@@ -72,18 +72,32 @@
                 return;
             }
             
+            // Check if admin account
+            const isAdmin = email.toLowerCase() === 'admin@gmail.com' && password === 'admin123';
+            
+            // Validate admin password
+            if (email.toLowerCase() === 'admin@gmail.com' && password !== 'admin123') {
+                showError('Mật khẩu admin không đúng!');
+                return;
+            }
+            
             // Simulate login
             const userData = {
                 email: email,
                 loginTime: new Date().toISOString(),
-                remember: remember
+                remember: remember,
+                role: isAdmin ? 'admin' : 'user',
+                fullname: isAdmin ? 'Admin ChamCham' : 'Khách hàng'
             };
             
             localStorage.setItem('lumiere-user', JSON.stringify(userData));
             
             showSuccess('Đăng nhập thành công! Đang chuyển hướng...');
             setTimeout(() => {
-                if (redirect) {
+                if (isAdmin) {
+                    // Admin → redirect to admin dashboard
+                    window.location.href = '../admin/dashboard.html';
+                } else if (redirect) {
                     window.location.href = redirect;
                 } else {
                     window.location.href = 'profile.html';

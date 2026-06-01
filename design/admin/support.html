@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hỗ trợ / Liên hệ - ChamCham Admin</title>
+    <meta name="description" content="Quản lý tin nhắn hỗ trợ từ khách hàng ChamCham">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="images/logo.svg" alt="ChamCham" class="sidebar-logo">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-name">ChamCham</span>
+                <span class="sidebar-brand-sub">Admin Panel</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Tổng quan</div>
+                <a href="dashboard.html" class="sidebar-link">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Dashboard
+                </a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Quản lý</div>
+                <a href="orders.html" class="sidebar-link">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    Đơn hàng
+                    <span class="sidebar-badge">3</span>
+                </a>
+                <a href="products.html" class="sidebar-link">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    Sản phẩm
+                </a>
+                <a href="materials.html" class="sidebar-link">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                    Kho nguyên liệu
+                </a>
+                <a href="coupons.html" class="sidebar-link">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    Mã giảm giá
+                </a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Khác</div>
+                <a href="support.html" class="sidebar-link active">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Hỗ trợ
+                    <span class="sidebar-badge" id="unreadCount">3</span>
+                </a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">AD</div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name">Admin ChamCham</div>
+                    <div class="sidebar-user-role">Quản trị viên</div>
+                </div>
+            </div>
+            <button class="sidebar-logout" onclick="logout()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Đăng xuất
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <header class="top-header">
+            <div class="top-header-left">
+                <button class="mobile-toggle" aria-label="Menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <h1 class="page-title">Hỗ trợ / Liên hệ</h1>
+                <p class="page-subtitle">Tin nhắn từ khách hàng</p>
+            </div>
+            <div class="top-header-right">
+                <div class="filter-chips">
+                    <button class="filter-chip active" data-filter="all" onclick="filterContacts('all', this)">Tất cả</button>
+                    <button class="filter-chip" data-filter="unread" onclick="filterContacts('unread', this)">Chưa phản hồi</button>
+                    <button class="filter-chip" data-filter="replied" onclick="filterContacts('replied', this)">Đã phản hồi</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="card">
+                <div class="card-body no-padding">
+                    <div class="table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Ngày gửi</th>
+                                    <th>Tên khách</th>
+                                    <th>Email</th>
+                                    <th>Chủ đề</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contactsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Detail Modal -->
+<div class="modal-overlay" id="contactModal">
+    <div class="modal" style="max-width:600px;">
+        <div class="modal-header">
+            <h3 class="modal-title" id="contactSubject"></h3>
+            <button class="modal-close" onclick="closeModal('contactModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--admin-border);">
+                <div style="width:48px;height:48px;border-radius:50%;background:var(--admin-primary-soft);color:var(--admin-primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0;" id="contactAvatar"></div>
+                <div>
+                    <div style="font-weight:600;color:var(--admin-text);" id="contactName"></div>
+                    <div style="font-size:0.82rem;color:var(--admin-text-muted);" id="contactEmail"></div>
+                </div>
+                <div style="margin-left:auto;" id="contactBadge"></div>
+            </div>
+            <div style="font-size:0.75rem;color:var(--admin-text-muted);margin-bottom:0.75rem;" id="contactDate"></div>
+            <div style="background:rgba(107,78,53,0.04);border-radius:var(--radius-md);padding:1.25rem;font-size:0.9rem;line-height:1.8;color:var(--admin-text);" id="contactMessage"></div>
+        </div>
+        <div class="modal-footer" id="contactFooter">
+            <button class="btn btn-ghost" onclick="closeModal('contactModal')">Đóng</button>
+            <button class="btn btn-primary" id="markRepliedBtn" onclick="markAsReplied()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>
+                Đánh dấu đã phản hồi
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+    let currentContactId = null;
+
+    function renderContacts(contacts) {
+        const tbody = document.getElementById('contactsBody');
+        tbody.innerHTML = '';
+        contacts.forEach(c => {
+            const isUnread = c.status === 'unread';
+            tbody.innerHTML += `
+                <tr style="cursor:pointer;${isUnread ? 'font-weight:500;' : ''}" onclick="viewContact(${c.id})">
+                    <td>${formatDateTime(c.date)}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            ${isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--admin-primary);display:inline-block;flex-shrink:0;"></span>' : ''}
+                            ${c.name}
+                        </div>
+                    </td>
+                    <td style="color:var(--admin-text-muted);font-size:0.82rem;">${c.email}</td>
+                    <td>${c.subject}</td>
+                    <td>${getContactStatusBadge(c.status)}</td>
+                </tr>`;
+        });
+    }
+
+    function viewContact(id) {
+        const c = MOCK_DATA.contacts.find(x => x.id === id);
+        if (!c) return;
+        currentContactId = id;
+        document.getElementById('contactSubject').textContent = c.subject;
+        document.getElementById('contactAvatar').textContent = c.name.charAt(0);
+        document.getElementById('contactName').textContent = c.name;
+        document.getElementById('contactEmail').textContent = c.email;
+        document.getElementById('contactDate').textContent = 'Gửi lúc: ' + formatDateTime(c.date);
+        document.getElementById('contactMessage').textContent = c.message;
+        document.getElementById('contactBadge').innerHTML = getContactStatusBadge(c.status);
+        
+        const markBtn = document.getElementById('markRepliedBtn');
+        if (c.status === 'replied') {
+            markBtn.style.display = 'none';
+        } else {
+            markBtn.style.display = 'inline-flex';
+        }
+        
+        openModal('contactModal');
+    }
+
+    function markAsReplied() {
+        const c = MOCK_DATA.contacts.find(x => x.id === currentContactId);
+        if (c) {
+            c.status = 'replied';
+            renderContacts(getFilteredContacts());
+            document.getElementById('contactBadge').innerHTML = getContactStatusBadge('replied');
+            document.getElementById('markRepliedBtn').style.display = 'none';
+            updateUnreadCount();
+            showToast('Đã đánh dấu phản hồi', 'success');
+        }
+    }
+
+    function filterContacts(filter, btn) {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        renderContacts(getFilteredContacts(filter));
+    }
+
+    function getFilteredContacts(filter) {
+        if (!filter) filter = document.querySelector('.filter-chip.active')?.dataset.filter || 'all';
+        if (filter === 'all') return MOCK_DATA.contacts;
+        return MOCK_DATA.contacts.filter(c => c.status === filter);
+    }
+
+    function updateUnreadCount() {
+        const count = MOCK_DATA.contacts.filter(c => c.status === 'unread').length;
+        document.getElementById('unreadCount').textContent = count;
+    }
+
+    renderContacts(MOCK_DATA.contacts);
+    updateUnreadCount();
+</script>
+</body>
+</html>

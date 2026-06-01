@@ -1,0 +1,351 @@
+[
+    {
+        "id": "DH-2024001",
+        "date": "2024-12-01T10:30:00",
+        "customer": {
+            "name": "Nguyễn Thị Lan",
+            "phone": "0912345678",
+            "email": "lan.nguyen@email.com",
+            "address": "45 Lý Thường Kiệt, Quận 10, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Vanilla Dream", "scent": "Vanilla & Musk", "color": "#F5E6D3", "colorName": "Kem nhạt", "size": "Lớn (300g)", "topping": "Hoa khô lavender", "qty": 2, "price": 180000 },
+            { "name": "Nến Peach Blossom", "scent": "Đào", "color": "#FFD5C8", "colorName": "Hồng đào", "size": "Tealight", "topping": "Không", "qty": 1, "price": 45000 }
+        ],
+        "total": 450000,
+        "status": "completed",
+        "payment": "paid",
+        "paymentMethod": "COD - Thanh toán khi nhận hàng",
+        "timeline": [
+            { "time": "2024-12-01T10:30:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Đặt hàng qua website" },
+            { "time": "2024-12-01T11:00:00", "status": "Xác nhận đơn hàng", "user": "Admin Hà", "note": "Đã kiểm tra và xác nhận" },
+            { "time": "2024-12-02T08:00:00", "status": "Đang chế tác", "user": "Admin Hà", "note": "Đổ nến, chờ đông" },
+            { "time": "2024-12-03T10:00:00", "status": "Đang giao hàng", "user": "Admin Hà", "note": "Giao GHTK, mã: GHK78901" },
+            { "time": "2024-12-04T15:00:00", "status": "Hoàn thành", "user": "Hệ thống", "note": "Khách xác nhận nhận hàng" }
+        ]
+    },
+    {
+        "id": "DH-2024002",
+        "date": "2024-12-01T14:20:00",
+        "customer": {
+            "name": "Trần Văn Minh",
+            "phone": "0987654321",
+            "email": "minh.tran@email.com",
+            "address": "123 Nguyễn Huệ, Quận 1, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Vanilla Dream", "scent": "Vanilla & Musk", "color": "#F5E6D3", "colorName": "Kem nhạt", "size": "Lớn (300g)", "topping": "Hoa khô lavender", "qty": 2, "price": 180000 },
+            { "name": "Nến Lavender Fields", "scent": "Lavender & Chamomile", "color": "#D4B0E0", "colorName": "Tím nhạt", "size": "Vừa (200g)", "topping": "Không", "qty": 1, "price": 150000 },
+            { "name": "Nến Custom", "scent": "Rose & Oud", "color": "#E8C4C4", "colorName": "Hồng pastel", "size": "Nhỏ (100g)", "topping": "Quế + Hoa hồng khô", "qty": 1, "price": 170000 }
+        ],
+        "total": 680000,
+        "status": "shipping",
+        "payment": "paid",
+        "paymentMethod": "Chuyển khoản ngân hàng",
+        "timeline": [
+            { "time": "2024-12-01T14:20:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Đặt hàng qua website" },
+            { "time": "2024-12-01T15:00:00", "status": "Xác nhận đơn hàng", "user": "Admin Hà", "note": "Đã kiểm tra thông tin và xác nhận" },
+            { "time": "2024-12-02T09:30:00", "status": "Đang chế tác", "user": "Admin Hà", "note": "Bắt đầu đổ nến và chuẩn bị nguyên liệu" },
+            { "time": "2024-12-03T14:00:00", "status": "Đang giao hàng", "user": "Admin Hà", "note": "Đã giao cho GHTK, mã vận đơn: GHK12345" }
+        ]
+    },
+    {
+        "id": "DH-2024003",
+        "date": "2024-12-02T09:15:00",
+        "customer": {
+            "name": "Lê Thị Hoa",
+            "phone": "0903112233",
+            "email": "hoa.le@email.com",
+            "address": "78 Trần Hưng Đạo, Quận 5, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Matcha Zen", "scent": "Matcha", "color": "#B8E0D2", "colorName": "Xanh mint", "size": "Vừa (200g)", "topping": "Không", "qty": 2, "price": 160000 }
+        ],
+        "total": 320000,
+        "status": "shipping",
+        "payment": "paid",
+        "paymentMethod": "Ví MoMo",
+        "timeline": [
+            { "time": "2024-12-02T09:15:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Đặt qua website" },
+            { "time": "2024-12-02T10:00:00", "status": "Xác nhận đơn hàng", "user": "Admin Hà", "note": "OK" },
+            { "time": "2024-12-03T08:00:00", "status": "Đang chế tác", "user": "Admin Hà", "note": "Đang đổ nến" },
+            { "time": "2024-12-04T09:00:00", "status": "Đang giao hàng", "user": "Admin Hà", "note": "Giao GHN, mã: GHN55678" }
+        ]
+    },
+    {
+        "id": "DH-2024004",
+        "date": "2024-12-02T16:45:00",
+        "customer": {
+            "name": "Phạm Đức An",
+            "phone": "0918776655",
+            "email": "an.pham@email.com",
+            "address": "200 Điện Biên Phủ, Quận Bình Thạnh, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Midnight Oud", "scent": "Oud & Amber", "color": "#2C1810", "colorName": "Nâu đen", "size": "Lớn (300g)", "topping": "Quế thanh", "qty": 2, "price": 250000 },
+            { "name": "Nến Cinnamon Spice", "scent": "Quế & Hồi", "color": "#E8C97A", "colorName": "Vàng mật ong", "size": "Vừa (200g)", "topping": "Quế thanh", "qty": 2, "price": 175000 }
+        ],
+        "total": 890000,
+        "status": "pending",
+        "payment": "unpaid",
+        "paymentMethod": "Chờ thanh toán",
+        "timeline": [
+            { "time": "2024-12-02T16:45:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Đặt hàng qua website, chưa thanh toán" }
+        ]
+    },
+    {
+        "id": "DH-2024005",
+        "date": "2024-12-03T08:00:00",
+        "customer": {
+            "name": "Hoàng Thị Mai",
+            "phone": "0933445566",
+            "email": "mai.hoang@email.com",
+            "address": "15 Nguyễn Văn Cừ, Quận 5, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Vanilla Dream", "scent": "Vanilla & Musk", "color": "#F5E6D3", "colorName": "Kem nhạt", "size": "XL (500g)", "topping": "Hoa hồng khô", "qty": 1, "price": 280000 },
+            { "name": "Nến Lavender Fields", "scent": "Lavender & Chamomile", "color": "#D4B0E0", "colorName": "Tím nhạt", "size": "Lớn (300g)", "topping": "Hoa khô lavender", "qty": 2, "price": 210000 },
+            { "name": "Nến Ocean Breeze", "scent": "Ocean Breeze", "color": "#B8E0D2", "colorName": "Xanh mint", "size": "Vừa (200g)", "topping": "Vỏ cam sấy", "qty": 2, "price": 200000 },
+            { "name": "Nến Peach Blossom", "scent": "Đào", "color": "#FFD5C8", "colorName": "Hồng đào", "size": "Tealight", "topping": "Không", "qty": 1, "price": 45000 }
+        ],
+        "total": 1250000,
+        "status": "completed",
+        "payment": "paid",
+        "paymentMethod": "Thẻ tín dụng Visa",
+        "timeline": [
+            { "time": "2024-12-03T08:00:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Đơn hàng lớn, khách VIP" },
+            { "time": "2024-12-03T08:30:00", "status": "Xác nhận đơn hàng", "user": "Admin Hà", "note": "Xác nhận ưu tiên xử lý" },
+            { "time": "2024-12-03T14:00:00", "status": "Đang chế tác", "user": "Admin Hà", "note": "Ưu tiên hoàn thành trong ngày" },
+            { "time": "2024-12-04T10:00:00", "status": "Đang giao hàng", "user": "Admin Hà", "note": "Ship tốc hành J&T, mã: JT998877" },
+            { "time": "2024-12-05T09:00:00", "status": "Hoàn thành", "user": "Hệ thống", "note": "Giao thành công, khách rất hài lòng" }
+        ]
+    },
+    {
+        "id": "DH-2024006",
+        "date": "2024-12-03T11:30:00",
+        "customer": {
+            "name": "Vũ Quốc Bảo",
+            "phone": "0977889900",
+            "email": "bao.vu@email.com",
+            "address": "88 Phan Xích Long, Quận Phú Nhuận, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Sandalwood Nights", "scent": "Sandalwood & Cedar", "color": "#F5E6D3", "colorName": "Kem nhạt", "size": "Lớn (300g)", "topping": "Hạt cà phê", "qty": 3, "price": 190000 }
+        ],
+        "total": 550000,
+        "status": "cancelled",
+        "payment": "refunded",
+        "paymentMethod": "Chuyển khoản ngân hàng",
+        "timeline": [
+            { "time": "2024-12-03T11:30:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Đặt 3 nến làm quà tặng" },
+            { "time": "2024-12-03T12:00:00", "status": "Xác nhận đơn hàng", "user": "Admin Hà", "note": "OK" },
+            { "time": "2024-12-03T18:00:00", "status": "Đã hủy", "user": "Khách hàng", "note": "Khách yêu cầu hủy vì đổi ý, đã hoàn tiền" }
+        ]
+    },
+    {
+        "id": "DH-2024007",
+        "date": "2024-12-04T13:20:00",
+        "customer": {
+            "name": "Đỗ Thanh Hà",
+            "phone": "0966554433",
+            "email": "ha.do@email.com",
+            "address": "320 Nguyễn Đình Chiểu, Quận 3, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Cinnamon Spice", "scent": "Quế & Hồi", "color": "#E8C97A", "colorName": "Vàng mật ong", "size": "Lớn (300g)", "topping": "Quế thanh", "qty": 1, "price": 175000 },
+            { "name": "Nến Citrus Burst", "scent": "Citrus & Bergamot", "color": "#FFFDF5", "colorName": "Trắng ngà", "size": "Vừa (200g)", "topping": "Vỏ cam sấy", "qty": 2, "price": 145000 },
+            { "name": "Nến Rose Garden", "scent": "Rose & Oud", "color": "#E8C4C4", "colorName": "Hồng pastel", "size": "Nhỏ (100g)", "topping": "Hoa hồng khô", "qty": 1, "price": 165000 }
+        ],
+        "total": 730000,
+        "status": "processing",
+        "payment": "paid",
+        "paymentMethod": "Ví ZaloPay",
+        "timeline": [
+            { "time": "2024-12-04T13:20:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Đặt hàng qua website" },
+            { "time": "2024-12-04T14:00:00", "status": "Xác nhận đơn hàng", "user": "Admin Hà", "note": "Xác nhận, chuẩn bị nguyên liệu" },
+            { "time": "2024-12-05T08:00:00", "status": "Đang chế tác", "user": "Admin Hà", "note": "Đang đổ nến, dự kiến xong chiều nay" }
+        ]
+    },
+    {
+        "id": "DH-2024008",
+        "date": "2024-12-04T15:00:00",
+        "customer": {
+            "name": "Bùi Minh Tuấn",
+            "phone": "0945332211",
+            "email": "tuan.bui@email.com",
+            "address": "55 Hai Bà Trưng, Quận 1, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Matcha Zen", "scent": "Matcha", "color": "#B8E0D2", "colorName": "Xanh mint", "size": "Lớn (300g)", "topping": "Lá bạc hà khô", "qty": 1, "price": 160000 },
+            { "name": "Nến Vanilla Dream", "scent": "Vanilla & Musk", "color": "#F5E6D3", "colorName": "Kem nhạt", "size": "Vừa (200g)", "topping": "Không", "qty": 1, "price": 180000 }
+        ],
+        "total": 420000,
+        "status": "processing",
+        "payment": "paid",
+        "paymentMethod": "COD - Thanh toán khi nhận hàng",
+        "timeline": [
+            { "time": "2024-12-04T15:00:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Đặt qua website" },
+            { "time": "2024-12-04T16:00:00", "status": "Xác nhận đơn hàng", "user": "Admin Hà", "note": "OK, bắt đầu chuẩn bị" }
+        ]
+    },
+    {
+        "id": "DH-2024009",
+        "date": "2024-12-05T09:45:00",
+        "customer": {
+            "name": "Ngô Thị Yến",
+            "phone": "0922113344",
+            "email": "yen.ngo@email.com",
+            "address": "150 Cách Mạng Tháng 8, Quận 3, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Midnight Oud", "scent": "Oud & Amber", "color": "#2C1810", "colorName": "Nâu đen", "size": "XL (500g)", "topping": "Không", "qty": 1, "price": 350000 },
+            { "name": "Nến Lavender Fields", "scent": "Lavender & Chamomile", "color": "#D4B0E0", "colorName": "Tím nhạt", "size": "Lớn (300g)", "topping": "Hoa khô lavender", "qty": 2, "price": 210000 },
+            { "name": "Nến Citrus Burst", "scent": "Citrus & Bergamot", "color": "#FFFDF5", "colorName": "Trắng ngà", "size": "Nhỏ (100g)", "topping": "Vỏ cam sấy", "qty": 1, "price": 145000 }
+        ],
+        "total": 960000,
+        "status": "completed",
+        "payment": "paid",
+        "paymentMethod": "Thẻ tín dụng Mastercard",
+        "timeline": [
+            { "time": "2024-12-05T09:45:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Khách VIP, đơn hàng lần 5" },
+            { "time": "2024-12-05T10:00:00", "status": "Xác nhận đơn hàng", "user": "Admin Hà", "note": "Ưu tiên xử lý khách VIP" },
+            { "time": "2024-12-05T16:00:00", "status": "Đang chế tác", "user": "Admin Hà", "note": "Hoàn thành nhanh" },
+            { "time": "2024-12-06T09:00:00", "status": "Đang giao hàng", "user": "Admin Hà", "note": "Giao nhanh Grab Express" },
+            { "time": "2024-12-06T14:00:00", "status": "Hoàn thành", "user": "Hệ thống", "note": "Giao thành công" }
+        ]
+    },
+    {
+        "id": "DH-2024010",
+        "date": "2024-12-05T17:10:00",
+        "customer": {
+            "name": "Lý Văn Hùng",
+            "phone": "0911002233",
+            "email": "hung.ly@email.com",
+            "address": "77 Pasteur, Quận 1, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Ocean Breeze", "scent": "Ocean Breeze", "color": "#B8E0D2", "colorName": "Xanh mint", "size": "XL (500g)", "topping": "Không", "qty": 2, "price": 300000 },
+            { "name": "Nến Sandalwood Nights", "scent": "Sandalwood & Cedar", "color": "#F5E6D3", "colorName": "Kem nhạt", "size": "Lớn (300g)", "topping": "Hạt cà phê", "qty": 2, "price": 190000 },
+            { "name": "Nến Peach Blossom", "scent": "Đào", "color": "#FFD5C8", "colorName": "Hồng đào", "size": "Tealight", "topping": "Không", "qty": 2, "price": 45000 }
+        ],
+        "total": 1100000,
+        "status": "pending",
+        "payment": "unpaid",
+        "paymentMethod": "Chờ thanh toán",
+        "timeline": [
+            { "time": "2024-12-05T17:10:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Đơn hàng lớn, đang chờ thanh toán" }
+        ]
+    },
+    {
+        "id": "DH-2024011",
+        "date": "2024-12-06T07:30:00",
+        "customer": {
+            "name": "Trương Thị Bích",
+            "phone": "0908776655",
+            "email": "bich.truong@email.com",
+            "address": "29 Lê Duẩn, Quận 1, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Cinnamon Spice", "scent": "Quế & Hồi", "color": "#E8C97A", "colorName": "Vàng mật ong", "size": "Nhỏ (100g)", "topping": "Quế thanh", "qty": 5, "price": 120000 }
+        ],
+        "total": 600000,
+        "status": "processing",
+        "payment": "paid",
+        "paymentMethod": "Ví MoMo",
+        "timeline": [
+            { "time": "2024-12-06T07:30:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Mua 5 nến nhỏ làm quà Giáng sinh" },
+            { "time": "2024-12-06T08:00:00", "status": "Xác nhận đơn hàng", "user": "Admin Hà", "note": "OK, 5 nến Cinnamon size nhỏ" },
+            { "time": "2024-12-06T10:00:00", "status": "Đang chế tác", "user": "Admin Hà", "note": "Đang đổ 5 nến, chờ đông khoảng 8 tiếng" }
+        ]
+    },
+    {
+        "id": "DH-2024012",
+        "date": "2024-12-06T10:00:00",
+        "customer": {
+            "name": "Mai Quang Khải",
+            "phone": "0934556677",
+            "email": "khai.mai@email.com",
+            "address": "160 Võ Văn Tần, Quận 3, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Vanilla Dream", "scent": "Vanilla & Musk", "color": "#F5E6D3", "colorName": "Kem nhạt", "size": "Vừa (200g)", "topping": "Hoa khô lavender", "qty": 1, "price": 180000 }
+        ],
+        "total": 180000,
+        "status": "pending",
+        "payment": "unpaid",
+        "paymentMethod": "Chờ thanh toán",
+        "timeline": [
+            { "time": "2024-12-06T10:00:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Đặt 1 nến, chờ thanh toán" }
+        ]
+    },
+    {
+        "id": "DH-2024013",
+        "date": "2024-12-06T14:30:00",
+        "customer": {
+            "name": "Phan Thị Diễm",
+            "phone": "0899887766",
+            "email": "diem.phan@email.com",
+            "address": "8 Nguyễn Bỉnh Khiêm, Quận 1, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Rose Garden", "scent": "Rose & Oud", "color": "#E8C4C4", "colorName": "Hồng pastel", "size": "Lớn (300g)", "topping": "Hoa hồng khô", "qty": 1, "price": 165000 },
+            { "name": "Nến Matcha Zen", "scent": "Matcha", "color": "#B8E0D2", "colorName": "Xanh mint", "size": "Vừa (200g)", "topping": "Lá bạc hà khô", "qty": 1, "price": 160000 }
+        ],
+        "total": 325000,
+        "status": "completed",
+        "payment": "paid",
+        "paymentMethod": "Ví ZaloPay",
+        "timeline": [
+            { "time": "2024-12-06T14:30:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Đặt qua website" },
+            { "time": "2024-12-06T15:00:00", "status": "Xác nhận đơn hàng", "user": "Admin Hà", "note": "OK" },
+            { "time": "2024-12-07T09:00:00", "status": "Đang chế tác", "user": "Admin Hà", "note": "2 nến, hoàn thành trong ngày" },
+            { "time": "2024-12-07T16:00:00", "status": "Đang giao hàng", "user": "Admin Hà", "note": "Giao tận tay, khách ở gần" },
+            { "time": "2024-12-07T17:00:00", "status": "Hoàn thành", "user": "Admin Hà", "note": "Giao tận tay thành công" }
+        ]
+    },
+    {
+        "id": "DH-2024014",
+        "date": "2024-12-07T08:15:00",
+        "customer": {
+            "name": "Cao Minh Phúc",
+            "phone": "0976001122",
+            "email": "phuc.cao@email.com",
+            "address": "210 Bạch Đằng, Quận Bình Thạnh, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Midnight Oud", "scent": "Oud & Amber", "color": "#2C1810", "colorName": "Nâu đen", "size": "Lớn (300g)", "topping": "Không", "qty": 1, "price": 250000 },
+            { "name": "Nến Cinnamon Spice", "scent": "Quế & Hồi", "color": "#E8C97A", "colorName": "Vàng mật ong", "size": "Lớn (300g)", "topping": "Quế thanh", "qty": 1, "price": 175000 }
+        ],
+        "total": 425000,
+        "status": "shipping",
+        "payment": "paid",
+        "paymentMethod": "Chuyển khoản ngân hàng",
+        "timeline": [
+            { "time": "2024-12-07T08:15:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Mua nến cho dịp Noel" },
+            { "time": "2024-12-07T09:00:00", "status": "Xác nhận đơn hàng", "user": "Admin Hà", "note": "OK" },
+            { "time": "2024-12-07T14:00:00", "status": "Đang chế tác", "user": "Admin Hà", "note": "Đang làm" },
+            { "time": "2024-12-08T10:00:00", "status": "Đang giao hàng", "user": "Admin Hà", "note": "GHTK, mã: GHK44556" }
+        ]
+    },
+    {
+        "id": "DH-2024015",
+        "date": "2024-12-07T16:00:00",
+        "customer": {
+            "name": "Đinh Thị Ngọc Ánh",
+            "phone": "0955443322",
+            "email": "anh.dinh@email.com",
+            "address": "102 Nguyễn Thị Minh Khai, Quận 3, TP.HCM"
+        },
+        "items": [
+            { "name": "Nến Lavender Fields", "scent": "Lavender & Chamomile", "color": "#D4B0E0", "colorName": "Tím nhạt", "size": "Vừa (200g)", "topping": "Hoa khô lavender", "qty": 3, "price": 150000 },
+            { "name": "Nến Peach Blossom", "scent": "Đào", "color": "#FFD5C8", "colorName": "Hồng đào", "size": "Tealight", "topping": "Không", "qty": 2, "price": 45000 }
+        ],
+        "total": 540000,
+        "status": "pending",
+        "payment": "unpaid",
+        "paymentMethod": "Chờ thanh toán",
+        "timeline": [
+            { "time": "2024-12-07T16:00:00", "status": "Đơn hàng được tạo", "user": "Khách hàng", "note": "Mua quà cho bạn, chờ thanh toán" }
+        ]
+    }
+]

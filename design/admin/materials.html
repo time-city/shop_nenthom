@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kho Nguyên liệu - ChamCham Admin</title>
+    <meta name="description" content="Quản lý kho nguyên liệu nến thơm ChamCham">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="images/logo.svg" alt="ChamCham" class="sidebar-logo">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-name">ChamCham</span>
+                <span class="sidebar-brand-sub">Admin Panel</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Tổng quan</div>
+                <a href="dashboard.html" class="sidebar-link">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Dashboard
+                </a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Quản lý</div>
+                <a href="orders.html" class="sidebar-link">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    Đơn hàng
+                    <span class="sidebar-badge">3</span>
+                </a>
+                <a href="products.html" class="sidebar-link">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    Sản phẩm
+                </a>
+                <a href="materials.html" class="sidebar-link active">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                    Kho nguyên liệu
+                </a>
+                <a href="coupons.html" class="sidebar-link">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    Mã giảm giá
+                </a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Khác</div>
+                <a href="support.html" class="sidebar-link">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Hỗ trợ
+                    <span class="sidebar-badge">3</span>
+                </a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">AD</div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name">Admin ChamCham</div>
+                    <div class="sidebar-user-role">Quản trị viên</div>
+                </div>
+            </div>
+            <button class="sidebar-logout" onclick="logout()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Đăng xuất
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <header class="top-header">
+            <div class="top-header-left">
+                <button class="mobile-toggle" aria-label="Menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <h1 class="page-title">Kho Nguyên liệu</h1>
+                <p class="page-subtitle">Quản lý mùi hương, màu sáp, kích thước, topping và loại nến</p>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Tabs -->
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="tab-scents">🌸 Mùi hương</button>
+                        <button class="tab-btn" data-tab="tab-colors">🎨 Màu sáp</button>
+                        <button class="tab-btn" data-tab="tab-sizes">📏 Kích thước</button>
+                        <button class="tab-btn" data-tab="tab-toppings">✨ Topping</button>
+                        <button class="tab-btn" data-tab="tab-types">🕯️ Loại nến</button>
+                    </div>
+
+                    <!-- Tab: Scents -->
+                    <div class="tab-panel active" id="tab-scents">
+                        <div class="flex-between mb-2">
+                            <span class="font-sm text-muted" id="scentsCount"></span>
+                            <button class="btn btn-primary btn-sm" onclick="openMaterialModal('scent')">+ Thêm mùi hương</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="admin-table">
+                                <thead><tr><th>#</th><th>Tên mùi hương</th><th>Giá cộng thêm</th><th></th></tr></thead>
+                                <tbody id="scentsBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Colors -->
+                    <div class="tab-panel" id="tab-colors">
+                        <div class="flex-between mb-2">
+                            <span class="font-sm text-muted" id="colorsCount"></span>
+                            <button class="btn btn-primary btn-sm" onclick="openMaterialModal('color')">+ Thêm màu sáp</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="admin-table">
+                                <thead><tr><th>#</th><th>Màu sắc</th><th>Tên màu</th><th>Mã hex</th><th>Giá cộng thêm</th><th></th></tr></thead>
+                                <tbody id="colorsBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Sizes -->
+                    <div class="tab-panel" id="tab-sizes">
+                        <div class="flex-between mb-2">
+                            <span class="font-sm text-muted" id="sizesCount"></span>
+                            <button class="btn btn-primary btn-sm" onclick="openMaterialModal('size')">+ Thêm kích thước</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="admin-table">
+                                <thead><tr><th>#</th><th>Kích thước</th><th>Giá cộng thêm</th><th></th></tr></thead>
+                                <tbody id="sizesBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Toppings -->
+                    <div class="tab-panel" id="tab-toppings">
+                        <div class="flex-between mb-2">
+                            <span class="font-sm text-muted" id="toppingsCount"></span>
+                            <button class="btn btn-primary btn-sm" onclick="openMaterialModal('topping')">+ Thêm topping</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="admin-table">
+                                <thead><tr><th>#</th><th>Tên topping</th><th>Giá cộng thêm</th><th>Tồn kho</th><th></th></tr></thead>
+                                <tbody id="toppingsBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Types -->
+                    <div class="tab-panel" id="tab-types">
+                        <div class="flex-between mb-2">
+                            <span class="font-sm text-muted" id="typesCount"></span>
+                            <button class="btn btn-primary btn-sm" onclick="openMaterialModal('type')">+ Thêm loại nến</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="admin-table">
+                                <thead><tr><th>#</th><th>Loại nến</th><th>Giá cộng thêm</th><th></th></tr></thead>
+                                <tbody id="typesBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Material Modal -->
+<div class="modal-overlay" id="materialModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title" id="materialModalTitle">Thêm nguyên liệu</h3>
+            <button class="modal-close" onclick="closeModal('materialModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label" id="materialNameLabel">Tên</label>
+                <input type="text" class="form-input" id="mName" placeholder="Nhập tên...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Giá cộng thêm (VND)</label>
+                <input type="number" class="form-input" id="mPrice" placeholder="Ví dụ: 15000">
+            </div>
+            <!-- Color-specific -->
+            <div class="form-group" id="colorField" style="display:none;">
+                <label class="form-label">Mã màu hex</label>
+                <div class="color-input-group">
+                    <input type="color" id="mColorPicker" value="#F5E6D3">
+                    <input type="text" class="form-input" id="mHex" placeholder="#F5E6D3" style="max-width:160px;">
+                </div>
+            </div>
+            <!-- Topping-specific -->
+            <div class="form-group" id="stockField" style="display:none;">
+                <label class="form-label">Trạng thái tồn kho</label>
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                    <label class="toggle">
+                        <input type="checkbox" id="mInStock" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="font-sm" id="stockLabel">Còn hàng</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('materialModal')">Hủy</button>
+            <button class="btn btn-primary" onclick="saveMaterial()">Lưu</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+    let currentMaterialType = '';
+
+    function renderAll() {
+        renderScents();
+        renderColors();
+        renderSizes();
+        renderToppings();
+        renderTypes();
+    }
+
+    function renderScents() {
+        const tbody = document.getElementById('scentsBody');
+        tbody.innerHTML = '';
+        MOCK_DATA.materials.scents.forEach((s, i) => {
+            tbody.innerHTML += `<tr>
+                <td>${i + 1}</td>
+                <td><strong>${s.name}</strong></td>
+                <td>${formatCurrency(s.price)}</td>
+                <td><div style="display:flex;gap:0.35rem;">
+                    <button class="btn-icon" title="Sửa" onclick="editMaterial('scent',${s.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="btn-icon" title="Xóa" style="color:var(--admin-danger)" onclick="deleteMaterial('scent',${s.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                </div></td>
+            </tr>`;
+        });
+        document.getElementById('scentsCount').textContent = `${MOCK_DATA.materials.scents.length} mùi hương`;
+    }
+
+    function renderColors() {
+        const tbody = document.getElementById('colorsBody');
+        tbody.innerHTML = '';
+        MOCK_DATA.materials.colors.forEach((c, i) => {
+            tbody.innerHTML += `<tr>
+                <td>${i + 1}</td>
+                <td><span class="color-swatch" style="background:${c.hex};"></span></td>
+                <td><strong>${c.name}</strong></td>
+                <td><code style="background:rgba(107,78,53,0.06);padding:2px 8px;border-radius:4px;font-size:0.8rem;">${c.hex}</code></td>
+                <td>${formatCurrency(c.price)}</td>
+                <td><div style="display:flex;gap:0.35rem;">
+                    <button class="btn-icon" title="Sửa" onclick="editMaterial('color',${c.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="btn-icon" title="Xóa" style="color:var(--admin-danger)" onclick="deleteMaterial('color',${c.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                </div></td>
+            </tr>`;
+        });
+        document.getElementById('colorsCount').textContent = `${MOCK_DATA.materials.colors.length} màu sáp`;
+    }
+
+    function renderSizes() {
+        const tbody = document.getElementById('sizesBody');
+        tbody.innerHTML = '';
+        MOCK_DATA.materials.sizes.forEach((s, i) => {
+            tbody.innerHTML += `<tr>
+                <td>${i + 1}</td>
+                <td><strong>${s.name}</strong></td>
+                <td>${formatCurrency(s.price)}</td>
+                <td><div style="display:flex;gap:0.35rem;">
+                    <button class="btn-icon" title="Sửa" onclick="editMaterial('size',${s.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="btn-icon" title="Xóa" style="color:var(--admin-danger)" onclick="deleteMaterial('size',${s.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                </div></td>
+            </tr>`;
+        });
+        document.getElementById('sizesCount').textContent = `${MOCK_DATA.materials.sizes.length} kích thước`;
+    }
+
+    function renderToppings() {
+        const tbody = document.getElementById('toppingsBody');
+        tbody.innerHTML = '';
+        MOCK_DATA.materials.toppings.forEach((t, i) => {
+            tbody.innerHTML += `<tr>
+                <td>${i + 1}</td>
+                <td><strong>${t.name}</strong></td>
+                <td>${formatCurrency(t.price)}</td>
+                <td>
+                    ${t.inStock
+                        ? '<span class="badge badge-success badge-dot">Còn hàng</span>'
+                        : '<span class="badge badge-danger badge-dot">Hết hàng</span>'}
+                </td>
+                <td><div style="display:flex;gap:0.35rem;">
+                    <button class="btn-icon" title="Sửa" onclick="editMaterial('topping',${t.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="btn-icon" title="Xóa" style="color:var(--admin-danger)" onclick="deleteMaterial('topping',${t.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                </div></td>
+            </tr>`;
+        });
+        document.getElementById('toppingsCount').textContent = `${MOCK_DATA.materials.toppings.length} topping`;
+    }
+
+    function renderTypes() {
+        const tbody = document.getElementById('typesBody');
+        tbody.innerHTML = '';
+        MOCK_DATA.materials.types.forEach((t, i) => {
+            tbody.innerHTML += `<tr>
+                <td>${i + 1}</td>
+                <td><strong>${t.name}</strong></td>
+                <td>${formatCurrency(t.price)}</td>
+                <td><div style="display:flex;gap:0.35rem;">
+                    <button class="btn-icon" title="Sửa" onclick="editMaterial('type',${t.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="btn-icon" title="Xóa" style="color:var(--admin-danger)" onclick="deleteMaterial('type',${t.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                </div></td>
+            </tr>`;
+        });
+        document.getElementById('typesCount').textContent = `${MOCK_DATA.materials.types.length} loại nến`;
+    }
+
+    function openMaterialModal(type) {
+        currentMaterialType = type;
+        const labels = { scent: 'mùi hương', color: 'màu sáp', size: 'kích thước', topping: 'topping', type: 'loại nến' };
+        document.getElementById('materialModalTitle').textContent = `Thêm ${labels[type]}`;
+        document.getElementById('materialNameLabel').textContent = `Tên ${labels[type]}`;
+        document.getElementById('mName').value = '';
+        document.getElementById('mPrice').value = '';
+        document.getElementById('colorField').style.display = type === 'color' ? 'block' : 'none';
+        document.getElementById('stockField').style.display = type === 'topping' ? 'block' : 'none';
+        if (type === 'color') {
+            document.getElementById('mColorPicker').value = '#F5E6D3';
+            document.getElementById('mHex').value = '#F5E6D3';
+        }
+        if (type === 'topping') {
+            document.getElementById('mInStock').checked = true;
+            document.getElementById('stockLabel').textContent = 'Còn hàng';
+        }
+        openModal('materialModal');
+    }
+
+    function editMaterial(type, id) {
+        const dataMap = { scent: 'scents', color: 'colors', size: 'sizes', topping: 'toppings', type: 'types' };
+        const item = MOCK_DATA.materials[dataMap[type]].find(x => x.id === id);
+        if (!item) return;
+        openMaterialModal(type);
+        const labels = { scent: 'mùi hương', color: 'màu sáp', size: 'kích thước', topping: 'topping', type: 'loại nến' };
+        document.getElementById('materialModalTitle').textContent = `Sửa ${labels[type]}`;
+        document.getElementById('mName').value = item.name;
+        document.getElementById('mPrice').value = item.price;
+        if (type === 'color' && item.hex) {
+            document.getElementById('mColorPicker').value = item.hex;
+            document.getElementById('mHex').value = item.hex;
+        }
+        if (type === 'topping') {
+            document.getElementById('mInStock').checked = item.inStock;
+            document.getElementById('stockLabel').textContent = item.inStock ? 'Còn hàng' : 'Hết hàng';
+        }
+    }
+
+    function saveMaterial() {
+        const name = document.getElementById('mName').value;
+        const price = document.getElementById('mPrice').value;
+        if (!name || price === '') {
+            showToast('Vui lòng điền đầy đủ thông tin', 'warning');
+            return;
+        }
+        showToast('Đã lưu thành công!', 'success');
+        closeModal('materialModal');
+    }
+
+    function deleteMaterial(type, id) {
+        if (confirm('Bạn có chắc muốn xóa?')) {
+            showToast('Đã xóa thành công', 'success');
+        }
+    }
+
+    // Sync color picker ↔ hex input
+    document.getElementById('mColorPicker').addEventListener('input', function() {
+        document.getElementById('mHex').value = this.value;
+    });
+    document.getElementById('mHex').addEventListener('input', function() {
+        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+            document.getElementById('mColorPicker').value = this.value;
+        }
+    });
+
+    // Stock toggle label
+    document.getElementById('mInStock').addEventListener('change', function() {
+        document.getElementById('stockLabel').textContent = this.checked ? 'Còn hàng' : 'Hết hàng';
+    });
+
+    renderAll();
+</script>
+</body>
+</html>

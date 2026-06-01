@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChamCham Admin</title>
+    <script>
+        // Auth check - redirect accordingly
+        const user = JSON.parse(localStorage.getItem('lumiere-user') || 'null');
+        if (!user || user.role !== 'admin') {
+            window.location.href = '../user/login.html?redirect=' + encodeURIComponent(window.location.origin + window.location.pathname.replace('index.html', 'dashboard.html'));
+        } else {
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</head>
+<body>
+    <p style="text-align:center; padding:3rem; font-family:sans-serif; color:#6B4C35;">Đang chuyển hướng...</p>
+</body>
+</html>
