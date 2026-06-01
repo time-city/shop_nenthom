@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - ChamCham</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+<!-- Navigation will be loaded here -->
+<main>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>Đăng Nhập</h1>
+            <p class="subtitle">Chào mừng quay lại ChamCham</p>
+            
+            <div class="error-message" id="errorMsg"></div>
+            <div class="success-message" id="successMsg"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Mật Khẩu</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                
+                <div class="remember-me">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember" class="remember-label">Ghi nhớ tôi</label>
+                </div>
+                
+                <button type="submit" class="submit-btn">Đăng Nhập</button>
+            </form>
+            
+            <div class="divider">hoặc</div>
+            
+            <div class="auth-links">
+                <p>Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a></p>
+                <p><a href="#forgot">Quên mật khẩu?</a></p>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- Footer will be loaded here -->
+
+<script src="js/components.js"></script>
+<script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect');
+
+            
+            // Validate
+            if (!email || !password) {
+                showError('Vui lòng điền đầy đủ thông tin');
+                return;
+            }
+            
+            // Simulate login
+            const userData = {
+                email: email,
+                loginTime: new Date().toISOString(),
+                remember: remember
+            };
+            
+            localStorage.setItem('lumiere-user', JSON.stringify(userData));
+            
+            showSuccess('Đăng nhập thành công! Đang chuyển hướng...');
+            setTimeout(() => {
+                if (redirect) {
+                    window.location.href = redirect;
+                } else {
+                    window.location.href = 'profile.html';
+                }
+            }, 1500);
+
+
+        });
+        
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 4000);
+        }
+        
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+        
+
+    </script>
+</body>
+</html>

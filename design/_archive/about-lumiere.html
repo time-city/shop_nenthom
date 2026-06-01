@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Câu Chuyện - ChamCham</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/features.css">
+    <link rel="stylesheet" href="css/footer.css">
+    
+    <style>
+        .hero-about {
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 5rem 4rem;
+            padding-top: 8rem;
+        }
+        
+        .hero-about h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.5rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+            color: #1a1814;
+        }
+        
+        .hero-about p {
+            font-size: 1rem;
+            color: #6b6660;
+            max-width: 600px;
+            line-height: 1.8;
+        }
+        
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            padding: 5rem 4rem;
+        }
+        
+        .about-text h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            font-weight: 300;
+            margin-bottom: 1.5rem;
+            color: #1a1814;
+        }
+        
+        .about-text p {
+            font-size: 0.95rem;
+            color: #6b6660;
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+        
+        .about-image {
+            aspect-ratio: 3/4;
+            background: linear-gradient(135deg, #f5ede3 0%, #e8ddd0 100%);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8B7355;
+            font-size: 0.9rem;
+        }
+        
+        .process-section {
+            background: #fff;
+            padding: 5rem 4rem;
+        }
+        
+        .process-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .process-card {
+            text-align: center;
+        }
+        
+        .process-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3rem;
+            color: #8B7355;
+            opacity: 0.3;
+            margin-bottom: 1rem;
+        }
+        
+        .process-card h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            font-weight: 300;
+            color: #1a1814;
+            margin-bottom: 0.8rem;
+        }
+        
+        .process-card p {
+            font-size: 0.88rem;
+            color: #6b6660;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation will be loaded here -->
+<main>
+    <section class="hero-about">
+        <h1>Câu Chuyện Của ChamCham</h1>
+        <p>Bắt đầu từ một niềm đam mê tạo tác những vật dụng đẹp bằng tay, ChamCham được sinh ra để mang ánh sáng và mùi hương vào từng ngôi nhà.</p>
+    </section>
+
+    <section class="about-content">
+        <div class="about-text">
+            <h2>Nguyên Liệu Tự Nhiên</h2>
+            <p>Chúng tôi chỉ sử dụng sáp đậu nành 100% tự nhiên, được thu hoạch bền vững. Mỗi hương liệu đều được chắt lọc từ tinh dầu thực vật nguyên chất, không có hóa chất tổng hợp.</p>
+            <p>Quá trình chế tạo hoàn toàn thủ công, từng nến được đổ tay và kiểm tra kỹ lưỡng để đảm bảo chất lượng tốt nhất.</p>
+        </div>
+        <div class="about-image">Ảnh Nguyên Liệu</div>
+    </section>
+
+    <section class="about-content" style="grid-template-columns: 1fr 1fr; grid-auto-flow: dense;">
+        <div class="about-image">Ảnh Quá Trình</div>
+        <div class="about-text">
+            <h2>Tùy Chỉnh Vô Hạn</h2>
+            <p>Mỗi khách hàng ChamCham là duy nhất, vì vậy mỗi nến cũng phải được tùy chỉnh theo sở thích riêng. Chọn hương thơm yêu thích, màu sáp phù hợp với không gian của bạn, và kích thước phần nến.</p>
+            <p>Không có hai nến ChamCham nào giống nhau — mỗi một là một tác phẩm độc lập, được tạo ra chỉ cho bạn.</p>
+        </div>
+    </section>
+
+    <section class="process-section">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div class="section-title">Quy Trình Tạo Nến</div>
+            <div class="section-sub">Từ ý tưởng đến thực tế</div>
+            
+            <div class="process-grid">
+                <div class="process-card">
+                    <div class="process-number">01</div>
+                    <h3>Lựa Chọn</h3>
+                    <p>Bạn chọn hương, màu sắc, kích thước và bao bì theo sở thích cá nhân của mình.</p>
+                </div>
+                <div class="process-card">
+                    <div class="process-number">02</div>
+                    <h3>Chuẩn Bị</h3>
+                    <p>Chúng tôi chuẩn bị nguyên liệu tối ưu, pha trộn tinh dầu với độ chính xác cao.</p>
+                </div>
+                <div class="process-card">
+                    <div class="process-number">03</div>
+                    <h3>Đổ Tay</h3>
+                    <p>Sáp được đổ vào từng hộp bằng tay, theo truyền thống thủ công lâu đời.</p>
+                </div>
+                <div class="process-card">
+                    <div class="process-number">04</div>
+                    <h3>Làm Lạnh</h3>
+                    <p>Nến được để yên trong 24 giờ để đạt độ cứng hoàn hảo.</p>
+                </div>
+                <div class="process-card">
+                    <div class="process-number">05</div>
+                    <h3>Kiểm Tra</h3>
+                    <p>Mỗi nến được kiểm tra kỹ lưỡng trước khi đóng gói.</p>
+                </div>
+                <div class="process-card">
+                    <div class="process-number">06</div>
+                    <h3>Gửi Đến Bạn</h3>
+                    <p>Nến được đóng gói cẩn thận và gửi đến tay bạn, sẵn sàng tặng hay dùng.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section style="padding: 5rem 4rem;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div class="section-title">Tại Sao Chọn ChamCham?</div>
+            <div class="section-sub">Cam kết chất lượng</div>
+            <div class="feat-grid">
+                <div class="feat-card">
+                    <div class="feat-icon">◎</div>
+                    <h4>Sáp Đậu Nành Tự Nhiên</h4>
+                    <p>100% sáp đậu nành có nguồn gốc từ nông trại bền vững, không chứa chất độc hại.</p>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon">◈</div>
+                    <h4>Tinh Dầu Thật</h4>
+                    <p>Chỉ sử dụng tinh dầu nguyên chất từ thực vật, không có hương liệu tổng hợp.</p>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon">◇</div>
+                    <h4>Làm Bằng Tay</h4>
+                    <p>Mỗi nến được đổ tay bởi các nghệ nhân tài năng với nhiều năm kinh nghiệm.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+<!-- Footer will be loaded here -->
+
+<script src="js/components.js"></script>
+</body>
+</html>

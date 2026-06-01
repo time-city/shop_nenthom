@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông Tin Cá Nhân - ChamCham</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/profile.css">
+
+    <style>
+        /* Profile-specific guard should run before any render */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <div class="profile-page" id="profilePage">
+        <div class="profile-header">
+            <div class="profile-avatar" id="profileAvatar" aria-hidden="true">CC</div>
+            <div class="profile-info">
+                <div class="profile-name" id="profileName">User</div>
+                <div class="profile-email" id="profileEmail">user@example.com</div>
+                <div class="profile-badge"><span class="badge-star">✦</span> THÀNH VIÊN</div>
+            </div>
+
+            <div class="profile-tabs" role="tablist" aria-label="Navigation">
+                <button class="profile-tab" type="button" id="tabProfile" role="tab" aria-selected="false" data-target="profile.html">Thông Tin Cá Nhân</button>
+                <button class="profile-tab" type="button" id="tabOrders" role="tab" aria-selected="false" data-target="orders.html">Lịch Sử Đơn Hàng</button>
+            </div>
+        </div>
+
+        <div class="profile-card" id="profileCard">
+            <h2 class="card-title">Thông Tin Cá Nhân</h2>
+
+            <form id="profileForm" autocomplete="off">
+                <div class="profile-grid">
+                    <div class="field">
+                        <label for="fullname">Họ và Tên</label>
+                        <input type="text" id="fullname" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="phone">Số Điện Thoại</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="city">Thành Phố</label>
+                        <input type="text" id="city" required>
+                    </div>
+
+                    <div class="field field-full">
+                        <label for="address">Địa Chỉ Giao Hàng</label>
+                        <input type="text" id="address" required>
+                    </div>
+
+                    <div class="field field-full">
+                        <label for="zip">Mã Bưu Chính</label>
+                        <input type="text" id="zip" required>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <button type="submit" class="btn-primary">Lưu Thay Đổi</button>
+                    <button type="button" class="btn-secondary" id="changePasswordBtn">Đổi Mật Khẩu</button>
+                </div>
+            </form>
+
+            <div class="toast" id="toast" aria-live="polite">
+                <span class="toast-check">✓</span>
+                <span>Đã lưu thay đổi</span>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="js/components.js"></script>
+<script src="js/profile.js"></script>
+<script>
+    // Tab active state for this page
+    (function(){
+        const tabProfile = document.getElementById('tabProfile');
+        const tabOrders = document.getElementById('tabOrders');
+        if (tabProfile) {
+            tabProfile.setAttribute('aria-selected', 'true');
+            tabProfile.classList.add('active');
+        }
+        if (tabOrders) {
+            tabOrders.setAttribute('aria-selected', 'false');
+        }
+    })();
+</script>
+</body>
+</html>
+

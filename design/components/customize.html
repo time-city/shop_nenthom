@@ -1,0 +1,128 @@
+<section id="customize" class="page-section fade-section">
+  <div class="section-title">Tạo nến của bạn</div>
+  <div class="section-sub">Chọn từng thành phần</div>
+
+  <div class="configurator">
+    <div class="config-panel">
+      <h3>Thành phần</h3>
+
+      <div class="option-group">
+        <div class="option-label">Hương thơm</div>
+        <div class="options" id="scent-opts">
+          <button class="opt scent-chip active" data-scent="Santal 33" data-desc="Gỗ đàn hương, da thuộc, sang trọng" data-color="#D4A574" onclick="selectScent(this, 'Santal 33', 'Gỗ đàn hương, da thuộc, sang trọng', '#D4A574')">
+            <span class="scent-dot" style="background:#D4A574;"></span>Santal 33
+          </button>
+          <button class="opt scent-chip" data-scent="Aquamarine" data-desc="Biển xanh, tươi mát, khoáng đạt" data-color="#7EC8C8" onclick="selectScent(this, 'Aquamarine', 'Biển xanh, tươi mát, khoáng đạt', '#7EC8C8')">
+            <span class="scent-dot" style="background:#7EC8C8;"></span>Aquamarine
+          </button>
+          <button class="opt scent-chip" data-scent="Orchid & Sea Salt" data-desc="Hoa lan quyến rũ, muối biển nhẹ nhàng" data-color="#C9A0C0" onclick="selectScent(this, 'Orchid & Sea Salt', 'Hoa lan quyến rũ, muối biển nhẹ nhàng', '#C9A0C0')">
+            <span class="scent-dot" style="background:#C9A0C0;"></span>Orchid & Sea Salt
+          </button>
+          <button class="opt scent-chip" data-scent="Oakmoss Amber" data-desc="Rêu rừng, hổ phách ấm, trầm sâu" data-color="#8B7355" onclick="selectScent(this, 'Oakmoss Amber', 'Rêu rừng, hổ phách ấm, trầm sâu', '#8B7355')">
+            <span class="scent-dot" style="background:#8B7355;"></span>Oakmoss Amber
+          </button>
+          <button class="opt scent-chip" data-scent="Incense Villages" data-desc="Trầm hương làng cổ, khói nhẹ, hoài niệm" data-color="#C4956A" onclick="selectScent(this, 'Incense Villages', 'Trầm hương làng cổ, khói nhẹ, hoài niệm', '#C4956A')">
+            <span class="scent-dot" style="background:#C4956A;"></span>Incense Villages
+          </button>
+          <button class="opt scent-chip" data-scent="Campfire" data-desc="Lửa trại, gỗ cháy, khói thông" data-color="#C4622A" onclick="selectScent(this, 'Campfire', 'Lửa trại, gỗ cháy, khói thông', '#C4622A')">
+            <span class="scent-dot" style="background:#C4622A;"></span>Campfire
+          </button>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <div class="option-label">Màu sáp</div>
+        <div class="color-opts" id="color-opts">
+          <div class="color-dot active" style="background:#F5ECD8" onclick="selectColor(this,'#F5ECD8','Kem')" title="Kem"></div>
+          <div class="color-dot" style="background:#E8C878" onclick="selectColor(this,'#E8C878','Mật ong')" title="Mật ong"></div>
+          <div class="color-dot" style="background:#E8B4A0" onclick="selectColor(this,'#E8B4A0','Hồng phấn')" title="Hồng phấn"></div>
+          <div class="color-dot" style="background:#C87878" onclick="selectColor(this,'#C87878','Đỏ hồng')" title="Đỏ hồng"></div>
+          <div class="color-dot" style="background:#A07850" onclick="selectColor(this,'#A07850','Nâu đất')" title="Nâu đất"></div>
+          <div class="color-dot" style="background:#3C2820" onclick="selectColor(this,'#3C2820','Đen khói')" title="Đen khói"></div>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <div class="option-label">Kích thước</div>
+        <div class="options" id="size-opts">
+          <button class="opt active" onclick="selectOpt(this,'size','S — 100g');updatePrice()">S — 100g</button>
+          <button class="opt" onclick="selectOpt(this,'size','M — 200g');updatePrice()">M — 200g</button>
+          <button class="opt" onclick="selectOpt(this,'size','L — 350g');updatePrice()">L — 350g</button>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <div class="option-label">Bao bì</div>
+        <div class="options" id="pack-opts">
+          <button class="opt active" onclick="selectOpt(this,'pack','Hộp trắng')">Hộp trắng</button>
+          <button class="opt" onclick="selectOpt(this,'pack','Hộp đen')">Hộp đen</button>
+          <button class="opt" onclick="selectOpt(this,'pack','Không hộp')">Không hộp</button>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <div class="option-label">Topping</div>
+        <div class="options" id="topping-opts">
+          <button class="opt topping-chip" data-topping="Socola" data-price="15000" onclick="selectTopping(this, 'Socola', 15000)">
+            <span class="topping-check">☐</span>Socola
+          </button>
+          <button class="opt topping-chip" data-topping="Trái tim lớn" data-price="20000" onclick="selectTopping(this, 'Trái tim lớn', 20000)">
+            <span class="topping-check">☐</span>Trái tim lớn
+          </button>
+          <button class="opt topping-chip" data-topping="Trái tim vừa" data-price="15000" onclick="selectTopping(this, 'Trái tim vừa', 15000)">
+            <span class="topping-check">☐</span>Trái tim vừa
+          </button>
+          <button class="opt topping-chip" data-topping="Trái tim nhỏ" data-price="10000" onclick="selectTopping(this, 'Trái tim nhỏ', 10000)">
+            <span class="topping-check">☐</span>Trái tim nhỏ
+          </button>
+          <button class="opt topping-chip" data-topping="Hoa hồng khô" data-price="25000" onclick="selectTopping(this, 'Hoa hồng khô', 25000)">
+            <span class="topping-check">☐</span>Hoa hồng khô
+          </button>
+          <button class="opt topping-chip" data-topping="Hoa mẫu đơn khô" data-price="25000" onclick="selectTopping(this, 'Hoa mẫu đơn khô', 25000)">
+            <span class="topping-check">☐</span>Hoa mẫu đơn khô
+          </button>
+          <button class="opt topping-chip" data-topping="Strawberry sấy" data-price="20000" onclick="selectTopping(this, 'Strawberry sấy', 20000)">
+            <span class="topping-check">☐</span>Strawberry sấy
+          </button>
+          <button class="opt topping-chip" data-topping="Việt quất sấy" data-price="20000" onclick="selectTopping(this, 'Việt quất sấy', 20000)">
+            <span class="topping-check">☐</span>Việt quất sấy
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="preview-box">
+        <div class="mini-candle" id="mini-candle" style="background:linear-gradient(105deg,#e8ddd0,#f5ede3 40%,#c8b89a)">
+          <div class="mini-wick"></div>
+          <div class="mini-flame"></div>
+        </div>
+        <div class="preview-name" id="prev-name">Santal 33</div>
+        <div class="preview-desc" id="prev-desc">Gỗ đàn hương, da thuộc, sang trọng</div>
+        <div class="preview-divider"></div>
+        <div class="preview-details">
+          <div class="preview-detail-row"><span class="detail-label">Kích thước:</span> <span id="prev-size">S — 100g</span></div>
+          <div class="preview-detail-row"><span class="detail-label">Màu sáp:</span> <span id="prev-color">Kem</span></div>
+          <div class="preview-detail-row"><span class="detail-label">Bao bì:</span> <span id="prev-pack">Hộp trắng</span></div>
+        </div>
+        <div class="preview-divider"></div>
+        <div class="preview-toppings" id="preview-toppings">
+          <div class="topping-list" id="topping-list">
+            <div class="no-topping">Chưa chọn topping</div>
+          </div>
+        </div>
+        <div class="preview-divider"></div>
+        <div class="preview-price-breakdown" id="price-breakdown">
+          <div class="price-line"><span>Nến S:</span> <span>189.000đ</span></div>
+          <div class="price-total">
+            <span>Tổng:</span> <span id="price-display">189.000đ</span>
+          </div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price" id="price-display">189.000đ</div>
+        <button class="add-btn" onclick="addToCart()">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+</section>

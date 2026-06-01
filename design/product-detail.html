@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Sản Phẩm - ChamCham</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/candle.css">
+    
+    <style>
+        body {
+            background: #F2E8D9;
+            color: #2C1810;
+        }
+
+        .product-detail-container {
+            min-height: 100vh;
+            padding: 5rem 2rem;
+            padding-top: 8rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .product-detail-container .btn-secondary {
+            background: transparent;
+            border: none;
+            color: #6B4C35;
+            padding: 0;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .product-detail-container .btn-secondary:hover {
+            color: #6B1218;
+            background: transparent;
+        }
+
+        .product-detail-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: start;
+            background: #F8F0E4;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 2.5rem;
+        }
+
+        .product-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .product-candle-preview {
+            width: 100%;
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #F8F0E4;
+            padding: 2rem;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+        }
+
+        .candle-preview {
+            width: 180px;
+            height: 240px;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-info h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: #2C1810;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-scent {
+            color: #6B4C35;
+            font-size: 0.8rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .product-price {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #6B1218;
+            margin-bottom: 1.5rem;
+        }
+
+        .product-note {
+            color: #6B4C35;
+            font-style: italic;
+            font-weight: 300;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .detail-section,
+        .quantity-control {
+            border-top: 1px solid rgba(107, 78, 53, 0.15);
+            padding-top: 1.25rem;
+        }
+
+        .detail-section {
+            margin-bottom: 3rem;
+        }
+
+        .detail-label {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: #6B4C35;
+            margin-bottom: 1rem;
+        }
+
+        .options-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .option-btn {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid rgba(107, 78, 53, 0.3);
+            background: #F8F0E4;
+            color: #2C1810;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .option-btn:hover {
+            border-color: #6B1218;
+            color: #6B1218;
+        }
+
+        .option-btn.active {
+            background: #6B1218;
+            color: #F5F0E8;
+            border-color: #6B1218;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .qty-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(107, 78, 53, 0.3);
+            background: #F8F0E4;
+            color: #2C1810;
+            cursor: pointer;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .qty-btn:hover {
+            border-color: #6B1218;
+            color: #6B1218;
+        }
+
+        .qty-display {
+            min-width: 60px;
+            text-align: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #2C1810;
+        }
+
+        .btn-add-cart {
+            width: 100%;
+            padding: 1rem;
+            background: #6B1218;
+            color: #F5F0E8;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+            border-radius: 999px;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 24px rgba(107, 18, 24, 0.3);
+        }
+
+        .btn-add-cart:hover {
+            background: #4A0C10;
+        }
+
+        .btn-continue-shopping {
+            width: 100%;
+            padding: 1rem;
+            background: transparent;
+            color: #6B1218;
+            border: 1px solid #6B1218;
+            cursor: pointer;
+            font-size: 0.95rem;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+            border-radius: 999px;
+        }
+
+        .btn-continue-shopping:hover {
+            background: #6B1218;
+            color: #F5F0E8;
+        }
+
+        .description-tabs {
+            margin-top: 4rem;
+            background: #F2E8D9;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+            border-top: 1px solid rgba(107, 78, 53, 0.15);
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(107, 78, 53, 0.15);
+            padding-bottom: 1rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: #6B4C35;
+            padding: 0.5rem 0;
+            position: relative;
+            transition: color 0.3s ease;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .tab-btn.active {
+            color: #6B1218;
+            font-weight: 500;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #6B1218;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+            color: #2C1810;
+            line-height: 1.8;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .product-detail-wrapper {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .product-detail-wrapper,
+            .description-tabs {
+                padding: 1.5rem;
+            }
+
+            .product-info h1 {
+                font-size: 1.5rem;
+            }
+
+            .product-price {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body class="intro-ready">
+
+<main>
+    <div class="product-detail-container">
+        <a href="index.html#collection" class="btn-secondary" style="display: inline-block; margin-bottom: 2rem;">← Quay lại</a>
+
+        <div class="product-detail-wrapper">
+            <!-- Product Visual -->
+            <div class="product-visual">
+                <div class="product-candle-preview">
+                    <div class="candle-preview" id="product-candle"></div>
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+                <h1 id="product-name">Vanilla Elegance</h1>
+                <p class="product-scent" id="product-category">Sweet</p>
+                <p class="product-price"><span id="product-price">250</span>đ</p>
+                <p class="product-note" id="product-note">Vanilla, Amber, Musk</p>
+
+                <!-- Options -->
+                <div class="detail-section">
+                    <div class="detail-label">Kích thước</div>
+                    <div class="options-group" id="size-options">
+                        <button class="option-btn active" data-size="100g" onclick="selectSize(this)">S — 100g</button>
+                        <button class="option-btn" data-size="200g" onclick="selectSize(this)">M — 200g</button>
+                        <button class="option-btn" data-size="350g" onclick="selectSize(this)">L — 350g</button>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-label">Màu sáp</div>
+                    <div class="options-group" id="color-options">
+                        <button class="option-btn active" data-color="cream" onclick="selectColor(this)">Kem</button>
+                        <button class="option-btn" data-color="honey" onclick="selectColor(this)">Mật ong</button>
+                        <button class="option-btn" data-color="sage" onclick="selectColor(this)">Sage</button>
+                        <button class="option-btn" data-color="rose" onclick="selectColor(this)">Rose</button>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-label">Bao bì</div>
+                    <div class="options-group" id="packaging-options">
+                        <button class="option-btn active" data-packaging="box-white" onclick="selectPackaging(this)">Hộp trắng</button>
+                        <button class="option-btn" data-packaging="box-black" onclick="selectPackaging(this)">Hộp đen</button>
+                        <button class="option-btn" data-packaging="none" onclick="selectPackaging(this)">Không hộp</button>
+                    </div>
+                </div>
+
+                <!-- Quantity -->
+                <div class="detail-section">
+                    <div class="detail-label">Số lượng</div>
+                    <div class="quantity-control">
+                        <button class="qty-btn" onclick="decreaseQty()">−</button>
+                        <div class="qty-display" id="quantity">1</div>
+                        <button class="qty-btn" onclick="increaseQty()">+</button>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <button class="btn-add-cart" onclick="addToCart()">Thêm vào giỏ</button>
+                <button class="btn-continue-shopping" onclick="window.location.href='index.html#collection'">Tiếp tục mua sắm</button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="description-tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab(this, 'description')">Mô tả</button>
+                <button class="tab-btn" onclick="switchTab(this, 'ingredients')">Thành phần</button>
+                <button class="tab-btn" onclick="switchTab(this, 'usage')">Cách sử dụng</button>
+            </div>
+
+            <div id="description" class="tab-content active">
+                <p>Nến thơm ChamCham được làm từ sáp đậu nành 100% tự nhiên, an toàn cho gia đình bạn. Mỗi sản phẩm là một tác phẩm độc lập, được tạo ra với tỉ mỉ và sự chuyên tâm.</p>
+                <p style="margin-top: 1rem;">Hương thơm lâu dài, mềm mại và tinh tế sẽ mang lại cảm giác thư giãn và yên bình cho không gian sống của bạn.</p>
+            </div>
+
+            <div id="ingredients" class="tab-content">
+                <p><strong>Thành phần chính:</strong></p>
+                <p id="tab-ingredients">Sáp đậu nành, tinh dầu thiên nhiên, nước hoa tự nhiên</p>
+            </div>
+
+            <div id="usage" class="tab-content">
+                <p><strong>Hướng dẫn sử dụng:</strong></p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li>Đốt nến trong phòng có diện tích 30-50m²</li>
+                    <li>Thời gian đốt lý tưởng: 3-4 giờ liên tục</li>
+                    <li>Để nến ở nơi thoáng mát, tránh gió</li>
+                    <li>Tắt đèn khi bạn rời khỏi phòng</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Navigation and Footer will be loaded here -->
+
+<script src="js/collection.js"></script>
+<script src="js/product-detail.js"></script>
+<script src="js/components.js"></script>
+<script src="js/utils.js"></script>
+</body>
+</html>

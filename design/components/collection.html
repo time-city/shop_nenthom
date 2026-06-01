@@ -1,0 +1,56 @@
+<!-- Collection Section -->
+<section id="collection" class="page-section collection-section fade-section">
+  <div class="collection-header">
+    <h2>Bộ Sưu Tập</h2>
+    <p>Khám phá những sáng tạo nến thơm được chọn lọc kỹ lưỡng</p>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="collection-filters">
+    <div class="filter-group">
+      <label for="scent-filter">Hương liệu</label>
+      <select id="scent-filter" class="filter-select">
+        <option value="">Tất cả</option>
+        <option value="Vanilla">Vanilla</option>
+        <option value="Floral">Floral</option>
+        <option value="Woody">Woody</option>
+        <option value="Fresh">Fresh</option>
+        <option value="Citrus">Citrus</option>
+        <option value="Sweet">Sweet</option>
+        <option value="Spicy">Spicy</option>
+        <option value="Oriental">Oriental</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="price-filter">Giá tiền</label>
+      <select id="price-filter" class="filter-select">
+        <option value="">Tất cả</option>
+        <option value="under-300">Dưới 300K</option>
+        <option value="300-500">300K - 500K</option>
+        <option value="500-800">500K - 800K</option>
+        <option value="over-800">Trên 800K</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="search-filter">Tìm kiếm</label>
+      <input type="text" id="search-filter" class="filter-input" placeholder="Nhập tên sản phẩm...">
+    </div>
+
+    <button class="btn-reset-filters" onclick="resetCollectionFilters()">Xóa bộ lọc</button>
+  </div>
+
+  <div class="collection-grid" id="collection-grid">
+    <!-- Products will be dynamically rendered here -->
+  </div>
+
+  <div class="no-results" id="no-results" style="display: none;">
+    <p>Không tìm thấy sản phẩm phù hợp</p>
+  </div>
+
+  <!-- Pagination -->
+  <div class="collection-pagination" id="collection-pagination">
+    <!-- Pagination buttons will be rendered here -->
+  </div>
+</section>

@@ -1,0 +1,202 @@
+/* ============================================
+   ChamCham - Hero Section
+   ============================================ */
+
+.hero {
+    min-height: 100vh;
+    background: var(--color-primary);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding: 0 4rem;
+    gap: 4rem;
+    padding-top: 5rem;
+}
+
+.hero-text h1 {
+    font-family: var(--font-display);
+    font-size: 4.5rem;
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    color: var(--color-text-light);
+}
+
+
+.hero-text h1 em {
+    font-style: italic;
+    color: var(--color-cream);
+}
+
+
+.hero-text p {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: rgba(245, 240, 232, 0.8);
+    max-width: 380px;
+    margin-bottom: 2.5rem;
+}
+
+
+.btn-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.btn-primary {
+    background: var(--color-cream);
+    color: var(--color-dark);
+    font-family: var(--font-body);
+    font-weight: var(--fw-medium);
+    font-size: var(--fs-sm);
+    letter-spacing: var(--ls-wider);
+    text-transform: uppercase;
+    padding: 14px 36px;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary:hover {
+    background: var(--color-cream-warm);
+    color: var(--color-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+}
+
+
+.btn-secondary {
+    background: transparent;
+    color: var(--color-text-light);
+    font-family: var(--font-body);
+    font-weight: var(--fw-medium);
+    font-size: var(--fs-sm);
+    letter-spacing: var(--ls-wider);
+    text-transform: uppercase;
+    padding: 13px 34px;
+    border: 1.5px solid rgba(245, 240, 232, 0.45);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(245, 240, 232, 0.08);
+    color: var(--color-text-light);
+    transform: translateY(-2px);
+}
+
+
+/* ============================================
+   Responsive Hero Section
+   ============================================ */
+
+/* Mobile */
+@media (max-width: 767px) {
+    .hero {
+        min-height: auto;
+        display: flex;
+        flex-direction: column;
+        padding: 3rem 1.5rem 2rem;
+        gap: 2.5rem;
+        padding-top: 6.5rem;
+    }
+
+    .hero-text {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .hero-text h1 {
+        font-size: clamp(2rem, 7vw, 2.5rem);
+        line-height: 1.25;
+        margin-bottom: 1.2rem;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+        text-align: center;
+    }
+    
+    .hero-text p {
+        font-size: 0.9rem;
+        line-height: 1.7;
+        max-width: 480px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 1.8rem;
+        text-align: center;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        gap: 0.8rem;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-primary, .btn-secondary {
+        padding: 13px 24px;
+        font-size: 0.8rem;
+        width: 100%;
+        max-width: 280px;
+        text-align: center;
+    }
+    
+    .candle-scene {
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-top: 1rem;
+    }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .hero {
+        min-height: 90vh;
+        grid-template-columns: 1fr 1fr;
+        padding: 2rem;
+        gap: 2rem;
+        padding-top: 5rem;
+    }
+    
+    .hero-text h1 {
+        font-size: 3rem;
+    }
+    
+    .hero-text p {
+        font-size: 0.9rem;
+        max-width: 100%;
+    }
+    
+    .btn-group {
+        flex-wrap: wrap;
+    }
+    
+    .scent-tags {
+        right: -40px;
+        top: 60px;
+    }
+    
+    .tag {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.6rem;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .hero {
+        min-height: 100vh;
+        grid-template-columns: 1fr 1fr;
+        padding: 0 4rem;
+        gap: 4rem;
+        padding-top: 5rem;
+    }
+}

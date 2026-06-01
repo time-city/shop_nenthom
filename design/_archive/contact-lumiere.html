@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liên Hệ - ChamCham</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/footer.css">
+    
+    <style>
+        .hero-contact {
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 5rem 4rem;
+            padding-top: 8rem;
+        }
+        
+        .hero-contact h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.5rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+            color: #1a1814;
+        }
+        
+        .contact-section {
+            padding: 5rem 4rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: start;
+            background: linear-gradient(135deg, rgba(212, 197, 176, 0.08) 0%, rgba(201, 212, 197, 0.08) 100%);
+            border-radius: 2px;
+            margin: 0 2rem;
+        }
+        
+        .contact-form {
+            max-width: 500px;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 2px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        
+        .contact-form h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            color: #1a1814;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #8B7355;
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #e0d8ce;
+            background: rgba(245, 237, 227, 0.5);
+            font-family: 'DM Sans', sans-serif;
+            color: #1a1814;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            border-radius: 2px;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #ccc;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #8B7355;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.08);
+        }        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .submit-btn {
+            background: #1a1814;
+            color: #FAF8F5;
+            border: none;
+            padding: 0.9rem 2rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            border-radius: 2px;
+        }
+
+        .submit-btn:hover {
+            background: #3d3830;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 24, 20, 0.15);
+        }        .contact-info {
+            padding-top: 2rem;
+        }
+        
+        .contact-info h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            color: #1a1814;
+        }
+        
+        .info-item {
+            margin-bottom: 2.5rem;
+        }
+        
+        .info-label {
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #8B7355;
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+        }
+        
+        .info-text {
+            font-size: 1rem;
+            color: #1a1814;
+            margin-bottom: 0.3rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+        }
+        
+        .info-desc {
+            font-size: 0.88rem;
+            color: #6b6660;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e0d8ce;
+        }
+        
+        .social-links a {
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #8B7355;
+            transition: color 0.2s;
+        }
+        
+        .social-links a:hover {
+            color: #1a1814;
+        }
+        
+        .faq-section {
+            background: #fff;
+            padding: 5rem 4rem;
+        }
+        
+        .faq-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .faq-item {
+            padding: 1.5rem;
+            border: 1px solid #e0d8ce;
+            background: #fafaf8;
+        }
+        
+        .faq-item h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 300;
+            color: #1a1814;
+            margin-bottom: 0.8rem;
+        }
+        
+        .faq-item p {
+            font-size: 0.88rem;
+            color: #6b6660;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation will be loaded here -->
+<main>
+    <section class="hero-contact">
+        <h1>Liên Hệ Với Chúng Tôi</h1>
+        <p>Có câu hỏi? Chúng tôi luôn sẵn sàng lắng nghe. Hãy để lại lời nhắn hoặc liên hệ trực tiếp.</p>
+    </section>
+
+    <section class="contact-section">
+        <div class="contact-form">
+            <h2>Gửi Lời Nhắn</h2>
+            <form id="contactForm">
+                <div class="form-group">
+                    <label for="name">Tên của bạn</label>
+                    <input type="text" id="name" name="name" placeholder="Nhập tên" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="subject">Chủ đề</label>
+                    <input type="text" id="subject" name="subject" placeholder="Chủ đề của bạn">
+                </div>
+                <div class="form-group">
+                    <label for="message">Tin nhắn</label>
+                    <textarea id="message" name="message" placeholder="Nội dung tin nhắn..." required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Gửi Tin Nhắn</button>
+            </form>
+        </div>
+
+        <div class="contact-info">
+            <h2>Thông Tin Liên Hệ</h2>
+            
+            <div class="info-item">
+                <div class="info-label">Email</div>
+                <div class="info-text">hello@lumiere.vn</div>
+                <div class="info-desc">Chúng tôi sẽ trả lời trong 24 giờ</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Điện Thoại</div>
+                <div class="info-text">+84 (0) 123 456 789</div>
+                <div class="info-desc">Thứ 2 - Thứ 6, 9:00 - 18:00 (Giờ Hà Nội)</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Địa Chỉ Studio</div>
+                <div class="info-text">Hà Nội, Việt Nam</div>
+                <div class="info-desc">Chúng tôi làm việc theo lịch hẹn</div>
+            </div>
+            
+            <div class="social-links">
+                <a href="#" target="_blank">Instagram</a>
+                <a href="#" target="_blank">Shopee</a>
+                <a href="#" target="_blank">Tiktok</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="faq-section">
+        <div style="max-width: 1000px; margin: 0 auto;">
+            <div class="section-title">Câu Hỏi Thường Gặp</div>
+            <div class="section-sub">Những thắc mắc phổ biến</div>
+            
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h3>Nến có thể cháy bao lâu?</h3>
+                    <p>Nến ChamCham có thời gian cháy từ 30-50 giờ tùy vào kích thước. Nến size L có thể cháy khoảng 50 giờ nếu sử dụng đúng cách.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Làm sao để nến cháy lâu?</h3>
+                    <p>Cắt tim nến thành 0.5cm trước mỗi lần sử dụng, tránh nến cháy quá 4 giờ liên tục, và để nến trong nơi không có gió.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Bao lâu thì nhận được hàng?</h3>
+                    <p>Nến được đóng gói trong 2-3 ngày làm việc. Giao hàng trong thành phố trong 2-3 ngày, ngoài thành phố từ 3-7 ngày.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Có thể đổi trả không?</h3>
+                    <p>Chúng tôi hỗ trợ đổi nến trong 30 ngày nếu sản phẩm bị lỗi. Nến đã sử dụng không thể đổi trả.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Hương có thể được tùy chỉnh?</h3>
+                    <p>Có! Chúng tôi cung cấp 6 hương tiêu chuẩn và có thể tạo hương đặc biệt theo yêu cầu. Liên hệ để tìm hiểu thêm.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Nến có an toàn cho trẻ em?</h3>
+                    <p>Nến ChamCham được làm từ nguyên liệu tự nhiên nhưng vẫn chứa lửa. Hãy để nến nơi trẻ em không thể tiếp cận được.</p>
+                </div>
+            </div>
+        </div>
+
+    </section>
+</main>
+<!-- Footer will be loaded here -->
+
+<script src="js/components.js"></script>
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Cảm ơn bạn đã liên hệ! Chúng tôi sẽ trả lời sớm nhất có thể.');
+            this.reset();
+        });
+    </script>
+</body>
+</html>

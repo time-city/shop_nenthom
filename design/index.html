@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChamCham - Nến Thơm Tùy Chỉnh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/hero.css">
+    <link rel="stylesheet" href="css/candle.css">
+    <link rel="stylesheet" href="css/configurator.css">
+    <link rel="stylesheet" href="css/features.css">
+    <link rel="stylesheet" href="css/banner.css">
+    <link rel="stylesheet" href="css/collection.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/page-sections.css">
+    <link rel="stylesheet" href="css/intro.css">
+    <link rel="stylesheet" href="css/floating-cta.css">
+</head>
+<body class="intro-playing">
+
+<div class="intro-overlay" aria-hidden="true">
+  <div class="intro-core">
+    <div class="intro-flame-wrap">
+      <div class="intro-glow"></div>
+      <div class="intro-flame"></div>
+      <div class="intro-wick"></div>
+    </div>
+
+    <div class="intro-candle-scene">
+      <div class="intro-garden">
+        <span class="garden-candle garden-candle-left-far"></span>
+        <span class="garden-candle garden-candle-left-near"></span>
+        <span class="garden-candle garden-candle-center-back"></span>
+        <span class="garden-candle garden-candle-center-front"></span>
+        <span class="garden-candle garden-candle-right-near"></span>
+        <span class="garden-candle garden-candle-right-far"></span>
+        <span class="garden-candle garden-candle-back-top"></span>
+      </div>
+
+      <div class="intro-candle-jar">
+        <div class="intro-candle-light"></div>
+        <div class="intro-candle-lip"></div>
+        <div class="intro-candle-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Navigation will be loaded here -->
+<main>
+<section id="home" class="hero fade-section">
+  <div class="hero-text">
+    <h1>Nến thơm<br><em>thuần khiết,</em><br>dành riêng<br>cho bạn</h1>
+    <p>Tự tạo nên thơm của riêng mình — chọn hương, màu sáp, kích thước và bao bì theo phong cách tối giản độc đáo.</p>
+    <div class="btn-group">
+      <button class="btn-primary" onclick="document.getElementById('customize').scrollIntoView({behavior:'smooth'})">Tùy chỉnh ngay</button>
+      <button class="btn-secondary" onclick="document.getElementById('collection').scrollIntoView({behavior:'smooth'})">Xem bộ sưu tập</button>
+    </div>
+  </div>
+  <div class="candle-scene">
+    <div class="candle-3d">
+      <div class="glow"></div>
+      <div class="flame">
+        <div class="flame-outer"></div>
+        <div class="flame-inner"></div>
+      </div>
+      <div class="wick"></div>
+      <div class="candle-body">
+        <div class="candle-top"></div>
+      </div>
+      <div class="shadow-ground"></div>
+    </div>
+    <div class="scent-tags">
+      <div class="tag">Vanilla & Cedar</div>
+      <div class="tag">Linen & Sage</div>
+      <div class="tag">Oud & Amber</div>
+    </div>
+  </div>
+</section>
+
+<!-- Banner Slider -->
+<div class="banner-slider">
+  <div class="slider-container"></div>
+  <button class="slider-nav slider-prev">&#10094;</button>
+  <button class="slider-nav slider-next">&#10095;</button>
+  <div class="dots"></div>
+</div>
+
+<!-- Sections will be loaded by components.js -->
+
+</main>
+
+<!-- Footer will be loaded here -->
+
+<script src="js/components.js"></script>
+<script src="js/scroll-animations.js"></script>
+<script src="js/intro.js"></script>
+<script src="js/collection.js"></script>
+<script src="js/banner-slider.js"></script>
+<script src="js/state.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/ui-controls.js"></script>
+<script src="js/floating-cta.js"></script>
+</body>
+</html>
+

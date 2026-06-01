@@ -1,0 +1,206 @@
+.auth-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 1.25rem 2rem;
+    background: var(--color-primary);
+    padding-top: 7.5rem;
+}
+
+.auth-card {
+    max-height: calc(100vh - 9rem);
+    overflow: auto;
+    padding: 3rem;
+    background: var(--color-cream);
+    max-width: 760px;
+    width: 100%;
+    border: 1px solid rgba(44, 24, 16, 0.1);
+    border-radius: 16px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.auth-card,
+.auth-card input,
+.auth-card label,
+.auth-card p,
+.auth-card .subtitle,
+.auth-card .password-requirements {
+    font-weight: 400;
+    color: var(--color-brown);
+}
+
+.auth-card h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    font-weight: 300;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    color: var(--color-brown);
+}
+
+.auth-card .subtitle {
+    text-align: center;
+    font-size: 0.88rem;
+    color: rgba(44, 24, 16, 0.72);
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    align-items: start;
+}
+
+.form-grid .form-group.full {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-brown);
+    margin-bottom: 0.5rem;
+    font-weight: 400;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid rgba(44, 24, 16, 0.18);
+    background: var(--color-cream-warm);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--color-brown);
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.form-group input::placeholder {
+    color: rgba(44, 24, 16, 0.4);
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(107, 18, 24, 0.08);
+}
+
+.password-requirements {
+    font-size: 0.75rem;
+    color: var(--color-primary);
+    margin-top: 0.3rem;
+    line-height: 1.4;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: flex-start;
+    font-size: 0.85rem;
+    color: rgba(44, 24, 16, 0.72);
+    margin-bottom: 1.5rem;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-right: 0.5rem;
+    margin-top: 0.2rem;
+    cursor: pointer;
+}
+
+.checkbox-group label {
+    cursor: pointer;
+    flex: 1;
+}
+
+.submit-btn {
+    width: 100%;
+    background: var(--color-primary);
+    color: var(--color-text-light);
+    border: none;
+    padding: 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-bottom: 1rem;
+}
+
+.auth-back-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-primary);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+}
+
+.auth-back-btn:hover {
+    opacity: 0.85;
+}
+
+.submit-btn:hover {
+    background: var(--color-primary-dark);
+}
+
+.divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    font-size: 0.85rem;
+    color: rgba(44, 24, 16, 0.45);
+}
+
+.auth-links {
+    text-align: center;
+}
+
+.auth-links a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.2s;
+}
+
+.auth-links a:hover {
+    color: var(--color-primary-dark);
+}
+
+.error-message {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    color: #856404;
+    padding: 0.8rem;
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    display: none;
+}
+
+.success-message {
+    background: #d4edda;
+    border: 1px solid #28a745;
+    color: #155724;
+    padding: 0.8rem;
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}

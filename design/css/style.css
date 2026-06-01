@@ -1,0 +1,69 @@
+/* Compatibility stylesheet for legacy pages */
+@import url('./global.css');
+
+:root {
+    --black: #4A0C10;
+    --maroon: #6B1218;
+    --maroon-light: #8B2028;
+    --gold: #F2E8D9;
+    --gray-900: #2C1810;
+    --gray-400: rgba(245, 240, 232, 0.78);
+    --red-900: #6B1218;
+    --red-900-light: #4A0C10;
+}
+
+.bg-black {
+    background-color: var(--color-primary-dark);
+}
+
+.text-white {
+    color: var(--color-text-light);
+}
+
+.bg-red-900 {
+    background-color: var(--color-primary);
+}
+
+.hover\:bg-red-800:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.text-yellow-600 {
+    color: var(--color-cream);
+}
+
+.hover\:text-yellow-600:hover {
+    color: var(--color-cream);
+}
+
+.text-gray-400 {
+    color: var(--gray-400);
+}
+
+.text-gray-500 {
+    color: rgba(245, 240, 232, 0.62);
+}
+
+.text-gray-900 {
+    color: var(--color-brown);
+}
+
+.bg-gray-900 {
+    background-color: var(--color-dark);
+}
+
+.bg-opacity-95 {
+    background-color: rgba(74, 12, 16, 0.95);
+}
+
+.bg-opacity-20 {
+    opacity: 0.2;
+}
+
+.border-opacity-20 {
+    opacity: 0.2;
+}
+
+.border-opacity-10 {
+    opacity: 0.1;
+}

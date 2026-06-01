@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký - ChamCham</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/register.css">
+</head>
+<body>
+<!-- Navigation will be loaded here -->
+<main>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>Đăng Ký</h1>
+            <p class="subtitle">Tạo tài khoản để lưu các sáng tạo của bạn</p>
+            
+            <div class="error-message" id="errorMsg"></div>
+            <div class="success-message" id="successMsg"></div>
+            
+            <form id="registerForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="fullname">Họ Tên</label>
+                        <input type="text" id="fullname" name="fullname" placeholder="Nguyễn Văn A" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Mật Khẩu</label>
+                        <input type="password" id="password" name="password" placeholder="••••••••" required>
+                        <div class="password-requirements">
+                            Tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường và số
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Xác Nhận Mật Khẩu</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required>
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="phone">Số Điện Thoại</label>
+                        <input type="tel" id="phone" name="phone" placeholder="0123456789" required>
+                    </div>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">Tôi đồng ý với <a href="#" style="color: #8B7355;">Điều khoản dịch vụ</a> và <a href="#" style="color: #8B7355;">Chính sách riêng tư</a></label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="newsletter" name="newsletter">
+                    <label for="newsletter">Gửi cho tôi các tin tức và ưu đãi từ ChamCham</label>
+                </div>
+                
+                <button type="submit" class="submit-btn">Tạo Tài Khoản</button>
+            </form>
+            
+            <div class="divider">hoặc</div>
+            
+            <div class="auth-links">
+                <div style="display:flex; justify-content:space-between; gap:1rem; align-items:center;">
+                    <button type="button" onclick="window.history.back()" class="auth-back-btn" aria-label="Back">←</button>
+                    <p style="margin:0; flex:1; text-align:center;">Đã có tài khoản? <a href="login.html">Đăng nhập</a></p>
+                    <div style="width:34px;"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+<!-- Footer will be loaded here -->
+
+<script src="js/components.js"></script>
+<script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fullname = document.getElementById('fullname').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const terms = document.getElementById('terms').checked;
+            const newsletter = document.getElementById('newsletter').checked;
+            
+            // Validate
+            if (!fullname || !email || !phone || !password || !confirmPassword) {
+                showError('Vui lòng điền đầy đủ thông tin');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showError('Mật khẩu phải có ít nhất 8 ký tự');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('Mật khẩu không khớp');
+                return;
+            }
+            
+            if (!terms) {
+                showError('Vui lòng đồng ý với Điều khoản dịch vụ');
+                return;
+            }
+            
+            // Simulate registration
+            const userData = {
+                fullname: fullname,
+                email: email,
+                phone: phone,
+                newsletter: newsletter,
+                registeredAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('lumiere-user', JSON.stringify(userData));
+            
+            showSuccess('Đăng ký thành công! Đang chuyển hướng...');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+        });
+        
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 4000);
+        }
+        
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+        
+
+    </script>
+</body>
+</html>

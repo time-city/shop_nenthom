@@ -1,0 +1,89 @@
+/* ============================================
+   ChamCham - Footer
+   ============================================ */
+
+footer {
+    background: var(--color-dark);
+    color: rgba(245, 240, 232, 0.8);
+    padding: 3rem 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4rem;
+}
+
+.footer-logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    height: 50px;
+    transition: opacity 0.3s ease;
+}
+
+.footer-logo-link:hover {
+    opacity: 0.85;
+}
+
+.footer-logo {
+    height: 50px;
+    width: auto;
+    max-width: 50px;
+}
+
+.footer-text {
+    font-size: 0.78rem;
+    color: rgba(245, 240, 232, 0.62);
+    letter-spacing: 0.08em;
+}
+
+/* ============================================
+   Responsive Footer
+   ============================================ */
+
+/* Mobile */
+@media (max-width: 767px) {
+    footer {
+        padding: 2rem 1.5rem;
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .footer-logo-link {
+        height: 40px;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .footer-logo {
+        height: 40px;
+        max-width: 40px;
+    }
+    
+    .footer-text {
+        font-size: 0.75rem;
+    }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+    footer {
+        padding: 2.5rem 2rem;
+    }
+    
+    .footer-logo-link {
+        height: 45px;
+    }
+    
+    .footer-logo {
+        height: 45px;
+        max-width: 45px;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    footer {
+        padding: 3rem 4rem;
+    }
+}

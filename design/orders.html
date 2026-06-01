@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Sử Đơn Hàng - ChamCham</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+<body>
+<main>
+    <div class="profile-page" id="ordersPage">
+        <div class="profile-header">
+            <div class="profile-avatar" id="profileAvatar" aria-hidden="true">CC</div>
+            <div class="profile-info">
+                <div class="profile-name" id="profileName">User</div>
+                <div class="profile-email" id="profileEmail">user@example.com</div>
+                <div class="profile-badge"><span class="badge-star">✦</span> THÀNH VIÊN</div>
+            </div>
+
+            <div class="profile-tabs" role="tablist" aria-label="Navigation">
+                <button class="profile-tab" type="button" id="tabProfile" role="tab" aria-selected="false" data-target="profile.html">Thông Tin Cá Nhân</button>
+                <button class="profile-tab" type="button" id="tabOrders" role="tab" aria-selected="false" data-target="orders.html">Lịch Sử Đơn Hàng</button>
+            </div>
+        </div>
+
+        <div class="orders-wrap">
+            <h2 class="orders-title">Lịch Sử Đơn Hàng</h2>
+            <div class="orders-list" id="ordersList"></div>
+
+            <div class="orders-empty" id="ordersEmpty" style="display:none;">
+                <div class="empty-icon">📦</div>
+                <div class="empty-text">Bạn chưa có đơn hàng nào</div>
+                <a class="empty-cta" href="index.html#collection">Khám Phá Bộ Sưu Tập</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="js/components.js"></script>
+<script src="js/orders.js"></script>
+<script>
+    (function(){
+        const tabProfile = document.getElementById('tabProfile');
+        const tabOrders = document.getElementById('tabOrders');
+        if (tabOrders) {
+            tabOrders.setAttribute('aria-selected', 'true');
+            tabOrders.classList.add('active');
+        }
+        if (tabProfile) {
+            tabProfile.setAttribute('aria-selected', 'false');
+        }
+    })();
+</script>
+</body>
+</html>
+

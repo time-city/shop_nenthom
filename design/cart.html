@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng - ChamCham</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/footer.css">
+    
+    <style>
+        body {
+            background: #F2E8D9;
+            color: #2C1810;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-section {
+            opacity: 0;
+            transition: opacity 0.8s ease-out;
+        }
+        
+        .fade-section.visible {
+            opacity: 1;
+        }
+        
+        .cart-container {
+            min-height: 100vh;
+            padding: 5rem 2rem;
+            padding-top: 8rem;
+        }
+        
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .cart-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.7rem;
+            font-weight: 700;
+            color: #2C1810;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid #6B1218;
+            width: fit-content;
+            max-width: 100%;
+        }
+
+        .cart-header a {
+            text-decoration: none;
+            color: #6B4C35;
+            font-size: 0.85rem;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            transition: color 0.2s ease;
+        }
+        
+        .cart-header a {
+            font-size: 0.85rem;
+        }
+
+        /* hide optional pack line if undefined */
+        .pack-line {
+            display: none;
+        }
+
+        .cart-header a:hover {
+            color: #6B1218;
+        }
+        
+        .cart-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        
+        .empty-cart {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .empty-cart-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: rgba(107, 78, 53, 0.35);
+        }
+        
+        .empty-cart p {
+            font-size: 1rem;
+            color: #6B4C35;
+            margin-bottom: 2rem;
+        }
+        
+        .empty-cart a {
+            display: inline-block;
+            background: #6B1218;
+            color: #F5F0E8;
+            padding: 0.8rem 2rem;
+            text-decoration: none;
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            transition: background 0.2s;
+            border-radius: 999px;
+            box-shadow: 0 10px 24px rgba(107, 18, 24, 0.28);
+        }
+        
+        .empty-cart a:hover {
+            background: #4A0C10;
+        }
+        
+        .cart-items {
+            background: #F8F0E4;
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 12px 28px rgba(44, 24, 16, 0.08);
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .cart-item {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(107, 78, 53, 0.15);
+            align-items: start;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-image {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #F5E7C9 0%, #F8F0E4 45%, #EAD7B0 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8B5E3C;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .item-image::before {
+            content: '🕯';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+        
+        .item-details h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #2C1810;
+            margin-bottom: 0.5rem;
+        }
+        
+        .item-details p {
+            font-size: 0.84rem;
+            color: #6B4C35;
+            margin-bottom: 0.3rem;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+        }
+        
+        .item-price {
+            text-align: right;
+        }
+        
+        .item-price .price {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            color: #6B1218;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(107, 78, 53, 0.20);
+            width: fit-content;
+            margin-left: auto;
+            border-radius: 999px;
+            background: #F8F0E4;
+            padding: 2px;
+        }
+
+        .quantity-control button {
+            background: #F8F0E4;
+            border: 1px solid rgba(107,18,24,0.20);
+            padding: 0.25rem 0.65rem;
+            cursor: pointer;
+            color: #2C1810;
+            font-size: 1rem;
+            border-radius: 999px;
+            transition: all 0.2s ease;
+        }
+
+        .quantity-control button:hover {
+            background: #6B1218;
+            color: #F5F0E8;
+            border-color: rgba(107,18,24,0.65);
+            transform: translateY(-1px);
+        }
+        
+        .quantity-control input {
+            width: 40px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 0.9rem;
+            color: #2C1810;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700;
+        }
+        
+        .remove-btn {
+            background: transparent;
+            border: none;
+            color: #6B1218;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 400;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        
+        .remove-btn:hover {
+            color: #4A0C10;
+            text-decoration: underline;
+        }
+
+        .remove-btn .trash {
+            margin-right: 0.35rem;
+            font-size: 0.95rem;
+            color: #6B1218;
+        }
+        
+        .cart-summary {
+            background: #F8F0E4;
+            border: none;
+            border-radius: 14px;
+            padding: 2rem;
+            height: fit-content;
+            box-shadow: 0 12px 28px rgba(44, 24, 16, 0.08);
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+        
+        .summary-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: #2C1810;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 0.75rem;
+        }
+
+        .summary-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40px;
+            height: 2px;
+            background: #6B1218;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            color: #6B4C35;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+        }
+        
+        .summary-row.total {
+            border-top: 1px solid rgba(107, 78, 53, 0.15);
+            padding-top: 1rem;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            color: #2C1810;
+        }
+        
+        .summary-row.total .value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            color: #6B1218;
+            font-weight: 700;
+        }
+
+        .summary-row.shipping span:last-child {
+            color: #8B5E3C;
+            font-style: italic;
+        }
+        
+        .checkout-btn {
+            width: 100%;
+            background: #6B1218;
+            color: #F5F0E8;
+            border: none;
+            padding: 0.9rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 1rem;
+            border-radius: 999px;
+            box-shadow: 0 10px 24px rgba(107, 18, 24, 0.28);
+        }
+        
+        .checkout-btn:hover {
+            background: #4A0C10;
+        }
+        
+        .continue-shopping {
+            width: 100%;
+            background: transparent;
+            color: #6B1218;
+            border: 1px solid #6B1218;
+            padding: 0.9rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 999px;
+        }
+        
+        .continue-shopping:hover {
+            background: #6B1218;
+            color: #F5F0E8;
+        }
+        
+        .promo-code {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(107, 78, 53, 0.15);
+        }
+        
+        .promo-code label {
+            display: block;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #6B4C35;
+            margin-bottom: 0.5rem;
+        }
+        
+        .promo-code-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .promo-code input {
+            flex: 1;
+            padding: 0.75rem 0.9rem;
+            border: 1.5px solid rgba(107,78,53,0.25);
+            background: #FFFFFF;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            color: #2C1810;
+            box-sizing: border-box;
+            border-radius: 999px;
+            margin-bottom: 0;
+        }
+
+        .promo-code input:focus {
+            outline: none;
+            border-color: #6B1218;
+            box-shadow: 0 0 0 3px rgba(107,18,24,0.08);
+        }
+
+        .promo-code input::placeholder {
+            color: rgba(107, 78, 53, 0.5);
+        }
+
+        .promo-code button {
+            padding: 0.7rem 1.1rem;
+            background: #6B1218;
+            border: 1px solid #6B1218;
+            color: #F5F0E8;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-sizing: border-box;
+            border-radius: 999px;
+            width: auto;
+        }
+        
+        .promo-code button:hover {
+            background: #6B1218;
+            color: #F5F0E8;
+        }
+
+        .cart-container .fade-section {
+            animation-name: fadeInUp;
+        }
+        
+        /* Tablet */
+        @media (min-width: 768px) {
+            .cart-container {
+                padding: 5rem 3rem;
+            }
+            
+            .cart-content {
+                grid-template-columns: 2fr 1fr;
+                gap: 3rem;
+            }
+            
+            .cart-item {
+                grid-template-columns: 100px 1fr auto;
+                gap: 2rem;
+                padding: 2rem;
+            }
+            
+            .item-image {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .item-price .price {
+                font-size: 1.4rem;
+            }
+            
+            .summary-row.total .value {
+                font-size: 1.5rem;
+            }
+            
+            .cart-header h1 {
+                font-size: 2.5rem;
+            }
+        }
+        
+        /* Desktop */
+        @media (min-width: 1024px) {
+            .cart-container {
+                padding: 5rem 4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation will be loaded here -->
+<main>
+    <div class="cart-container">
+        <div class="cart-header fade-section">
+            <h1>Giỏ Hàng</h1>
+            <a href="index.html" style="text-decoration: none; color: #8B7355; font-size: 0.85rem;">← Tiếp tục mua sắm</a>
+        </div>
+        
+        <div class="cart-content fade-section" id="cartContent">
+            <!-- Will be populated by JavaScript -->
+            <div class="empty-cart">
+                <div class="empty-cart-icon">🛍</div>
+                <p>Giỏ hàng của bạn đang trống</p>
+                <a href="index.html">Bắt Đầu Mua Sắm</a>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- Footer will be loaded here -->
+
+<!-- <script src="js/components.js"></script> -->
+<script>
+    // Intersection Observer cho fade in/out effect
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, observerOptions);
+
+    function observeFadeSections() {
+        const fadeSections = document.querySelectorAll('.fade-section');
+        fadeSections.forEach(section => observer.observe(section));
+    }
+
+    function loadCart() {
+        const cartContent = document.getElementById('cartContent');
+        const cart = JSON.parse(localStorage.getItem('lumiere-cart')) || [];
+        
+        if (cart.length === 0) {
+            cartContent.innerHTML = `
+                <div class="empty-cart fade-section">
+                    <div class="empty-cart-icon">🛍</div>
+                    <p>Giỏ hàng của bạn đang trống</p>
+                    <a href="index.html">Bắt Đầu Mua Sắm</a>
+                </div>
+            `;
+            observeFadeSections();
+            return;
+        }
+        
+        let itemsHTML = '<div class="cart-items">';
+        let total = 0;
+        
+        cart.forEach((item, index) => {
+            const subtotal = item.price * item.quantity;
+            total += subtotal;
+            
+            itemsHTML += `
+                <div class="cart-item fade-section">
+                    <div class="item-image" aria-hidden="true"></div>
+                    <div class="item-details">
+                        <h3>${item.scent}</h3>
+                        <p>Màu: ${item.color}</p>
+                        <p>Kích thước: ${item.size}</p>
+                        ${item.pack !== undefined && item.pack !== null && String(item.pack).toLowerCase() !== 'undefined' ? `<p class="pack-line">Bao bì: ${item.pack}</p>` : ''}
+
+                    </div>
+                    <div class="item-price">
+                        <div class="price">${(item.price * item.quantity).toLocaleString('vi-VN')}đ</div>
+                        <div class="quantity-control">
+                            <button onclick="updateQuantity(${index}, -1)">−</button>
+                            <input type="number" value="${item.quantity}" readonly>
+                            <button onclick="updateQuantity(${index}, 1)">+</button>
+                        </div>
+                        <button class="remove-btn" onclick="removeItem(${index})">
+                            <span class="trash">🗑</span>
+                            XÓA
+                        </button>
+
+                    </div>
+                </div>
+            `;
+        });
+        
+        itemsHTML += '</div>';
+        
+        const summaryHTML = `
+            <div class="cart-summary fade-section">
+                <div class="promo-code">
+                    <label for="promoCode">Mã Khuyến Mãi</label>
+                    <div class="promo-code-row">
+                        <input type="text" id="promoCode" placeholder="Nhập mã khuyến mãi...">
+                        <button onclick="applyPromo()">Áp Dụng</button>
+                    </div>
+                </div>
+                
+                <h2 class="summary-title">Tóm Tắt Đơn Hàng</h2>
+                <div class="summary-row">
+                    <span>Tạm tính:</span>
+                    <span>${total.toLocaleString('vi-VN')}đ</span>
+                </div>
+                <div class="summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span>Miễn Phí</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Tổng cộng:</span>
+                    <span class="value">${total.toLocaleString('vi-VN')}đ</span>
+                </div>
+                <button class="checkout-btn" onclick="checkout()">Thanh Toán</button>
+                <button class="continue-shopping" onclick="window.location.href='index.html'">Tiếp Tục Mua Sắm</button>
+            </div>
+        `;
+        
+        cartContent.innerHTML = itemsHTML + summaryHTML;
+        observeFadeSections();
+    }
+    
+    function updateQuantity(index, change) {
+        const cart = JSON.parse(localStorage.getItem('lumiere-cart')) || [];
+        if (cart[index]) {
+            cart[index].quantity += change;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            localStorage.setItem('lumiere-cart', JSON.stringify(cart));
+            loadCart();
+        }
+    }
+    
+    function removeItem(index) {
+        if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
+            const cart = JSON.parse(localStorage.getItem('lumiere-cart')) || [];
+            cart.splice(index, 1);
+            localStorage.setItem('lumiere-cart', JSON.stringify(cart));
+            loadCart();
+        }
+    }
+    
+    function applyPromo() {
+        alert('Chức năng khuyến mãi sẽ được cập nhật sớm');
+    }
+    
+    function checkout() {
+        const user = JSON.parse(localStorage.getItem('lumiere-user'));
+        // Guest checkout: không bắt buộc đăng nhập
+        sessionStorage.setItem('lumiere-guest-checkout', user ? 'false' : 'true');
+        window.location.href = 'checkout.html';
+    }
+    
+    // Load cart on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCart();
+    });
+</script>
+</body>
+</html>

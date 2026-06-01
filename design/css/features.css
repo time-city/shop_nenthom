@@ -1,0 +1,102 @@
+/* ============================================
+   ChamCham - Features Section
+   ============================================ */
+
+.features-section,
+.feat-section {
+    background: #6B1218;
+    padding: 5rem 4rem;
+    color: #F5F0E8;
+}
+
+.feat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
+
+.feat-card {
+    padding: 2.2rem;
+    border: none;
+    background: rgba(248, 240, 228, 0.95);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.feat-icon {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+    color: #6B1218;
+}
+
+.feat-card h4 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    color: #2C1810;
+}
+
+.feat-card p {
+    font-size: 0.9rem;
+    color: #6B4C35;
+    line-height: 1.8;
+    font-weight: 300;
+}
+
+/* ============================================
+   Responsive Features
+   ============================================ */
+
+/* Mobile */
+@media (max-width: 767px) {
+    .feat-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .feat-card {
+        padding: 1.5rem;
+    }
+    
+    .feat-icon {
+        font-size: 1.2rem;
+    }
+    
+    .feat-card h4 {
+        font-size: 1rem;
+    }
+    
+    .feat-card p {
+        font-size: 0.8rem;
+    }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .feat-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .feat-card {
+        padding: 1.5rem;
+    }
+    
+    .feat-card h4 {
+        font-size: 1.1rem;
+    }
+    
+    .feat-card p {
+        font-size: 0.81rem;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .feat-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

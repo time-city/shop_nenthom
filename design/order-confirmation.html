@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác Nhận Đơn Hàng - ChamCham</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/footer.css">
+    
+    <style>
+        .confirmation-container {
+            min-height: 100vh;
+            padding: 5rem 4rem;
+            padding-top: 8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .confirmation-content {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border: 1px solid #e0d8ce;
+            border-radius: 2px;
+            padding: 3rem;
+            text-align: center;
+        }
+        
+        .confirmation-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .confirmation-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 300;
+            color: #1a1814;
+            margin-bottom: 1rem;
+        }
+        
+        .confirmation-subtitle {
+            font-size: 0.95rem;
+            color: #6b6660;
+            margin-bottom: 2rem;
+        }
+        
+        .order-details {
+            background: #FAF8F5;
+            padding: 2rem;
+            border-radius: 2px;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #6b6660;
+        }
+        
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .detail-row label {
+            color: #8B7355;
+            font-weight: 400;
+        }
+        
+        .detail-row .value {
+            color: #1a1814;
+            text-align: right;
+        }
+        
+        .order-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            color: #1a1814;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e0d8ce;
+        }
+        
+        .shipping-info {
+            background: #FAF8F5;
+            padding: 1.5rem;
+            border-radius: 2px;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+        
+        .shipping-title {
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #8B7355;
+            margin-bottom: 1rem;
+        }
+        
+        .shipping-detail {
+            font-size: 0.9rem;
+            color: #1a1814;
+            margin-bottom: 0.5rem;
+        }
+        
+        .shipping-detail:last-child {
+            margin-bottom: 0;
+        }
+        
+        .next-steps {
+            background: #FAF8F5;
+            padding: 2rem;
+            border-radius: 2px;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+        
+        .steps-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 300;
+            color: #1a1814;
+            margin-bottom: 1rem;
+        }
+        
+        .step {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #6b6660;
+        }
+        
+        .step:last-child {
+            margin-bottom: 0;
+        }
+        
+        .step-number {
+            min-width: 30px;
+            height: 30px;
+            background: #1a1814;
+            color: #FAF8F5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            padding-top: 0.3rem;
+        }
+        
+        .contact-info {
+            font-size: 0.85rem;
+            color: #6b6660;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e0d8ce;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 0.9rem;
+            border: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #1a1814;
+            color: #FAF8F5;
+        }
+        
+        .btn-primary:hover {
+            background: #3d3830;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #1a1814;
+            border: 1px solid #1a1814;
+        }
+        
+        .btn-secondary:hover {
+            background: #1a1814;
+            color: #FAF8F5;
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation will be loaded here -->
+<main>
+    <div class="confirmation-container">
+        <div class="confirmation-content" id="confirmationContent">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+</main>
+<!-- Footer will be loaded here -->
+
+<script src="js/components.js"></script>
+<script>
+        function loadConfirmation() {
+            const order = JSON.parse(localStorage.getItem('lumiere-order'));
+            
+            if (!order) {
+                document.getElementById('confirmationContent').innerHTML = `
+                    <div style="text-align: center;">
+                        <p style="color: #6b6660; margin-bottom: 2rem;">Không tìm thấy đơn hàng</p>
+                        <a href="index.html" class="btn btn-primary">Quay Lại Cửa Hàng</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            const estimatedDate = new Date(order.createdAt);
+            estimatedDate.setDate(estimatedDate.getDate() + 3);
+            
+            let itemsHTML = '';
+            order.items.forEach(item => {
+                itemsHTML += `
+                    <div class="detail-row">
+                        <span>${item.scent} (${item.size}) x ${item.quantity}</span>
+                        <span class="value">${(item.price * item.quantity).toLocaleString('vi-VN')}đ</span>
+                    </div>
+                `;
+            });
+            
+            const paymentMethodText = order.paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản ngân hàng';
+            
+            const html = `
+                <div class="confirmation-icon">✓</div>
+                <h1 class="confirmation-title">Đơn Hàng Được Xác Nhận!</h1>
+                <p class="confirmation-subtitle">Cảm ơn bạn đã tin tưởng ChamCham. Chúng tôi sẽ giao hàng sớm nhất.</p>
+                
+                <div class="order-details">
+                    <div class="order-number">#${order.orderNumber}</div>
+                    
+                    <div class="detail-row">
+                        <label>Ngày Đặt Hàng:</label>
+                        <span class="value">${new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Dự Kiến Giao Hàng:</label>
+                        <span class="value">${estimatedDate.toLocaleDateString('vi-VN')}</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Phương Thức Thanh Toán:</label>
+                        <span class="value">${paymentMethodText}</span>
+                    </div>
+                </div>
+                
+                <div class="shipping-info">
+                    <div class="shipping-title">Địa Chỉ Giao Hàng</div>
+                    <div class="shipping-detail">${order.fullname}</div>
+                    <div class="shipping-detail">${order.address}</div>
+                    <div class="shipping-detail">${order.city}, ${order.zip || 'Việt Nam'}</div>
+                    <div class="shipping-detail">Điện thoại: ${order.phone}</div>
+                </div>
+                
+                <div class="order-details">
+                    <div style="font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; color: #8B7355; margin-bottom: 1rem;">Chi Tiết Đơn Hàng</div>
+                    ${itemsHTML}
+                    <div class="detail-row" style="border-top: 1px solid #e0d8ce; margin-top: 1rem; padding-top: 1rem;">
+                        <label>Tạm Tính:</label>
+                        <span class="value">${order.subtotal.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Phí Vận Chuyển:</label>
+                        <span class="value">${order.shipping.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <div class="detail-row" style="font-weight: 600; font-size: 1rem; color: #1a1814;">
+                        <label>Tổng Cộng:</label>
+                        <span class="value">${order.total.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                </div>
+                
+                <div class="next-steps">
+                    <div class="steps-title">Các Bước Tiếp Theo</div>
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">Xác nhận đơn hàng được gửi qua email</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">Chúng tôi sẽ chuẩn bị hàng trong 24 giờ</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">Hàng sẽ được giao trong 2-3 ngày làm việc</div>
+                    </div>
+                    <div class="contact-info">
+                        <strong>Cần hỗ trợ?</strong> Liên hệ chúng tôi qua email support@lumiere.com hoặc số điện thoại +84 xxx xxxx
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <a href="index.html" class="btn btn-primary">Tiếp Tục Mua Sắm</a>
+                    <a href="contact-lumiere.html" class="btn btn-secondary">Liên Hệ Hỗ Trợ</a>
+                </div>
+
+                ${order.isGuest ? `
+                  <div class="shipping-info" style="margin-top: 1.5rem; border: 1px solid rgba(107, 78, 53, 0.15);">
+                    <div class="shipping-title">Gợi ý đăng ký thành viên</div>
+                    <div class="shipping-detail">Lưu thông tin để mua hàng nhanh hơn lần sau + nhận ưu đãi thành viên độc quyền</div>
+                    <div style="margin-top: 1.2rem; display:flex; gap:1rem;">
+                      <a href="register.html" class="btn btn-primary" style="flex: 1; text-align:center; text-decoration:none;">Đăng ký thành viên</a>
+                      <a href="index.html" class="btn btn-secondary" style="flex: 1; text-align:center; text-decoration:none;">Về trang chủ</a>
+                    </div>
+                  </div>
+                ` : ''}
+
+                ${!order.isGuest ? `
+                  <div style="margin-top: 1.5rem; font-size:0.9rem; color:#6b6660;">Bạn có thể xem lịch sử đơn hàng trong phần tài khoản (nếu có).</div>
+                ` : ''}
+            `;
+            
+            document.getElementById('confirmationContent').innerHTML = html;
+        }
+        
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('lumiere-cart')) || [];
+            const cartCount = document.getElementById('cartCount');
+            if (cart.length > 0) {
+                cartCount.textContent = cart.length;
+                cartCount.style.display = 'flex';
+            } else {
+                cartCount.style.display = 'none';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadConfirmation);
+    </script>
+</body>
+</html>

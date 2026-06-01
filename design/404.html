@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Trang Không Tìm Thấy | ChamCham</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/footer.css">
+    
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8rem 2rem 2rem;
+        }
+
+        .error-container {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .error-code {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 8rem;
+            font-weight: 300;
+            color: #8B7355;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+            opacity: 0.8;
+        }
+
+        .error-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: #1a1814;
+            margin-bottom: 1rem;
+        }
+
+        .error-description {
+            font-size: 1rem;
+            color: #6b6660;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .error-illustration {
+            font-size: 4rem;
+            margin: 2rem 0;
+            opacity: 0.7;
+        }
+
+        .error-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .error-btn {
+            padding: 0.9rem 2rem;
+            border: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 2px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .error-btn-primary {
+            background: #1a1814;
+            color: #FAF8F5;
+        }
+
+        .error-btn-primary:hover {
+            background: #3d3830;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 24, 20, 0.15);
+        }
+
+        .error-btn-secondary {
+            background: transparent;
+            color: #1a1814;
+            border: 1px solid #1a1814;
+        }
+
+        .error-btn-secondary:hover {
+            background: #1a1814;
+            color: #FAF8F5;
+        }
+
+        .error-suggestions {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e0d8ce;
+            text-align: left;
+        }
+
+        .suggestions-title {
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #8B7355;
+            margin-bottom: 1rem;
+        }
+
+        .suggestions-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .suggestions-list li {
+            text-align: center;
+        }
+
+        .suggestions-list a {
+            color: #1a1814;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            display: block;
+            padding: 0.5rem;
+        }
+
+        .suggestions-list a:hover {
+            color: #8B7355;
+        }
+
+        /* Animation */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .error-illustration {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 5rem;
+            }
+
+            .error-title {
+                font-size: 1.8rem;
+            }
+
+            .error-illustration {
+                font-size: 3rem;
+            }
+
+            .error-buttons {
+                flex-direction: column;
+            }
+
+            .error-btn {
+                width: 100%;
+            }
+
+            .suggestions-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation will be loaded here -->
+<main>
+    <div class="error-container">
+        <div class="error-code">404</div>
+        <div class="error-title">Trang Không Tìm Thấy</div>
+        <div class="error-illustration">🕯️</div>
+        <p class="error-description">
+            Xin lỗi, trang bạn đang tìm kiếm đã bị dịch chuyển hoặc không tồn tại. 
+            Hãy quay lại trang chủ hoặc khám phá các tùy chọn khác của chúng tôi.
+        </p>
+        
+        <div class="error-buttons">
+            <a href="index.html" class="error-btn error-btn-primary">Về Trang Chủ</a>
+            <a href="javascript:history.back()" class="error-btn error-btn-secondary">Quay Lại</a>
+        </div>
+
+        <div class="error-suggestions">
+            <div class="suggestions-title">Những trang phổ biến</div>
+            <ul class="suggestions-list">
+                <li><a href="index.html#home">Trang Chủ</a></li>
+                <li><a href="index.html#customize">Tùy Chỉnh</a></li>
+                <li><a href="index.html#story">Câu Chuyện</a></li>
+                <li><a href="index.html#contact">Liên Hệ</a></li>
+                <li><a href="cart.html">Giỏ Hàng</a></li>
+            </ul>
+        </div>
+    </div>
+</main>
+
+<!-- Footer will be loaded here -->
+
+<script src="js/components.js"></script>
+</body>
+</html>

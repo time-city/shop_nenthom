@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh Toán - ChamCham</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/footer.css">
+    
+    <style>
+        .checkout-container {
+            min-height: 100vh;
+            padding: 5rem 4rem;
+            padding-top: 8rem;
+            background: #F2E8D9;
+        }
+
+        .checkout-header {
+            background: #6B1218;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            border-radius: 0;
+            margin-bottom: 2rem;
+        }
+
+        .checkout-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #F5F0E8;
+            margin: 0;
+        }
+
+        .checkout-header {
+            position: relative;
+        }
+
+        .checkout-breadcrumb {
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 0.8rem;
+            color: rgba(245,240,232,0.6);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+
+        .checkout-breadcrumb .active {
+            font-weight: 500;
+            color: rgba(245,240,232,1);
+        }
+
+        .checkout-breadcrumb .sep {
+            color: rgba(245,240,232,0.35);
+            margin: 0 0.5rem;
+        }
+        
+        /* override old title styles */
+        .checkout-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #F5F0E8;
+            margin-bottom: 0;
+        }
+        
+        .checkout-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 3rem;
+        }
+        
+        .checkout-form {
+            background: #F8F0E4;
+            border: 1px solid rgba(107,78,53,0.12);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+        
+        .form-section {
+            margin-bottom: 2.5rem;
+        }
+        
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #2C1810;
+            margin-bottom: 1.5rem;
+            border-bottom: 0;
+            padding-bottom: 0.75rem;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40px;
+            height: 2px;
+            background: #6B1218;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-size: 0.72rem;
+            letter-spacing: 0.10em;
+            text-transform: uppercase;
+            color: #6B4C35;
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.8rem 1rem;
+            border: 1.5px solid rgba(107,78,53,0.20);
+            background: #FFFFFF;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            color: #2C1810;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #6B1218;
+            box-shadow: 0 0 0 3px rgba(107,18,24,0.08);
+        }
+        
+        .form-group input::placeholder {
+            color: #ccc;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'DM Sans', sans-serif;
+        }
+        
+        .payment-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .payment-option {
+            position: relative;
+        }
+        
+        .payment-option input[type="radio"] {
+            display: none;
+        }
+        
+        .payment-option label {
+            display: block;
+            padding: 16px 20px;
+            border: 1.5px solid rgba(107,78,53,0.20);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            border-radius: 12px;
+            position: relative;
+            background: #FFFFFF;
+        }
+        
+        .payment-option input[type="radio"]:checked + label {
+            background: rgba(107,18,24,0.04);
+            color: #2C1810;
+            border-color: #6B1218;
+        }
+
+        .payment-option input[type="radio"]:checked + label::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #6B1218;
+            top: -6px;
+            right: -6px;
+        }
+        
+        .payment-option label {
+            font-size: 0.85rem;
+            color: #1a1814;
+            font-family: 'DM Sans', sans-serif;
+        }
+        
+        .checkout-summary {
+            background: #F8F0E4;
+            border: 1px solid rgba(107,78,53,0.12);
+            border-radius: 16px;
+            padding: 2rem;
+            height: fit-content;
+            box-shadow: 0 4px 24px rgba(44,24,16,0.08);
+        }
+        
+        .summary-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #2C1810;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #6B1218;
+        }
+        
+        .order-items {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(107,78,53,0.12);
+        }
+        
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            color: #2C1810;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(107,78,53,0.12);
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+        
+        .order-item span:last-child {
+            color: #6B1218;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700;
+            font-size: 1rem;
+            text-align: right;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            color: #6b6660;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+        }
+
+        
+        .summary-row.total {
+            border-top: 2px solid rgba(107,78,53,0.12);
+            padding-top: 1rem;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            color: #2C1810;
+        }
+        
+        .summary-row.total .value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            color: #2C1810;
+        }
+
+        .summary-row.total {
+            color: #2C1810;
+        }
+        
+        .pay-btn {
+            width: 100%;
+            background: #6B1218;
+            color: #F5F0E8;
+            border: none;
+            padding: 16px;
+            border-radius: 999px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.25s ease;
+            margin-bottom: 1rem;
+            box-shadow: 0 6px 24px rgba(107,18,24,0.32);
+            transform: translateY(0);
+        }
+        
+        .pay-btn:hover {
+            background: #4A0C10;
+            transform: translateY(-2px);
+        }
+        
+        .back-btn {
+            width: 100%;
+            background: transparent;
+            color: #6B1218;
+            border: 1.5px solid #6B1218;
+            padding: 14px;
+            border-radius: 999px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        
+        .back-btn:hover {
+            background: #6B1218;
+            color: #F5F0E8;
+        }
+        
+        .error-message {
+            background: #fce4e4;
+            border: 1px solid #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 2px;
+            display: none;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 2px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation will be loaded here -->
+<main>
+    <div class="checkout-container">
+        <div class="checkout-header">
+            <h1>Thanh Toán</h1>
+            <div class="checkout-breadcrumb" aria-label="Breadcrumb">
+                <span>Giỏ hàng</span><span class="sep">→</span>
+                <span class="active">Thanh toán</span><span class="sep">→</span>
+                <span>Hoàn tất</span>
+            </div>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        
+        <div class="checkout-content">
+            <form class="checkout-form" id="checkoutForm">
+                <!-- Billing Info -->
+                <div class="form-section">
+                    <div class="section-title">Thông Tin Thanh Toán</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Họ và Tên</label>
+                            <input type="text" id="fullname" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="email" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Số Điện Thoại</label>
+                            <input type="tel" id="phone" placeholder="+84..." required>
+                        </div>
+                        <div class="form-group">
+                            <label>Công Ty (Tùy Chọn)</label>
+                            <input type="text" id="company">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Shipping Info -->
+                <div class="form-section">
+                    <div class="section-title">Địa Chỉ Giao Hàng</div>
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label>Địa Chỉ</label>
+                            <input type="text" id="address" placeholder="Số nhà, tên đường..." required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Thành Phố</label>
+                            <input type="text" id="city" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mã Bưu Chính</label>
+                            <input type="text" id="zip">
+                        </div>
+                    </div>
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label>Ghi Chú Đơn Hàng (Tùy Chọn)</label>
+                            <textarea id="notes" placeholder="Hướng dẫn giao hàng, yêu cầu đặc biệt..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Method -->
+                <div class="form-section">
+                    <div class="section-title">Phương Thức Thanh Toán</div>
+                    <div class="payment-options">
+                        <div class="payment-option">
+                            <input type="radio" id="cod" name="payment" value="cod" checked>
+                            <label for="cod">🏠 COD &nbsp; Thanh Toán Khi Nhận Hàng</label>
+                        </div>
+                        <div class="payment-option">
+                            <input type="radio" id="transfer" name="payment" value="transfer">
+                            <label for="transfer">🏦 Chuyển khoản &nbsp; Ngân Hàng</label>
+                        </div>
+                    </div>
+                    <div id="bankInfo" style="display: none; background: #FAF8F5; padding: 1rem; border-radius: 2px; font-size: 0.85rem; color: #6b6660; margin-bottom: 1.5rem;">
+                        <p><strong>Ngân Hàng:</strong> Vietcombank</p>
+                        <p><strong>Số Tài Khoản:</strong> 1234567890</p>
+                        <p><strong>Chủ Tài Khoản:</strong> LUMIERE CO., LTD</p>
+                        <p style="font-style: italic; margin-top: 0.5rem;">Vui lòng chuyển khoản trước khi giao hàng</p>
+                    </div>
+                </div>
+            </form>
+            
+            <!-- Order Summary -->
+            <div class="checkout-summary">
+                <div class="summary-title">Tóm Tắt Đơn Hàng</div>
+                <div class="order-items" id="orderItems">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                
+                <div class="summary-row">
+                    <span>Tạm tính:</span>
+                    <span id="subtotal">0đ</span>
+                </div>
+                <div class="summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span id="shipping" style="color: #8B5E3C; font-style: italic;">30.000đ</span>
+                </div>
+                <div class="summary-row">
+                    <span>Thuế:</span>
+                    <span id="tax">0đ</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Tổng cộng:</span>
+                    <span class="value" id="total">0đ</span>
+                </div>
+                
+                <button class="pay-btn" onclick="processPayment()">Hoàn Thành Đơn Hàng</button>
+                <button class="back-btn" onclick="window.location.href='cart.html'">Quay Lại Giỏ Hàng</button>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- Footer will be loaded here -->
+
+<script src="js/components.js"></script>
+<script src="js/collection.js"></script>
+<script>
+        // Check user login status and load checkout
+        function loadCheckout() {
+            // Check if cart is empty
+            const cart = JSON.parse(localStorage.getItem('lumiere-cart')) || [];
+            if (cart.length === 0) {
+                showError('Giỏ hàng của bạn đang trống');
+                setTimeout(() => {
+                    window.location.href = 'index.html#collection';
+                }, 2000);
+                return;
+            }
+            
+            // Check if user is logged in
+            const user = JSON.parse(localStorage.getItem('lumiere-user'));
+            const isGuestCheckout = sessionStorage.getItem('lumiere-guest-checkout') === 'true';
+
+            // Logged-in user: pre-fill form with user data
+            if (user) {
+                document.getElementById('fullname').value = user.fullname || '';
+                document.getElementById('email').value = user.email || '';
+                document.getElementById('phone').value = user.phone || '';
+            }
+
+            // Member discount banner
+            const bannerId = 'memberBanner';
+            const existingBanner = document.getElementById(bannerId);
+            if (existingBanner) existingBanner.remove();
+
+            const banner = document.createElement('div');
+            banner.id = bannerId;
+            banner.style.cssText = [
+                'background:#6B1218',
+                'border:1px solid rgba(107,18,24,0.35)',
+                'color:#F5F0E8',
+                'padding:14px 20px',
+                'border-radius:12px',
+                'margin-bottom:1.5rem',
+                'font-size:0.95rem',
+                'font-family: "DM Sans", sans-serif',
+                'font-weight:300'
+            ].join(';');
+
+            if (user && !isGuestCheckout) {
+                banner.innerHTML = '🎁 &nbsp; Bạn đang được hưởng ưu đãi thành viên';
+            } else {
+                banner.innerHTML = '🎁 &nbsp; Đăng ký thành viên để nhận ưu đãi cho lần mua tiếp theo '
+                    + '<a href="register.html" target="_blank" style="color:#F2E8D9; font-weight:500; text-decoration:none;">Đăng ký ngay →</a>';
+            }
+
+            document.querySelector('.checkout-form').prepend(banner);
+
+
+            // Load cart items and calculate totals
+            let subtotal = 0;
+            let orderHTML = '';
+            
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                orderHTML += `
+                    <div class="order-item">
+                        <span>${item.name} (${item.size}) x ${item.quantity}</span>
+                        <span>${itemTotal.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('orderItems').innerHTML = orderHTML;
+            
+            const shipping = 30000;
+            const tax = 0;
+            const total = subtotal + shipping + tax;
+            
+            document.getElementById('subtotal').textContent = subtotal.toLocaleString('vi-VN') + 'đ';
+            document.getElementById('total').textContent = total.toLocaleString('vi-VN') + 'đ';
+        }
+        
+        // Payment method toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCheckout();
+            
+            const radios = document.querySelectorAll('input[name="payment"]');
+            radios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const bankInfo = document.getElementById('bankInfo');
+                    if (this.value === 'transfer') {
+                        bankInfo.style.display = 'block';
+                    } else {
+                        bankInfo.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        function validateForm() {
+            const fullname = document.getElementById('fullname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const city = document.getElementById('city').value.trim();
+            
+            if (!fullname || !email || !phone || !address || !city) {
+                showError('Vui lòng điền đầy đủ thông tin bắt buộc');
+                return false;
+            }
+            
+            // Validate email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('Email không hợp lệ');
+                return false;
+            }
+            
+            // Validate phone
+            const phoneRegex = /^[0-9]{9,11}$/;
+            if (!phoneRegex.test(phone.replace(/[^\d]/g, ''))) {
+                showError('Số điện thoại không hợp lệ');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            setTimeout(() => {
+                errorMsg.style.display = 'none';
+            }, 4000);
+        }
+        
+        function showSuccess(message) {
+            const successMsg = document.getElementById('successMessage');
+            successMsg.textContent = message;
+            successMsg.style.display = 'block';
+        }
+        
+        function processPayment() {
+            if (!validateForm()) {
+                return;
+            }
+
+            const cart = JSON.parse(localStorage.getItem('lumiere-cart')) || [];
+            if (cart.length === 0) {
+                showError('Giỏ hàng của bạn đang trống');
+                return;
+            }
+
+            const orderNumber = 'ORD' + Date.now();
+            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            const isGuestCheckout = sessionStorage.getItem('lumiere-guest-checkout') === 'true';
+            const user = JSON.parse(localStorage.getItem('lumiere-user'));
+
+            const order = {
+                orderNumber: orderNumber,
+                items: cart,
+                subtotal: subtotal,
+                shipping: 30000,
+                tax: 0,
+                total: subtotal + 30000,
+                fullname: document.getElementById('fullname').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                zip: document.getElementById('zip').value,
+                notes: document.getElementById('notes').value,
+                paymentMethod: paymentMethod,
+                createdAt: new Date().toISOString(),
+                userId: user && !isGuestCheckout ? user.id || null : null,
+                isGuest: isGuestCheckout
+            };
+            
+            localStorage.setItem('lumiere-order', JSON.stringify(order));
+            localStorage.removeItem('lumiere-cart');
+            
+            showSuccess('Đơn hàng được tạo thành công! Đang chuyển hướng...');
+            setTimeout(() => {
+                window.location.href = 'order-confirmation.html';
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

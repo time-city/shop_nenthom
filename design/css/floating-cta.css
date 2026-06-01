@@ -1,0 +1,87 @@
+/* ============================================
+   ChamCham - Floating CTA Bar
+   ============================================ */
+
+.floating-cta {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #6B1218 0%, #4A0C10 100%);
+    padding: 1.2rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    z-index: 999;
+    box-shadow: 0 -8px 40px rgba(107, 18, 24, 0.4);
+    transform: translateY(120px);
+    transition: transform 0.4s ease;
+    border-top: 2px solid rgba(245, 240, 232, 0.15);
+}
+
+.floating-cta.visible {
+    transform: translateY(0);
+}
+
+.floating-cta-btn {
+    padding: 0.9rem 1.8rem;
+    border: none;
+    border-radius: 999px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.floating-cta-btn.primary {
+    background: #F5F0E8;
+    color: #6B1218;
+    box-shadow: 0 8px 24px rgba(245, 240, 232, 0.3);
+}
+
+.floating-cta-btn.primary:hover {
+    background: #FFF;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(245, 240, 232, 0.4);
+}
+
+.floating-cta-btn.secondary {
+    background: transparent;
+    color: #F5F0E8;
+    border: 1.5px solid #F5F0E8;
+}
+
+.floating-cta-btn.secondary:hover {
+    background: rgba(245, 240, 232, 0.1);
+    border-color: #FFF;
+    color: #FFF;
+}
+
+/* Hide floating CTA on mobile */
+@media (max-width: 767px) {
+    .floating-cta {
+        padding: 1rem 1.5rem;
+        gap: 1rem;
+    }
+
+    .floating-cta-btn {
+        padding: 0.75rem 1.2rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Adjust main content for fixed CTA bar */
+body.cta-visible {
+    padding-bottom: 80px;
+}
+
+@media (max-width: 767px) {
+    body.cta-visible {
+        padding-bottom: 70px;
+    }
+}

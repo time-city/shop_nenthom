@@ -1,0 +1,232 @@
+/* ============================================
+   ChamCham - Global Styles
+   ============================================ */
+
+/* Font import (brand) */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Playfair+Display:wght@700;800&display=swap');
+
+:root {
+    /* ── BRAND COLORS ── */
+    --color-primary:        #6B1218;   /* đỏ đô chính — nền chủ đạo */
+    --color-primary-dark:   #4A0C10;   /* đỏ đô sẫm — nav, banner, hover */
+    --color-primary-light:  #8B2028;   /* đỏ đô sáng hơn — accent */
+
+    --color-brown:          #2C1810;   /* nâu đen — section tối, footer */
+    --color-brown-light:    #4B3224;   /* nâu sáng */
+    --color-brown-dark:     #1A100C;   /* nâu tối */
+
+    --color-cream:          #F2E8D9;   /* be kem — card, form, box */
+    --color-cream-dark:     #E2D0B8;   /* be đậm hơn */
+    --color-cream-warm:     #F5F0E8;   /* trắng kem — chữ, icon, highlight */
+
+    --color-text-primary:   #F5F0E8;   /* chữ chính trên nền tối */
+    --color-text-secondary: rgba(245, 240, 232, 0.8);   /* chữ phụ trên nền tối */
+    --color-text-light:     #F5F0E8;   /* trắng kem */
+    --color-text-muted:     rgba(245, 240, 232, 0.62);   /* chữ mờ */
+    --color-dark:           #2C1810;   /* nâu đen */
+
+    /* compatibility aliases used by older components */
+    --color-bg:             #6B1218;
+    --color-text:           #F5F0E8;
+    --color-secondary:      #F2E8D9;
+    --color-wood:           #2C1810;
+
+    --color-border:         rgba(107, 18, 24, 0.15);   /* viền đỏ đô mờ */
+    --color-border-warm:    rgba(139, 94, 60, 0.20);   /* viền nâu mờ */
+
+    /* ── TYPOGRAPHY ── */
+    --font-display:  'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    --font-body:     'DM Sans', 'Jost', 'Inter', sans-serif;
+    --font-accent:   'Cormorant Garamond', serif;   /* italic, quote, tagline */
+
+    /* ── FONT WEIGHTS ── */
+    --fw-light:    300;
+    --fw-regular:  400;
+    --fw-medium:   500;
+    --fw-bold:     700;
+
+    /* ── FONT SIZES (fluid) ── */
+    --fs-xs:   0.75rem;
+    --fs-sm:   0.875rem;
+    --fs-base: 1rem;
+    --fs-md:   1.125rem;
+    --fs-lg:   1.375rem;
+    --fs-xl:   1.75rem;
+    --fs-2xl:  2.25rem;
+    --fs-3xl:  3rem;
+    --fs-4xl:  4rem;
+
+    /* ── LETTER SPACING ── */
+    --ls-tight:  -0.02em;
+    --ls-normal:  0;
+    --ls-wide:    0.08em;
+    --ls-wider:   0.16em;
+    --ls-widest:  0.28em;   /* dùng cho label kiểu "Studio" */
+
+    /* ── SPACING & RADIUS ── */
+    --radius-sm:  6px;
+    --radius-md:  12px;
+    --radius-lg:  20px;
+    --radius-pill: 999px;
+}
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-base);
+
+  color: var(--color-text-primary);
+    background-color: var(--color-primary);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5 {
+    font-family: var(--font-display);
+    font-weight: var(--fw-bold);
+    color: var(--color-text-primary);
+    line-height: 1.15;
+    letter-spacing: var(--ls-tight);
+}
+
+h1 { font-size: var(--fs-4xl); }
+h2 { font-size: var(--fs-3xl); }
+h3 { font-size: var(--fs-2xl); }
+h4 { font-size: var(--fs-xl);  }
+
+em, i {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: var(--fw-light);
+  color: var(--color-primary);
+}
+
+
+p {
+    font-family: var(--font-body);
+    font-weight: var(--fw-regular);
+    color: var(--color-text-secondary);
+    line-height: 1.8;
+}
+
+
+a {
+    color: var(--color-text-light);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover { color: var(--color-cream); }
+
+
+section {
+    padding: 5rem 4rem;
+}
+
+/* Fade In Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+.fade-section {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.fade-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Section Titles */
+.section-title {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: var(--fw-light);
+    margin-bottom: 0.5rem;
+}
+
+.section-sub {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+}
+
+
+/* ============================================
+   Responsive Breakpoints
+   ============================================ */
+
+/* Mobile */
+@media (max-width: 767px) {
+    section {
+        padding: 3rem 1.5rem;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        line-height: 1.2;
+    }
+    
+    p {
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+    
+    .section-title {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .section-sub {
+        font-size: 0.75rem;
+        margin-bottom: 2rem;
+    }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+    section {
+        padding: 4rem 2rem;
+    }
+    
+    .section-title {
+        font-size: 2rem;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    section {
+        padding: 5rem 4rem;
+    }
+}

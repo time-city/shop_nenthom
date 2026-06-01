@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - ChamCham Studio</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-black text-white">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-black bg-opacity-95 z-50 border-b border-red-900 border-opacity-20">
+        <div class="max-w-7xl mx-auto px-12 py-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-red-900 flex items-center justify-center">
+                    <span class="text-white font-serif font-bold text-xs">CC</span>
+                </div>
+                <span class="font-serif font-bold text-lg tracking-widest">CHAMCHAM</span>
+            </div>
+            
+            <div class="flex items-center gap-12">
+                <a href="index.html" class="nav-link">Shop</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="contact.html" class="nav-link active">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="pt-20">
+        <!-- Hero -->
+        <section class="h-96 bg-black flex items-center justify-center border-b border-red-900 border-opacity-10">
+            <div class="text-center">
+                <h1 class="font-serif text-5xl tracking-widest mb-4">Get in Touch</h1>
+                <p class="text-yellow-600 text-sm tracking-widest">We'd Love to Hear From You</p>
+            </div>
+        </section>
+
+        <!-- Contact Content -->
+        <section class="py-20 px-12 bg-black">
+            <div class="max-w-6xl mx-auto grid grid-cols-2 gap-16">
+                <!-- Contact Form -->
+                <div>
+                    <h2 class="font-serif text-2xl text-yellow-600 mb-8 tracking-wide">Send us a Message</h2>
+                    
+                    <form class="space-y-6">
+                        <div>
+                            <label class="block text-xs text-gray-400 uppercase tracking-widest mb-2">Full Name</label>
+                            <input type="text" placeholder="Your name" class="w-full bg-gray-900 border border-red-900 border-opacity-20 px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-yellow-600 focus:border-opacity-50 transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs text-gray-400 uppercase tracking-widest mb-2">Email</label>
+                            <input type="email" placeholder="your@email.com" class="w-full bg-gray-900 border border-red-900 border-opacity-20 px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-yellow-600 focus:border-opacity-50 transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs text-gray-400 uppercase tracking-widest mb-2">Subject</label>
+                            <input type="text" placeholder="How can we help?" class="w-full bg-gray-900 border border-red-900 border-opacity-20 px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-yellow-600 focus:border-opacity-50 transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs text-gray-400 uppercase tracking-widest mb-2">Message</label>
+                            <textarea placeholder="Share your thoughts..." rows="6" class="w-full bg-gray-900 border border-red-900 border-opacity-20 px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-yellow-600 focus:border-opacity-50 transition-colors resize-none"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white py-3 uppercase tracking-widest text-sm font-medium transition-colors duration-300">
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Contact Info -->
+                <div>
+                    <h2 class="font-serif text-2xl text-yellow-600 mb-8 tracking-wide">Contact Info</h2>
+                    
+                    <div class="space-y-8">
+                        <!-- Email -->
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase tracking-widest mb-2">Email</p>
+                            <p class="text-white mb-1">hello@chamchamstudio.com</p>
+                            <p class="text-gray-400 text-sm">For general inquiries</p>
+                        </div>
+                        
+                        <!-- Phone -->
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase tracking-widest mb-2">Phone</p>
+                            <p class="text-white mb-1">+84 (0) 123 456 789</p>
+                            <p class="text-gray-400 text-sm">Monday - Friday, 9am - 6pm (Hanoi Time)</p>
+                        </div>
+                        
+                        <!-- Address -->
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase tracking-widest mb-2">Studio Location</p>
+                            <p class="text-white mb-1">ChamCham Studio</p>
+                            <p class="text-gray-400 text-sm">Hanoi, Vietnam</p>
+                            <p class="text-gray-400 text-sm">By appointment only</p>
+                        </div>
+                        
+                        <!-- Social Media -->
+                        <div class="pt-8 border-t border-red-900 border-opacity-20">
+                            <p class="text-xs text-gray-400 uppercase tracking-widest mb-4">Follow Us</p>
+                            <div class="flex gap-6">
+                                <a href="#" class="text-gray-400 hover:text-yellow-600 transition-colors text-sm uppercase tracking-widest">Instagram</a>
+                                <a href="#" class="text-gray-400 hover:text-yellow-600 transition-colors text-sm uppercase tracking-widest">Shopee</a>
+                                <a href="#" class="text-gray-400 hover:text-yellow-600 transition-colors text-sm uppercase tracking-widest">TikTok</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="py-20 px-12 bg-black border-t border-red-900 border-opacity-10">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="font-serif text-3xl text-yellow-600 mb-12 text-center tracking-wide">Frequently Asked Questions</h2>
+                
+                <div class="space-y-6">
+                    <div class="border border-red-900 border-opacity-20 p-6">
+                        <h3 class="font-serif text-lg text-yellow-600 mb-3">How long do your candles burn?</h3>
+                        <p class="text-gray-400 text-sm">Our premium hand-poured candles typically burn for 40-50 hours depending on usage and environmental factors. Each candle is individually crafted with high-quality soy wax.</p>
+                    </div>
+                    
+                    <div class="border border-red-900 border-opacity-20 p-6">
+                        <h3 class="font-serif text-lg text-yellow-600 mb-3">What is your return policy?</h3>
+                        <p class="text-gray-400 text-sm">We offer a 30-day return policy for unused items in original packaging. For custom pieces, please contact us directly to discuss your specific situation.</p>
+                    </div>
+                    
+                    <div class="border border-red-900 border-opacity-20 p-6">
+                        <h3 class="font-serif text-lg text-yellow-600 mb-3">Do you offer international shipping?</h3>
+                        <p class="text-gray-400 text-sm">Yes! We ship worldwide with carefully calculated rates based on destination. Customs fees, if applicable, are the responsibility of the buyer.</p>
+                    </div>
+                    
+                    <div class="border border-red-900 border-opacity-20 p-6">
+                        <h3 class="font-serif text-lg text-yellow-600 mb-3">Can I customize my candle?</h3>
+                        <p class="text-gray-400 text-sm">Absolutely! Our bespoke customization service allows you to choose jar type, wax color, scent profile, and lid option. Contact us for custom orders and bulk inquiries.</p>
+                    </div>
+                    
+                    <div class="border border-red-900 border-opacity-20 p-6">
+                        <h3 class="font-serif text-lg text-yellow-600 mb-3">What materials do you use?</h3>
+                        <p class="text-gray-400 text-sm">We use premium soy wax, natural essential oils, and sustainably sourced materials. Our glass containers are recycled where possible, and our packaging is eco-friendly.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-black border-t border-red-900 border-opacity-20 py-12 px-12">
+            <div class="max-w-6xl mx-auto grid grid-cols-4 gap-8 mb-12">
+                <div>
+                    <h4 class="font-serif text-sm mb-4 text-yellow-600 uppercase tracking-widest">Shop</h4>
+                    <ul class="space-y-2 text-gray-400 text-xs">
+                        <li><a href="#" class="hover:text-yellow-600 transition-colors">Candles</a></li>
+                        <li><a href="#" class="hover:text-yellow-600 transition-colors">Jewelry</a></li>
+                        <li><a href="#" class="hover:text-yellow-600 transition-colors">Customs</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-serif text-sm mb-4 text-yellow-600 uppercase tracking-widest">Company</h4>
+                    <ul class="space-y-2 text-gray-400 text-xs">
+                        <li><a href="about.html" class="hover:text-yellow-600 transition-colors">About</a></li>
+                        <li><a href="contact.html" class="hover:text-yellow-600 transition-colors">Contact</a></li>
+                        <li><a href="#" class="hover:text-yellow-600 transition-colors">FAQ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-serif text-sm mb-4 text-yellow-600 uppercase tracking-widest">Social</h4>
+                    <ul class="space-y-2 text-gray-400 text-xs">
+                        <li><a href="#" class="hover:text-yellow-600 transition-colors">Instagram</a></li>
+                        <li><a href="#" class="hover:text-yellow-600 transition-colors">Shopee</a></li>
+                        <li><a href="#" class="hover:text-yellow-600 transition-colors">TikTok</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-serif text-sm mb-4 text-yellow-600 uppercase tracking-widest">Legal</h4>
+                    <ul class="space-y-2 text-gray-400 text-xs">
+                        <li><a href="#" class="hover:text-yellow-600 transition-colors">Privacy</a></li>
+                        <li><a href="#" class="hover:text-yellow-600 transition-colors">Terms</a></li>
+                        <li><a href="#" class="hover:text-yellow-600 transition-colors">Shipping</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-red-900 border-opacity-20 pt-8 text-center text-gray-500 text-xs">
+                <p>&copy; 2024 ChamCham Studio. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
