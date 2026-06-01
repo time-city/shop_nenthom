@@ -1,0 +1,63 @@
+%% DIAGRAM 2 — USER STORY KHÁCH HÀNG
+%% Mục đích: Thể hiện các hành động chính của khách từ khám phá đến đặt hàng thành công (có nhánh đăng nhập/khách).
+%% Ngày cập nhật: 2026-05-20
+
+graph TD
+  classDef decisionStyle fill:#FFC857,stroke:#B8860B,color:#1A1A1A;
+  classDef actionStyle fill:#6B1218,stroke:#6B1218,color:#FFFFFF;
+  classDef successStyle fill:#C8E6C9,stroke:#2E7D32,color:#1B5E20;
+  classDef suggestStyle fill:#6B1218,stroke:#6B1218,color:#FFFFFF;
+
+  home["Vào trang chủ"]
+  collection["Xem bộ sưu tập"]
+  productDetail["Xem chi tiết sản phẩm"]
+  customize["Tùy chỉnh nến"]
+  addToCart["Thêm vào giỏ hàng"]
+  checkout["Thanh toán"]
+
+  loggedInDecision{"Đã đăng nhập?"}
+  checkoutMember["Đã đăng nhập → Checkout với discount"]
+  checkoutGuest["Chưa có tài khoản → Checkout điền thông tin"]
+
+  orderSuccess["Đặt hàng thành công"]
+
+  suggestRegister["Gợi ý đăng ký thành viên"]
+  viewOrders["Xem lịch sử đơn hàng"]
+
+  loginRegister["Đăng nhập / Đăng ký"]
+  profilePage["Xem trang cá nhân"]
+
+  arrowSearch["Tìm kiếm sản phẩm"]
+  arrowCare["Quan tâm đến sản phẩm"]
+  arrowPersonal["Muốn cá nhân hóa"]
+  arrowReady["Sẵn sàng mua"]
+
+  arrowNoAccount["Chưa có tài khoản"]
+  arrowHasAccount["Đã có tài khoản"]
+  arrowDone["Hoàn tất"]
+  arrowFirstBuy["Lần đầu mua"]
+  arrowBuyAgain["Mua lại"]
+
+  home --> arrowSearch --> collection --> arrowCare --> productDetail --> customize --> arrowPersonal --> addToCart --> arrowReady --> checkout
+
+  checkout --> loggedInDecision
+  loggedInDecision -- "Chưa" --> arrowNoAccount --> checkoutGuest
+  loggedInDecision -- "Rồi" --> arrowHasAccount --> checkoutMember
+
+  checkoutGuest --> arrowDone --> orderSuccess
+  checkoutMember --> arrowDone --> orderSuccess
+
+  orderSuccess --> suggestRegister
+  orderSuccess --> viewOrders
+
+  home --> loginRegister --> profilePage
+
+  %% gợi ý xu hướng mở rộng (giữ label xu hướng theo yêu cầu)
+  suggestRegister -. "Lần đầu mua" .-> arrowFirstBuy
+  viewOrders -. "Mua lại" .-> arrowBuyAgain
+
+  class loggedInDecision decisionStyle;
+  class home,collection,productDetail,customize,addToCart,checkout,loginRegister,profilePage,checkoutMember,checkoutGuest,orderSuccess,suggestRegister,viewOrders actionStyle;
+  class orderSuccess successStyle;
+  class suggestRegister suggestStyle;
+

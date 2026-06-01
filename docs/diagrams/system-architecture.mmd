@@ -1,0 +1,29 @@
+%% DIAGRAM 1 — SƠ ĐỒ HỆ THỐNG TỔNG QUAN
+%% Mục đích: Mô tả luồng kết nối giữa 2 client (Client App, Admin App), Backend API Server và Database.
+%% Ngày cập nhật: 2026-05-20
+
+graph TD
+  clientApp["Client App\n(Trang khách hàng)"]
+  adminApp["Admin App\n(Trang quản trị)"]
+  apiServer["API Server"]
+  database["Database"]
+
+  classDef clientAppStyle fill:#6B1218,stroke:#6B1218,color:#FFFFFF;
+  classDef adminAppStyle fill:#8B5E3C,stroke:#8B5E3C,color:#FFFFFF;
+  classDef apiServerStyle fill:#2C1810,stroke:#2C1810,color:#FFFFFF;
+  classDef databaseStyle fill:#F2E8D9,stroke:#2C1810,color:#2C1810;
+
+  class clientApp clientAppStyle;
+  class adminApp adminAppStyle;
+  class apiServer apiServerStyle;
+  class database databaseStyle;
+
+  clientApp -->|"HTTP Request"| apiServer
+  adminApp -->|"HTTP Request"| apiServer
+
+  apiServer -->|"Query"| database
+  database -->|"Response"| apiServer
+
+  apiServer -->|"JSON Response"| clientApp
+  apiServer -->|"JSON Response"| adminApp
+

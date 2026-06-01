@@ -1,0 +1,58 @@
+%% DIAGRAM 3 — USER STORY ADMIN
+%% Mục đích: Thể hiện các hành động chính của Admin từ đăng nhập tới các nhánh quản lý và thống kê.
+%% Ngày cập nhật: 2026-05-20
+
+graph TD
+  classDef adminActionStyle fill:#8B5E3C,stroke:#8B5E3C,color:#FFFFFF;
+  classDef dashboardStyle fill:#2C1810,stroke:#2C1810,color:#FFFFFF;
+  classDef pendingStyle fill:#FFC857,stroke:#B8860B,color:#1A1A1A;
+  classDef deliveringStyle fill:#A5D6A7,stroke:#2E7D32,color:#1B5E20;
+  classDef deliveredStyle fill:#2E7D32,stroke:#1B5E20,color:#FFFFFF;
+
+  loginAdmin["Đăng nhập Admin"]
+  dashboard["Dashboard tổng quan"]
+
+  manageCatalog["Quản lý sản phẩm"]
+  viewProducts["Xem danh sách sản phẩm"]
+  crudProducts["Thêm / Sửa / Xóa sản phẩm"]
+
+  manageOrders["Quản lý đơn hàng"]
+  viewOrders["Xem danh sách đơn hàng"]
+  updateOrderStatus["Cập nhật trạng thái đơn hàng"]
+  statusProcessing["Đang xử lý"]
+  statusShipping["Đang giao"]
+  statusDelivered["Đã giao"]
+
+  manageUsers["Quản lý người dùng"]
+  viewMembers["Xem danh sách thành viên"]
+  lockAccount["Xem chi tiết / Khóa tài khoản"]
+
+  manageStats["Thống kê"]
+  revenue["Xem doanh thu"]
+  bestSeller["Xem sản phẩm bán chạy"]
+
+  loginAdmin --> dashboard
+
+  dashboard -->|"Quản lý catalog"| manageCatalog
+  manageCatalog --> viewProducts
+  manageCatalog --> crudProducts
+
+  dashboard -->|"Xử lý đơn"| manageOrders
+  manageOrders --> viewOrders
+  manageOrders --> updateOrderStatus
+  updateOrderStatus --> statusProcessing -->|"Cập nhật vận chuyển"| statusShipping -->|"Cập nhật vận chuyển"| statusDelivered
+
+  dashboard -->|"Quản lý thành viên"| manageUsers
+  manageUsers --> viewMembers
+  manageUsers --> lockAccount
+
+  dashboard -->|"Báo cáo kinh doanh"| manageStats
+  manageStats --> revenue
+  manageStats --> bestSeller
+
+  class loginAdmin,manageCatalog,viewProducts,crudProducts,manageOrders,viewOrders,updateOrderStatus,manageUsers,viewMembers,lockAccount,manageStats,revenue,bestSeller adminActionStyle;
+  class dashboard dashboardStyle;
+  class statusProcessing pendingStyle;
+  class statusShipping deliveringStyle;
+  class statusDelivered deliveredStyle;
+
