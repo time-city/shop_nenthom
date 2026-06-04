@@ -1,0 +1,383 @@
+// ==========================================
+// CẤU HÌNH GENERATOR & DATASOURCE
+// ==========================================
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["public"] // Bắt buộc khai báo schemas ở đây
+}
+
+// ==========================================
+// ĐỊNH NGHĨA ENUMS
+// ==========================================
+enum Role {
+  CUSTOMER
+  ADMIN
+  @@schema("public")
+}
+
+enum UserStatus {
+  ACTIVE
+  LOCKED
+  @@schema("public")
+}
+
+enum ContactStatus {
+  PENDING
+  REPLIED
+  @@schema("public")
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  @@schema("public")
+}
+
+enum PaymentMethod {
+  COD
+  BANK_TRANSFER
+  @@schema("public")
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  FAILED
+  @@schema("public")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+  @@schema("public")
+}
+
+// ==========================================
+// 1. NHÓM QUẢN LÝ NGƯỜI DÙNG & LIÊN HỆ
+// ==========================================
+
+model User {
+  id               String   @id @default(uuid()) @db.Uuid
+  email            String   @unique
+  password_hash    String
+  role             Role     @default(CUSTOMER)
+  status           UserStatus @default(ACTIVE)
+  fullname         String?
+  phone            String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  // Relations
+  shipping_addresses ShippingAddress[]
+  cart               Cart?
+  orders             Order[]
+  discount_usages    DiscountUsage[]
+  history_logs       OrderHistoryLog[] @relation("AdminLogs")
+
+  @@map("users")
+  @@schema("public")
+}
+
+model ShippingAddress {
+  id         String  @id @default(uuid()) @db.Uuid
+  user_id    String  @db.Uuid
+  fullname   String
+  phone      String
+  address    String
+  city       String
+  is_default Boolean @default(false)
+
+  // Relations
+  user       User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("shipping_addresses")
+  @@schema("public")
+}
+
+model Contact {
+  id         String        @id @default(uuid()) @db.Uuid
+  name       String
+  email      String
+  subject    String
+  message    String        @db.Text
+  status     ContactStatus @default(PENDING)
+  created_at DateTime      @default(now())
+
+  @@map("contacts")
+  @@schema("public")
+}
+
+// ==========================================
+// 2. NHÓM QUẢN LÝ SẢN PHẨM & TÙY CHỈNH NẾN
+// ==========================================
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?   @db.Text
+  is_active   Boolean   @default(true)
+
+  // Relations
+  products    Product[]
+
+  @@map("categories")
+  @@schema("public")
+}
+
+model Product {
+  id               String   @id @default(uuid()) @db.Uuid
+  category_id      Int
+  name             String
+  base_price_cents Int
+  description      String?  @db.Text
+  images           Json     // Lưu mảng chuỗi URL hình ảnh
+  is_active        Boolean  @default(true)
+  created_at       DateTime @default(now())
+
+  // Relations
+  category         Category @relation(fields: [category_id], references: [id])
+  cart_items       CartItem[]
+  order_items      OrderItem[]
+
+  @@map("products")
+  @@schema("public")
+}
+
+model Scent {
+  id                Int       @id @default(autoincrement())
+  name              String
+  price_extra_cents Int       @default(0)
+  is_active         Boolean   @default(true)
+
+  // Relations
+  cart_items        CartItem[]
+  order_items       OrderItem[]
+
+  @@map("scents")
+  @@schema("public")
+}
+
+model WaxColor {
+  id                Int       @id @default(autoincrement())
+  name              String
+  hex_code          String
+  price_extra_cents Int       @default(0)
+  is_active         Boolean   @default(true)
+
+  // Relations
+  cart_items        CartItem[]
+  order_items       OrderItem[]
+
+  @@map("wax_colors")
+  @@schema("public")
+}
+
+model CandleSize {
+  id                Int       @id @default(autoincrement())
+  name              String
+  weight_gram       Int
+  price_extra_cents Int       @default(0)
+  is_active         Boolean   @default(true)
+
+  // Relations
+  cart_items        CartItem[]
+  order_items       OrderItem[]
+
+  @@map("candle_sizes")
+  @@schema("public")
+}
+
+model Packaging {
+  id                Int       @id @default(autoincrement())
+  name              String
+  price_extra_cents Int       @default(0)
+  is_active         Boolean   @default(true)
+
+  // Relations
+  cart_items        CartItem[]
+  order_items       OrderItem[]
+
+  @@map("packagings")
+  @@schema("public")
+}
+
+model Topping {
+  id                Int       @id @default(autoincrement())
+  name              String
+  price_extra_cents Int       @default(0)
+  in_stock          Boolean   @default(true)
+  is_active         Boolean   @default(true)
+
+  // Note: Không có quan hệ trực tiếp vì Topping lưu dạng mảng JSON
+  @@map("toppings")
+  @@schema("public")
+}
+
+// ==========================================
+// 3. NHÓM GIỎ HÀNG (SERVER SIDE)
+// ==========================================
+
+model Cart {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String?  @unique @db.Uuid
+  session_id String?  @unique // Dành cho khách vãng lai
+  updated_at DateTime @updatedAt
+
+  // Relations
+  user       User?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  items      CartItem[]
+
+  @@map("carts")
+  @@schema("public")
+}
+
+model CartItem {
+  id            String  @id @default(uuid()) @db.Uuid
+  cart_id       String  @db.Uuid
+  product_id    String  @db.Uuid
+  quantity      Int     @default(1)
+  scent_id      Int?
+  color_id      Int?
+  size_id       Int?
+  pack_id       Int?
+  toppings_json Json?   // Mảng các ID topping: [1, 3, 5]
+
+  // Relations
+  cart          Cart        @relation(fields: [cart_id], references: [id], onDelete: Cascade)
+  product       Product     @relation(fields: [product_id], references: [id])
+  scent         Scent?      @relation(fields: [scent_id], references: [id])
+  color         WaxColor?   @relation(fields: [color_id], references: [id])
+  size          CandleSize? @relation(fields: [size_id], references: [id])
+  packaging     Packaging?  @relation(fields: [pack_id], references: [id])
+
+  @@map("cart_items")
+  @@schema("public")
+}
+
+// ==========================================
+// 4. NHÓM ĐƠN HÀNG & THANH TOÁN (SEPAY READY)
+// ==========================================
+
+model Order {
+  id                String        @id @default(uuid()) @db.Uuid
+  order_number      String        @unique
+  user_id           String?       @db.Uuid
+  
+  // Thông tin Guest
+  guest_email       String?
+  guest_phone       String?
+
+  // Snapshot địa chỉ giao hàng
+  shipping_fullname String
+  shipping_phone    String
+  shipping_address  String
+  shipping_city     String
+  shipping_note     String?       @db.Text
+
+  // Trạng thái đơn & Thanh toán
+  status            OrderStatus   @default(PENDING)
+  payment_method    PaymentMethod
+  payment_status    PaymentStatus @default(UNPAID)
+  transaction_id    String?       // Mã đối soát SePay
+  paid_at           DateTime?
+
+  // Tổng tiền
+  subtotal_cents    Int
+  discount_cents    Int           @default(0)
+  shipping_cents    Int           @default(0)
+  total_cents       Int
+
+  created_at        DateTime      @default(now())
+
+  // Relations
+  user              User?             @relation(fields: [user_id], references: [id])
+  items             OrderItem[]
+  history_logs      OrderHistoryLog[]
+  discount_usages   DiscountUsage[]
+
+  @@map("orders")
+  @@schema("public")
+}
+
+model OrderItem {
+  id               String  @id @default(uuid()) @db.Uuid
+  order_id         String  @db.Uuid
+  product_id       String  @db.Uuid
+  quantity         Int
+  unit_price_cents Int     // Snapshot giá trị món hàng ngay lúc mua
+
+  // Option snapshots
+  scent_id         Int?
+  color_id         Int?
+  size_id          Int?
+  pack_id          Int?
+  toppings_json    Json?
+
+  // Relations
+  order            Order       @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product          Product     @relation(fields: [product_id], references: [id])
+  scent            Scent?      @relation(fields: [scent_id], references: [id])
+  color            WaxColor?   @relation(fields: [color_id], references: [id])
+  size             CandleSize? @relation(fields: [size_id], references: [id])
+  packaging        Packaging?  @relation(fields: [pack_id], references: [id])
+
+  @@map("order_items")
+  @@schema("public")
+}
+
+model OrderHistoryLog {
+  id              String       @id @default(uuid()) @db.Uuid
+  order_id        String       @db.Uuid
+  previous_status OrderStatus?
+  current_status  OrderStatus
+  updated_by      String?      @db.Uuid // Nullable = Hệ thống tự động update (SePay)
+  note            String?      @db.Text
+  created_at      DateTime     @default(now())
+
+  // Relations
+  order           Order  @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  admin           User?  @relation("AdminLogs", fields: [updated_by], references: [id])
+
+  @@map("order_history_logs")
+  @@schema("public")
+}
+
+model DiscountCode {
+  id                    String       @id @default(uuid()) @db.Uuid
+  code                  String       @unique
+  discount_amount_cents Int
+  type                  DiscountType
+  max_uses              Int
+  used_count            Int          @default(0)
+  is_active             Boolean      @default(true)
+  expires_at            DateTime?
+
+  // Relations
+  usages                DiscountUsage[]
+
+  @@map("discount_codes")
+  @@schema("public")
+}
+
+model DiscountUsage {
+  id               String   @id @default(uuid()) @db.Uuid
+  discount_code_id String   @db.Uuid
+  user_id          String?  @db.Uuid
+  order_id         String   @unique @db.Uuid // 1 đơn hàng chỉ xài 1 mã
+  used_at          DateTime @default(now())
+
+  // Relations
+  discount_code    DiscountCode @relation(fields: [discount_code_id], references: [id], onDelete: Cascade)
+  user             User?        @relation(fields: [user_id], references: [id])
+  order            Order        @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@map("discount_usages")
+  @@schema("public")
+}
