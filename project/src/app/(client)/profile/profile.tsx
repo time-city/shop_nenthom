@@ -37,6 +37,10 @@ const getCookie = (name: string) => {
   );
 };
 
+const clearCookie = (name: string) => {
+  document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+};
+
 const readUser = () => {
   try {
     if (typeof window === "undefined") {
@@ -210,6 +214,24 @@ export function ProfilePageContent() {
     toast.success(message);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("fullname");
+    localStorage.removeItem("email");
+    localStorage.removeItem("phone");
+    localStorage.removeItem("remember");
+    localStorage.removeItem("lumiere-user");
+    clearCookie("role");
+    clearCookie("accessToken");
+
+    const message = "Đăng xuất thành công";
+    console.log(message);
+    toast.success(message);
+
+    window.setTimeout(() => {
+      window.location.href = "/login";
+    }, 900);
+  };
+
   return (
     <main className="min-h-[calc(100dvh-5rem)] bg-[#F2E8D9] text-[#2C1810]">
       <ProfileHeader activeTab="profile" user={user} />
@@ -283,6 +305,13 @@ export function ProfilePageContent() {
                 className="rounded-full border-[1.5px] border-[#6B1218] bg-transparent px-6 py-3 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8] sm:text-[0.8rem]"
               >
                 Đổi Mật Khẩu
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full border-[1.5px] border-[#2C1810]/25 bg-transparent px-6 py-3 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] sm:text-[0.8rem]"
+              >
+                Đăng Xuất
               </button>
             </div>
           </form>
