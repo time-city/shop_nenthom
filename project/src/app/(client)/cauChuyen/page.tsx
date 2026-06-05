@@ -1,9 +1,5 @@
-import React from 'react'
+import { redirect } from "next/navigation";
 
-function CauChuyen() {
-  return (
-    <div>CauChuyen</div>
-  )
+export default function CauChuyen() {
+  redirect("/#cauChuyen");
 }
-
-export default CauChuyen

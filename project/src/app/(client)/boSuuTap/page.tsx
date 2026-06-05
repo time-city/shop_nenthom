@@ -1,9 +1,5 @@
-import React from 'react'
+import { redirect } from "next/navigation";
 
-function BoSuuTap() {
-  return (
-    <div>boSuuTap</div>
-  )
+export default function BoSuuTap() {
+  redirect("/#boSuuTap");
 }
-
-export default BoSuuTap

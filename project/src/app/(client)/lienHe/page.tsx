@@ -1,9 +1,5 @@
-import React from 'react'
+import { redirect } from "next/navigation";
 
-function LienHe() {
-  return (
-    <div>LienHe</div>
-  )
+export default function LienHe() {
+  redirect("/#lienHe");
 }
-
-export default LienHe
