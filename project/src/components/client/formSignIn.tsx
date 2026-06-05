@@ -9,6 +9,7 @@ import {
 } from "formik";
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "react-toastify";
 import { z } from "zod";
 
 interface SignInValues {
@@ -102,11 +103,11 @@ const saveAuthResponse = (response: AuthResponse) => {
 
 export default function FormSignIn() {
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   const showError = (message: string) => {
-    setSuccessMessage("");
     setErrorMessage(message);
+    console.log(message);
+    toast.error(message);
     window.setTimeout(() => setErrorMessage(""), 4000);
   };
 
@@ -147,10 +148,11 @@ export default function FormSignIn() {
       success: true,
     };
 
+    console.log(response.message);
     saveAuthResponse(response);
     localStorage.setItem("remember", String(values.remember));
     setErrorMessage("");
-    setSuccessMessage(response.message);
+    toast.success(response.message);
 
     const redirect = new URLSearchParams(window.location.search).get("redirect");
 
@@ -181,12 +183,6 @@ export default function FormSignIn() {
           {errorMessage ? (
             <div className="mb-6 rounded-sm border border-[#ffc107] bg-[#fff3cd] p-3 text-[0.85rem] text-[#856404]">
               {errorMessage}
-            </div>
-          ) : null}
-
-          {successMessage ? (
-            <div className="mb-6 rounded-sm border border-[#28a745] bg-[#d4edda] p-3 text-[0.85rem] text-[#155724]">
-              {successMessage}
             </div>
           ) : null}
 

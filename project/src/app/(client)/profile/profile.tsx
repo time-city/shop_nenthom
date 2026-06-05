@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 
 type UserData = {
   address?: string;
@@ -191,7 +192,6 @@ function Field({
 
 export function ProfilePageContent() {
   const [user, setUser] = useState<Required<UserData>>(() => readUser());
-  const [showToast, setShowToast] = useState(false);
 
   const updateField = (field: keyof Required<UserData>, value: string) => {
     setUser((current) => ({ ...current, [field]: value }));
@@ -204,8 +204,10 @@ export function ProfilePageContent() {
     localStorage.setItem("fullname", user.fullname);
     localStorage.setItem("email", user.email);
     localStorage.setItem("phone", user.phone);
-    setShowToast(true);
-    window.setTimeout(() => setShowToast(false), 2500);
+
+    const message = "Đã lưu thay đổi";
+    console.log(message);
+    toast.success(message);
   };
 
   return (
@@ -274,8 +276,9 @@ export function ProfilePageContent() {
               <button
                 type="button"
                 onClick={() => {
-                  setShowToast(true);
-                  window.setTimeout(() => setShowToast(false), 2500);
+                  const message = "Tính năng đổi mật khẩu sẽ được cập nhật";
+                  console.log(message);
+                  toast.info(message);
                 }}
                 className="rounded-full border-[1.5px] border-[#6B1218] bg-transparent px-6 py-3 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8] sm:text-[0.8rem]"
               >
@@ -286,15 +289,6 @@ export function ProfilePageContent() {
         </div>
       </section>
 
-      {showToast ? (
-        <div
-          className="fixed bottom-5 right-5 z-[999] flex items-center gap-2 rounded-[10px] bg-[#6B1218] px-4 py-3 text-[0.9rem] text-[#F5F0E8] shadow-[0_12px_28px_rgba(107,18,24,0.25)]"
-          aria-live="polite"
-        >
-          <span>✓</span>
-          <span>Đã lưu thay đổi</span>
-        </div>
-      ) : null}
     </main>
   );
 }

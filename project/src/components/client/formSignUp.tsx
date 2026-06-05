@@ -8,7 +8,7 @@ import {
   type FormikHelpers,
 } from "formik";
 import Link from "next/link";
-import { useState } from "react";
+import { toast } from "react-toastify";
 import { z } from "zod";
 
 interface SignUpValues {
@@ -134,8 +134,6 @@ const saveAuthResponse = (response: AuthResponse) => {
 };
 
 export default function FormSignUp() {
-  const [successMessage, setSuccessMessage] = useState("");
-
   const handleSubmit = (
     values: SignUpValues,
     actions: FormikHelpers<SignUpValues>,
@@ -160,9 +158,10 @@ export default function FormSignUp() {
       success: true,
     };
 
+    console.log(response.message);
     saveAuthResponse(response);
     localStorage.setItem("newsletter", String(values.newsletter));
-    setSuccessMessage(response.message);
+    toast.success(response.message);
 
     window.setTimeout(() => {
       window.location.href = "/";
@@ -181,12 +180,6 @@ export default function FormSignUp() {
           <p className="mb-7 mt-2 text-center text-[0.86rem] font-normal leading-relaxed text-[#2c1810]/70 sm:mb-8 sm:text-[0.88rem]">
             Tạo tài khoản để lưu các sáng tạo của bạn
           </p>
-
-          {successMessage ? (
-            <div className="mb-6 rounded-sm border border-[#28a745] bg-[#d4edda] p-3 text-[0.85rem] text-[#155724]">
-              {successMessage}
-            </div>
-          ) : null}
 
           <Formik
             initialValues={initialValues}
