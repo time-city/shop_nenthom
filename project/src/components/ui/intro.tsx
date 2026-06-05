@@ -128,7 +128,7 @@ function Flower({
       style={{ left: x, opacity, width: size * 4 }}
     >
       <div
-        className="absolute bottom-0 left-1/2 w-0.5 -translate-x-1/2 rounded bg-gradient-to-t from-[#1a0a08] to-[#3a1815] origin-bottom animate-[ft-sway_2.8s_ease-in-out_infinite]"
+        className="absolute bottom-0 left-1/2 w-0.5 -translate-x-1/2 rounded bg-linear-to-t from-[#1a0a08] to-[#3a1815] origin-bottom animate-[ft-sway_2.8s_ease-in-out_infinite]"
         style={{ animationDelay: delay, height: h }}
       />
       <div
@@ -207,40 +207,40 @@ export default function Intro() {
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[9999] overflow-hidden bg-black transition-opacity duration-1000 ${
+      className={`fixed inset-0 z-9999 overflow-hidden bg-black transition-opacity duration-1000 ${
         phase === "hide" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       onClick={dismiss}
     >
       <div className="absolute inset-0 overflow-hidden">
         <div
-          className={`absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(107,18,24,0.3)_0%,rgba(84,12,18,0.5)_28%,rgba(60,8,14,0.7)_52%,rgba(42,6,10,0.85)_75%,#1a0a08_100%)] transition-opacity duration-[1800ms] ${
+          className={`absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(107,18,24,0.3)_0%,rgba(84,12,18,0.5)_28%,rgba(60,8,14,0.7)_52%,rgba(42,6,10,0.85)_75%,#1a0a08_100%)] transition-opacity duration-1800 ${
             showGarden ? "opacity-100" : "opacity-0"
           }`}
         />
         <div
-          className={`absolute -top-8 left-1/2 h-44 w-[340px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,180,100,0.25)_0%,rgba(200,100,80,0.08)_48%,transparent_70%)] blur-2xl transition-opacity duration-[1800ms] ${
+          className={`absolute -top-8 left-1/2 h-44 w-[340px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,180,100,0.25)_0%,rgba(200,100,80,0.08)_48%,transparent_70%)] blur-2xl transition-opacity duration-1800 ${
             showGarden ? "opacity-100" : "opacity-0"
           }`}
         />
         <div
-          className={`absolute bottom-[35%] left-[-6%] h-[155px] w-[46%] rounded-[52%_60%_0_0] bg-gradient-to-b from-[#3A0A0E] to-[#2a0608] transition-opacity duration-[1800ms] ${
+          className={`absolute bottom-[35%] left-[-6%] h-[155px] w-[46%] rounded-[52%_60%_0_0] bg-linear-to-b from-[#3A0A0E] to-[#2a0608] transition-opacity duration-1800 ${
             showGarden ? "opacity-50" : "opacity-0"
           }`}
         />
         <div
-          className={`absolute bottom-[33%] left-[28%] h-[188px] w-[56%] rounded-[60%_52%_0_0] bg-gradient-to-b from-[#3d0a0d] to-[#2c0809] transition-opacity duration-[1800ms] ${
+          className={`absolute bottom-[33%] left-[28%] h-[188px] w-[56%] rounded-[60%_52%_0_0] bg-linear-to-b from-[#3d0a0d] to-[#2c0809] transition-opacity duration-1800 ${
             showGarden ? "opacity-45" : "opacity-0"
           }`}
         />
         <div
-          className={`absolute bottom-[32%] right-[-6%] h-[142px] w-[44%] rounded-[56%_46%_0_0] bg-gradient-to-b from-[#380a0c] to-[#280607] transition-opacity duration-[1800ms] ${
+          className={`absolute bottom-[32%] right-[-6%] h-[142px] w-[44%] rounded-[56%_46%_0_0] bg-linear-to-b from-[#380a0c] to-[#280607] transition-opacity duration-1800 ${
             showGarden ? "opacity-45" : "opacity-0"
           }`}
         />
 
         <div
-          className={`absolute bottom-[32%] left-0 right-0 h-[175px] transition-opacity duration-[1800ms] ${
+          className={`absolute bottom-[32%] left-0 right-0 h-[175px] transition-opacity duration-1800 ${
             showGarden ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -249,7 +249,7 @@ export default function Intro() {
           ))}
         </div>
         <div
-          className={`absolute bottom-[22%] left-0 right-0 h-[235px] transition-opacity duration-[1800ms] delay-150 ${
+          className={`absolute bottom-[22%] left-0 right-0 h-[235px] transition-opacity duration-1800 delay-150 ${
             showGarden ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -258,7 +258,7 @@ export default function Intro() {
           ))}
         </div>
         <div
-          className={`absolute bottom-[14%] left-0 right-0 h-[195px] transition-opacity duration-[1800ms] delay-300 ${
+          className={`absolute bottom-[14%] left-0 right-0 h-[195px] transition-opacity duration-1800 delay-300 ${
             showGarden ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -268,7 +268,7 @@ export default function Intro() {
         </div>
 
         <div
-          className={`absolute bottom-0 left-0 right-0 h-[44%] bg-gradient-to-b from-[#1a0a08] via-[#140707] to-[#0f0504] transition-opacity duration-[1800ms] ${
+          className={`absolute bottom-0 left-0 right-0 h-[44%] bg-linear-to-b from-[#1a0a08] via-[#140707] to-[#0f0504] transition-opacity duration-1800 ${
             showGarden ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -276,14 +276,14 @@ export default function Intro() {
         </div>
 
         <div
-          className={`absolute bottom-[12%] left-0 right-0 h-24 transition-opacity duration-[1800ms] delay-300 ${
+          className={`absolute bottom-[12%] left-0 right-0 h-24 transition-opacity duration-1800 delay-300 ${
             showGarden ? "opacity-100" : "opacity-0"
           }`}
         >
           {grass.map((blade) => (
             <div
               key={`${blade.x}-${blade.h}`}
-              className="absolute bottom-0 rounded-[50%_50%_28%_28%] bg-gradient-to-t from-[#1a0a08] via-[#2c1810] to-[#4a2420]"
+              className="absolute bottom-0 rounded-[50%_50%_28%_28%] bg-linear-to-t from-[#1a0a08] via-[#2c1810] to-[#4a2420]"
               style={{
                 height: blade.h,
                 left: blade.x,
@@ -295,7 +295,7 @@ export default function Intro() {
         </div>
 
         <div
-          className={`absolute bottom-[6%] left-0 right-0 h-40 transition-opacity duration-[1800ms] delay-500 ${
+          className={`absolute bottom-[6%] left-0 right-0 h-40 transition-opacity duration-1800 delay-500 ${
             showGarden ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -313,7 +313,7 @@ export default function Intro() {
         </div>
 
         <div
-          className={`absolute inset-0 transition-opacity duration-[1800ms] delay-700 ${
+          className={`absolute inset-0 transition-opacity duration-1800 delay-700 ${
             showGarden ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -339,12 +339,12 @@ export default function Intro() {
           }`}
         >
           <div className="relative flex flex-col items-center">
-            <div className="absolute -top-[70px] left-1/2 size-[190px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,208,96,0.48)_0%,rgba(255,158,44,0.16)_44%,transparent_68%)] blur-xl animate-[ft-glow_1.6s_ease-in-out_infinite] max-sm:size-[140px] max-sm:-top-14" />
+            <div className="absolute top-[-70px] left-1/2 size-[190px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,208,96,0.48)_0%,rgba(255,158,44,0.16)_44%,transparent_68%)] blur-xl animate-[ft-glow_1.6s_ease-in-out_infinite] max-sm:size-[140px] max-sm:-top-14" />
             <div className="relative z-10 h-[46px] w-[19px] rounded-[50%_50%_38%_38%] bg-[radial-gradient(ellipse_at_50%_68%,#fff_0%,#fff8b8_15%,#ffd030_42%,#ff8600_73%,transparent_100%)] origin-bottom animate-[ft-flick_0.62s_ease-in-out_infinite] max-sm:h-9 max-sm:w-3.5" />
             <div className="h-[22px] w-0.5 rounded bg-[#3a2810] max-sm:h-4" />
           </div>
           <div className="relative h-[200px] w-[148px] rounded-[18px_18px_12px_12px] bg-[linear-gradient(115deg,rgba(248,242,230,0.93)_0%,rgba(255,251,240,0.96)_34%,rgba(232,220,200,0.94)_68%,rgba(206,190,166,0.92)_100%)] shadow-[inset_-15px_0_30px_rgba(0,0,0,0.10),inset_10px_0_24px_rgba(255,255,255,0.32),0_12px_44px_rgba(0,0,0,0.28),0_3px_10px_rgba(0,0,0,0.16)] max-sm:h-[152px] max-sm:w-[110px]">
-            <div className="absolute left-[13px] top-[8%] h-[66%] w-[11px] rounded-md bg-gradient-to-b from-white/35 via-white/10 to-transparent max-sm:left-2.5 max-sm:w-2" />
+            <div className="absolute left-[13px] top-[8%] h-[66%] w-[11px] rounded-md bg-linear-to-b from-white/35 via-white/10 to-transparent max-sm:left-2.5 max-sm:w-2" />
             <div className="absolute left-1/2 top-1.5 h-6 w-[118px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_40%_38%,rgba(255,252,236,0.92)_0%,rgba(238,224,200,0.82)_55%,rgba(210,192,166,0.68)_100%)] max-sm:h-[18px] max-sm:w-[88px]" />
           </div>
         </div>

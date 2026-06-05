@@ -42,13 +42,13 @@ export default function Header() {
         </ul>
 
         <div className="nav-actions flex shrink-0 items-center gap-3">
-          <a
-            href="/login.html"
+          <Link
+            href="/login"
             className="user-btn flex size-10 items-center justify-center rounded-full border border-[#f5f0e8]/20 text-[#f5f0e8] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f5f0e8]/40 hover:text-[#F8F0E4] hover:opacity-90"
             aria-label="User"
           >
             <User className="size-5" aria-hidden="true" />
-          </a>
+          </Link>
 
           <a
             href="/cart.html"
