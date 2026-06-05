@@ -21,17 +21,14 @@ interface SignUpValues {
   newsletter: boolean;
 }
 
-type AuthResponse = {
-  data: {
-    accessToken: string;
-    user: {
-      email: string;
-      fullname: string;
-      id: string;
-      phone: string;
-      role: string;
-    };
-  };
+type RegisterRequest = {
+  email: string;
+  fullname: string;
+  password: string;
+  phone: string;
+};
+
+type RegisterResponse = {
   message: string;
   success: boolean;
 };
@@ -102,35 +99,27 @@ const validateSignUp = (values: SignUpValues) => {
   );
 };
 
-const setCookie = (name: string, value: string) => {
-  document.cookie = `${name}=${encodeURIComponent(
-    value,
-  )}; path=/; max-age=604800; SameSite=Lax`;
-};
-
-// Lưu dữ liệu auth theo response backend: user info vào localStorage, role/token vào cookies.
-const saveAuthResponse = (response: AuthResponse) => {
+// Register API chỉ trả success/message, nên dùng request để tạm fill profile sau khi đăng ký.
+const saveRegisterRequest = (
+  request: RegisterRequest,
+  response: RegisterResponse,
+) => {
   if (!response.success) {
     return;
   }
 
-  const { accessToken, user } = response.data;
-
-  localStorage.setItem("fullname", user.fullname);
-  localStorage.setItem("email", user.email);
-  localStorage.setItem("phone", user.phone);
+  localStorage.setItem("fullname", request.fullname);
+  localStorage.setItem("email", request.email);
+  localStorage.setItem("phone", request.phone);
   localStorage.setItem(
     "lumiere-user",
     JSON.stringify({
-      email: user.email,
-      fullname: user.fullname,
-      phone: user.phone,
-      role: user.role,
+      email: request.email,
+      fullname: request.fullname,
+      phone: request.phone,
+      role: "user",
     }),
   );
-
-  setCookie("role", user.role);
-  setCookie("accessToken", accessToken);
 };
 
 export default function FormSignUp() {
@@ -141,30 +130,22 @@ export default function FormSignUp() {
     const fullname = values.fullname.trim();
     const email = values.email.trim();
     const phone = values.phone.trim();
+    const password = values.password;
+    const request: RegisterRequest = { email, fullname, password, phone };
 
-    // Mock response hiện tại; khi gắn API thật thì thay object này bằng response từ server.
-    const response: AuthResponse = {
-      data: {
-        accessToken: `chamcham-user-${Date.now()}`,
-        user: {
-          email,
-          fullname,
-          id: `customer-${Date.now()}`,
-          phone,
-          role: "user",
-        },
-      },
+    // TODO: POST /api/auth/register với request { fullname, email, phone, password }.
+    const response: RegisterResponse = {
       message: "Đăng ký thành công! Đang chuyển hướng...",
       success: true,
     };
 
     console.log(response.message);
-    saveAuthResponse(response);
+    saveRegisterRequest(request, response);
     localStorage.setItem("newsletter", String(values.newsletter));
     toast.success(response.message);
 
     window.setTimeout(() => {
-      window.location.href = "/";
+      window.location.href = "/login";
     }, 1500);
 
     actions.setSubmitting(false);

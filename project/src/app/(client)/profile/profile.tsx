@@ -5,23 +5,35 @@ import { FormEvent, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
 type UserData = {
-  address?: string;
-  city?: string;
   email?: string;
   fullname?: string;
   phone?: string;
   role?: string;
-  zip?: string;
+};
+
+type ProfileUpdateRequest = {
+  fullname: string;
+  phone: string;
+};
+
+type ProfileUpdateResponse = {
+  data: {
+    user: {
+      email: string;
+      fullname: string;
+      id: string;
+      phone: string;
+    };
+  };
+  message: string;
+  success: boolean;
 };
 
 const defaultUser: Required<UserData> = {
-  address: "",
-  city: "",
   email: "user@example.com",
   fullname: "User",
   phone: "",
   role: "user",
-  zip: "",
 };
 
 const getCookie = (name: string) => {
@@ -92,6 +104,29 @@ const getInitials = (name: string) => {
     .toUpperCase();
 
   return initials || "CC";
+};
+
+const saveProfileResponse = (
+  currentUser: Required<UserData>,
+  response: ProfileUpdateResponse,
+) => {
+  if (!response.success) {
+    return currentUser;
+  }
+
+  const updatedUser = {
+    ...currentUser,
+    email: response.data.user.email,
+    fullname: response.data.user.fullname,
+    phone: response.data.user.phone,
+  };
+
+  localStorage.setItem("lumiere-user", JSON.stringify(updatedUser));
+  localStorage.setItem("fullname", updatedUser.fullname);
+  localStorage.setItem("email", updatedUser.email);
+  localStorage.setItem("phone", updatedUser.phone);
+
+  return updatedUser;
 };
 
 function ProfileHeader({
@@ -204,14 +239,28 @@ export function ProfilePageContent() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    localStorage.setItem("lumiere-user", JSON.stringify(user));
-    localStorage.setItem("fullname", user.fullname);
-    localStorage.setItem("email", user.email);
-    localStorage.setItem("phone", user.phone);
+    const request: ProfileUpdateRequest = {
+      fullname: user.fullname.trim(),
+      phone: user.phone.trim(),
+    };
 
-    const message = "Đã lưu thay đổi";
-    console.log(message);
-    toast.success(message);
+    // TODO: PUT /api/users/profile với request { fullname, phone } và token trong cookie.
+    const response: ProfileUpdateResponse = {
+      data: {
+        user: {
+          email: user.email,
+          fullname: request.fullname,
+          id: "current-user",
+          phone: request.phone,
+        },
+      },
+      message: "Đã lưu thay đổi",
+      success: true,
+    };
+
+    console.log(response.message);
+    setUser(saveProfileResponse(user, response));
+    toast.success(response.message);
   };
 
   const handleLogout = () => {
@@ -264,28 +313,6 @@ export function ProfilePageContent() {
                 value={user.phone}
                 onChange={updateField}
               />
-              <Field
-                id="city"
-                label="Thành Phố"
-                value={user.city}
-                onChange={updateField}
-              />
-              <div className="md:col-span-2">
-                <Field
-                  id="address"
-                  label="Địa Chỉ Giao Hàng"
-                  value={user.address}
-                  onChange={updateField}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Field
-                  id="zip"
-                  label="Mã Bưu Chính"
-                  value={user.zip}
-                  onChange={updateField}
-                />
-              </div>
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">

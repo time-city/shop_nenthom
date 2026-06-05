@@ -18,7 +18,12 @@ interface SignInValues {
   remember: boolean;
 }
 
-type AuthResponse = {
+type LoginRequest = {
+  email: string;
+  password: string;
+};
+
+type LoginResponse = {
   data: {
     accessToken: string;
     user: {
@@ -77,7 +82,7 @@ const setCookie = (name: string, value: string) => {
 };
 
 // Lưu dữ liệu auth theo response backend: user info vào localStorage, role/token vào cookies.
-const saveAuthResponse = (response: AuthResponse) => {
+const saveLoginResponse = (response: LoginResponse) => {
   if (!response.success) {
     return;
   }
@@ -117,27 +122,28 @@ export default function FormSignIn() {
   ) => {
     const email = values.email.trim();
     const password = values.password;
+    const request: LoginRequest = { email, password };
 
-    if (!email || !password) {
+    if (!request.email || !request.password) {
       showError("Vui lòng điền đầy đủ thông tin");
       actions.setSubmitting(false);
       return;
     }
 
-    const isAdmin = email.toLowerCase() === "admin@gmail.com";
+    const isAdmin = request.email.toLowerCase() === "admin@gmail.com";
 
-    if (isAdmin && password !== "admin123") {
+    if (isAdmin && request.password !== "admin123") {
       showError("Mật khẩu admin không đúng!");
       actions.setSubmitting(false);
       return;
     }
 
-    // Mock response hiện tại; khi gắn API thật thì thay object này bằng response từ server.
-    const response: AuthResponse = {
+    // TODO: POST /api/auth/login với request { email, password }, rồi thay mock bằng response từ server.
+    const response: LoginResponse = {
       data: {
         accessToken: `chamcham-${isAdmin ? "admin" : "user"}-${Date.now()}`,
         user: {
-          email,
+          email: request.email,
           fullname: isAdmin ? "Admin ChamCham" : "Khách hàng",
           id: isAdmin ? "admin" : "customer",
           phone: localStorage.getItem("phone") ?? "",
@@ -149,7 +155,7 @@ export default function FormSignIn() {
     };
 
     console.log(response.message);
-    saveAuthResponse(response);
+    saveLoginResponse(response);
     localStorage.setItem("remember", String(values.remember));
     setErrorMessage("");
     toast.success(response.message);
