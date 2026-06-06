@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "set -a && source .env && set +a && npx tsx prisma/seed.ts"
+    "seed": "set -a && source .env && set +a && npx tsx prisma/seed.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
@@ -34,6 +35,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
+    "husky": "^9.1.7",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"
