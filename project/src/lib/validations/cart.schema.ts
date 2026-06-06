@@ -11,3 +11,16 @@ export const addToCartSchema = z.object({
 })
 
 export type AddToCartInput = z.infer<typeof addToCartSchema>
+
+export const updateCartItemSchema = z.object({
+    itemId: z.string().uuid('Item ID không hợp lệ'),
+    quantity: z.coerce.number().min(1, 'Số lượng tối thiểu là 1'),
+})
+
+export type UpdateCartItemInput = z.infer<typeof updateCartItemSchema>
+
+export const removeCartItemSchema = z.object({
+    itemId: z.string().uuid('Item ID không hợp lệ'),
+})
+
+export type RemoveCartItemInput = z.infer<typeof removeCartItemSchema>

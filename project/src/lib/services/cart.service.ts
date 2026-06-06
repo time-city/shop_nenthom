@@ -57,5 +57,33 @@ export const CartService = {
                 toppings_json: data.toppings_json ?? [],
             },
         })
-    }
+    },
+
+    async updateCartItem(cartId: string, itemId: string, quantity: number) {
+        // Check item thuộc cart này không
+        const item = await prisma.cartItem.findFirst({
+            where: { id: itemId, cart_id: cartId },
+        })
+        if (!item) throw new Error('Sản phẩm không tồn tại trong giỏ hàng')
+
+        return prisma.cartItem.update({
+            where: { id: itemId },
+            data: { quantity },
+        })
+    },
+
+    async removeCartItem(cartId: string, itemId: string) {
+        const item = await prisma.cartItem.findFirst({
+            where: { id: itemId, cart_id: cartId },
+        })
+        if (!item) throw new Error('Sản phẩm không tồn tại trong giỏ hàng')
+
+        return prisma.cartItem.delete({ where: { id: itemId } })
+    },
+
+    async clearCart(cartId: string) {
+        return prisma.cartItem.deleteMany({ where: { cart_id: cartId } })
+    },
+
+
 }
