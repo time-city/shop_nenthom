@@ -8,9 +8,10 @@ import {
   type FormikHelpers,
 } from "formik";
 import Link from "next/link";
-import { useState } from "react";
+import { type ChangeEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import { loginUser } from "../../lib/action/auth.action";
 
 interface SignInValues {
   email: string;
@@ -18,31 +19,14 @@ interface SignInValues {
   remember: boolean;
 }
 
-type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-type LoginResponse = {
-  data: {
-    accessToken: string;
-    user: {
-      email: string;
-      fullname: string;
-      id: string;
-      phone: string;
-      role: string;
-    };
-  };
-  message: string;
-  success: boolean;
-};
-
 const initialValues: SignInValues = {
   email: "",
   password: "",
   remember: false,
 };
+
+const rememberKey = "remember";
+const rememberedEmailKey = "rememberedEmail";
 
 const signInSchema = z.object({
   email: z
@@ -50,7 +34,10 @@ const signInSchema = z.object({
     .trim()
     .min(1, "Vui lòng nhập email")
     .email("Email không đúng định dạng"),
-  password: z.string().min(1, "Vui lòng nhập mật khẩu"),
+  password: z
+    .string()
+    .min(1, "Vui lòng nhập mật khẩu")
+    .min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
   remember: z.boolean(),
 });
 
@@ -75,39 +62,23 @@ const validateSignIn = (values: SignInValues) => {
   );
 };
 
-const setCookie = (name: string, value: string) => {
-  document.cookie = `${name}=${encodeURIComponent(
-    value,
-  )}; path=/; max-age=604800; SameSite=Lax`;
-};
-
-// Lưu dữ liệu auth theo response backend: user info vào localStorage, role/token vào cookies.
-const saveLoginResponse = (response: LoginResponse) => {
-  if (!response.success) {
-    return;
-  }
-
-  const { accessToken, user } = response.data;
-
-  localStorage.setItem("fullname", user.fullname);
-  localStorage.setItem("email", user.email);
-  localStorage.setItem("phone", user.phone);
-  localStorage.setItem(
-    "lumiere-user",
-    JSON.stringify({
-      email: user.email,
-      fullname: user.fullname,
-      phone: user.phone,
-      role: user.role,
-    }),
-  );
-
-  setCookie("role", user.role);
-  setCookie("accessToken", accessToken);
-};
-
 export default function FormSignIn() {
   const [errorMessage, setErrorMessage] = useState("");
+  const [formInitialValues, setFormInitialValues] =
+    useState<SignInValues>(initialValues);
+
+  useEffect(() => {
+    const shouldRemember = localStorage.getItem(rememberKey) === "true";
+    const rememberedEmail = localStorage.getItem(rememberedEmailKey) ?? "";
+
+    if (shouldRemember && rememberedEmail) {
+      setFormInitialValues({
+        email: rememberedEmail,
+        password: "",
+        remember: true,
+      });
+    }
+  }, []);
 
   const showError = (message: string) => {
     setErrorMessage(message);
@@ -116,55 +87,51 @@ export default function FormSignIn() {
     window.setTimeout(() => setErrorMessage(""), 4000);
   };
 
-  const handleSubmit = (
+  const handleSubmit = async (
     values: SignInValues,
     actions: FormikHelpers<SignInValues>,
   ) => {
     const email = values.email.trim();
     const password = values.password;
-    const request: LoginRequest = { email, password };
 
-    if (!request.email || !request.password) {
+    if (!email || !password) {
       showError("Vui lòng điền đầy đủ thông tin");
       actions.setSubmitting(false);
       return;
     }
 
-    const isAdmin = request.email.toLowerCase() === "admin@gmail.com";
+    // action-(đăng nhập)
+    const result = await loginUser({
+      email,
+      password,
+    });
 
-    if (isAdmin && request.password !== "admin123") {
-      showError("Mật khẩu admin không đúng!");
+    if (!result.success) {
+      showError(result.error ?? "Đăng nhập thất bại");
       actions.setSubmitting(false);
       return;
     }
 
-    // TODO: POST /api/auth/login với request { email, password }, rồi thay mock bằng response từ server.
-    const response: LoginResponse = {
-      data: {
-        accessToken: `chamcham-${isAdmin ? "admin" : "user"}-${Date.now()}`,
-        user: {
-          email: request.email,
-          fullname: isAdmin ? "Admin ChamCham" : "Khách hàng",
-          id: isAdmin ? "admin" : "customer",
-          phone: localStorage.getItem("phone") ?? "",
-          role: isAdmin ? "admin" : "user",
-        },
-      },
-      message: "Đăng nhập thành công! Đang chuyển hướng...",
-      success: true,
-    };
+    const message = "Đăng nhập thành công!";
+    console.log(message);
 
-    console.log(response.message);
-    saveLoginResponse(response);
-    localStorage.setItem("remember", String(values.remember));
+    // Remember me chỉ lưu email và trạng thái checkbox, không lưu mật khẩu.
+    if (values.remember) {
+      localStorage.setItem(rememberKey, "true");
+      localStorage.setItem(rememberedEmailKey, email);
+    } else {
+      localStorage.removeItem(rememberKey);
+      localStorage.removeItem(rememberedEmailKey);
+    }
+
     setErrorMessage("");
-    toast.success(response.message);
+    toast.success(message);
 
     const redirect = new URLSearchParams(window.location.search).get("redirect");
 
     window.setTimeout(() => {
-      if (isAdmin) {
-        window.location.href = "/admin/dashboard";
+      if (result.user?.role === "ADMIN") {
+        window.location.href = "/admin";
       } else if (redirect) {
         window.location.href = redirect;
       } else {
@@ -193,11 +160,12 @@ export default function FormSignIn() {
           ) : null}
 
           <Formik
-            initialValues={initialValues}
+            initialValues={formInitialValues}
+            enableReinitialize
             validate={validateSignIn}
             onSubmit={handleSubmit}
           >
-            {({ errors, isSubmitting, touched }) => (
+            {({ errors, isSubmitting, setFieldValue, touched, values }) => (
               <Form>
                 <div className="mb-6">
                   <label
@@ -257,6 +225,25 @@ export default function FormSignIn() {
                     id="remember"
                     name="remember"
                     type="checkbox"
+                    checked={values.remember}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                      const checked = event.target.checked;
+                      void setFieldValue("remember", checked);
+
+                      if (checked) {
+                        localStorage.setItem(rememberKey, "true");
+
+                        if (values.email.trim()) {
+                          localStorage.setItem(
+                            rememberedEmailKey,
+                            values.email.trim(),
+                          );
+                        }
+                      } else {
+                        localStorage.removeItem(rememberKey);
+                        localStorage.removeItem(rememberedEmailKey);
+                      }
+                    }}
                     className="mr-2 cursor-pointer accent-[#7A1218]"
                   />
                   <span>Ghi nhớ tôi</span>
