@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, User } from "lucide-react";
+import { getCurrentUser } from "../../lib/action/auth.action";
 
 const navLinks = [
   { href: "#trangChu", label: "Trang chủ" },
@@ -10,7 +11,24 @@ const navLinks = [
   { href: "#lienHe", label: "Liên hệ" },
 ];
 
-export default function Header() {
+const getInitials = (name: string) => {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return initials || "CC";
+};
+
+export default async function Header() {
+  // action-(lấy user hiện tại)
+  const currentUser = await getCurrentUser();
+  const userHref =
+    currentUser?.role === "ADMIN" ? "/admin" : currentUser ? "/profile" : "/login";
+
   return (
     <header className="fixed inset-x-0 top-0 z-[100] border-b border-[#f5f0e8]/10 bg-[#6B1218]/95 shadow-lg shadow-black/10 backdrop-blur">
       <nav className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between gap-6 px-4 sm:px-8 lg:px-16">
@@ -43,11 +61,20 @@ export default function Header() {
 
         <div className="nav-actions flex shrink-0 items-center gap-3">
           <Link
-            href="/login"
+            href={userHref}
             className="user-btn flex size-10 items-center justify-center rounded-full border border-[#f5f0e8]/20 text-[#f5f0e8] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f5f0e8]/40 hover:text-[#F8F0E4] hover:opacity-90"
-            aria-label="User"
+            aria-label={currentUser ? "Thông tin tài khoản" : "Đăng nhập"}
           >
-            <User className="size-5" aria-hidden="true" />
+            {currentUser ? (
+              <span
+                className="flex size-full items-center justify-center rounded-full bg-[#F5F0E8] text-xs font-semibold uppercase tracking-[0.08em] text-[#6B1218]"
+                aria-hidden="true"
+              >
+                {getInitials(currentUser.fullname ?? currentUser.email)}
+              </span>
+            ) : (
+              <User className="size-5" aria-hidden="true" />
+            )}
           </Link>
 
           <a

@@ -1,8 +1,8 @@
-import TrangChu from "./(client)/trangChu/page";
-import BoSuuTap from "./(client)/boSuuTap/page";
-import TuyChinh from "./(client)/tuyChinh/page";
-import CauChuyen from "./(client)/cauChuyen/page";
-import LienHe from "./(client)/lienHe/page";
+import TrangChu from "./(client)/home/page";
+import BoSuuTap from "./(client)/collection/page";
+import TuyChinh from "./(client)/custom/page";
+import CauChuyen from "./(client)/story/page";
+import LienHe from "./(client)/contact/page";
 
 export default function Home() {
   return (

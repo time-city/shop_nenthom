@@ -8,8 +8,11 @@ import {
   type FormikHelpers,
 } from "formik";
 import Link from "next/link";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import { registerUser } from "../../lib/action/auth.action";
+import ModalOTP from "./modalOTP";
 
 interface SignUpValues {
   fullname: string;
@@ -21,17 +24,46 @@ interface SignUpValues {
   newsletter: boolean;
 }
 
-type RegisterRequest = {
+type PendingSignUp = {
   email: string;
   fullname: string;
+  newsletter: boolean;
   password: string;
   phone: string;
 };
 
-type RegisterResponse = {
-  message: string;
-  success: boolean;
+type RegisterOtpResponse = {
+  error?: string;
+  message?: string;
+  otp?: string;
+  success?: boolean;
 };
+
+// fe-(gửi OTP đăng ký)
+async function sendRegisterOtp(email: string) {
+  try {
+    const response = await fetch("/api/auth/register/otp", {
+      body: JSON.stringify({ email }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+
+    const result = (await response.json()) as RegisterOtpResponse;
+
+    if (!response.ok || !result.success || !result.otp) {
+      return {
+        error:
+          result.error ??
+          result.message ??
+          "Email không tồn tại hoặc chưa thể gửi OTP",
+      };
+    }
+
+    return { otp: result.otp, success: true };
+  } catch {
+    return { error: "Không thể gửi OTP đến email này" };
+  }
+}
 
 const initialValues: SignUpValues = {
   fullname: "",
@@ -58,16 +90,13 @@ const signUpSchema = z
     password: z
       .string()
       .min(1, "Vui lòng nhập mật khẩu")
-      .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
-      .regex(/[a-z]/, "Mật khẩu cần có chữ thường")
-      .regex(/[A-Z]/, "Mật khẩu cần có chữ hoa")
-      .regex(/\d/, "Mật khẩu cần có số"),
+      .min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
     confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
     phone: z
       .string()
       .trim()
       .min(1, "Vui lòng nhập số điện thoại")
-      .regex(/^(0|\+84)[0-9]{9,10}$/, "Số điện thoại không đúng định dạng"),
+      .regex(/^(0[3|5|7|8|9])+([0-9]{8})$/, "Số điện thoại không hợp lệ"),
     terms: z.boolean().refine((value) => value, {
       message: "Vui lòng đồng ý với Điều khoản dịch vụ",
     }),
@@ -99,31 +128,21 @@ const validateSignUp = (values: SignUpValues) => {
   );
 };
 
-// Register API chỉ trả success/message, nên dùng request để tạm fill profile sau khi đăng ký.
-const saveRegisterRequest = (
-  request: RegisterRequest,
-  response: RegisterResponse,
-) => {
-  if (!response.success) {
-    return;
-  }
-
-  localStorage.setItem("fullname", request.fullname);
-  localStorage.setItem("email", request.email);
-  localStorage.setItem("phone", request.phone);
-  localStorage.setItem(
-    "lumiere-user",
-    JSON.stringify({
-      email: request.email,
-      fullname: request.fullname,
-      phone: request.phone,
-      role: "user",
-    }),
-  );
-};
-
 export default function FormSignUp() {
-  const handleSubmit = (
+  const [otpCode, setOtpCode] = useState("");
+  const [otpOpen, setOtpOpen] = useState(false);
+  const [pendingSignUp, setPendingSignUp] = useState<PendingSignUp | null>(null);
+  const [isOtpSubmitting, setIsOtpSubmitting] = useState(false);
+
+  const openOtpModal = (data: PendingSignUp, otp: string) => {
+    setPendingSignUp(data);
+    setOtpCode(otp);
+    setOtpOpen(true);
+    console.log(`OTP đăng ký: ${otp}`);
+    toast.info("Mã OTP đã được gửi đến email");
+  };
+
+  const handleSubmit = async (
     values: SignUpValues,
     actions: FormikHelpers<SignUpValues>,
   ) => {
@@ -131,28 +150,103 @@ export default function FormSignUp() {
     const email = values.email.trim();
     const phone = values.phone.trim();
     const password = values.password;
-    const request: RegisterRequest = { email, fullname, password, phone };
 
-    // TODO: POST /api/auth/register với request { fullname, email, phone, password }.
-    const response: RegisterResponse = {
-      message: "Đăng ký thành công! Đang chuyển hướng...",
-      success: true,
-    };
+    // fe-(gửi OTP đăng ký)
+    const otpResult = await sendRegisterOtp(email);
 
-    console.log(response.message);
-    saveRegisterRequest(request, response);
-    localStorage.setItem("newsletter", String(values.newsletter));
-    toast.success(response.message);
+    if (!otpResult.success || !otpResult.otp) {
+      const message = otpResult.error ?? "Không thể gửi OTP";
+      console.log(message);
+      toast.error(message);
+      actions.setSubmitting(false);
+      return;
+    }
+
+    openOtpModal(
+      {
+        email,
+        fullname,
+        newsletter: values.newsletter,
+        password,
+        phone,
+      },
+      otpResult.otp,
+    );
+    actions.setSubmitting(false);
+  };
+
+  const handleConfirmOtp = async (otp: string) => {
+    if (!pendingSignUp) {
+      toast.error("Không tìm thấy thông tin đăng ký tạm");
+      return;
+    }
+
+    if (otp !== otpCode) {
+      const message = "Mã OTP không đúng";
+      console.log(message);
+      toast.error(message);
+      return;
+    }
+
+    setIsOtpSubmitting(true);
+
+    // action-(đăng ký)
+    const result = await registerUser({
+      email: pendingSignUp.email,
+      fullname: pendingSignUp.fullname,
+      password: pendingSignUp.password,
+      phone: pendingSignUp.phone,
+    });
+
+    if (!result.success) {
+      const message = result.error ?? "Đăng ký thất bại";
+      console.log(message);
+      toast.error(message);
+      setIsOtpSubmitting(false);
+      return;
+    }
+
+    const message = "Đăng ký thành công! Đang chuyển hướng...";
+    console.log(message);
+    localStorage.setItem("newsletter", String(pendingSignUp.newsletter));
+    toast.success(message);
+    setOtpOpen(false);
+    setPendingSignUp(null);
+    setIsOtpSubmitting(false);
 
     window.setTimeout(() => {
       window.location.href = "/login";
     }, 1500);
+  };
 
-    actions.setSubmitting(false);
+  const handleResendOtp = async () => {
+    if (!pendingSignUp) {
+      return;
+    }
+
+    // fe-(gửi lại OTP)
+    const otpResult = await sendRegisterOtp(pendingSignUp.email);
+
+    if (!otpResult.success || !otpResult.otp) {
+      const message = otpResult.error ?? "Không thể gửi lại OTP";
+      console.log(message);
+      toast.error(message);
+      return;
+    }
+
+    openOtpModal(pendingSignUp, otpResult.otp);
   };
 
   return (
     <main>
+      <ModalOTP
+        email={pendingSignUp?.email ?? ""}
+        isSubmitting={isOtpSubmitting}
+        onClose={() => setOtpOpen(false)}
+        onConfirm={handleConfirmOtp}
+        onResend={handleResendOtp}
+        open={otpOpen}
+      />
       <div className="flex min-h-[calc(100dvh-5rem)] items-center justify-center bg-[#7A1218] px-4 pb-6 pt-24 sm:px-6 sm:pb-8 md:px-8 md:pt-[7.5rem]">
         <div className="max-h-[calc(100dvh-8rem)] w-full max-w-[760px] overflow-auto rounded-2xl border border-[#2c1810]/10 bg-[#F5F0E8] p-6 text-[#2C1810] sm:p-8 md:max-h-[calc(100dvh-9rem)] md:p-12">
           <h1 className="text-center font-serif text-[2rem] font-light leading-tight text-[#2C1810] sm:text-[2.2rem]">
@@ -244,7 +338,7 @@ export default function FormSignUp() {
                       </p>
                     ) : null}
                     <div className="mt-1 text-[0.72rem] leading-relaxed text-[#7A1218] sm:text-xs">
-                      Tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường và số
+                      Tối thiểu 6 ký tự
                     </div>
                   </div>
 
