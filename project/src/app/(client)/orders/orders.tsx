@@ -240,7 +240,7 @@ export default function Orders() {
               Bạn chưa có đơn hàng nào
             </div>
             <Link
-              href="/#boSuuTap"
+              href="/#collection"
               className="rounded-full bg-[#6B1218] px-6 py-3 text-[0.75rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] no-underline"
             >
               Khám Phá Bộ Sưu Tập

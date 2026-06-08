@@ -8,11 +8,9 @@ import {
   type FormikHelpers,
 } from "formik";
 import Link from "next/link";
-import { useState } from "react";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { registerUser } from "../../lib/action/auth.action";
-import ModalOTP from "./modalOTP";
 
 interface SignUpValues {
   fullname: string;
@@ -22,47 +20,6 @@ interface SignUpValues {
   phone: string;
   terms: boolean;
   newsletter: boolean;
-}
-
-type PendingSignUp = {
-  email: string;
-  fullname: string;
-  newsletter: boolean;
-  password: string;
-  phone: string;
-};
-
-type RegisterOtpResponse = {
-  error?: string;
-  message?: string;
-  otp?: string;
-  success?: boolean;
-};
-
-// fe-(gửi OTP đăng ký)
-async function sendRegisterOtp(email: string) {
-  try {
-    const response = await fetch("/api/auth/register/otp", {
-      body: JSON.stringify({ email }),
-      headers: { "Content-Type": "application/json" },
-      method: "POST",
-    });
-
-    const result = (await response.json()) as RegisterOtpResponse;
-
-    if (!response.ok || !result.success || !result.otp) {
-      return {
-        error:
-          result.error ??
-          result.message ??
-          "Email không tồn tại hoặc chưa thể gửi OTP",
-      };
-    }
-
-    return { otp: result.otp, success: true };
-  } catch {
-    return { error: "Không thể gửi OTP đến email này" };
-  }
 }
 
 const initialValues: SignUpValues = {
@@ -129,19 +86,6 @@ const validateSignUp = (values: SignUpValues) => {
 };
 
 export default function FormSignUp() {
-  const [otpCode, setOtpCode] = useState("");
-  const [otpOpen, setOtpOpen] = useState(false);
-  const [pendingSignUp, setPendingSignUp] = useState<PendingSignUp | null>(null);
-  const [isOtpSubmitting, setIsOtpSubmitting] = useState(false);
-
-  const openOtpModal = (data: PendingSignUp, otp: string) => {
-    setPendingSignUp(data);
-    setOtpCode(otp);
-    setOtpOpen(true);
-    console.log(`OTP đăng ký: ${otp}`);
-    toast.info("Mã OTP đã được gửi đến email");
-  };
-
   const handleSubmit = async (
     values: SignUpValues,
     actions: FormikHelpers<SignUpValues>,
@@ -151,102 +95,37 @@ export default function FormSignUp() {
     const phone = values.phone.trim();
     const password = values.password;
 
-    // fe-(gửi OTP đăng ký)
-    const otpResult = await sendRegisterOtp(email);
+    // action-(đăng ký)
+    console.log("[register:start]", { email, fullname, phone });
+    const result = await registerUser({
+      email,
+      fullname,
+      password,
+      phone,
+    });
+    console.log("[register:result]", result);
 
-    if (!otpResult.success || !otpResult.otp) {
-      const message = otpResult.error ?? "Không thể gửi OTP";
+    if (!result.success) {
+      const message = result.error ?? "Đăng ký thất bại";
       console.log(message);
       toast.error(message);
       actions.setSubmitting(false);
       return;
     }
 
-    openOtpModal(
-      {
-        email,
-        fullname,
-        newsletter: values.newsletter,
-        password,
-        phone,
-      },
-      otpResult.otp,
-    );
-    actions.setSubmitting(false);
-  };
-
-  const handleConfirmOtp = async (otp: string) => {
-    if (!pendingSignUp) {
-      toast.error("Không tìm thấy thông tin đăng ký tạm");
-      return;
-    }
-
-    if (otp !== otpCode) {
-      const message = "Mã OTP không đúng";
-      console.log(message);
-      toast.error(message);
-      return;
-    }
-
-    setIsOtpSubmitting(true);
-
-    // action-(đăng ký)
-    const result = await registerUser({
-      email: pendingSignUp.email,
-      fullname: pendingSignUp.fullname,
-      password: pendingSignUp.password,
-      phone: pendingSignUp.phone,
-    });
-
-    if (!result.success) {
-      const message = result.error ?? "Đăng ký thất bại";
-      console.log(message);
-      toast.error(message);
-      setIsOtpSubmitting(false);
-      return;
-    }
-
     const message = "Đăng ký thành công! Đang chuyển hướng...";
     console.log(message);
-    localStorage.setItem("newsletter", String(pendingSignUp.newsletter));
+    localStorage.setItem("newsletter", String(values.newsletter));
     toast.success(message);
-    setOtpOpen(false);
-    setPendingSignUp(null);
-    setIsOtpSubmitting(false);
+    actions.setSubmitting(false);
 
     window.setTimeout(() => {
       window.location.href = "/login";
     }, 1500);
   };
 
-  const handleResendOtp = async () => {
-    if (!pendingSignUp) {
-      return;
-    }
-
-    // fe-(gửi lại OTP)
-    const otpResult = await sendRegisterOtp(pendingSignUp.email);
-
-    if (!otpResult.success || !otpResult.otp) {
-      const message = otpResult.error ?? "Không thể gửi lại OTP";
-      console.log(message);
-      toast.error(message);
-      return;
-    }
-
-    openOtpModal(pendingSignUp, otpResult.otp);
-  };
-
   return (
     <main>
-      <ModalOTP
-        email={pendingSignUp?.email ?? ""}
-        isSubmitting={isOtpSubmitting}
-        onClose={() => setOtpOpen(false)}
-        onConfirm={handleConfirmOtp}
-        onResend={handleResendOtp}
-        open={otpOpen}
-      />
       <div className="flex min-h-[calc(100dvh-5rem)] items-center justify-center bg-[#7A1218] px-4 pb-6 pt-24 sm:px-6 sm:pb-8 md:px-8 md:pt-[7.5rem]">
         <div className="max-h-[calc(100dvh-8rem)] w-full max-w-[760px] overflow-auto rounded-2xl border border-[#2c1810]/10 bg-[#F5F0E8] p-6 text-[#2C1810] sm:p-8 md:max-h-[calc(100dvh-9rem)] md:p-12">
           <h1 className="text-center font-serif text-[2rem] font-light leading-tight text-[#2C1810] sm:text-[2.2rem]">
@@ -276,11 +155,10 @@ export default function FormSignUp() {
                       name="fullname"
                       type="text"
                       placeholder="Nguyễn Văn A"
-                      className={`w-full border bg-[#F2E8D9] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
-                        touched.fullname && errors.fullname
-                          ? "border-[#ffc107]"
-                          : "border-[#2c1810]/20"
-                      }`}
+                      className={`w-full border bg-[#F5F0E8] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.fullname && errors.fullname
+                        ? "border-[#ffc107]"
+                        : "border-[#2c1810]/20"
+                        }`}
                     />
                     {touched.fullname && errors.fullname ? (
                       <p className="mt-2 text-xs text-[#856404]">
@@ -301,11 +179,10 @@ export default function FormSignUp() {
                       name="email"
                       type="email"
                       placeholder="your@email.com"
-                      className={`w-full border bg-[#F2E8D9] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
-                        touched.email && errors.email
-                          ? "border-[#ffc107]"
-                          : "border-[#2c1810]/20"
-                      }`}
+                      className={`w-full border bg-[#F5F0E8] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.email && errors.email
+                        ? "border-[#ffc107]"
+                        : "border-[#2c1810]/20"
+                        }`}
                     />
                     {touched.email && errors.email ? (
                       <p className="mt-2 text-xs text-[#856404]">
@@ -326,11 +203,10 @@ export default function FormSignUp() {
                       name="password"
                       type="password"
                       placeholder="••••••••"
-                      className={`w-full border bg-[#F2E8D9] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
-                        touched.password && errors.password
-                          ? "border-[#ffc107]"
-                          : "border-[#2c1810]/20"
-                      }`}
+                      className={`w-full border bg-[#F5F0E8] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.password && errors.password
+                        ? "border-[#ffc107]"
+                        : "border-[#2c1810]/20"
+                        }`}
                     />
                     {touched.password && errors.password ? (
                       <p className="mt-2 text-xs text-[#856404]">
@@ -354,11 +230,10 @@ export default function FormSignUp() {
                       name="confirmPassword"
                       type="password"
                       placeholder="••••••••"
-                      className={`w-full border bg-[#F2E8D9] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
-                        touched.confirmPassword && errors.confirmPassword
-                          ? "border-[#ffc107]"
-                          : "border-[#2c1810]/20"
-                      }`}
+                      className={`w-full border bg-[#F5F0E8] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.confirmPassword && errors.confirmPassword
+                        ? "border-[#ffc107]"
+                        : "border-[#2c1810]/20"
+                        }`}
                     />
                     {touched.confirmPassword && errors.confirmPassword ? (
                       <p className="mt-2 text-xs text-[#856404]">
@@ -379,11 +254,10 @@ export default function FormSignUp() {
                       name="phone"
                       type="tel"
                       placeholder="0123456789"
-                      className={`w-full border bg-[#F2E8D9] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
-                        touched.phone && errors.phone
-                          ? "border-[#ffc107]"
-                          : "border-[#2c1810]/20"
-                      }`}
+                      className={`w-full border bg-[#F5F0E8] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.phone && errors.phone
+                        ? "border-[#ffc107]"
+                        : "border-[#2c1810]/20"
+                        }`}
                     />
                     {touched.phone && errors.phone ? (
                       <p className="mt-2 text-xs text-[#856404]">
@@ -437,7 +311,7 @@ export default function FormSignUp() {
 
                 <button
                   type="submit"
-                  className="mb-4 w-full bg-[#7A1218] p-3.5 text-[0.76rem] uppercase tracking-[0.12em] text-[#F5F0E8] transition-colors hover:bg-[#6B1218] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
+                  className="mb-4 w-full bg-[#7A1218] p-3.5 text-[0.76rem] uppercase tracking-[0.12em] text-[#F5F0E8] transition-colors hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Đang tạo tài khoản..." : "Tạo Tài Khoản"}
