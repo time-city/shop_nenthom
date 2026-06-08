@@ -1,7 +1,16 @@
 'use server'
 
 import { ProductService } from "../services/product.service";
-import { GetProductsParams, productSchema } from "../validations/product.schema";
+import { GetProductsParams, productSchema, createProductSchema, updateProductSchema, deleteProductSchema } from "../validations/product.schema";
+import { getSession } from "../session";
+
+// Kiểm tra người dùng hiện tại có quyền ADMIN để thao tác quản trị.
+async function requireAdmin() {
+    const session = await getSession()
+    if (!session || session.role !== 'ADMIN') return { error: 'Không có quyền truy cập' }
+
+    return null
+}
 
 export async function getProductsAction(params: Partial<GetProductsParams> = {}) {
     const parsed = productSchema.safeParse(params);
@@ -36,4 +45,51 @@ export async function getCustomizationOptionsAction() {
   } catch (err) {
     return { error: (err as Error).message }
   }
+}
+
+export async function createProductAction(params: unknown) {
+    const authError = await requireAdmin()
+    if (authError) return authError
+
+    const parsed = createProductSchema.safeParse(params)
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+    try {
+        const product = await ProductService.createProduct(parsed.data)
+        return { success: true, data: product }
+    } catch (err) {
+        return { error: (err as Error).message }
+    }
+}
+
+export async function updateProductAction(id: string, params: unknown) {
+    const authError = await requireAdmin()
+    if (authError) return authError
+
+    if (!id) return { error: 'Thiếu product ID' }
+
+    const parsed = updateProductSchema.safeParse(params)
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+    try {
+        const product = await ProductService.updateProduct(id, parsed.data)
+        return { success: true, data: product }
+    } catch (err) {
+        return { error: (err as Error).message }
+    }
+}
+
+export async function deleteProductAction(params: unknown) {
+    const authError = await requireAdmin()
+    if (authError) return authError
+
+    const parsed = deleteProductSchema.safeParse(params)
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+    try {
+        const product = await ProductService.deleteProduct(parsed.data.id)
+        return { success: true, data: product }
+    } catch (err) {
+        return { error: (err as Error).message }
+    }
 }
