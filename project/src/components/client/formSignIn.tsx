@@ -131,7 +131,7 @@ export default function FormSignIn() {
 
     window.setTimeout(() => {
       if (result.user?.role === "ADMIN") {
-        window.location.href = "/admin";
+        window.location.href = "/admin/dashboard";
       } else if (redirect) {
         window.location.href = redirect;
       } else {
@@ -251,7 +251,7 @@ export default function FormSignIn() {
 
                 <button
                   type="submit"
-                  className="mb-4 w-full bg-[#7A1218] p-3.5 text-[0.76rem] uppercase tracking-[0.12em] text-[#F5F0E8] transition-colors hover:bg-[#6B1218] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
+                  className="mb-4 w-full bg-[#7A1218] p-3.5 text-[0.76rem] uppercase tracking-[0.12em] text-[#F5F0E8] transition-colors hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Đang đăng nhập..." : "Đăng Nhập"}

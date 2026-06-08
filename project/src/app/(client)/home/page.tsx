@@ -11,7 +11,7 @@ const bannerSlides = [
       "Tạo nên thơm của riêng mình với những mùi hương độc đáo và màu sắc tinh tế.",
     buttonLabel: "Khám Phá",
     bgClass: "bg-[#6B543A]",
-    href: "/#tuyChinh",
+    href: "/#custom",
   },
   {
     title: "Sáp Đậu Nành Tự Nhiên",
@@ -19,7 +19,7 @@ const bannerSlides = [
       "Được làm từ nguyên liệu tự nhiên 100%, an toàn cho gia đình bạn.",
     buttonLabel: "Tìm Hiểu Thêm",
     bgClass: "bg-[#9C8A73]",
-    href: "/#boSuuTap",
+    href: "/#collection",
   },
   {
     title: "Quà Tặng Hoàn Hảo",
@@ -27,7 +27,7 @@ const bannerSlides = [
       "Mỗi nến ChamCham là một tác phẩm độc lập, hoàn hảo để tặng người thân.",
     buttonLabel: "Mua Ngay",
     bgClass: "bg-[#8DA089]",
-    href: "/#boSuuTap",
+    href: "/#collection",
   },
 ];
 
@@ -77,9 +77,8 @@ export default function TrangChu() {
         </div>
       </div>
 
-      <div id="trangChu" className="bg-[#7A1218] text-[#F5F0E8] scroll-mt-20">
+      <div className="bg-[#7A1218] text-[#F5F0E8]">
         <section
-          id="home"
           className="hero fade-section visible observed grid h-[calc(100vh-5rem)] min-h-[560px] grid-cols-1 items-center gap-4 overflow-hidden bg-[#7A1218] px-6 py-6 md:grid-cols-2 md:gap-8 md:px-8 lg:gap-16 lg:px-16"
         >
           <div className="hero-text flex w-full max-w-[480px] flex-col items-center text-center opacity-100 md:block md:max-w-none md:text-left">
@@ -98,13 +97,13 @@ export default function TrangChu() {
             </p>
             <div className="btn-group flex w-full flex-col items-center justify-center gap-2.5 md:w-auto md:flex-row md:flex-wrap md:justify-start lg:gap-4">
               <Link
-                href="/#tuyChinh"
+                href="/#custom"
                 className="btn-primary w-full max-w-[260px] rounded-full border-[1.5px] border-transparent bg-[#F5F0E8] px-6 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] shadow-[0_10px_28px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#F2E8D9] hover:text-[#2C1810] hover:shadow-[0_14px_36px_rgba(0,0,0,0.22)] lg:w-auto lg:px-9 lg:py-3.5"
               >
                 Tùy chỉnh ngay
               </Link>
               <Link
-                href="/#boSuuTap"
+                href="/#collection"
                 className="btn-secondary w-full max-w-[260px] rounded-full border-[1.5px] border-[#f5f0e8]/45 bg-transparent px-6 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f5f0e8]/10 hover:text-[#F5F0E8] lg:w-auto lg:px-[34px]"
               >
                 Xem bộ sưu tập

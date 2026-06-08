@@ -1,9 +1,5 @@
-import React from 'react'
+import FormCustom from "../../../components/client/formCustom";
 
-function TuyChinh() {
-    return (
-        <div>TuyChinh</div>
-    )
+export default function TuyChinh() {
+  return <FormCustom />;
 }
-
-export default TuyChinh
