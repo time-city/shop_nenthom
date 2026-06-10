@@ -2,11 +2,11 @@ import Link from "next/link";
 
 const stats = [
   {
-    change: "↑ 12.5%",
-    changeType: "up",
+    change: "",
+    changeType: "",
     icon: "revenue",
     label: "Doanh thu",
-    value: "45.680.000₫",
+    value: "—",
     svg: (
       <>
         <line x1="12" y1="1" x2="12" y2="23" />
@@ -15,11 +15,11 @@ const stats = [
     ),
   },
   {
-    change: "↑ 8.2%",
-    changeType: "up",
+    change: "",
+    changeType: "",
     icon: "orders",
     label: "Đơn hàng",
-    value: "156",
+    value: "—",
     svg: (
       <>
         <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -29,11 +29,11 @@ const stats = [
     ),
   },
   {
-    change: "↓ 3.1%",
-    changeType: "down",
+    change: "",
+    changeType: "",
     icon: "customers",
     label: "Khách hàng",
-    value: "89",
+    value: "—",
     svg: (
       <>
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -44,11 +44,11 @@ const stats = [
     ),
   },
   {
-    change: "↑ 15.8%",
-    changeType: "up",
+    change: "",
+    changeType: "",
     icon: "products",
     label: "Sản phẩm bán được",
-    value: "342",
+    value: "—",
     svg: (
       <>
         <path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -56,77 +56,6 @@ const stats = [
         <path d="M2 12l10 5 10-5" />
       </>
     ),
-  },
-];
-
-const topProducts = [
-  {
-    name: "Nến Vanilla Dream",
-    note: "Nến hũ",
-    revenue: "7.200.000 đ",
-    sold: 48,
-  },
-  {
-    name: "Nến Lavender Fields",
-    note: "Nến cốc",
-    revenue: "5.250.000 đ",
-    sold: 35,
-  },
-  {
-    name: "Nến Ocean Breeze",
-    note: "Nến trụ",
-    revenue: "4.200.000 đ",
-    sold: 28,
-  },
-  {
-    name: "Nến Rose Garden",
-    note: "Nến hũ",
-    revenue: "3.300.000 đ",
-    sold: 22,
-  },
-  {
-    name: "Nến Sandalwood",
-    note: "Nến cốc",
-    revenue: "2.700.000 đ",
-    sold: 18,
-  },
-];
-
-const recentOrders = [
-  {
-    code: "DH-2024001",
-    customer: "Nguyễn Thị Lan",
-    status: "Hoàn thành",
-    statusType: "done",
-    total: "450.000 đ",
-  },
-  {
-    code: "DH-2024002",
-    customer: "Trần Văn Minh",
-    status: "Đang xử lý",
-    statusType: "processing",
-    total: "680.000 đ",
-  },
-  {
-    code: "DH-2024003",
-    customer: "Lê Thị Hoa",
-    status: "Đang giao",
-    statusType: "shipping",
-    total: "320.000 đ",
-  },
-  {
-    code: "DH-2024004",
-    customer: "Phạm Đức An",
-    status: "Chờ xác nhận",
-    statusType: "pending",
-    total: "890.000 đ",
-  },
-  {
-    code: "DH-2024005",
-    customer: "Hoàng Thị Mai",
-    status: "Hoàn thành",
-    statusType: "done",
-    total: "1.250.000 đ",
   },
 ];
 
@@ -171,9 +100,9 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="dashboard-date-picker-group">
-              <input type="date" defaultValue="2024-12-01" />
+              <input type="date" />
               <span>đến</span>
-              <input type="date" defaultValue="2024-12-05" />
+              <input type="date" />
             </div>
           </div>
         </header>
@@ -198,9 +127,11 @@ export default function DashboardPage() {
                       {stat.svg}
                     </svg>
                   </div>
-                  <span className={`dashboard-stat-change ${stat.changeType}`}>
-                    {stat.change}
-                  </span>
+                  {stat.change ? (
+                    <span className={`dashboard-stat-change ${stat.changeType}`}>
+                      {stat.change}
+                    </span>
+                  ) : null}
                 </div>
                 <div className="dashboard-stat-value">{stat.value}</div>
                 <div className="dashboard-stat-label">{stat.label}</div>
@@ -225,25 +156,11 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {topProducts.map((product, index) => (
-                        <tr key={product.name}>
-                          <td>
-                            <div className="dashboard-product-rank">
-                              🕯️
-                            </div>
+                        <tr>
+                          <td colSpan={4} className="text-center text-[#6B4C35]">
+                            Chưa có dữ liệu bán chạy
                           </td>
-                          <td>
-                            <div className="dashboard-product-name">
-                              {product.name}
-                            </div>
-                            <div className="dashboard-product-note">
-                              {product.note}
-                            </div>
-                          </td>
-                          <td>{product.sold}</td>
-                          <td>{product.revenue}</td>
                         </tr>
-                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -272,20 +189,11 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {recentOrders.map((order) => (
-                        <tr key={order.code}>
-                          <td>{order.code}</td>
-                          <td>{order.customer}</td>
-                          <td>{order.total}</td>
-                          <td>
-                            <span
-                              className={`dashboard-status ${order.statusType}`}
-                            >
-                              {order.status}
-                            </span>
+                        <tr>
+                          <td colSpan={4} className="text-center text-[#6B4C35]">
+                            Chưa có dữ liệu đơn hàng
                           </td>
                         </tr>
-                      ))}
                     </tbody>
                   </table>
                 </div>

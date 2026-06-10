@@ -88,8 +88,6 @@ export async function getCurrentUser() {
 
     return user;
 }
-
-
 export async function sendVerifyEmailAction(data: SendVerifyEmailFormState) {
     const parsed = sendVerifyEmailSchema.safeParse({
         email: data.email,

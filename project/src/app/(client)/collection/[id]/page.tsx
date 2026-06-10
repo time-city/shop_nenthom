@@ -1,26 +1,10 @@
-import DetailCardProduct, {
-  type ProductDetail,
-} from "../../../../components/client/detailCardProduct";
+import DetailCardProduct from "../../../../components/client/detailCardProduct";
+import type {
+  ClientProductDetailDataInterface,
+  ClientProductDetailInterface,
+} from "../../../../interface/clientInterface";
 import { getProductDetailsAction } from "../../../../lib/action/product.action";
-
-type ProductDetailPageProps = {
-  params: Promise<{
-    id: string;
-  }>;
-};
-
-type ProductDetailData = {
-  options?: {
-    colors?: NonNullable<ProductDetail["options"]>["waxColors"];
-    packagings?: NonNullable<ProductDetail["options"]>["packagings"];
-    scents?: NonNullable<ProductDetail["options"]>["scents"];
-    sizes?: NonNullable<ProductDetail["options"]>["sizes"];
-    toppings?: NonNullable<ProductDetail["options"]>["toppings"];
-    waxColors?: NonNullable<ProductDetail["options"]>["waxColors"];
-  };
-  product?: Partial<ProductDetail>;
-  [key: string]: unknown;
-};
+import type { ProductDetailPageProps } from "../../../../lib/types/client";
 
 export default async function ProductDetailPage({
   params,
@@ -43,12 +27,12 @@ export default async function ProductDetailPage({
     );
   }
 
-  const detailData = result.data as ProductDetailData;
-  const rawProduct = (detailData.product ?? detailData) as Partial<ProductDetail>;
+  const detailData = result.data as ClientProductDetailDataInterface;
+  const rawProduct = (detailData.product ?? detailData) as Partial<ClientProductDetailInterface>;
   const rawOptions = (detailData.options ??
     rawProduct.options ??
-    {}) as NonNullable<ProductDetailData["options"]>;
-  const product: ProductDetail = {
+    {}) as NonNullable<ClientProductDetailDataInterface["options"]>;
+  const product: ClientProductDetailInterface = {
     base_price_cents: rawProduct.base_price_cents ?? 0,
     category: rawProduct.category ?? null,
     description: rawProduct.description ?? null,

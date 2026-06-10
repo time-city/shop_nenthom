@@ -1,0 +1,180 @@
+.tree {
+  position: absolute;
+  bottom: 0;
+}
+
+.farTree {
+  opacity: 0.36;
+}
+
+.farTree:nth-child(1) { left: 3%; width: 20px; height: 85px; }
+.farTree:nth-child(2) { left: 9%; width: 16px; height: 68px; }
+.farTree:nth-child(3) { left: 16%; width: 24px; height: 104px; }
+.farTree:nth-child(4) { left: 22%; width: 14px; height: 60px; }
+.farTree:nth-child(5) { left: 60%; width: 18px; height: 76px; }
+.farTree:nth-child(6) { left: 68%; width: 26px; height: 112px; }
+.farTree:nth-child(7) { left: 76%; width: 16px; height: 66px; }
+.farTree:nth-child(8) { left: 84%; width: 22px; height: 94px; }
+.farTree:nth-child(9) { left: 92%; width: 15px; height: 60px; }
+
+.midTree:nth-child(1) { left: 1%; width: 42px; height: 175px; opacity: 0.6; }
+.midTree:nth-child(2) { left: 8%; width: 34px; height: 140px; opacity: 0.56; }
+.midTree:nth-child(3) { left: 16%; width: 50px; height: 205px; opacity: 0.63; }
+.midTree:nth-child(4) { left: 23%; width: 32px; height: 124px; opacity: 0.54; }
+.midTree:nth-child(5) { left: 69%; width: 46px; height: 190px; opacity: 0.61; }
+.midTree:nth-child(6) { left: 77%; width: 36px; height: 148px; opacity: 0.58; }
+.midTree:nth-child(7) { left: 85%; width: 52px; height: 215px; opacity: 0.64; }
+.midTree:nth-child(8) { left: 93%; width: 30px; height: 126px; opacity: 0.52; }
+
+.nearTree:nth-child(1) { left: 0%; width: 65px; height: 190px; opacity: 0.8; }
+.nearTree:nth-child(2) { left: 7%; width: 50px; height: 150px; opacity: 0.74; }
+.nearTree:nth-child(3) { left: 74%; width: 62px; height: 184px; opacity: 0.78; }
+.nearTree:nth-child(4) { left: 83%; width: 48px; height: 144px; opacity: 0.72; }
+.nearTree:nth-child(5) { left: 91%; width: 70px; height: 196px; opacity: 0.82; }
+
+.treeTrunk {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 20%;
+  height: 30%;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: #150805;
+}
+
+.farTree .treeTrunk {
+  height: 27%;
+}
+
+.treeCrown {
+  position: absolute;
+  bottom: 22%;
+  left: 50%;
+  width: 100%;
+  height: 80%;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 44% 44%;
+  background: linear-gradient(155deg, #3a0a0e 0%, #2a0608 55%, #1a0503 100%);
+}
+
+.farTree .treeCrown {
+  background: linear-gradient(to bottom, #3a0a0e, #2a0608);
+}
+
+.grassBlade {
+  position: absolute;
+  bottom: 0;
+  width: 12px;
+  height: 24px;
+  border-radius: 50% 50% 28% 28%;
+  background: linear-gradient(to top, #1a0a08, #2c1810, #4a2420);
+  opacity: 0.5;
+}
+
+.grassBlade:nth-child(5n+1) { left: 3%; width: 8px; height: 14px; opacity: 0.35; }
+.grassBlade:nth-child(5n+2) { left: 18%; width: 16px; height: 32px; opacity: 0.62; }
+.grassBlade:nth-child(5n+3) { left: 36%; width: 22px; height: 40px; opacity: 0.78; }
+.grassBlade:nth-child(5n+4) { left: 61%; width: 14px; height: 28px; opacity: 0.55; }
+.grassBlade:nth-child(5n+5) { left: 84%; width: 24px; height: 38px; opacity: 0.72; }
+.grassBlade:nth-child(2n) { transform: translateX(22px); }
+.grassBlade:nth-child(3n) { transform: translateX(48px); }
+.grassBlade:nth-child(7n) { transform: translateX(76px); }
+
+.flower {
+  position: absolute;
+  bottom: 0;
+  width: 34px;
+  height: 64px;
+  opacity: 0.7;
+}
+
+.flower:nth-child(6n+1) { left: 4%; height: 32px; opacity: 0.55; }
+.flower:nth-child(6n+2) { left: 17%; height: 58px; opacity: 0.68; }
+.flower:nth-child(6n+3) { left: 31%; height: 76px; opacity: 0.82; }
+.flower:nth-child(6n+4) { left: 52%; height: 42px; opacity: 0.61; }
+.flower:nth-child(6n+5) { left: 73%; height: 70px; opacity: 0.78; }
+.flower:nth-child(6n+6) { left: 91%; height: 54px; opacity: 0.66; }
+.flower:nth-child(2n) { transform: translateX(18px); }
+.flower:nth-child(5n) { transform: translateX(-12px); }
+
+.flowerStem {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  transform-origin: bottom;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(to top, #1a0a08, #3a1815);
+  animation: ft-sway 2.8s ease-in-out infinite;
+}
+
+.flower:nth-child(3n+1) .flowerStem { animation-delay: 0.2s; }
+.flower:nth-child(3n+2) .flowerStem { animation-delay: 0.5s; }
+.flower:nth-child(3n+3) .flowerStem { animation-delay: 0.8s; }
+
+.flowerHead {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translateX(-50%);
+}
+
+.petal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 12px;
+  transform-origin: 50% 100%;
+  border-radius: 50% 50% 40% 40%;
+  background: radial-gradient(ellipse at 50% 30%, #c4686e, #b05666 80%);
+}
+
+.flower:nth-child(3n+2) .petal {
+  background: radial-gradient(ellipse at 50% 30%, #d4887a, #c87068 80%);
+}
+
+.flower:nth-child(3n+3) .petal {
+  background: radial-gradient(ellipse at 50% 30%, #e8c87a, #d8b85a 80%);
+}
+
+.petal:nth-child(1) { transform: translateX(-50%) translateY(-100%) rotate(0deg); }
+.petal:nth-child(2) { transform: translateX(-50%) translateY(-100%) rotate(60deg); }
+.petal:nth-child(3) { transform: translateX(-50%) translateY(-100%) rotate(120deg); }
+.petal:nth-child(4) { transform: translateX(-50%) translateY(-100%) rotate(180deg); }
+.petal:nth-child(5) { transform: translateX(-50%) translateY(-100%) rotate(240deg); }
+.petal:nth-child(6) { transform: translateX(-50%) translateY(-100%) rotate(300deg); }
+
+.flowerCenter {
+  position: absolute;
+  z-index: 10;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, #e8c87a, rgba(240, 210, 60, 0.7) 70%);
+}
+
+.firefly {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 242, 140, 0.9);
+  animation: ft-firefly 4s linear infinite;
+}
+
+.firefly:nth-child(5n+1) { left: 10%; bottom: 12%; animation-delay: 0.1s; animation-duration: 3s; }
+.firefly:nth-child(5n+2) { left: 28%; bottom: 30%; animation-delay: 1.3s; animation-duration: 5s; }
+.firefly:nth-child(5n+3) { left: 46%; bottom: 18%; animation-delay: 2.1s; animation-duration: 4s; }
+.firefly:nth-child(5n+4) { left: 68%; bottom: 48%; animation-delay: 0.8s; animation-duration: 6s; }
+.firefly:nth-child(5n+5) { left: 88%; bottom: 36%; animation-delay: 1.9s; animation-duration: 7s; }
+.firefly:nth-child(2n) { width: 4px; height: 4px; }
+.firefly:nth-child(3n) { width: 5px; height: 5px; }

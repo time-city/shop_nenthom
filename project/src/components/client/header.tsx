@@ -75,10 +75,10 @@ export default async function Header() {
             )}
           </Link>
 
-          <a
-            href="/cart.html"
+          <Link
+            href="/cart"
             className="cart-link relative flex size-10 items-center justify-center rounded-full border border-[#f5f0e8]/20 text-[#f5f0e8] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f5f0e8]/40 hover:text-[#F8F0E4] hover:opacity-90"
-            aria-label="Cart"
+            aria-label="Giỏ hàng"
           >
             <ShoppingCart className="size-5" aria-hidden="true" />
             <span
@@ -87,7 +87,7 @@ export default async function Header() {
             >
               0
             </span>
-          </a>
+          </Link>
         </div>
       </nav>
     </header>

@@ -1,15 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
-
-type CardProductProps = {
-  candleColor?: string;
-  href?: string;
-  id?: number | string;
-  name?: string;
-  price?: number | string;
-  scentNote?: string;
-};
+import type { CardProductProps } from "../../lib/types/client";
+import styles from "../../styles/cardProduct.module.css";
 
 const formatPrice = (price: number | string) => {
   if (typeof price === "number") {
@@ -19,18 +13,31 @@ const formatPrice = (price: number | string) => {
   return price;
 };
 
+const getCandleWaxClass = (color: string) => {
+  const normalizedColor = color.toLowerCase();
+
+  if (normalizedColor === "#c8ddc4") return styles.sage;
+  if (normalizedColor === "#e7b4d4") return styles.blossom;
+  if (normalizedColor === "#e4a9cb") return styles.peony;
+  if (normalizedColor === "#d29a61") return styles.cedar;
+  if (normalizedColor === "#c88f58") return styles.sandalwood;
+  if (normalizedColor === "#f1dec5") return styles.linen;
+
+  return styles.cream;
+};
+
 export default function CardProduct({
-  candleColor = "#F1DEC5",
+  candleColor,
   href,
-  id = 3,
-  name = "Vanilla Dreams",
-  price = "300đ",
-  scentNote = "Vanilla, Caramel, Tonka",
+  name,
+  price,
+  scentNote,
 }: CardProductProps) {
-  const detailHref = href ?? `/product-detail?id=${id}`;
+  const router = useRouter();
+  const detailHref = href;
   const openDetail = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
-    window.history.pushState(null, "", detailHref);
+    router.push(detailHref, { scroll: false });
   };
 
   return (
@@ -43,10 +50,7 @@ export default function CardProduct({
       >
         <div className="candle-preview relative h-[104px] w-[76px] rounded-[6px_6px_5px_5px] shadow-[0_16px_30px_rgba(44,24,16,0.12),inset_-9px_0_16px_rgba(126,93,56,0.08),inset_7px_0_13px_rgba(255,255,255,0.26)] sm:h-[122px] sm:w-[90px]">
           <div
-            className="absolute inset-0 rounded-[6px_6px_5px_5px]"
-            style={{
-              background: `linear-gradient(105deg, #fff7ec 0%, ${candleColor} 52%, #dec8a8 100%)`,
-            }}
+            className={`${styles.candleWax} ${getCandleWaxClass(candleColor ?? "#F5E6D3")}`}
           />
           <div className="absolute -top-3 left-1/2 h-4 w-5 -translate-x-1/2 rounded-[4px_4px_0_0] bg-[#D6A15F]" />
           <div className="absolute -top-2 left-1/2 h-3 w-1.5 -translate-x-1/2 rounded-full bg-[#FF9800] shadow-[0_0_16px_rgba(255,152,0,0.68)]" />
@@ -61,7 +65,7 @@ export default function CardProduct({
         </a>
 
         <p className="scent-note mt-2 line-clamp-1 text-[0.82rem] leading-5 text-[#2C1810]/72">
-          {scentNote}
+          {scentNote || "Nến thơm thủ công tinh giản."}
         </p>
 
         <p className="product-price mt-5 font-serif text-[0.98rem] text-[#7A1218]">

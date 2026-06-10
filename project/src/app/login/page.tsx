@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Footer from "../../components/client/footer";
-import FormSignIn from "../../components/client/formSignIn";
+import FormSignIn from "../../components/auth/formSignIn";
 import Header from "../../components/client/header";
 import Intro from "../../components/ui/intro";
 import { getCurrentUser } from "../../lib/action/auth.action";

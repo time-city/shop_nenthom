@@ -5,42 +5,15 @@ import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Modal from "@mui/material/Modal";
 import Typography from "@mui/material/Typography";
-
-type ModalDeleteProductProps = {
-  onClose: () => void;
-  onConfirm?: () => void;
-  open: boolean;
-  productName?: string;
-};
-
-const burgundy = "#6B1218";
-const burgundyDark = "#4A0C10";
-const cream = "#F8F0E4";
-const danger = "#B91C1C";
-const text = "#2C1810";
-const muted = "#6B4C35";
-
-const modalStyle = {
-  bgcolor: cream,
-  border: "1px solid rgba(107, 78, 53, 0.14)",
-  borderRadius: "16px",
-  boxShadow: "0 16px 48px rgba(44, 24, 16, 0.16)",
-  left: "50%",
-  maxWidth: 460,
-  outline: "none",
-  overflow: "hidden",
-  position: "absolute",
-  top: "50%",
-  transform: "translate(-50%, -50%)",
-  width: "calc(100% - 32px)",
-};
+import type { AdminModalDeleteProductProps } from "../../lib/types/admin";
+import styles from "../../styles/adminModal.module.css";
 
 export default function ModalDeleteProduct({
   onClose,
   onConfirm,
   open,
   productName,
-}: ModalDeleteProductProps) {
+}: AdminModalDeleteProductProps) {
   const handleConfirm = () => {
     onConfirm?.();
     onClose();
@@ -53,14 +26,10 @@ export default function ModalDeleteProduct({
       aria-labelledby="delete-product-title"
       aria-describedby="delete-product-description"
     >
-      <Box sx={modalStyle}>
-        <Box className="flex items-start gap-4 px-6 py-6">
+      <Box className={`${styles.modalPaper} ${styles.deletePaper}`}>
+        <Box className={styles.deleteBody}>
           <Box
-            className="flex size-12 shrink-0 items-center justify-center rounded-full"
-            sx={{
-              bgcolor: "rgba(185, 28, 28, 0.08)",
-              color: danger,
-            }}
+            className={styles.dangerIcon}
             aria-hidden="true"
           >
             <svg
@@ -79,33 +48,21 @@ export default function ModalDeleteProduct({
             </svg>
           </Box>
 
-          <Box className="min-w-0 flex-1">
+          <Box className={styles.deleteContent}>
             <Typography
               id="delete-product-title"
               component="h3"
-              sx={{
-                color: text,
-                fontFamily: "var(--admin-font-display)",
-                fontSize: "1.35rem",
-                fontWeight: 700,
-                lineHeight: 1.2,
-              }}
+              className={styles.deleteTitle}
             >
               Xóa sản phẩm?
             </Typography>
 
             <Typography
               id="delete-product-description"
-              sx={{
-                color: muted,
-                fontFamily: "var(--admin-font-body)",
-                fontSize: "0.9rem",
-                lineHeight: 1.65,
-                mt: 1,
-              }}
+              className={styles.description}
             >
               Bạn có chắc muốn xóa{" "}
-              <Box component="span" sx={{ color: burgundy, fontWeight: 700 }}>
+              <Box component="span" className={styles.highlight}>
                 {productName || "sản phẩm này"}
               </Box>
               ? Thao tác này không thể hoàn tác.
@@ -113,24 +70,13 @@ export default function ModalDeleteProduct({
           </Box>
         </Box>
 
-        <Divider sx={{ borderColor: "rgba(107, 78, 53, 0.14)" }} />
+        <Divider className={styles.divider} />
 
-        <Box className="flex flex-col-reverse gap-3 px-6 py-4 sm:flex-row sm:justify-end">
+        <Box className={styles.footer}>
           <Button
             type="button"
             onClick={onClose}
-            sx={{
-              borderRadius: "8px",
-              color: muted,
-              fontFamily: "var(--admin-font-body)",
-              fontWeight: 600,
-              px: 2.5,
-              py: 1,
-              "&:hover": {
-                bgcolor: "rgba(107, 78, 53, 0.06)",
-                color: text,
-              },
-            }}
+            className={styles.ghostButton}
           >
             Hủy
           </Button>
@@ -139,20 +85,7 @@ export default function ModalDeleteProduct({
             type="button"
             variant="contained"
             onClick={handleConfirm}
-            sx={{
-              bgcolor: danger,
-              borderRadius: "8px",
-              boxShadow: "0 8px 18px rgba(185, 28, 28, 0.18)",
-              color: "#fff",
-              fontFamily: "var(--admin-font-body)",
-              fontWeight: 700,
-              px: 2.5,
-              py: 1,
-              "&:hover": {
-                bgcolor: burgundyDark,
-                boxShadow: "0 12px 24px rgba(185, 28, 28, 0.25)",
-              },
-            }}
+            className={styles.dangerButton}
           >
             Xóa sản phẩm
           </Button>

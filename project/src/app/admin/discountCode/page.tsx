@@ -1,47 +1,8 @@
 "use client";
 
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import ModalDiscount from "../../../components/admin/modalDiscount";
-
-const coupons = [
-  {
-    code: "WELCOME10",
-    discountType: "Phần trăm",
-    value: "10%",
-    usage: "24 / 100",
-    expiredAt: "31/12/2024",
-    status: "Đang hoạt động",
-    statusType: "completed",
-  },
-  {
-    code: "FREESHIP50",
-    discountType: "Cố định",
-    value: "50.000 đ",
-    usage: "48 / 80",
-    expiredAt: "25/12/2024",
-    status: "Đang hoạt động",
-    statusType: "completed",
-  },
-  {
-    code: "VIP20",
-    discountType: "Phần trăm",
-    value: "20%",
-    usage: "12 / 50",
-    expiredAt: "15/01/2025",
-    status: "Sắp diễn ra",
-    statusType: "pending",
-  },
-  {
-    code: "NOEL2024",
-    discountType: "Cố định",
-    value: "120.000 đ",
-    usage: "100 / 100",
-    expiredAt: "24/12/2024",
-    status: "Đã hết lượt",
-    statusType: "cancelled",
-  },
-];
 
 export default function DiscountCodePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -110,53 +71,14 @@ export default function DiscountCodePage() {
                 </tr>
               </thead>
               <tbody>
-                {coupons.map((coupon) => (
-                  <tr key={coupon.code} className="transition hover:bg-[#6B1218]/[0.025]">
-                    <td className="border-t border-[#6B4E35]/10 px-5 py-4">
-                      <span className="font-mono text-sm font-bold uppercase text-[#6B1218]">
-                        {coupon.code}
-                      </span>
-                    </td>
-                    <td className="border-t border-[#6B4E35]/10 px-5 py-4 text-sm text-[#2C1810]">
-                      {coupon.discountType}
-                    </td>
-                    <td className="border-t border-[#6B4E35]/10 px-5 py-4">
-                      <span className="font-serif font-bold text-[#6B1218]">
-                        {coupon.value}
-                      </span>
-                    </td>
-                    <td className="border-t border-[#6B4E35]/10 px-5 py-4 text-sm text-[#2C1810]">
-                      {coupon.usage}
-                    </td>
-                    <td className="border-t border-[#6B4E35]/10 px-5 py-4 text-sm text-[#2C1810]">
-                      {coupon.expiredAt}
-                    </td>
-                    <td className="border-t border-[#6B4E35]/10 px-5 py-4">
-                      <span className={`dashboard-status ${coupon.statusType}`}>
-                        {coupon.status}
-                      </span>
-                    </td>
-                    <td className="border-t border-[#6B4E35]/10 px-5 py-4">
-                      <div className="flex gap-2">
-                        <button
-                          className="inline-flex size-9 items-center justify-center rounded-lg border border-[#6B4E35]/20 text-[#6B4C35] transition hover:border-[#6B1218] hover:bg-[#6B1218]/10 hover:text-[#6B1218]"
-                          type="button"
-                          aria-label={`Sửa ${coupon.code}`}
-                          onClick={() => setIsModalOpen(true)}
-                        >
-                          <Pencil className="size-4" aria-hidden="true" />
-                        </button>
-                        <button
-                          className="inline-flex size-9 items-center justify-center rounded-lg border border-[#6B4E35]/20 text-[#6B4C35] transition hover:border-[#B91C1C] hover:bg-[#B91C1C]/10 hover:text-[#B91C1C]"
-                          type="button"
-                          aria-label={`Xóa ${coupon.code}`}
-                        >
-                          <Trash2 className="size-4" aria-hidden="true" />
-                        </button>
-                      </div>
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="border-t border-[#6B4E35]/10 px-5 py-8 text-center text-sm text-[#6B4C35]"
+                    >
+                      Chưa có dữ liệu mã giảm giá
                     </td>
                   </tr>
-                ))}
               </tbody>
             </table>
           </div>

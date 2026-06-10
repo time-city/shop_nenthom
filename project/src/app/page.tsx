@@ -6,8 +6,9 @@ import BoSuuTap from "./(client)/collection/page";
 import TuyChinh from "./(client)/custom/page";
 import CauChuyen from "./(client)/story/page";
 import LienHe from "./(client)/contact/page";
+import type { CollectionPageProps } from "../lib/types/client";
 
-export default function Home() {
+export default function Home({ searchParams }: CollectionPageProps = {}) {
   return (
     <>
       <Intro />
@@ -21,7 +22,7 @@ export default function Home() {
 
         {/* 2. Bộ sưu tập */}
         <section id="collection" className="scroll-mt-20">
-          <BoSuuTap />
+          <BoSuuTap searchParams={searchParams} />
         </section>
 
         {/* 3. Tùy chỉnh */}

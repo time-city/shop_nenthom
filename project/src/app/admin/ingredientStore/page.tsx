@@ -9,77 +9,494 @@ import {
   Ruler,
   Sparkles,
   Trash2,
-  type LucideIcon,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import ModalIngredient, {
-  type IngredientType,
-} from "../../../components/admin/modalIngredient";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
+import ModalEditIngre from "../../../components/admin/modalEditIngre";
+import ModalIngredient from "../../../components/admin/modalIngredient";
+import type {
+  AdminCustomizationOptionsSuccessResponseInterface,
+  AdminOptionItemInterface,
+  AdminPackagingActionSuccessResponseInterface,
+  AdminScentActionSuccessResponseInterface,
+  AdminSizeActionSuccessResponseInterface,
+  AdminToppingActionSuccessResponseInterface,
+  AdminWaxColorActionSuccessResponseInterface,
+} from "../../../interface/adminInterface";
+import {
+  createPackagingAction,
+  createScentAction,
+  createSizeAction,
+  createToppingAction,
+  createWaxColorAction,
+  deleteOptionAction,
+  updatePackagingAction,
+  updateScentAction,
+  updateSizeAction,
+  updateToppingAction,
+  updateWaxColorAction,
+} from "../../../lib/action/option.action";
+import { getCustomizationOptionsAction } from "../../../lib/action/product.action";
+import type {
+  AdminIngredientActionButtonsProps,
+  AdminIngredientEditTarget,
+  AdminIngredientFormValues,
+  AdminIngredientItem,
+  AdminIngredientTableProps,
+  AdminIngredientType,
+  AdminMaterialTab,
+  AdminTableCellProps,
+  AdminTableShellProps,
+} from "../../../lib/types/admin";
+import ingredientStyles from "../../../styles/adminIngredientStore.module.css";
 
-type MaterialTab = {
-  addLabel: string;
-  icon: LucideIcon;
-  id: IngredientType;
-  label: string;
-};
+type AdminDeleteOptionType = "scent" | "waxColor" | "size" | "packaging" | "topping";
 
-const tabs: MaterialTab[] = [
+const tabs: AdminMaterialTab[] = [
   { addLabel: "Thêm mùi hương", icon: Flower2, id: "scent", label: "Mùi hương" },
   { addLabel: "Thêm màu sáp", icon: Palette, id: "color", label: "Màu sáp" },
   { addLabel: "Thêm kích thước", icon: Ruler, id: "size", label: "Kích thước" },
   { addLabel: "Thêm topping", icon: Sparkles, id: "topping", label: "Topping" },
-  { addLabel: "Thêm loại nến", icon: Flame, id: "type", label: "Loại nến" },
+  { addLabel: "Thêm bao bì", icon: Flame, id: "type", label: "Bao bì" },
 ];
 
-const scents = [
-  { id: 1, name: "Vanilla", price: "20.000 đ" },
-  { id: 2, name: "Lavender", price: "25.000 đ" },
-  { id: 3, name: "Sandalwood", price: "30.000 đ" },
-  { id: 4, name: "Oud & Amber", price: "45.000 đ" },
-];
+const formatIngredientPrice = (value: number) =>
+  `${new Intl.NumberFormat("vi-VN").format(value)} đ`;
 
-const colors = [
-  { hex: "#F5F0E8", id: 1, name: "Cream", price: "0 đ" },
-  { hex: "#D9B8C4", id: 2, name: "Rose Dust", price: "12.000 đ" },
-  { hex: "#BFD8C2", id: 3, name: "Sage", price: "12.000 đ" },
-  { hex: "#C99765", id: 4, name: "Cedar", price: "15.000 đ" },
-];
+const mapScentToIngredientItem = (
+  scent: AdminScentActionSuccessResponseInterface["data"],
+): AdminIngredientItem => ({
+  id: scent.id,
+  name: scent.name,
+  price: formatIngredientPrice(scent.price_extra_cents),
+});
 
-const sizes = [
-  { id: 1, name: "100g", price: "0 đ" },
-  { id: 2, name: "180g", price: "45.000 đ" },
-  { id: 3, name: "250g", price: "85.000 đ" },
-];
+const mapWaxColorToIngredientItem = (
+  color: AdminWaxColorActionSuccessResponseInterface["data"],
+): AdminIngredientItem => ({
+  hex: color.hex_code,
+  id: color.id,
+  name: color.name,
+  price: formatIngredientPrice(color.price_extra_cents),
+});
 
-const toppings = [
-  { id: 1, name: "Hoa khô", price: "15.000 đ", stock: 120 },
-  { id: 2, name: "Vỏ cam", price: "12.000 đ", stock: 86 },
-  { id: 3, name: "Tinh thể đá", price: "20.000 đ", stock: 45 },
-];
+const mapSizeToIngredientItem = (
+  size: AdminSizeActionSuccessResponseInterface["data"],
+): AdminIngredientItem => ({
+  id: size.id,
+  name: size.name,
+  price: formatIngredientPrice(size.price_extra_cents),
+  weight_gram: size.weight_gram,
+});
 
-const candleTypes = [
-  { id: 1, name: "Nến hũ", price: "0 đ" },
-  { id: 2, name: "Nến cốc", price: "10.000 đ" },
-  { id: 3, name: "Nến trụ", price: "20.000 đ" },
-  { id: 4, name: "Nến tealight", price: "-15.000 đ" },
-];
+const mapToppingToIngredientItem = (
+  topping: AdminToppingActionSuccessResponseInterface["data"],
+): AdminIngredientItem => ({
+  id: topping.id,
+  in_stock: topping.in_stock,
+  name: topping.name,
+  price: formatIngredientPrice(topping.price_extra_cents),
+});
 
-const counts: Record<IngredientType, number> = {
-  color: colors.length,
-  scent: scents.length,
-  size: sizes.length,
-  topping: toppings.length,
-  type: candleTypes.length,
+const mapPackagingToIngredientItem = (
+  packaging: AdminPackagingActionSuccessResponseInterface["data"],
+): AdminIngredientItem => ({
+  id: packaging.id,
+  name: packaging.name,
+  price: formatIngredientPrice(packaging.price_extra_cents),
+});
+
+const mapOptionToIngredientItem = (
+  option: AdminOptionItemInterface,
+): AdminIngredientItem => ({
+  hex: option.hex_code,
+  id: option.id,
+  in_stock: option.in_stock ?? true,
+  name: option.name,
+  price: formatIngredientPrice(option.price_extra_cents),
+  weight_gram: option.weight_gram,
+});
+
+const deleteOptionTypeMap: Record<AdminIngredientType, AdminDeleteOptionType> = {
+  color: "waxColor",
+  scent: "scent",
+  size: "size",
+  topping: "topping",
+  type: "packaging",
 };
 
 export default function IngredientStorePage() {
-  const [activeTab, setActiveTab] = useState<IngredientType>("scent");
-  const [modalType, setModalType] = useState<IngredientType | null>(null);
+  const [activeTab, setActiveTab] = useState<AdminIngredientType>("scent");
+  const [modalType, setModalType] = useState<AdminIngredientType | null>(null);
+  const [editTarget, setEditTarget] = useState<AdminIngredientEditTarget | null>(null);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(true);
+  const [scents, setScents] = useState<AdminIngredientItem[]>([]);
+  const [colors, setColors] = useState<AdminIngredientItem[]>([]);
+  const [sizes, setSizes] = useState<AdminIngredientItem[]>([]);
+  const [toppings, setToppings] = useState<AdminIngredientItem[]>([]);
+  const [packagings, setPackagings] = useState<AdminIngredientItem[]>([]);
 
   const activeConfig = useMemo(
     () => tabs.find((tab) => tab.id === activeTab) ?? tabs[0],
     [activeTab],
   );
+  const counts: Record<AdminIngredientType, number> = {
+    color: colors.length,
+    scent: scents.length,
+    size: sizes.length,
+    topping: toppings.length,
+    type: packagings.length,
+  };
+
+  useEffect(() => {
+    const loadOptions = async () => {
+      setIsLoadingOptions(true);
+
+      // action-(lấy danh sách nguyên liệu)
+      const result = await getCustomizationOptionsAction();
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        setIsLoadingOptions(false);
+        return;
+      }
+
+      if ("success" in result && result.success) {
+        const optionsResult = result as AdminCustomizationOptionsSuccessResponseInterface;
+        setScents(optionsResult.data.scents.map(mapOptionToIngredientItem));
+        setColors(optionsResult.data.colors.map(mapOptionToIngredientItem));
+        setSizes(optionsResult.data.sizes.map(mapOptionToIngredientItem));
+        setToppings(optionsResult.data.toppings.map(mapOptionToIngredientItem));
+        setPackagings(optionsResult.data.packagings.map(mapOptionToIngredientItem));
+      }
+
+      setIsLoadingOptions(false);
+    };
+
+    void loadOptions();
+  }, []);
+
+  const openEditModal = (type: AdminIngredientType, item: AdminIngredientItem) => {
+    setEditTarget({ item, type });
+  };
+
+  const removeDeletedItem = (
+    type: AdminIngredientType,
+    itemId: number,
+  ) => {
+    const filterDeletedItem = (items: AdminIngredientItem[]) =>
+      items.filter((item) => item.id !== itemId);
+
+    if (type === "scent") setScents(filterDeletedItem);
+    if (type === "color") setColors(filterDeletedItem);
+    if (type === "size") setSizes(filterDeletedItem);
+    if (type === "topping") setToppings(filterDeletedItem);
+    if (type === "type") setPackagings(filterDeletedItem);
+  };
+
+  const deleteIngredient = async (
+    type: AdminIngredientType,
+    item: AdminIngredientItem,
+  ) => {
+    const shouldDelete = window.confirm(`Bạn có chắc muốn xóa "${item.name}"?`);
+
+    if (!shouldDelete) return;
+
+    // action-(xóa option nguyên liệu)
+    const result = await deleteOptionAction({
+      id: item.id,
+      type: deleteOptionTypeMap[type],
+    });
+
+    if ("error" in result && result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    if ("success" in result && result.success) {
+      removeDeletedItem(type, item.id);
+      toast.success("Đã xóa nguyên liệu");
+    }
+  };
+
+  const saveNewIngredient = async (values: AdminIngredientFormValues) => {
+    if (modalType === "scent") {
+      // action-(tạo mùi hương)
+      const result = await createScentAction({
+        is_active: true,
+        name: values.name,
+        price_extra_cents: values.price_extra_cents,
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return false;
+      }
+
+      if ("success" in result && result.success) {
+        const scentResult = result as AdminScentActionSuccessResponseInterface;
+        setScents((currentItems) => [
+          ...currentItems,
+          mapScentToIngredientItem(scentResult.data),
+        ]);
+        toast.success("Đã thêm mùi hương");
+      }
+
+      return true;
+    }
+
+    if (modalType === "color") {
+      // action-(tạo màu sáp)
+      const result = await createWaxColorAction({
+        hex_code: values.hex ?? "#F5E6D3",
+        is_active: true,
+        name: values.name,
+        price_extra_cents: values.price_extra_cents,
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return false;
+      }
+
+      if ("success" in result && result.success) {
+        const colorResult = result as AdminWaxColorActionSuccessResponseInterface;
+        setColors((currentItems) => [
+          ...currentItems,
+          mapWaxColorToIngredientItem(colorResult.data),
+        ]);
+        toast.success("Đã thêm màu sáp");
+      }
+
+      return true;
+    }
+
+    if (modalType === "size") {
+      // action-(tạo kích thước)
+      const result = await createSizeAction({
+        is_active: true,
+        name: values.name,
+        price_extra_cents: values.price_extra_cents,
+        weight_gram: values.weight_gram,
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return false;
+      }
+
+      if ("success" in result && result.success) {
+        const sizeResult = result as AdminSizeActionSuccessResponseInterface;
+        setSizes((currentItems) => [
+          ...currentItems,
+          mapSizeToIngredientItem(sizeResult.data),
+        ]);
+        toast.success("Đã thêm kích thước");
+      }
+
+      return true;
+    }
+
+    if (modalType === "topping") {
+      // action-(tạo topping)
+      const result = await createToppingAction({
+        in_stock: values.in_stock ?? true,
+        is_active: true,
+        name: values.name,
+        price_extra_cents: values.price_extra_cents,
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return false;
+      }
+
+      if ("success" in result && result.success) {
+        const toppingResult = result as AdminToppingActionSuccessResponseInterface;
+        setToppings((currentItems) => [
+          ...currentItems,
+          mapToppingToIngredientItem(toppingResult.data),
+        ]);
+        toast.success("Đã thêm topping");
+      }
+
+      return true;
+    }
+
+    if (modalType === "type") {
+      // action-(tạo bao bì)
+      const result = await createPackagingAction({
+        is_active: true,
+        name: values.name,
+        price_extra_cents: values.price_extra_cents,
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return false;
+      }
+
+      if ("success" in result && result.success) {
+        const packagingResult = result as AdminPackagingActionSuccessResponseInterface;
+        setPackagings((currentItems) => [
+          ...currentItems,
+          mapPackagingToIngredientItem(packagingResult.data),
+        ]);
+        toast.success("Đã thêm bao bì");
+      }
+
+      return true;
+    }
+
+    toast.info("Action cho mục này sẽ được nối sau");
+    return false;
+  };
+
+  const saveEditedIngredient = async (
+    item: AdminIngredientItem,
+    values: AdminIngredientFormValues,
+  ) => {
+    if (editTarget?.type === "scent") {
+      // action-(cập nhật mùi hương)
+      const result = await updateScentAction(item.id, {
+        name: values.name,
+        price_extra_cents: values.price_extra_cents,
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return false;
+      }
+
+      if ("success" in result && result.success) {
+        const scentResult = result as AdminScentActionSuccessResponseInterface;
+        setScents((currentItems) =>
+          currentItems.map((currentItem) =>
+            currentItem.id === item.id
+              ? mapScentToIngredientItem(scentResult.data)
+              : currentItem,
+          ),
+        );
+        toast.success("Đã cập nhật mùi hương");
+      }
+
+      return true;
+    }
+
+    if (editTarget?.type === "color") {
+      // action-(cập nhật màu sáp)
+      const result = await updateWaxColorAction(item.id, {
+        hex_code: values.hex ?? item.hex ?? "#F5E6D3",
+        name: values.name,
+        price_extra_cents: values.price_extra_cents,
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return false;
+      }
+
+      if ("success" in result && result.success) {
+        const colorResult = result as AdminWaxColorActionSuccessResponseInterface;
+        setColors((currentItems) =>
+          currentItems.map((currentItem) =>
+            currentItem.id === item.id
+              ? mapWaxColorToIngredientItem(colorResult.data)
+              : currentItem,
+          ),
+        );
+        toast.success("Đã cập nhật màu sáp");
+      }
+
+      return true;
+    }
+
+    if (editTarget?.type === "size") {
+      // action-(cập nhật kích thước)
+      const result = await updateSizeAction(item.id, {
+        name: values.name,
+        price_extra_cents: values.price_extra_cents,
+        weight_gram: values.weight_gram,
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return false;
+      }
+
+      if ("success" in result && result.success) {
+        const sizeResult = result as AdminSizeActionSuccessResponseInterface;
+        setSizes((currentItems) =>
+          currentItems.map((currentItem) =>
+            currentItem.id === item.id
+              ? mapSizeToIngredientItem(sizeResult.data)
+              : currentItem,
+          ),
+        );
+        toast.success("Đã cập nhật kích thước");
+      }
+
+      return true;
+    }
+
+    if (editTarget?.type === "topping") {
+      // action-(cập nhật topping)
+      const result = await updateToppingAction(item.id, {
+        in_stock: values.in_stock ?? item.in_stock ?? true,
+        name: values.name,
+        price_extra_cents: values.price_extra_cents,
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return false;
+      }
+
+      if ("success" in result && result.success) {
+        const toppingResult = result as AdminToppingActionSuccessResponseInterface;
+        setToppings((currentItems) =>
+          currentItems.map((currentItem) =>
+            currentItem.id === item.id
+              ? mapToppingToIngredientItem(toppingResult.data)
+              : currentItem,
+          ),
+        );
+        toast.success("Đã cập nhật topping");
+      }
+
+      return true;
+    }
+
+    if (editTarget?.type === "type") {
+      // action-(cập nhật bao bì)
+      const result = await updatePackagingAction(item.id, {
+        name: values.name,
+        price_extra_cents: values.price_extra_cents,
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return false;
+      }
+
+      if ("success" in result && result.success) {
+        const packagingResult = result as AdminPackagingActionSuccessResponseInterface;
+        setPackagings((currentItems) =>
+          currentItems.map((currentItem) =>
+            currentItem.id === item.id
+              ? mapPackagingToIngredientItem(packagingResult.data)
+              : currentItem,
+          ),
+        );
+        toast.success("Đã cập nhật bao bì");
+      }
+
+      return true;
+    }
+
+    toast.info("Action cho mục này sẽ được nối sau");
+    return false;
+  };
 
   return (
     <>
@@ -103,7 +520,7 @@ export default function IngredientStorePage() {
           <div>
             <h1 className="dashboard-page-title">Kho Nguyên liệu</h1>
             <p className="dashboard-page-subtitle">
-              Quản lý mùi hương, màu sáp, kích thước, topping và loại nến
+              Quản lý mùi hương, màu sáp, kích thước, topping và bao bì
             </p>
           </div>
         </div>
@@ -155,11 +572,46 @@ export default function IngredientStorePage() {
           </div>
 
           <div className="overflow-x-auto">
-            {activeTab === "scent" ? <ScentTable /> : null}
-            {activeTab === "color" ? <ColorTable /> : null}
-            {activeTab === "size" ? <SizeTable /> : null}
-            {activeTab === "topping" ? <ToppingTable /> : null}
-            {activeTab === "type" ? <TypeTable /> : null}
+            {isLoadingOptions ? (
+              <div className="rounded-xl border border-[#6B4E35]/10 bg-[#F5F0E8]/70 px-5 py-8 text-center text-sm text-[#6B4C35]">
+                Đang tải dữ liệu nguyên liệu...
+              </div>
+            ) : null}
+            {!isLoadingOptions && activeTab === "scent" ? (
+              <ScentTable
+                items={scents}
+                onDelete={(item) => void deleteIngredient("scent", item)}
+                onEdit={(item) => openEditModal("scent", item)}
+              />
+            ) : null}
+            {!isLoadingOptions && activeTab === "color" ? (
+              <ColorTable
+                items={colors}
+                onDelete={(item) => void deleteIngredient("color", item)}
+                onEdit={(item) => openEditModal("color", item)}
+              />
+            ) : null}
+            {!isLoadingOptions && activeTab === "size" ? (
+              <SizeTable
+                items={sizes}
+                onDelete={(item) => void deleteIngredient("size", item)}
+                onEdit={(item) => openEditModal("size", item)}
+              />
+            ) : null}
+            {!isLoadingOptions && activeTab === "topping" ? (
+              <ToppingTable
+                items={toppings}
+                onDelete={(item) => void deleteIngredient("topping", item)}
+                onEdit={(item) => openEditModal("topping", item)}
+              />
+            ) : null}
+            {!isLoadingOptions && activeTab === "type" ? (
+              <TypeTable
+                items={packagings}
+                onDelete={(item) => void deleteIngredient("type", item)}
+                onEdit={(item) => openEditModal("type", item)}
+              />
+            ) : null}
           </div>
         </section>
       </div>
@@ -168,18 +620,27 @@ export default function IngredientStorePage() {
         open={Boolean(modalType)}
         ingredientType={modalType ?? "scent"}
         onClose={() => setModalType(null)}
+        onSave={saveNewIngredient}
+      />
+      <ModalEditIngre
+        open={Boolean(editTarget)}
+        ingredientType={editTarget?.type ?? "scent"}
+        item={editTarget?.item ?? null}
+        onClose={() => setEditTarget(null)}
+        onSave={saveEditedIngredient}
       />
     </>
   );
 }
 
-function ActionButtons() {
+function ActionButtons({ onDelete, onEdit }: AdminIngredientActionButtonsProps) {
   return (
     <div className="flex gap-2">
       <button
         className="inline-flex size-9 items-center justify-center rounded-lg border border-[#6B4E35]/20 text-[#6B4C35] transition hover:border-[#6B1218] hover:bg-[#6B1218]/10 hover:text-[#6B1218]"
         type="button"
         aria-label="Sửa"
+        onClick={onEdit}
       >
         <Pencil className="size-4" aria-hidden="true" />
       </button>
@@ -187,6 +648,7 @@ function ActionButtons() {
         className="inline-flex size-9 items-center justify-center rounded-lg border border-[#6B4E35]/20 text-[#6B4C35] transition hover:border-[#B91C1C] hover:bg-[#B91C1C]/10 hover:text-[#B91C1C]"
         type="button"
         aria-label="Xóa"
+        onClick={onDelete}
       >
         <Trash2 className="size-4" aria-hidden="true" />
       </button>
@@ -197,10 +659,7 @@ function ActionButtons() {
 function TableShell({
   children,
   headers,
-}: {
-  children: React.ReactNode;
-  headers: React.ReactNode[];
-}) {
+}: AdminTableShellProps) {
   return (
     <table className="w-full min-w-[680px] border-collapse text-left">
       <thead>
@@ -220,7 +679,7 @@ function TableShell({
   );
 }
 
-function TableCell({ children }: { children: React.ReactNode }) {
+function TableCell({ children }: AdminTableCellProps) {
   return (
     <td className="border-t border-[#6B4E35]/10 px-5 py-4 text-sm text-[#2C1810]">
       {children}
@@ -228,10 +687,10 @@ function TableCell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ScentTable() {
+function ScentTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Tên mùi hương", "Giá cộng thêm", ""]}>
-      {scents.map((item) => (
+      {items.map((item) => (
         <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
           <TableCell>{item.id}</TableCell>
           <TableCell>
@@ -241,7 +700,10 @@ function ScentTable() {
             <span className="font-serif font-bold text-[#6B1218]">{item.price}</span>
           </TableCell>
           <TableCell>
-            <ActionButtons />
+            <ActionButtons
+              onDelete={() => onDelete(item)}
+              onEdit={() => onEdit(item)}
+            />
           </TableCell>
         </tr>
       ))}
@@ -249,15 +711,15 @@ function ScentTable() {
   );
 }
 
-function ColorTable() {
+function ColorTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Màu sắc", "Tên màu", "Mã hex", "Giá cộng thêm", ""]}>
-      {colors.map((item) => (
+      {items.map((item) => (
         <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
           <TableCell>{item.id}</TableCell>
           <TableCell>
             <span
-              className="inline-block size-7 rounded-md border-2 border-[#6B4E35]/20 shadow-inner"
+              className={ingredientStyles.colorSwatch}
               style={{ backgroundColor: item.hex }}
             />
           </TableCell>
@@ -269,7 +731,10 @@ function ColorTable() {
             <span className="font-serif font-bold text-[#6B1218]">{item.price}</span>
           </TableCell>
           <TableCell>
-            <ActionButtons />
+            <ActionButtons
+              onDelete={() => onDelete(item)}
+              onEdit={() => onEdit(item)}
+            />
           </TableCell>
         </tr>
       ))}
@@ -277,10 +742,10 @@ function ColorTable() {
   );
 }
 
-function SizeTable() {
+function SizeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Kích thước", "Giá cộng thêm", ""]}>
-      {sizes.map((item) => (
+      {items.map((item) => (
         <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
           <TableCell>{item.id}</TableCell>
           <TableCell>
@@ -290,7 +755,10 @@ function SizeTable() {
             <span className="font-serif font-bold text-[#6B1218]">{item.price}</span>
           </TableCell>
           <TableCell>
-            <ActionButtons />
+            <ActionButtons
+              onDelete={() => onDelete(item)}
+              onEdit={() => onEdit(item)}
+            />
           </TableCell>
         </tr>
       ))}
@@ -298,10 +766,10 @@ function SizeTable() {
   );
 }
 
-function ToppingTable() {
+function ToppingTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
-    <TableShell headers={["#", "Tên topping", "Giá cộng thêm", "Tồn kho", ""]}>
-      {toppings.map((item) => (
+    <TableShell headers={["#", "Tên topping", "Giá cộng thêm", "Trạng thái", ""]}>
+      {items.map((item) => (
         <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
           <TableCell>{item.id}</TableCell>
           <TableCell>
@@ -310,9 +778,22 @@ function ToppingTable() {
           <TableCell>
             <span className="font-serif font-bold text-[#6B1218]">{item.price}</span>
           </TableCell>
-          <TableCell>{item.stock}</TableCell>
           <TableCell>
-            <ActionButtons />
+            <span
+              className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                item.in_stock === false
+                  ? "bg-[#B91C1C]/10 text-[#B91C1C]"
+                  : "bg-[#15803D]/10 text-[#15803D]"
+              }`}
+            >
+              {item.in_stock === false ? "Hết hàng" : "Còn hàng"}
+            </span>
+          </TableCell>
+          <TableCell>
+            <ActionButtons
+              onDelete={() => onDelete(item)}
+              onEdit={() => onEdit(item)}
+            />
           </TableCell>
         </tr>
       ))}
@@ -320,10 +801,10 @@ function ToppingTable() {
   );
 }
 
-function TypeTable() {
+function TypeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
-    <TableShell headers={["#", "Loại nến", "Giá cộng thêm", ""]}>
-      {candleTypes.map((item) => (
+    <TableShell headers={["#", "Bao bì", "Giá cộng thêm", ""]}>
+      {items.map((item) => (
         <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
           <TableCell>{item.id}</TableCell>
           <TableCell>
@@ -333,7 +814,10 @@ function TypeTable() {
             <span className="font-serif font-bold text-[#6B1218]">{item.price}</span>
           </TableCell>
           <TableCell>
-            <ActionButtons />
+            <ActionButtons
+              onDelete={() => onDelete(item)}
+              onEdit={() => onEdit(item)}
+            />
           </TableCell>
         </tr>
       ))}

@@ -1,164 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { IntroPhase } from "../../lib/types/client";
+import styles from "../../styles/intro.module.css";
 
-type IntroPhase = "black" | "candle" | "garden" | "hide";
-
-const farTrees = [
-  { x: "3%", w: 20, h: 85 },
-  { x: "9%", w: 16, h: 68 },
-  { x: "16%", w: 24, h: 104 },
-  { x: "22%", w: 14, h: 60 },
-  { x: "60%", w: 18, h: 76 },
-  { x: "68%", w: 26, h: 112 },
-  { x: "76%", w: 16, h: 66 },
-  { x: "84%", w: 22, h: 94 },
-  { x: "92%", w: 15, h: 60 },
-];
-
-const midTrees = [
-  { x: "1%", w: 42, h: 175, op: 0.6 },
-  { x: "8%", w: 34, h: 140, op: 0.56 },
-  { x: "16%", w: 50, h: 205, op: 0.63 },
-  { x: "23%", w: 32, h: 124, op: 0.54 },
-  { x: "69%", w: 46, h: 190, op: 0.61 },
-  { x: "77%", w: 36, h: 148, op: 0.58 },
-  { x: "85%", w: 52, h: 215, op: 0.64 },
-  { x: "93%", w: 30, h: 126, op: 0.52 },
-];
-
-const nearTrees = [
-  { x: "0%", w: 65, h: 190, op: 0.8 },
-  { x: "7%", w: 50, h: 150, op: 0.74 },
-  { x: "74%", w: 62, h: 184, op: 0.78 },
-  { x: "83%", w: 48, h: 144, op: 0.72 },
-  { x: "91%", w: 70, h: 196, op: 0.82 },
-];
-
-const grass = Array.from({ length: 40 }, (_, index) => ({
-  x: `${(index * 13) % 100}%`,
-  w: 8 + ((index * 7) % 18),
-  h: 14 + ((index * 11) % 28),
-  op: 0.35 + ((index * 9) % 45) / 100,
-}));
-
-const flowers = Array.from({ length: 34 }, (_, index) => ({
-  x: `${(index * 17 + 4) % 100}%`,
-  h: 24 + ((index * 13) % 58),
-  size: 8 + ((index * 5) % 7),
-  delay: `${((index * 3) % 9) / 10}s`,
-  op: 0.55 + ((index * 7) % 34) / 100,
-  color:
-    index % 3 === 0
-      ? ["#C4686E", "#B05666", "#E8C87A"]
-      : index % 3 === 1
-        ? ["#D4887A", "#C87068", "#F5ECD8"]
-        : ["#E8C87A", "#D8B85A", "#F5ECD8"],
-}));
-
-const fireflies = Array.from({ length: 22 }, (_, index) => ({
-  left: `${10 + ((index * 19) % 80)}%`,
-  bottom: `${12 + ((index * 11) % 45)}%`,
-  size: 2 + ((index * 5) % 4),
-  duration: `${3 + ((index * 7) % 5)}s`,
-  delay: `${((index * 13) % 70) / 10}s`,
-}));
-
-function Tree({
-  h,
-  opacity,
-  w,
-  x,
-  layer,
-}: {
-  h: number;
-  opacity: number;
-  w: number;
-  x: string;
-  layer: "far" | "mid" | "near";
-}) {
-  const trunkWidth = Math.round(w * (layer === "near" ? 0.22 : 0.2));
-  const trunkHeight = Math.round(h * (layer === "far" ? 0.27 : 0.3));
-
-  return (
-    <div
-      className="absolute bottom-0"
-      style={{ height: h, left: x, opacity, width: w }}
-    >
-      <div
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-sm bg-[#150805]"
-        style={{ height: trunkHeight, width: trunkWidth }}
-      />
-      <div
-        className="absolute left-1/2 -translate-x-1/2 rounded-[50%_50%_44%_44%]"
-        style={{
-          background:
-            layer === "far"
-              ? "linear-gradient(to bottom,#3a0a0e,#2a0608)"
-              : "linear-gradient(155deg,#3a0a0e 0%,#2a0608 55%,#1a0503 100%)",
-          bottom: Math.round(h * 0.22),
-          height: Math.round(h * 0.8),
-          width: w,
-        }}
-      />
-    </div>
-  );
-}
-
-function Flower({
-  delay,
-  h,
-  opacity,
-  size,
-  x,
-  colors,
-}: {
-  colors: string[];
-  delay: string;
-  h: number;
-  opacity: number;
-  size: number;
-  x: string;
-}) {
-  const petals = Array.from({ length: 6 }, (_, index) => index);
-
-  return (
-    <div
-      className="absolute bottom-0"
-      style={{ left: x, opacity, width: size * 4 }}
-    >
-      <div
-        className="absolute bottom-0 left-1/2 w-0.5 -translate-x-1/2 rounded bg-linear-to-t from-[#1a0a08] to-[#3a1815] origin-bottom animate-[ft-sway_2.8s_ease-in-out_infinite]"
-        style={{ animationDelay: delay, height: h }}
-      />
-      <div
-        className="absolute left-1/2 -translate-x-1/2"
-        style={{ bottom: h - size * 0.7, height: size * 2.4, width: size * 2.4 }}
-      >
-        {petals.map((petal) => (
-          <div
-            key={petal}
-            className="absolute left-1/2 top-1/2 origin-[50%_100%] rounded-[50%_50%_40%_40%]"
-            style={{
-              background: `radial-gradient(ellipse at 50% 30%,${colors[0]},${colors[1]} 80%)`,
-              height: size * 1.3,
-              transform: `translateX(-50%) translateY(-100%) rotate(${petal * 60}deg)`,
-              width: size,
-            }}
-          />
-        ))}
-        <div
-          className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{
-            background: `radial-gradient(circle,${colors[2]},rgba(240,210,60,0.7) 70%)`,
-            height: size * 0.9,
-            width: size * 0.9,
-          }}
-        />
-      </div>
-    </div>
-  );
-}
+const farTrees = Array.from({ length: 9 }, (_, index) => index);
+const midTrees = Array.from({ length: 8 }, (_, index) => index);
+const nearTrees = Array.from({ length: 5 }, (_, index) => index);
+const grass = Array.from({ length: 40 }, (_, index) => index);
+const flowers = Array.from({ length: 34 }, (_, index) => index);
+const petals = Array.from({ length: 6 }, (_, index) => index);
+const fireflies = Array.from({ length: 22 }, (_, index) => index);
 
 export default function Intro() {
   const [phase, setPhase] = useState<IntroPhase>("black");
@@ -245,7 +97,10 @@ export default function Intro() {
           }`}
         >
           {farTrees.map((tree) => (
-            <Tree key={tree.x} {...tree} layer="far" opacity={0.36} />
+            <div key={tree} className={`${styles.tree} ${styles.farTree}`}>
+              <div className={styles.treeTrunk} />
+              <div className={styles.treeCrown} />
+            </div>
           ))}
         </div>
         <div
@@ -254,7 +109,10 @@ export default function Intro() {
           }`}
         >
           {midTrees.map((tree) => (
-            <Tree key={tree.x} {...tree} layer="mid" opacity={tree.op} />
+            <div key={tree} className={`${styles.tree} ${styles.midTree}`}>
+              <div className={styles.treeTrunk} />
+              <div className={styles.treeCrown} />
+            </div>
           ))}
         </div>
         <div
@@ -263,7 +121,10 @@ export default function Intro() {
           }`}
         >
           {nearTrees.map((tree) => (
-            <Tree key={tree.x} {...tree} layer="near" opacity={tree.op} />
+            <div key={tree} className={`${styles.tree} ${styles.nearTree}`}>
+              <div className={styles.treeTrunk} />
+              <div className={styles.treeCrown} />
+            </div>
           ))}
         </div>
 
@@ -282,14 +143,8 @@ export default function Intro() {
         >
           {grass.map((blade) => (
             <div
-              key={`${blade.x}-${blade.h}`}
-              className="absolute bottom-0 rounded-[50%_50%_28%_28%] bg-linear-to-t from-[#1a0a08] via-[#2c1810] to-[#4a2420]"
-              style={{
-                height: blade.h,
-                left: blade.x,
-                opacity: blade.op,
-                width: blade.w,
-              }}
+              key={blade}
+              className={styles.grassBlade}
             />
           ))}
         </div>
@@ -300,15 +155,15 @@ export default function Intro() {
           }`}
         >
           {flowers.map((flower) => (
-            <Flower
-              key={`${flower.x}-${flower.h}`}
-              colors={flower.color}
-              delay={flower.delay}
-              h={flower.h}
-              opacity={flower.op}
-              size={flower.size}
-              x={flower.x}
-            />
+            <div key={flower} className={styles.flower}>
+              <div className={styles.flowerStem} />
+              <div className={styles.flowerHead}>
+                {petals.map((petal) => (
+                  <div key={petal} className={styles.petal} />
+                ))}
+                <div className={styles.flowerCenter} />
+              </div>
+            </div>
           ))}
         </div>
 
@@ -319,16 +174,8 @@ export default function Intro() {
         >
           {fireflies.map((fly) => (
             <span
-              key={`${fly.left}-${fly.bottom}`}
-              className="absolute rounded-full bg-[#fff28c]/90 animate-[ft-firefly_linear_infinite]"
-              style={{
-                animationDelay: fly.delay,
-                animationDuration: fly.duration,
-                bottom: fly.bottom,
-                height: fly.size,
-                left: fly.left,
-                width: fly.size,
-              }}
+              key={fly}
+              className={styles.firefly}
             />
           ))}
         </div>
