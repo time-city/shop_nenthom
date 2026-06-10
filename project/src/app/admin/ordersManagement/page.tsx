@@ -2,85 +2,15 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import type {
+  AdminOrder,
+  AdminOrderStatus,
+  AdminPaymentStatus,
+} from "../../../lib/types/admin";
 
-type OrderStatus =
-  | "pending"
-  | "processing"
-  | "shipping"
-  | "completed"
-  | "cancelled";
+const orders: AdminOrder[] = [];
 
-type PaymentStatus = "paid" | "unpaid" | "refunded";
-
-type Order = {
-  customer: string;
-  date: string;
-  id: string;
-  payment: PaymentStatus;
-  status: OrderStatus;
-  total: number;
-};
-
-const orders: Order[] = [
-  {
-    id: "DH-2024001",
-    date: "2024-12-05T09:30:00",
-    customer: "Nguyễn Thị Lan",
-    total: 450000,
-    status: "completed",
-    payment: "paid",
-  },
-  {
-    id: "DH-2024002",
-    date: "2024-12-05T10:45:00",
-    customer: "Trần Văn Minh",
-    total: 680000,
-    status: "processing",
-    payment: "paid",
-  },
-  {
-    id: "DH-2024003",
-    date: "2024-12-04T15:20:00",
-    customer: "Lê Thị Hoa",
-    total: 320000,
-    status: "shipping",
-    payment: "paid",
-  },
-  {
-    id: "DH-2024004",
-    date: "2024-12-04T18:10:00",
-    customer: "Phạm Đức An",
-    total: 890000,
-    status: "pending",
-    payment: "unpaid",
-  },
-  {
-    id: "DH-2024005",
-    date: "2024-12-03T11:05:00",
-    customer: "Hoàng Thị Mai",
-    total: 1250000,
-    status: "completed",
-    payment: "paid",
-  },
-  {
-    id: "DH-2024006",
-    date: "2024-12-03T14:40:00",
-    customer: "Đỗ Quốc Bảo",
-    total: 520000,
-    status: "cancelled",
-    payment: "refunded",
-  },
-  {
-    id: "DH-2024007",
-    date: "2024-12-02T08:25:00",
-    customer: "Vũ Thanh Huyền",
-    total: 760000,
-    status: "processing",
-    payment: "paid",
-  },
-];
-
-const statusLabels: Record<OrderStatus, string> = {
+const statusLabels: Record<AdminOrderStatus, string> = {
   cancelled: "Đã hủy",
   completed: "Hoàn thành",
   pending: "Chờ xác nhận",
@@ -88,13 +18,13 @@ const statusLabels: Record<OrderStatus, string> = {
   shipping: "Đang giao",
 };
 
-const paymentLabels: Record<PaymentStatus, string> = {
+const paymentLabels: Record<AdminPaymentStatus, string> = {
   paid: "Đã thanh toán",
   refunded: "Hoàn tiền",
   unpaid: "Chưa thanh toán",
 };
 
-const paymentClassNames: Record<PaymentStatus, string> = {
+const paymentClassNames: Record<AdminPaymentStatus, string> = {
   paid: "done",
   refunded: "cancelled",
   unpaid: "pending",
@@ -116,7 +46,7 @@ function formatDateTime(value: string) {
 
 export default function OrdersManagementPage() {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<OrderStatus | "">("");
+  const [status, setStatus] = useState<AdminOrderStatus | "">("");
 
   const filteredOrders = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -197,7 +127,7 @@ export default function OrdersManagementPage() {
                   className="orders-form-select"
                   value={status}
                   onChange={(event) =>
-                    setStatus(event.target.value as OrderStatus | "")
+                    setStatus(event.target.value as AdminOrderStatus | "")
                   }
                 >
                   <option value="">Tất cả trạng thái</option>
@@ -290,28 +220,6 @@ export default function OrdersManagementPage() {
                   Không tìm thấy đơn hàng phù hợp
                 </div>
               ) : null}
-
-              <div className="orders-pagination" aria-label="Orders pagination">
-                <button className="orders-pagination-btn" type="button" disabled>
-                  ‹
-                </button>
-                <button
-                  className="orders-pagination-btn active"
-                  type="button"
-                  aria-current="page"
-                >
-                  1
-                </button>
-                <button className="orders-pagination-btn" type="button">
-                  2
-                </button>
-                <button className="orders-pagination-btn" type="button">
-                  3
-                </button>
-                <button className="orders-pagination-btn" type="button">
-                  ›
-                </button>
-              </div>
             </div>
           </section>
         </div>

@@ -1,0 +1,24 @@
+.colorSwatch {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(107, 78, 53, 0.2);
+  border-radius: 6px;
+  box-shadow: inset 0 2px 4px rgba(44, 24, 16, 0.08);
+}
+
+.cream {
+  background-color: #f5f0e8;
+}
+
+.roseDust {
+  background-color: #d9b8c4;
+}
+
+.sage {
+  background-color: #bfd8c2;
+}
+
+.cedar {
+  background-color: #c99765;
+}

@@ -3,15 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { logoutUser } from "../../lib/action/auth.action";
+import type {
+  AdminNavItem,
+  AdminSidebarSectionProps,
+} from "../../lib/types/admin";
 
-type NavItem = {
-  badge?: number;
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-};
-
-const overviewLinks: NavItem[] = [
+const overviewLinks: AdminNavItem[] = [
   {
     href: "/admin/dashboard",
     label: "Dashboard",
@@ -26,9 +25,8 @@ const overviewLinks: NavItem[] = [
   },
 ];
 
-const managementLinks: NavItem[] = [
+const managementLinks: AdminNavItem[] = [
   {
-    badge: 3,
     href: "/admin/ordersManagement",
     label: "Đơn hàng",
     icon: (
@@ -69,9 +67,8 @@ const managementLinks: NavItem[] = [
   },
 ];
 
-const otherLinks: NavItem[] = [
+const otherLinks: AdminNavItem[] = [
   {
-    badge: 3,
     href: "/admin/support",
     label: "Hỗ trợ",
     icon: (
@@ -83,9 +80,20 @@ const otherLinks: NavItem[] = [
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const handleLogout = () => {
-    router.push("/login");
+    startTransition(async () => {
+      // action-(đăng xuất)
+      const result = await logoutUser();
+
+      if (!result.success) {
+        return;
+      }
+
+      router.replace("/login");
+      router.refresh();
+    });
   };
 
   return (
@@ -131,6 +139,7 @@ export default function Navbar() {
           className="admin-sidebar-logout"
           type="button"
           onClick={handleLogout}
+          disabled={isPending}
         >
           <svg
             width="18"
@@ -147,7 +156,7 @@ export default function Navbar() {
             <polyline points="16,17 21,12 16,7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-          Đăng xuất
+          {isPending ? "Đang đăng xuất..." : "Đăng xuất"}
         </button>
       </div>
     </aside>
@@ -158,11 +167,7 @@ function SidebarSection({
   links,
   pathname,
   title,
-}: {
-  links: NavItem[];
-  pathname: string;
-  title: string;
-}) {
+}: AdminSidebarSectionProps) {
   return (
     <div className="admin-sidebar-section">
       <div className="admin-sidebar-section-title">{title}</div>

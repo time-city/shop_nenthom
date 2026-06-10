@@ -1,55 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ModalDeleteProduct from "../../../components/admin/modalDeleteProduct";
 import ModalProduct from "../../../components/admin/modalProduct";
+import type {
+  AdminProductListItemInterface,
+  AdminProductsSuccessResponseInterface,
+} from "../../../interface/adminInterface";
+import { getProductsAction } from "../../../lib/action/product.action";
+import type { AdminProductRow } from "../../../lib/types/admin";
 
-const products = [
-  {
-    id: "SP001",
-    name: "Nến Vanilla Dream",
-    category: "Nến hũ",
-    price: "180.000 đ",
-    status: "Đang bán",
-    statusType: "completed",
-  },
-  {
-    id: "SP002",
-    name: "Nến Lavender Fields",
-    category: "Nến cốc",
-    price: "150.000 đ",
-    status: "Đang bán",
-    statusType: "completed",
-  },
-  {
-    id: "SP003",
-    name: "Nến Ocean Breeze",
-    category: "Nến trụ",
-    price: "210.000 đ",
-    status: "Ẩn",
-    statusType: "pending",
-  },
-  {
-    id: "SP004",
-    name: "Nến Rose Garden",
-    category: "Nến hũ",
-    price: "195.000 đ",
-    status: "Đang bán",
-    statusType: "completed",
-  },
-  {
-    id: "SP005",
-    name: "Nến Sandalwood",
-    category: "Nến cốc",
-    price: "230.000 đ",
-    status: "Hết hàng",
-    statusType: "cancelled",
-  },
-];
+const formatCurrency = (value: number) =>
+  `${new Intl.NumberFormat("vi-VN").format(value)} đ`;
+
+const mapProductToRow = (
+  product: AdminProductListItemInterface,
+): AdminProductRow => ({
+  category: product.category?.name ?? "Chưa phân loại",
+  id: product.id,
+  name: product.name,
+  price: formatCurrency(product.base_price_cents),
+  status: "Đang bán",
+  statusType: "completed",
+});
 
 export default function ProductManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteProductName, setDeleteProductName] = useState("");
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [products, setProducts] = useState<AdminProductRow[]>([]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      setIsLoadingProducts(true);
+
+      // action-(lấy danh sách sản phẩm admin)
+      const result = await getProductsAction({ limit: 100, page: 1 });
+
+      if ("success" in result && result.success) {
+        const productResult = result as AdminProductsSuccessResponseInterface;
+        setProducts(productResult.data.map(mapProductToRow));
+      }
+
+      setIsLoadingProducts(false);
+    };
+
+    void loadProducts();
+  }, []);
 
   return (
     <>
@@ -189,6 +186,16 @@ export default function ProductManagementPage() {
                 </tbody>
               </table>
             </div>
+            {isLoadingProducts ? (
+              <div className="px-5 py-8 text-center text-sm text-[#6B4C35]">
+                Đang tải danh sách sản phẩm...
+              </div>
+            ) : null}
+            {!isLoadingProducts && products.length === 0 ? (
+              <div className="px-5 py-8 text-center text-sm text-[#6B4C35]">
+                Chưa có sản phẩm nào
+              </div>
+            ) : null}
           </div>
         </section>
       </div>

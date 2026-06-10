@@ -1,0 +1,33 @@
+.candleWax {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px 6px 5px 5px;
+}
+
+.cream {
+  background: linear-gradient(105deg, #fff7ec 0%, #f1dec5 52%, #dec8a8 100%);
+}
+
+.sage {
+  background: linear-gradient(105deg, #fff7ec 0%, #c8ddc4 52%, #dec8a8 100%);
+}
+
+.blossom {
+  background: linear-gradient(105deg, #fff7ec 0%, #e7b4d4 52%, #dec8a8 100%);
+}
+
+.peony {
+  background: linear-gradient(105deg, #fff7ec 0%, #e4a9cb 52%, #dec8a8 100%);
+}
+
+.cedar {
+  background: linear-gradient(105deg, #fff7ec 0%, #d29a61 52%, #dec8a8 100%);
+}
+
+.sandalwood {
+  background: linear-gradient(105deg, #fff7ec 0%, #c88f58 52%, #dec8a8 100%);
+}
+
+.linen {
+  background: linear-gradient(105deg, #fff7ec 0%, #f1dec5 52%, #dec8a8 100%);
+}

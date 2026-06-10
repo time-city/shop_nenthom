@@ -2,23 +2,17 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, type MouseEvent } from "react";
-
-type NavLink = {
-  href: string;
-  label: string;
-};
-
-type NavLinksProps = {
-  links: NavLink[];
-  className?: string;
-  linkClassName?: string;
-};
+import type { ClientNavLinksProps } from "../../lib/types/client";
 
 /**
  * Smooth scroll đến section khi đang ở trang chủ ("/").
  * Nếu đang ở trang khác thì navigate về /#hash bình thường.
  */
-export default function NavLinks({ links, className, linkClassName }: NavLinksProps) {
+export default function NavLinks({
+  links,
+  className,
+  linkClassName,
+}: ClientNavLinksProps) {
   const pathname = usePathname();
 
   // Xử lý scroll khi navigate từ trang khác về "/#hash"
