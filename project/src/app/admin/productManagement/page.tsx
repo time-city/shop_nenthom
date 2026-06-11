@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import ModalDeleteProduct from "../../../components/admin/modalDeleteProduct";
+import ModalEditProduct from "../../../components/admin/modalEditProduct";
 import ModalProduct from "../../../components/admin/modalProduct";
 import type {
   AdminProductListItemInterface,
   AdminProductsSuccessResponseInterface,
 } from "../../../interface/adminInterface";
-import { getProductsAction } from "../../../lib/action/product.action";
+import {
+  deleteProductAction,
+  getProductsAction,
+} from "../../../lib/action/product.action";
 import type { AdminProductRow } from "../../../lib/types/admin";
 
 const formatCurrency = (value: number) =>
@@ -20,33 +25,74 @@ const mapProductToRow = (
   id: product.id,
   name: product.name,
   price: formatCurrency(product.base_price_cents),
-  status: "Đang bán",
-  statusType: "completed",
+  status: product.is_active ? "Đang bán" : "Đã ẩn",
+  statusType: product.is_active ? "completed" : "cancelled",
 });
 
 export default function ProductManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deleteProductName, setDeleteProductName] = useState("");
+  const [editProduct, setEditProduct] =
+    useState<AdminProductListItemInterface | null>(null);
+  const [deleteProduct, setDeleteProduct] =
+    useState<AdminProductListItemInterface | null>(null);
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [products, setProducts] = useState<AdminProductRow[]>([]);
+  const [productError, setProductError] = useState("");
+  const [products, setProducts] = useState<AdminProductListItemInterface[]>([]);
+
+  const loadProducts = useCallback(async () => {
+    setIsLoadingProducts(true);
+
+    // action-(lấy danh sách sản phẩm admin)
+    const result = await getProductsAction({ limit: 100, page: 1 });
+
+    if ("error" in result && result.error) {
+      setProductError(result.error);
+      toast.error(result.error);
+      setProducts([]);
+      setIsLoadingProducts(false);
+      return;
+    }
+
+    if ("success" in result && result.success) {
+      const productResult = result as AdminProductsSuccessResponseInterface;
+      setProductError("");
+      setProducts(productResult.data);
+    }
+
+    setIsLoadingProducts(false);
+  }, []);
 
   useEffect(() => {
-    const loadProducts = async () => {
-      setIsLoadingProducts(true);
-
-      // action-(lấy danh sách sản phẩm admin)
-      const result = await getProductsAction({ limit: 100, page: 1 });
-
-      if ("success" in result && result.success) {
-        const productResult = result as AdminProductsSuccessResponseInterface;
-        setProducts(productResult.data.map(mapProductToRow));
-      }
-
-      setIsLoadingProducts(false);
-    };
-
     void loadProducts();
-  }, []);
+  }, [loadProducts]);
+
+  const stopRowClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!deleteProduct) return;
+
+    setIsDeletingProduct(true);
+
+    // action-(xóa sản phẩm)
+    const result = await deleteProductAction({ id: deleteProduct.id });
+
+    if ("error" in result && result.error) {
+      toast.error(result.error);
+      setIsDeletingProduct(false);
+      return;
+    }
+
+    if ("success" in result && result.success) {
+      toast.success("Đã xóa sản phẩm");
+      setDeleteProduct(null);
+      await loadProducts();
+    }
+
+    setIsDeletingProduct(false);
+  };
 
   return (
     <>
@@ -118,71 +164,88 @@ export default function ProductManagementPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) => (
-                    <tr key={product.id}>
-                      <td>
-                        <div className="product-table-thumb" aria-hidden="true">
-                          <span />
-                        </div>
-                      </td>
-                      <td>
-                        <div className="dashboard-product-name">{product.name}</div>
-                        <div className="dashboard-product-note">{product.id}</div>
-                      </td>
-                      <td>{product.category}</td>
-                      <td className="orders-table-amount">{product.price}</td>
-                      <td>
-                        <span className={`dashboard-status ${product.statusType}`}>
-                          {product.status}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="product-row-actions">
-                          <button
-                            className="orders-icon-btn"
-                            type="button"
-                            aria-label={`Sửa ${product.name}`}
-                            onClick={() => setIsModalOpen(true)}
-                          >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              aria-hidden="true"
+                  {products.map((product) => {
+                    const productRow = mapProductToRow(product);
+
+                    return (
+                      <tr
+                        key={product.id}
+                        className="transition hover:bg-[#6B1218]/[0.03]"
+                      >
+                        <td>
+                          <div className="product-table-thumb" aria-hidden="true">
+                            <span />
+                          </div>
+                        </td>
+                        <td>
+                          <div className="dashboard-product-name">
+                            {productRow.name}
+                          </div>
+                          <div className="dashboard-product-note">
+                            {productRow.id}
+                          </div>
+                        </td>
+                        <td>{productRow.category}</td>
+                        <td className="orders-table-amount">{productRow.price}</td>
+                        <td>
+                          <span className={`dashboard-status ${productRow.statusType}`}>
+                            {productRow.status}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="product-row-actions">
+                            <button
+                              className="orders-icon-btn"
+                              type="button"
+                              aria-label={`Sửa ${productRow.name}`}
+                              onClick={(event) => {
+                                stopRowClick(event);
+                                setEditProduct(product);
+                              }}
                             >
-                              <path d="M12 20h9" />
-                              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-                            </svg>
-                          </button>
-                          <button
-                            className="orders-icon-btn product-danger-btn"
-                            type="button"
-                            aria-label={`Xóa ${product.name}`}
-                            onClick={() => setDeleteProductName(product.name)}
-                          >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              aria-hidden="true"
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                aria-hidden="true"
+                              >
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                              </svg>
+                            </button>
+                            <button
+                              className="orders-icon-btn product-danger-btn"
+                              type="button"
+                              aria-label={`Xóa ${productRow.name}`}
+                              onClick={(event) => {
+                                stopRowClick(event);
+                                setDeleteProduct(product);
+                              }}
                             >
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                              <path d="M10 11v6" />
-                              <path d="M14 11v6" />
-                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                aria-hidden="true"
+                              >
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                <path d="M10 11v6" />
+                                <path d="M14 11v6" />
+                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -191,7 +254,12 @@ export default function ProductManagementPage() {
                 Đang tải danh sách sản phẩm...
               </div>
             ) : null}
-            {!isLoadingProducts && products.length === 0 ? (
+            {!isLoadingProducts && productError ? (
+              <div className="px-5 py-8 text-center text-sm text-[#8A1119]">
+                {productError}
+              </div>
+            ) : null}
+            {!isLoadingProducts && !productError && products.length === 0 ? (
               <div className="px-5 py-8 text-center text-sm text-[#6B4C35]">
                 Chưa có sản phẩm nào
               </div>
@@ -200,11 +268,23 @@ export default function ProductManagementPage() {
         </section>
       </div>
 
-      <ModalProduct open={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <ModalProduct
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={loadProducts}
+      />
+      <ModalEditProduct
+        open={Boolean(editProduct)}
+        product={editProduct}
+        onClose={() => setEditProduct(null)}
+        onSave={loadProducts}
+      />
       <ModalDeleteProduct
-        open={Boolean(deleteProductName)}
-        productName={deleteProductName}
-        onClose={() => setDeleteProductName("")}
+        open={Boolean(deleteProduct)}
+        productName={deleteProduct?.name}
+        isDeleting={isDeletingProduct}
+        onClose={() => setDeleteProduct(null)}
+        onConfirm={handleDeleteProduct}
       />
     </>
   );

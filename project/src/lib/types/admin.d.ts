@@ -78,23 +78,77 @@ export type AdminIngredientTableProps = {
 /** Props cho modal thêm/sửa sản phẩm trong admin. */
 export type AdminModalProductProps = {
   onClose: () => void;
-  onSave?: () => void;
+  onSave?: () => Promise<void> | void;
   open: boolean;
+};
+
+/** Props cho modal chỉnh sửa sản phẩm trong admin. */
+export type AdminModalEditProductProps = {
+  onClose: () => void;
+  onSave?: () => Promise<void> | void;
+  open: boolean;
+  product: import("../../interface/adminInterface").AdminProductListItemInterface | null;
+};
+
+/** Props cho modal xem chi tiết sản phẩm trong admin. */
+export type AdminModalDetailProductProps = {
+  onClose: () => void;
+  open: boolean;
+  productId: string | null;
+};
+
+/** Values form tạo/sửa sản phẩm trong admin. */
+export type AdminProductFormValues = {
+  base_price_cents: string;
+  category_id: string;
+  description: string;
+  image_data_url: string;
+  image_file_name: string;
+  is_active: boolean;
+  name: string;
 };
 
 /** Props cho modal xác nhận xoá sản phẩm trong admin. */
 export type AdminModalDeleteProductProps = {
+  confirmLabel?: string;
+  description?: string;
+  isDeleting?: boolean;
+  loadingLabel?: string;
   onClose: () => void;
-  onConfirm?: () => void;
+  onConfirm?: () => Promise<void> | void;
   open: boolean;
   productName?: string;
+  title?: string;
+};
+
+/** Props cho modal xác nhận xoá dùng chung trong admin. */
+export type AdminDeleteConfirmModalProps = {
+  confirmLabel?: string;
+  description?: string;
+  isDeleting?: boolean;
+  itemName?: string;
+  loadingLabel?: string;
+  onClose: () => void;
+  onConfirm?: () => Promise<void> | void;
+  open: boolean;
+  productName?: string;
+  title?: string;
 };
 
 /** Props cho modal thêm/sửa mã giảm giá trong admin. */
 export type AdminModalDiscountProps = {
   onClose: () => void;
-  onSave?: () => void;
+  onSave?: () => Promise<void> | void;
   open: boolean;
+};
+
+/** Values form tạo mã giảm giá trong admin. */
+export type AdminDiscountFormValues = {
+  code: string;
+  discount_amount_cents: string;
+  expires_at: string;
+  max_uses: string;
+  type: "FIXED" | "PERCENTAGE";
 };
 
 /** Item điều hướng trong sidebar admin. */

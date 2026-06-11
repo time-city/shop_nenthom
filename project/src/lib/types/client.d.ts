@@ -86,6 +86,14 @@ export type SignUpValues = {
   terms: boolean;
 };
 
+/** Values form liên hệ phía client. */
+export type ClientContactFormValues = {
+  email: string;
+  message: string;
+  name: string;
+  subject: string;
+};
+
 /** Thông tin user tối thiểu cho trang orders. */
 export type ClientOrderUserData = {
   email?: string;
@@ -116,9 +124,11 @@ export type ClientOrderRecord = {
 /** Item giỏ hàng legacy lưu ở localStorage phía client. */
 export type ClientCartItem = {
   color?: string;
+  itemId?: string;
   name?: string;
   pack?: string | null;
   price: number;
+  productId?: string;
   quantity: number;
   scent: string;
   size?: string;

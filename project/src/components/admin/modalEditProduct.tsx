@@ -20,9 +20,9 @@ import type {
   AdminProductCategoryInterface,
 } from "../../interface/adminInterface";
 import { getCategoriesAction } from "../../lib/action/category.action";
-import { createProductAction } from "../../lib/action/product.action";
+import { updateProductAction } from "../../lib/action/product.action";
 import type {
-  AdminModalProductProps,
+  AdminModalEditProductProps,
   AdminProductFormValues,
 } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
@@ -55,11 +55,30 @@ const readImageFile = (file: File) =>
     reader.readAsDataURL(file);
   });
 
-export default function ModalProduct({
+const getFirstImageUrl = (images: unknown) => {
+  if (Array.isArray(images) && typeof images[0] === "string") {
+    return images[0];
+  }
+
+  return "";
+};
+
+const getImageFileName = (imageUrl: string) => {
+  if (!imageUrl) return "";
+
+  if (imageUrl.startsWith("data:image/")) {
+    return "Ảnh hiện tại";
+  }
+
+  return imageUrl.split("/").pop()?.split("?")[0] || "Ảnh hiện tại";
+};
+
+export default function ModalEditProduct({
   onClose,
   onSave,
   open,
-}: AdminModalProductProps) {
+  product,
+}: AdminModalEditProductProps) {
   const [categories, setCategories] = useState<AdminProductCategoryInterface[]>([]);
   const [formValues, setFormValues] = useState<AdminProductFormValues>(
     initialProductFormValues,
@@ -68,14 +87,24 @@ export default function ModalProduct({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !product) return;
 
-    setFormValues(initialProductFormValues);
+    const currentImage = getFirstImageUrl(product.images);
+
+    setFormValues({
+      base_price_cents: String(product.base_price_cents),
+      category_id: String(product.category_id),
+      description: product.description ?? "",
+      image_data_url: currentImage,
+      image_file_name: getImageFileName(currentImage),
+      is_active: product.is_active,
+      name: product.name,
+    });
 
     const loadCategories = async () => {
       setIsLoadingCategories(true);
 
-      // action-(lấy danh sách category cho product)
+      // action-(lấy danh sách category cho edit product)
       const result = await getCategoriesAction();
 
       if ("error" in result && result.error) {
@@ -94,7 +123,7 @@ export default function ModalProduct({
     };
 
     void loadCategories();
-  }, [open]);
+  }, [open, product]);
 
   const updateField = (
     field: keyof AdminProductFormValues,
@@ -138,6 +167,8 @@ export default function ModalProduct({
   };
 
   const handleSave = async () => {
+    if (!product) return;
+
     const productName = formValues.name.trim();
     const productPrice = Number(formValues.base_price_cents);
     const categoryId = Number(formValues.category_id);
@@ -158,19 +189,14 @@ export default function ModalProduct({
       return;
     }
 
-    if (!imageDataUrl) {
-      toast.error("Vui lòng chọn ảnh sản phẩm");
-      return;
-    }
-
     setIsSubmitting(true);
 
-    // action-(tạo sản phẩm)
-    const result = await createProductAction({
+    // action-(cập nhật sản phẩm)
+    const result = await updateProductAction(product.id, {
       base_price_cents: productPrice,
       category_id: categoryId,
       description: formValues.description.trim() || undefined,
-      images: [imageDataUrl],
+      ...(imageDataUrl ? { images: [imageDataUrl] } : {}),
       is_active: formValues.is_active,
       name: productName,
     });
@@ -182,9 +208,8 @@ export default function ModalProduct({
     }
 
     if ("success" in result && result.success) {
-      toast.success("Đã thêm sản phẩm");
+      toast.success("Đã cập nhật sản phẩm");
       await onSave?.();
-      setFormValues(initialProductFormValues);
       onClose();
     }
 
@@ -195,17 +220,17 @@ export default function ModalProduct({
     <Modal
       open={open}
       onClose={onClose}
-      aria-labelledby="product-modal-title"
-      aria-describedby="product-modal-description"
+      aria-labelledby="edit-product-modal-title"
+      aria-describedby="edit-product-modal-description"
     >
       <Box className={`${styles.modalPaper} ${styles.productPaper}`}>
         <Box className={styles.header}>
           <Typography
-            id="product-modal-title"
+            id="edit-product-modal-title"
             component="h3"
             className={styles.title}
           >
-            Thêm sản phẩm mới
+            Chỉnh sửa sản phẩm
           </Typography>
 
           <Button
@@ -221,7 +246,7 @@ export default function ModalProduct({
         <Divider className={styles.divider} />
 
         <Box
-          id="product-modal-description"
+          id="edit-product-modal-description"
           component="form"
           className={styles.form}
         >
@@ -236,9 +261,9 @@ export default function ModalProduct({
             />
 
             <FormControl fullWidth className={styles.field}>
-              <InputLabel id="product-category-label">Danh mục</InputLabel>
+              <InputLabel id="edit-product-category-label">Danh mục</InputLabel>
               <Select
-                labelId="product-category-label"
+                labelId="edit-product-category-label"
                 label="Danh mục"
                 value={formValues.category_id}
                 onChange={(event) =>
@@ -284,12 +309,15 @@ export default function ModalProduct({
           <Box>
             <Typography
               component="label"
-              htmlFor="product-image-upload"
+              htmlFor="edit-product-image-upload"
               className={styles.sectionLabel}
             >
               Ảnh sản phẩm
             </Typography>
-            <label htmlFor="product-image-upload" className={styles.uploadArea}>
+            <label
+              htmlFor="edit-product-image-upload"
+              className={styles.uploadArea}
+            >
               {formValues.image_data_url ? (
                 <>
                   <Box
@@ -315,7 +343,7 @@ export default function ModalProduct({
                 </>
               )}
               <input
-                id="product-image-upload"
+                id="edit-product-image-upload"
                 type="file"
                 accept="image/*"
                 hidden
@@ -356,7 +384,7 @@ export default function ModalProduct({
             disabled={isSubmitting}
             className={styles.primaryButton}
           >
-            {isSubmitting ? "Đang lưu..." : "Lưu sản phẩm"}
+            {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
           </Button>
         </Box>
       </Box>

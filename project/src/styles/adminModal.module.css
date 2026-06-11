@@ -17,6 +17,19 @@
   max-width: 620px;
 }
 
+.detailProductPaper {
+  width: min(1120px, calc(100vw - 32px));
+  max-width: 1120px;
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+}
+
+@media (max-width: 767px) {
+  .detailProductPaper {
+    overflow-y: auto;
+  }
+}
+
 .ingredientPaper,
 .discountPaper {
   max-width: 560px;

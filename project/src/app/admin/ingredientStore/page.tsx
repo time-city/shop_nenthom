@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import ModalDeleteProduct from "../../../components/admin/modalDeleteProduct";
 import ModalEditIngre from "../../../components/admin/modalEditIngre";
 import ModalIngredient from "../../../components/admin/modalIngredient";
 import type {
@@ -129,6 +130,9 @@ export default function IngredientStorePage() {
   const [activeTab, setActiveTab] = useState<AdminIngredientType>("scent");
   const [modalType, setModalType] = useState<AdminIngredientType | null>(null);
   const [editTarget, setEditTarget] = useState<AdminIngredientEditTarget | null>(null);
+  const [deleteTarget, setDeleteTarget] =
+    useState<AdminIngredientEditTarget | null>(null);
+  const [isDeletingIngredient, setIsDeletingIngredient] = useState(false);
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
   const [scents, setScents] = useState<AdminIngredientItem[]>([]);
   const [colors, setColors] = useState<AdminIngredientItem[]>([]);
@@ -194,29 +198,30 @@ export default function IngredientStorePage() {
     if (type === "type") setPackagings(filterDeletedItem);
   };
 
-  const deleteIngredient = async (
-    type: AdminIngredientType,
-    item: AdminIngredientItem,
-  ) => {
-    const shouldDelete = window.confirm(`Bạn có chắc muốn xóa "${item.name}"?`);
+  const deleteIngredient = async () => {
+    if (!deleteTarget) return;
 
-    if (!shouldDelete) return;
+    setIsDeletingIngredient(true);
 
     // action-(xóa option nguyên liệu)
     const result = await deleteOptionAction({
-      id: item.id,
-      type: deleteOptionTypeMap[type],
+      id: deleteTarget.item.id,
+      type: deleteOptionTypeMap[deleteTarget.type],
     });
 
     if ("error" in result && result.error) {
       toast.error(result.error);
+      setIsDeletingIngredient(false);
       return;
     }
 
     if ("success" in result && result.success) {
-      removeDeletedItem(type, item.id);
+      removeDeletedItem(deleteTarget.type, deleteTarget.item.id);
+      setDeleteTarget(null);
       toast.success("Đã xóa nguyên liệu");
     }
+
+    setIsDeletingIngredient(false);
   };
 
   const saveNewIngredient = async (values: AdminIngredientFormValues) => {
@@ -580,35 +585,35 @@ export default function IngredientStorePage() {
             {!isLoadingOptions && activeTab === "scent" ? (
               <ScentTable
                 items={scents}
-                onDelete={(item) => void deleteIngredient("scent", item)}
+                onDelete={(item) => setDeleteTarget({ item, type: "scent" })}
                 onEdit={(item) => openEditModal("scent", item)}
               />
             ) : null}
             {!isLoadingOptions && activeTab === "color" ? (
               <ColorTable
                 items={colors}
-                onDelete={(item) => void deleteIngredient("color", item)}
+                onDelete={(item) => setDeleteTarget({ item, type: "color" })}
                 onEdit={(item) => openEditModal("color", item)}
               />
             ) : null}
             {!isLoadingOptions && activeTab === "size" ? (
               <SizeTable
                 items={sizes}
-                onDelete={(item) => void deleteIngredient("size", item)}
+                onDelete={(item) => setDeleteTarget({ item, type: "size" })}
                 onEdit={(item) => openEditModal("size", item)}
               />
             ) : null}
             {!isLoadingOptions && activeTab === "topping" ? (
               <ToppingTable
                 items={toppings}
-                onDelete={(item) => void deleteIngredient("topping", item)}
+                onDelete={(item) => setDeleteTarget({ item, type: "topping" })}
                 onEdit={(item) => openEditModal("topping", item)}
               />
             ) : null}
             {!isLoadingOptions && activeTab === "type" ? (
               <TypeTable
                 items={packagings}
-                onDelete={(item) => void deleteIngredient("type", item)}
+                onDelete={(item) => setDeleteTarget({ item, type: "type" })}
                 onEdit={(item) => openEditModal("type", item)}
               />
             ) : null}
@@ -628,6 +633,16 @@ export default function IngredientStorePage() {
         item={editTarget?.item ?? null}
         onClose={() => setEditTarget(null)}
         onSave={saveEditedIngredient}
+      />
+      <ModalDeleteProduct
+        open={Boolean(deleteTarget)}
+        title="Xóa nguyên liệu?"
+        itemName={deleteTarget?.item.name}
+        confirmLabel="Xóa nguyên liệu"
+        loadingLabel="Đang xóa..."
+        isDeleting={isDeletingIngredient}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={deleteIngredient}
       />
     </>
   );

@@ -1,32 +1,48 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 import CartItem from "../../../components/client/cartItem";
 import CartSummary from "../../../components/client/cartSummary";
 import CheckoutForm from "../../../components/client/checkoutForm";
 import CheckoutSummary from "../../../components/client/checkoutSummary";
+import type {
+  ClientCartActionItemInterface,
+  ClientCartActionSuccessResponseInterface,
+} from "../../../interface/clientInterface";
+import {
+  clearCartAction,
+  getOrCreateCartAction,
+  removeCartItemAction,
+  updateCartItemAction,
+} from "../../../lib/action/cart.action";
 import type { CartPageStep, ClientCartItem } from "../../../lib/types/client";
 
-const cartStorageKey = "lumiere-cart";
+const getCartItemPrice = (item: ClientCartActionItemInterface) =>
+  item.product.base_price_cents +
+  (item.scent?.price_extra_cents ?? 0) +
+  (item.color?.price_extra_cents ?? 0) +
+  (item.size?.price_extra_cents ?? 0) +
+  (item.packaging?.price_extra_cents ?? 0);
 
-const readCart = () => {
-  try {
-    const rawCart = localStorage.getItem(cartStorageKey);
-    const parsedCart = rawCart ? JSON.parse(rawCart) : [];
-
-    return Array.isArray(parsedCart) ? (parsedCart as ClientCartItem[]) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveCart = (cart: ClientCartItem[]) => {
-  localStorage.setItem(cartStorageKey, JSON.stringify(cart));
-};
+const mapCartItem = (item: ClientCartActionItemInterface): ClientCartItem => ({
+  color: item.color?.name,
+  itemId: item.id,
+  name: item.product.name,
+  pack: item.packaging?.name,
+  price: getCartItemPrice(item),
+  productId: item.product_id,
+  quantity: item.quantity,
+  scent: item.scent?.name ?? item.product.name,
+  size: item.size?.weight_gram
+    ? `${item.size.name} (${item.size.weight_gram}g)`
+    : item.size?.name,
+});
 
 export default function CartPage() {
   const [cart, setCart] = useState<ClientCartItem[]>([]);
+  const [isLoadingCart, setIsLoadingCart] = useState(true);
   const [step, setStep] = useState<CartPageStep>("cart");
 
   const subtotal = useMemo(
@@ -38,42 +54,94 @@ export default function CartPage() {
     [cart],
   );
 
-  useEffect(() => {
-    setCart(readCart());
+  const loadCart = useCallback(async () => {
+    setIsLoadingCart(true);
+
+    // action-(lấy giỏ hàng)
+    const result = await getOrCreateCartAction();
+
+    if ("error" in result && result.error) {
+      toast.error(result.error);
+      setCart([]);
+      setIsLoadingCart(false);
+      return;
+    }
+
+    if ("success" in result && result.success) {
+      const cartResult = result as ClientCartActionSuccessResponseInterface;
+      setCart(cartResult.cart.items.map(mapCartItem));
+    }
+
+    setIsLoadingCart(false);
   }, []);
 
-  const updateCart = (nextCart: ClientCartItem[]) => {
-    setCart(nextCart);
-    saveCart(nextCart);
+  useEffect(() => {
+    void loadCart();
+  }, [loadCart]);
+
+  const updateQuantity = async (index: number, change: number) => {
+    const targetItem = cart[index];
+
+    if (!targetItem?.itemId) return;
+
+    const nextQuantity = targetItem.quantity + change;
+
+    if (nextQuantity <= 0) {
+      await removeItem(index);
+      return;
+    }
+
+    // action-(cập nhật số lượng giỏ hàng)
+    const result = await updateCartItemAction({
+      itemId: targetItem.itemId,
+      quantity: nextQuantity,
+    });
+
+    if ("error" in result && result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    await loadCart();
   };
 
-  const updateQuantity = (index: number, change: number) => {
-    const nextCart = cart
-      .map((item, itemIndex) =>
-        itemIndex === index
-          ? { ...item, quantity: Math.max(item.quantity + change, 0) }
-          : item,
-      )
-      .filter((item) => item.quantity > 0);
+  const removeItem = async (index: number) => {
+    const targetItem = cart[index];
 
-    updateCart(nextCart);
-  };
+    if (!targetItem?.itemId) return;
 
-  const removeItem = (index: number) => {
     const shouldRemove = window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?");
 
     if (!shouldRemove) return;
 
-    updateCart(cart.filter((_, itemIndex) => itemIndex !== index));
+    // action-(xóa item khỏi giỏ hàng)
+    const result = await removeCartItemAction({ itemId: targetItem.itemId });
+
+    if ("error" in result && result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success("Đã xóa sản phẩm khỏi giỏ hàng");
+    await loadCart();
   };
 
   const applyPromo = () => {
     window.alert("Chức năng khuyến mãi sẽ được cập nhật sớm");
   };
 
-  const completeOrder = () => {
+  const completeOrder = async () => {
     window.alert("Đơn hàng được tạo thành công!");
-    updateCart([]);
+
+    // action-(xóa toàn bộ giỏ hàng)
+    const result = await clearCartAction();
+
+    if ("error" in result && result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    setCart([]);
     setStep("cart");
   };
 
@@ -122,7 +190,13 @@ export default function CartPage() {
           </Link>
         </div>
 
-        {cart.length === 0 ? (
+        {isLoadingCart ? (
+          <section className="rounded-2xl bg-[#F8F0E4] px-6 py-16 text-center shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
+            <p className="text-base text-[#6B4C35]">
+              Đang tải giỏ hàng...
+            </p>
+          </section>
+        ) : cart.length === 0 ? (
           <section className="rounded-2xl bg-[#F8F0E4] px-6 py-16 text-center shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
             <div className="mb-4 text-5xl text-[#6B4C35]/35">🛍</div>
             <p className="mb-8 text-base text-[#6B4C35]">

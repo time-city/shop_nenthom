@@ -59,7 +59,7 @@ export default function Intro() {
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-9999 overflow-hidden bg-black transition-opacity duration-1000 ${
+      className={`fixed inset-0 z-9999 overflow-hidden bg-black transition-opacity duration-1000 hover:cursor-pointer ${
         phase === "hide" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       onClick={dismiss}
