@@ -1,0 +1,78 @@
+.scentDot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 999px;
+}
+
+.santal {
+  background-color: #d4a574;
+}
+
+.aquamarine {
+  background-color: #7ec8c8;
+}
+
+.orchid {
+  background-color: #c9a0c0;
+}
+
+.oakmoss {
+  background-color: #8b7355;
+}
+
+.incense {
+  background-color: #c4956a;
+}
+
+.campfire {
+  background-color: #c4622a;
+}
+
+.colorDotCream {
+  background-color: #f5ecd8;
+}
+
+.colorDotHoney {
+  background-color: #e8c878;
+}
+
+.colorDotBlush {
+  background-color: #e8b4a0;
+}
+
+.colorDotRose {
+  background-color: #c87878;
+}
+
+.colorDotEarth {
+  background-color: #a07850;
+}
+
+.colorDotSmoke {
+  background-color: #3c2820;
+}
+
+.miniCandleCream {
+  background: linear-gradient(105deg, #f5ecd8, #f5ede3 42%, #c8b89a);
+}
+
+.miniCandleHoney {
+  background: linear-gradient(105deg, #e8c878, #f5ede3 42%, #c8b89a);
+}
+
+.miniCandleBlush {
+  background: linear-gradient(105deg, #e8b4a0, #f5ede3 42%, #c8b89a);
+}
+
+.miniCandleRose {
+  background: linear-gradient(105deg, #c87878, #f5ede3 42%, #c8b89a);
+}
+
+.miniCandleEarth {
+  background: linear-gradient(105deg, #a07850, #f5ede3 42%, #c8b89a);
+}
+
+.miniCandleSmoke {
+  background: linear-gradient(105deg, #3c2820, #f5ede3 42%, #c8b89a);
+}

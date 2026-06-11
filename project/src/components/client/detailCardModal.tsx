@@ -1,18 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getProductDetailsAction } from "../../lib/action/product.action";
-import DetailCardProduct, { type ProductDetail } from "./detailCardProduct";
+import DetailCardProduct from "./detailCardProduct";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
+import type {
+  ClientProductDetailDataInterface,
+  ClientProductDetailInterface,
+} from "../../interface/clientInterface";
+import type { DetailCardModalProps } from "../../lib/types/client";
+import styles from "../../styles/clientModal.module.css";
 
-export default function DetailCardModal() {
+export default function DetailCardModal({
+  isAuthenticated = false,
+}: DetailCardModalProps) {
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
   const pathname = usePathname();
+  const router = useRouter();
   
-  const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [product, setProduct] = useState<ClientProductDetailInterface | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -20,11 +29,13 @@ export default function DetailCardModal() {
       setLoading(true);
       getProductDetailsAction(productId).then((result) => {
         if ("success" in result && result.success) {
-            const detailData = result.data as any;
-            const rawProduct = (detailData.product ?? detailData) as any;
-            const rawOptions = (detailData.options ?? rawProduct.options ?? {}) as any;
+            const detailData = result.data as ClientProductDetailDataInterface;
+            const rawProduct = (detailData.product ?? detailData) as Partial<ClientProductDetailInterface>;
+            const rawOptions = (detailData.options ??
+              rawProduct.options ??
+              {}) as NonNullable<ClientProductDetailDataInterface["options"]>;
             
-            const p: ProductDetail = {
+            const p: ClientProductDetailInterface = {
               base_price_cents: rawProduct.base_price_cents ?? 0,
               category: rawProduct.category ?? null,
               description: rawProduct.description ?? null,
@@ -56,8 +67,8 @@ export default function DetailCardModal() {
     params.delete("productId");
     const query = params.toString();
     const newPath = query ? `${pathname}?${query}` : pathname;
-    
-    window.history.pushState(null, "", newPath);
+
+    router.replace(newPath, { scroll: false });
   };
 
   if (!productId) return null;
@@ -65,15 +76,7 @@ export default function DetailCardModal() {
   if (loading || !product) {
     return (
       <Modal open={true} onClose={handleClose}>
-        <Box
-          sx={{
-            left: "50%",
-            outline: "none",
-            position: "absolute",
-            top: "50%",
-            transform: "translate(-50%, -50%)",
-          }}
-        >
+        <Box className={styles.loadingShell}>
           <div className="flex h-32 w-64 items-center justify-center rounded-2xl bg-[#F8F0E4] shadow-2xl">
             <p className="font-serif text-lg text-[#6B1218]">Đang tải...</p>
           </div>
@@ -84,6 +87,7 @@ export default function DetailCardModal() {
 
   return (
     <DetailCardProduct 
+        isAuthenticated={isAuthenticated}
         product={product} 
         onClose={handleClose} 
     />

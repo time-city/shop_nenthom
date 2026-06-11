@@ -1,0 +1,217 @@
+/** Query params dùng cho trang collection. */
+export type CollectionSearchParams = {
+  categoryId?: string;
+  page?: string;
+  productId?: string;
+  q?: string;
+};
+
+/** Props của trang collection trong App Router. */
+export type CollectionPageProps = {
+  searchParams?: Promise<CollectionSearchParams>;
+};
+
+/** Props card sản phẩm phía client. */
+export type CardProductProps = {
+  candleColor?: string;
+  href: string;
+  id: number | string;
+  name: string;
+  price: number | string;
+  scentNote?: string;
+};
+
+/** Props trang chi tiết sản phẩm theo params id. */
+export type ProductDetailPageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+/** Props modal/detail card sản phẩm. */
+export type DetailCardProductProps = {
+  isAuthenticated?: boolean;
+  product: import("../../interface/clientInterface").ClientProductDetailInterface;
+  onClose?: () => void;
+};
+
+/** Props wrapper modal chi tiết sản phẩm. */
+export type DetailCardModalProps = {
+  isAuthenticated?: boolean;
+};
+
+/** Props nhóm option trong detail card sản phẩm. */
+export type DetailOptionGroupProps = {
+  label: string;
+  onSelect: (item: import("../../interface/clientInterface").ClientProductOptionItemInterface) => void;
+  options: import("../../interface/clientInterface").ClientProductOptionItemInterface[];
+  renderLabel?: (item: import("../../interface/clientInterface").ClientProductOptionItemInterface) => string;
+  selectedId?: number;
+};
+
+/** Props form tùy chỉnh nến. */
+export type FormCustomProps = {
+  isAuthenticated?: boolean;
+  options?: import("../../interface/clientInterface").ClientCustomizationOptionsInterface;
+};
+
+/** Link điều hướng trong header client. */
+export type ClientNavLink = {
+  href: string;
+  label: string;
+};
+
+/** Props danh sách link điều hướng client. */
+export type ClientNavLinksProps = {
+  className?: string;
+  linkClassName?: string;
+  links: ClientNavLink[];
+};
+
+/** Values form đăng nhập. */
+export type SignInValues = {
+  email: string;
+  password: string;
+  remember: boolean;
+};
+
+/** Values form đăng ký. */
+export type SignUpValues = {
+  confirmPassword: string;
+  email: string;
+  fullname: string;
+  newsletter: boolean;
+  password: string;
+  phone: string;
+  terms: boolean;
+};
+
+/** Thông tin user tối thiểu cho trang orders. */
+export type ClientOrderUserData = {
+  email?: string;
+  fullname?: string;
+  phone?: string;
+};
+
+/** Trạng thái đơn hàng phía client. */
+export type ClientOrderStatus = "processing" | "shipping" | "done" | "canceled";
+
+/** Item trong một đơn hàng phía client. */
+export type ClientOrderItem = {
+  detail?: string;
+  name: string;
+  price: number;
+  quantity: number;
+};
+
+/** Dữ liệu một đơn hàng phía client. */
+export type ClientOrderRecord = {
+  date: string;
+  id: string;
+  items: ClientOrderItem[];
+  status: ClientOrderStatus;
+  total: number;
+};
+
+/** Item giỏ hàng legacy lưu ở localStorage phía client. */
+export type ClientCartItem = {
+  color?: string;
+  name?: string;
+  pack?: string | null;
+  price: number;
+  quantity: number;
+  scent: string;
+  size?: string;
+};
+
+/** Bước đang hiển thị trong trang giỏ hàng. */
+export type CartPageStep = "cart" | "checkout";
+
+/** Props item trong trang giỏ hàng. */
+export type CartItemProps = {
+  index: number;
+  item: ClientCartItem;
+  onQuantityChange: (index: number, change: number) => void;
+  onRemove: (index: number) => void;
+};
+
+/** Props khối tổng tóm tắt đơn ở trang giỏ hàng. */
+export type CartSummaryProps = {
+  onApplyPromo: () => void;
+  onCheckout: () => void;
+  subtotal: number;
+};
+
+/** Phương thức thanh toán trong checkout. */
+export type CartPaymentMethod = "bank" | "cod";
+
+/** Props form thanh toán. */
+export type CheckoutFormProps = {
+  onComplete: () => void;
+};
+
+/** Props khối tổng tóm tắt đơn ở trang checkout. */
+export type CheckoutSummaryProps = {
+  items: ClientCartItem[];
+  onBackToCart: () => void;
+};
+
+/** Props header của trang lịch sử đơn hàng. */
+export type OrdersHeaderProps = {
+  user: Required<ClientOrderUserData>;
+};
+
+/** Thông tin user dùng trong trang profile. */
+export type ClientProfileUserData = {
+  address?: string;
+  city?: string;
+  email?: string;
+  fullname?: string;
+  phone?: string;
+  role?: string;
+  zip?: string;
+};
+
+/** Tab đang active trong profile. */
+export type ClientProfileTab = "orders" | "profile";
+
+/** Props header profile. */
+export type ProfileHeaderProps = {
+  activeTab: ClientProfileTab;
+  user: Required<ClientProfileUserData>;
+};
+
+/** Props field trong form profile. */
+export type ProfileFieldProps = {
+  className?: string;
+  id: keyof Required<ClientProfileUserData>;
+  label: string;
+  onChange: (field: keyof Required<ClientProfileUserData>, value: string) => void;
+  type?: string;
+  value: string;
+};
+
+/** Phase hiển thị intro animation. */
+export type IntroPhase = "black" | "candle" | "garden" | "hide";
+
+/** Layer cây trong intro animation. */
+export type IntroTreeLayer = "far" | "mid" | "near";
+
+/** Props cây trong intro animation. */
+export type IntroTreeProps = {
+  h: number;
+  layer: IntroTreeLayer;
+  opacity: number;
+  w: number;
+  x: string;
+};
+
+/** Props hoa trong intro animation. */
+export type IntroFlowerProps = {
+  colors: string[];
+  delay: string;
+  h: number;
+  opacity: number;
+  size: number;
+  x: string;
+};

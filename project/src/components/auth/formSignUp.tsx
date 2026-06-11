@@ -11,16 +11,7 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { registerUser } from "../../lib/action/auth.action";
-
-interface SignUpValues {
-  fullname: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  phone: string;
-  terms: boolean;
-  newsletter: boolean;
-}
+import type { SignUpValues } from "../../lib/types/client";
 
 const initialValues: SignUpValues = {
   fullname: "",
@@ -96,25 +87,21 @@ export default function FormSignUp() {
     const password = values.password;
 
     // action-(đăng ký)
-    console.log("[register:start]", { email, fullname, phone });
     const result = await registerUser({
       email,
       fullname,
       password,
       phone,
     });
-    console.log("[register:result]", result);
 
     if (!result.success) {
       const message = result.error ?? "Đăng ký thất bại";
-      console.log(message);
       toast.error(message);
       actions.setSubmitting(false);
       return;
     }
 
     const message = "Đăng ký thành công! Đang chuyển hướng...";
-    console.log(message);
     localStorage.setItem("newsletter", String(values.newsletter));
     toast.success(message);
     actions.setSubmitting(false);

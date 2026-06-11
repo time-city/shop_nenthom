@@ -12,12 +12,7 @@ import { type ChangeEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { loginUser } from "../../lib/action/auth.action";
-
-interface SignInValues {
-  email: string;
-  password: string;
-  remember: boolean;
-}
+import type { SignInValues } from "../../lib/types/client";
 
 const initialValues: SignInValues = {
   email: "",
@@ -82,7 +77,6 @@ export default function FormSignIn() {
 
   const showError = (message: string) => {
     setErrorMessage(message);
-    console.log(message);
     toast.error(message);
     window.setTimeout(() => setErrorMessage(""), 4000);
   };
@@ -113,7 +107,6 @@ export default function FormSignIn() {
     }
 
     const message = "Đăng nhập thành công!";
-    console.log(message);
 
     // Remember me chỉ lưu email và trạng thái checkbox, không lưu mật khẩu.
     if (values.remember) {

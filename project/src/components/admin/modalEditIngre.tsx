@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
@@ -8,51 +8,75 @@ import Modal from "@mui/material/Modal";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import type { AdminModalIngredientProps } from "../../lib/types/admin";
+import type { AdminModalEditIngredientProps } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
 
-export default function ModalIngredient({
+const toNumberValue = (value?: string) =>
+  value ? value.replace(/[^\d-]/g, "") : "";
+
+const formatPriceLabel = (value: string) => {
+  const numberValue = Number(value);
+
+  if (!Number.isFinite(numberValue)) return "0 đ";
+
+  return `${new Intl.NumberFormat("vi-VN").format(numberValue)} đ`;
+};
+
+export default function ModalEditIngre({
   ingredientType,
+  item,
   onClose,
   onSave,
   open,
-}: AdminModalIngredientProps) {
+}: AdminModalEditIngredientProps) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [hex, setHex] = useState("#F5E6D3");
   const [inStock, setInStock] = useState(true);
   const [weightGram, setWeightGram] = useState("");
-  const nameLabel =
-    ingredientType === "color"
-      ? "Tên màu"
-      : ingredientType === "type"
-        ? "Bao bì"
-        : ingredientType === "size"
-          ? "Kích thước"
-          : ingredientType === "topping"
-            ? "Tên topping"
-            : "Tên mùi hương";
+
+  const nameLabel = useMemo(() => {
+    if (ingredientType === "color") return "Tên màu";
+    if (ingredientType === "type") return "Bao bì";
+    if (ingredientType === "size") return "Kích thước";
+    if (ingredientType === "topping") return "Tên topping";
+
+    return "Tên mùi hương";
+  }, [ingredientType]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!item) return;
 
-    setName("");
-    setPrice("");
-    setHex("#F5E6D3");
-    setInStock(true);
-    setWeightGram("");
-  }, [open, ingredientType]);
+    setName(item.name);
+    setPrice(toNumberValue(item.price));
+    setHex(item.hex ?? "#F5E6D3");
+    setInStock(item.in_stock ?? true);
+    setWeightGram(String(item.weight_gram ?? ""));
+  }, [item]);
 
   const handleSave = async () => {
-    const shouldClose = await onSave?.({
+    if (!item) return;
+
+    const values = {
       hex,
       in_stock: inStock,
       is_active: true,
-      name: name.trim(),
+      name: name.trim() || item.name,
       price_extra_cents: Number(price) || 0,
-      stock: inStock ? 1 : 0,
-      weight_gram: Number(weightGram) || 0,
-    });
+      weight_gram: Number(weightGram) || item.weight_gram || 0,
+    };
+    const updatedItem = {
+      ...item,
+      hex: ingredientType === "color" ? hex : item.hex,
+      in_stock: ingredientType === "topping" ? values.in_stock : item.in_stock,
+      name: values.name,
+      price: formatPriceLabel(price),
+      weight_gram:
+        ingredientType === "size"
+          ? values.weight_gram
+          : item.weight_gram,
+    };
+    const shouldClose = await onSave?.(updatedItem, values);
 
     if (shouldClose === false) return;
 
@@ -63,17 +87,17 @@ export default function ModalIngredient({
     <Modal
       open={open}
       onClose={onClose}
-      aria-labelledby="ingredient-modal-title"
-      aria-describedby="ingredient-modal-description"
+      aria-labelledby="edit-ingredient-modal-title"
+      aria-describedby="edit-ingredient-modal-description"
     >
       <Box className={`${styles.modalPaper} ${styles.ingredientPaper}`}>
         <Box className={styles.header}>
           <Typography
-            id="ingredient-modal-title"
+            id="edit-ingredient-modal-title"
             component="h3"
             className={styles.title}
           >
-            Thêm nguyên liệu
+            Chỉnh sửa nguyên liệu
           </Typography>
 
           <Button
@@ -89,7 +113,7 @@ export default function ModalIngredient({
         <Divider className={styles.divider} />
 
         <Box
-          id="ingredient-modal-description"
+          id="edit-ingredient-modal-description"
           component="form"
           className={styles.form}
         >
@@ -126,10 +150,7 @@ export default function ModalIngredient({
 
           {ingredientType === "color" ? (
             <Box>
-              <Typography
-                component="label"
-                className={styles.sectionLabel}
-              >
+              <Typography component="label" className={styles.sectionLabel}>
                 Mã màu hex
               </Typography>
               <Box className={styles.inlineRow}>
@@ -139,24 +160,21 @@ export default function ModalIngredient({
                   onChange={(event) => setHex(event.target.value)}
                   className={`${styles.field} ${styles.colorPickerField}`}
                 />
-              <TextField
-                value={hex}
-                onChange={(event) => setHex(event.target.value)}
-                placeholder="#F5E6D3"
-                fullWidth
-                slotProps={{ htmlInput: { maxLength: 7 } }}
-                className={styles.field}
-              />
+                <TextField
+                  value={hex}
+                  onChange={(event) => setHex(event.target.value)}
+                  placeholder="#F5E6D3"
+                  fullWidth
+                  slotProps={{ htmlInput: { maxLength: 7 } }}
+                  className={styles.field}
+                />
               </Box>
             </Box>
           ) : null}
 
           {ingredientType === "topping" ? (
             <Box>
-              <Typography
-                component="label"
-                className={styles.sectionLabel}
-              >
+              <Typography component="label" className={styles.sectionLabel}>
                 Trạng thái tồn kho
               </Typography>
               <Box className={styles.inlineRow}>
@@ -189,7 +207,7 @@ export default function ModalIngredient({
             onClick={handleSave}
             className={styles.primaryButton}
           >
-            Lưu
+            Lưu thay đổi
           </Button>
         </Box>
       </Box>
