@@ -1,26 +1,34 @@
 import prisma from '../prisma';
 import bcryptjs from 'bcryptjs';
 import { RegisterFormState } from '../validations/auth.schema';
-import { createOtpToken, generateOtp, verifyOtpToken } from '../otp';
-import { Mail } from '../mail';
-import { verifyEmailTemplate } from '../mail/templates/verify-email';
+
+function normalizeEmail(email: string) {
+    return email.trim().toLowerCase();
+}
 
 export const AuthService = {
     async register(data: RegisterFormState) {
-        const existing = await prisma.user.findUnique({
-            where: { email: data.email }
+        const email = normalizeEmail(data.email);
+        const existing = await prisma.user.findFirst({
+            where: {
+                email: {
+                    equals: email,
+                    mode: 'insensitive',
+                },
+            },
         })
         if (existing) throw new Error('Email đã tồn tại');
+
         const salt = await bcryptjs.genSalt(10);
         const hashPassword = await bcryptjs.hash(data.password, salt);
 
         const user = await prisma.user.create({
             data: {
                 fullname: data.fullname,
-                email: data.email,
+                email,
                 password_hash: hashPassword,
                 phone: data.phone,
-                status: 'LOCKED',
+                status: 'ACTIVE',
             },
             select: {
                 id: true,
@@ -35,8 +43,14 @@ export const AuthService = {
     },
 
     async validateUser(email: string, password: string) {
-        const user = await prisma.user.findUnique({
-            where: { email },
+        const normalizedEmail = normalizeEmail(email);
+        const user = await prisma.user.findFirst({
+            where: {
+                email: {
+                    equals: normalizedEmail,
+                    mode: 'insensitive',
+                },
+            },
             select: {
                 id: true,
                 fullname: true,
@@ -63,35 +77,5 @@ export const AuthService = {
             role: user.role,
             status: user.status,
         };
-    },
-    async sendVerifyEmail(email: string) {
-        const user = await prisma.user.findUnique({ where: { email } })
-        if (!user) throw new Error('Email không tồn tại')
-        if (user.status === 'ACTIVE') throw new Error('Email đã được xác thực')
-
-        const otp = generateOtp()
-        const token = createOtpToken(email, otp)
-
-        await Mail.send({
-            to: email,
-            subject: 'Xác nhận email - ChamCham Studio',
-            html: verifyEmailTemplate(otp),
-        })
-
-        return { token } // trả token về FE để dùng khi verify
-    },
-    async verifyEmail(token: string, email: string, otp: string) {
-        const isValid = verifyOtpToken(token, email, otp)
-        if (!isValid) throw new Error('Mã OTP không hợp lệ hoặc đã hết hạn')
-
-        const user = await prisma.user.findUnique({ where: { email } })
-        if (!user) throw new Error('Email không tồn tại')
-        if (user.status === 'ACTIVE') throw new Error('Email đã được xác thực')
-
-        return prisma.user.update({
-            where: { email },
-            data: { status: 'ACTIVE' },
-            select: { id: true, email: true, status: true },
-        })
     },
 }
