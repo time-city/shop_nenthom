@@ -110,3 +110,63 @@ export interface ClientProductDetailDataInterface {
   product?: Partial<ClientProductDetailInterface>;
   [key: string]: unknown;
 }
+
+/** Contact item trả về sau khi user gửi form liên hệ. */
+export interface ClientContactInterface {
+  created_at: Date | string;
+  email: string;
+  id: string;
+  message: string;
+  name: string;
+  status: "PENDING" | "REPLIED";
+  subject: string;
+}
+
+/** Response thành công của action gửi liên hệ. */
+export interface ClientSubmitContactSuccessResponseInterface {
+  data: ClientContactInterface;
+  success: true;
+}
+
+/** Product nằm trong item giỏ hàng trả về từ action cart. */
+export interface ClientCartProductInterface {
+  base_price_cents: number;
+  id: string;
+  images: unknown;
+  name: string;
+}
+
+/** Option nằm trong item giỏ hàng trả về từ action cart. */
+export interface ClientCartOptionInterface {
+  hex_code?: string;
+  id: number;
+  name: string;
+  price_extra_cents: number;
+  weight_gram?: number;
+}
+
+/** Item giỏ hàng trả về từ action cart. */
+export interface ClientCartActionItemInterface {
+  color?: ClientCartOptionInterface | null;
+  id: string;
+  pack_id?: number | null;
+  packaging?: ClientCartOptionInterface | null;
+  product: ClientCartProductInterface;
+  product_id: string;
+  quantity: number;
+  scent?: ClientCartOptionInterface | null;
+  size?: ClientCartOptionInterface | null;
+  toppings_json?: unknown;
+}
+
+/** Cart trả về từ action lấy/tạo giỏ hàng. */
+export interface ClientCartActionCartInterface {
+  id: string;
+  items: ClientCartActionItemInterface[];
+}
+
+/** Response thành công của action lấy/tạo giỏ hàng. */
+export interface ClientCartActionSuccessResponseInterface {
+  cart: ClientCartActionCartInterface;
+  success: true;
+}

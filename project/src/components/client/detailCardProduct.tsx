@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { addToCartAction } from "../../lib/action/cart.action";
 import type {
   DetailCardProductProps,
   DetailOptionGroupProps,
@@ -60,6 +61,7 @@ export default function DetailCardProduct({
   const [selectedPackaging, setSelectedPackaging] = useState(
     product.options?.packagings?.[0] ?? null,
   );
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const image = getFirstImage(product.images);
   const candleColor = selectedColor?.hex_code ?? "#F1DEC5";
@@ -87,14 +89,33 @@ export default function DetailCardProduct({
     }
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!isAuthenticated) {
       toast.info("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng");
       router.push("/login");
       return;
     }
 
+    setIsAddingToCart(true);
+
+    // action-(thêm sản phẩm vào giỏ hàng)
+    const result = await addToCartAction({
+      color_id: selectedColor?.id,
+      pack_id: selectedPackaging?.id,
+      product_id: product.id,
+      quantity,
+      scent_id: product.options?.scents?.[0]?.id,
+      size_id: selectedSize?.id,
+    });
+
+    if ("error" in result && result.error) {
+      toast.error(result.error);
+      setIsAddingToCart(false);
+      return;
+    }
+
     toast.success("Đã thêm sản phẩm vào giỏ hàng");
+    setIsAddingToCart(false);
   };
 
   return (
@@ -213,9 +234,10 @@ export default function DetailCardProduct({
                   <button
                     type="button"
                     onClick={handleAddToCart}
+                    disabled={isAddingToCart}
                     className="w-full rounded-full bg-[#6B1218] px-6 py-4 text-[0.85rem] font-medium uppercase tracking-[0.08em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.3)] transition hover:bg-[#4A0C10]"
                   >
-                    Thêm vào giỏ
+                    {isAddingToCart ? "Đang thêm..." : "Thêm vào giỏ"}
                   </button>
                   <button
                     type="button"

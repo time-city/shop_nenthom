@@ -5,24 +5,33 @@ import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Modal from "@mui/material/Modal";
 import Typography from "@mui/material/Typography";
-import type { AdminModalDeleteProductProps } from "../../lib/types/admin";
+import type { AdminDeleteConfirmModalProps } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
 
 export default function ModalDeleteProduct({
+  confirmLabel = "Xóa sản phẩm",
+  description,
+  isDeleting,
+  itemName,
+  loadingLabel = "Đang xóa...",
   onClose,
   onConfirm,
   open,
   productName,
-}: AdminModalDeleteProductProps) {
-  const handleConfirm = () => {
-    onConfirm?.();
-    onClose();
+  title = "Xóa sản phẩm?",
+}: AdminDeleteConfirmModalProps) {
+  const handleConfirm = async () => {
+    await onConfirm?.();
   };
+  const targetName = itemName ?? productName ?? "mục này";
+  const modalDescription =
+    description ??
+    `Bạn có chắc muốn xóa "${targetName}"? Thao tác này không thể hoàn tác.`;
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={isDeleting ? undefined : onClose}
       aria-labelledby="delete-product-title"
       aria-describedby="delete-product-description"
     >
@@ -54,18 +63,24 @@ export default function ModalDeleteProduct({
               component="h3"
               className={styles.deleteTitle}
             >
-              Xóa sản phẩm?
+              {title}
             </Typography>
 
             <Typography
               id="delete-product-description"
               className={styles.description}
             >
-              Bạn có chắc muốn xóa{" "}
-              <Box component="span" className={styles.highlight}>
-                {productName || "sản phẩm này"}
-              </Box>
-              ? Thao tác này không thể hoàn tác.
+              {description ? (
+                modalDescription
+              ) : (
+                <>
+                  Bạn có chắc muốn xóa{" "}
+                  <Box component="span" className={styles.highlight}>
+                    {targetName}
+                  </Box>
+                  ? Thao tác này không thể hoàn tác.
+                </>
+              )}
             </Typography>
           </Box>
         </Box>
@@ -76,6 +91,7 @@ export default function ModalDeleteProduct({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isDeleting}
             className={styles.ghostButton}
           >
             Hủy
@@ -85,9 +101,10 @@ export default function ModalDeleteProduct({
             type="button"
             variant="contained"
             onClick={handleConfirm}
+            disabled={isDeleting}
             className={styles.dangerButton}
           >
-            Xóa sản phẩm
+            {isDeleting ? loadingLabel : confirmLabel}
           </Button>
         </Box>
       </Box>

@@ -1,14 +1,23 @@
 import Footer from "../components/client/footer";
 import Header from "../components/client/header";
 import Intro from "../components/ui/intro";
+import { redirect } from "next/navigation";
 import TrangChu from "./(client)/home/page";
 import BoSuuTap from "./(client)/collection/page";
 import TuyChinh from "./(client)/custom/page";
 import CauChuyen from "./(client)/story/page";
 import LienHe from "./(client)/contact/page";
+import { getCurrentUser } from "../lib/action/auth.action";
 import type { CollectionPageProps } from "../lib/types/client";
 
-export default function Home({ searchParams }: CollectionPageProps = {}) {
+export default async function Home({ searchParams }: CollectionPageProps = {}) {
+  // action-(check role trang vào web)
+  const currentUser = await getCurrentUser();
+
+  if (currentUser?.role === "ADMIN") {
+    redirect("/admin/dashboard");
+  }
+
   return (
     <>
       <Intro />

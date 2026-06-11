@@ -25,6 +25,35 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+@layer base {
+  :where(
+      button:not(:disabled),
+      a[href],
+      [role="button"]:not([aria-disabled="true"]),
+      [role="tab"]:not([aria-disabled="true"]),
+      summary,
+      label[for],
+      input[type="button"]:not(:disabled),
+      input[type="checkbox"]:not(:disabled),
+      input[type="radio"]:not(:disabled),
+      input[type="submit"]:not(:disabled),
+      select:not(:disabled),
+      .MuiButtonBase-root:not(.Mui-disabled)
+    ):hover {
+    @apply cursor-pointer;
+  }
+
+  :where(
+      button:disabled,
+      input:disabled,
+      select:disabled,
+      [aria-disabled="true"],
+      .Mui-disabled
+    ) {
+    @apply cursor-not-allowed;
+  }
+}
+
 body.intro-playing {
   overflow: hidden;
 }

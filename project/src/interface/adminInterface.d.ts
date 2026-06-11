@@ -103,14 +103,76 @@ export interface AdminProductCategoryInterface {
   name: string;
 }
 
+/** Response thành công khi lấy danh sách category trong admin. */
+export interface AdminCategoriesSuccessResponseInterface {
+  categories: AdminProductCategoryInterface[];
+  success: true;
+}
+
 /** Product item trong response danh sách sản phẩm admin. */
 export interface AdminProductListItemInterface {
   base_price_cents: number;
   category?: AdminProductCategoryInterface | null;
+  category_id: number;
+  description: string | null;
+  id: string;
+  images: unknown;
+  is_active: boolean;
+  name: string;
+}
+
+/** Product item trả về khi tạo/cập nhật sản phẩm admin. */
+export interface AdminProductActionDataInterface {
+  base_price_cents: number;
+  category_id: number;
+  created_at?: Date | string;
+  description?: string | null;
+  id: string;
+  images: unknown;
+  is_active: boolean;
+  name: string;
+}
+
+/** Response thành công khi tạo/cập nhật sản phẩm admin. */
+export interface AdminProductActionSuccessResponseInterface {
+  data: AdminProductActionDataInterface;
+  success: true;
+}
+
+/** Option item trong response chi tiết sản phẩm admin. */
+export interface AdminProductDetailOptionItemInterface {
+  hex_code?: string;
+  id: number;
+  name: string;
+  price_extra_cents: number;
+  weight_gram?: number;
+}
+
+/** Nhóm option trả về trong chi tiết sản phẩm admin. */
+export interface AdminProductDetailOptionsInterface {
+  colors: AdminProductDetailOptionItemInterface[];
+  packagings: AdminProductDetailOptionItemInterface[];
+  scents: AdminProductDetailOptionItemInterface[];
+  sizes: AdminProductDetailOptionItemInterface[];
+  toppings: AdminProductDetailOptionItemInterface[];
+}
+
+/** Data chi tiết sản phẩm trả về từ action admin. */
+export interface AdminProductDetailInterface {
+  base_price_cents: number;
+  category?: AdminProductCategoryInterface | null;
+  created_at?: Date | string;
   description: string | null;
   id: string;
   images: unknown;
   name: string;
+  options?: AdminProductDetailOptionsInterface;
+}
+
+/** Response thành công khi lấy chi tiết sản phẩm admin. */
+export interface AdminProductDetailSuccessResponseInterface {
+  data: AdminProductDetailInterface;
+  success: true;
 }
 
 /** Meta pagination trong response danh sách sản phẩm admin. */
@@ -132,4 +194,30 @@ export interface AdminProductsSuccessResponseInterface {
 export interface AdminActionErrorResponseInterface {
   error: string;
   status?: string;
+}
+
+/** Contact item trả về từ action lấy danh sách liên hệ admin. */
+export interface AdminContactItemInterface {
+  created_at: Date | string;
+  email: string;
+  id: string;
+  message: string;
+  name: string;
+  status: "PENDING" | "REPLIED";
+  subject: string;
+}
+
+/** Meta pagination trong response danh sách liên hệ admin. */
+export interface AdminContactsMetaInterface {
+  limit: number;
+  page: number;
+  total: number;
+  totalPages: number;
+}
+
+/** Response thành công khi lấy danh sách liên hệ admin. */
+export interface AdminContactsSuccessResponseInterface {
+  data: AdminContactItemInterface[];
+  meta: AdminContactsMetaInterface;
+  success: true;
 }

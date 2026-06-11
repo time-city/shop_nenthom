@@ -1,7 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 import ModalSupport from "../../../components/admin/modalSupport";
+import type {
+  AdminContactItemInterface,
+  AdminContactsSuccessResponseInterface,
+} from "../../../interface/adminInterface";
+import {
+  getContactsAction,
+  updateContactStatusAction,
+} from "../../../lib/action/contact.action";
 import type {
   AdminSupportFilter,
   AdminSupportMessage,
@@ -27,11 +36,63 @@ const formatDateTime = (value: string) =>
     year: "numeric",
   }).format(new Date(value));
 
+const filterStatusMap: Partial<Record<AdminSupportFilter, "PENDING" | "REPLIED">> = {
+  replied: "REPLIED",
+  unread: "PENDING",
+};
+
+const normalizeContact = (
+  contact: AdminContactItemInterface,
+): AdminSupportMessage => ({
+  date:
+    contact.created_at instanceof Date
+      ? contact.created_at.toISOString()
+      : String(contact.created_at),
+  email: contact.email,
+  id: contact.id,
+  message: contact.message,
+  name: contact.name,
+  status: contact.status === "REPLIED" ? "replied" : "unread",
+  subject: contact.subject,
+});
+
 export default function SupportPage() {
   const [activeFilter, setActiveFilter] = useState<AdminSupportFilter>("all");
   const [contacts, setContacts] = useState<AdminSupportMessage[]>([]);
+  const [isLoadingContacts, setIsLoadingContacts] = useState(true);
   const [selectedContact, setSelectedContact] =
     useState<AdminSupportMessage | null>(null);
+
+  useEffect(() => {
+    const loadContacts = async () => {
+      setIsLoadingContacts(true);
+
+      // action-(lấy danh sách liên hệ)
+      const result = await getContactsAction({
+        limit: 100,
+        page: 1,
+        ...(filterStatusMap[activeFilter]
+          ? { status: filterStatusMap[activeFilter] }
+          : {}),
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        setContacts([]);
+        setIsLoadingContacts(false);
+        return;
+      }
+
+      if ("success" in result && result.success) {
+        const contactResult = result as AdminContactsSuccessResponseInterface;
+        setContacts(contactResult.data.map(normalizeContact));
+      }
+
+      setIsLoadingContacts(false);
+    };
+
+    void loadContacts();
+  }, [activeFilter]);
 
   const filteredContacts = useMemo(() => {
     if (activeFilter === "all") return contacts;
@@ -39,7 +100,19 @@ export default function SupportPage() {
     return contacts.filter((contact) => contact.status === activeFilter);
   }, [activeFilter, contacts]);
 
-  const markAsReplied = (contactId: number | string) => {
+  const markAsReplied = async (contactId: number | string) => {
+    // action-(cập nhật trạng thái liên hệ)
+    const result = await updateContactStatusAction({
+      id: String(contactId),
+      status: "REPLIED",
+    });
+
+    if ("error" in result && result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success("Đã đánh dấu phản hồi");
     setContacts((currentContacts) =>
       currentContacts.map((contact) =>
         contact.id === contactId ? { ...contact, status: "replied" } : contact,
@@ -116,6 +189,17 @@ export default function SupportPage() {
                   </tr>
                 </thead>
                 <tbody>
+                  {isLoadingContacts ? (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-5 py-8 text-center text-sm text-[#6B4C35]"
+                      >
+                        Đang tải tin nhắn hỗ trợ...
+                      </td>
+                    </tr>
+                  ) : null}
+
                   {filteredContacts.map((contact) => (
                     <tr
                       key={contact.id}
@@ -148,7 +232,7 @@ export default function SupportPage() {
                     </tr>
                   ))}
 
-                  {filteredContacts.length === 0 ? (
+                  {!isLoadingContacts && filteredContacts.length === 0 ? (
                     <tr>
                       <td
                         colSpan={5}

@@ -1,3 +1,5 @@
+import ModalContact from "../../../components/client/modalContact";
+
 const contactItems = [
   {
     label: "EMAIL",
@@ -42,62 +44,7 @@ export default function LienHe() {
             Gửi Lời Nhắn
           </h2>
 
-          <form id="contactForm" className="mt-8 space-y-5">
-            <div className="form-group">
-              <label className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]">
-                Tên của bạn
-              </label>
-              <input
-                type="text"
-                placeholder="Nhập tên"
-                required
-                className="w-full rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]">
-                Email
-              </label>
-              <input
-                type="email"
-                placeholder="your@email.com"
-                required
-                className="w-full rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]">
-                Chủ đề
-              </label>
-              <input
-                type="text"
-                placeholder="Chủ đề của bạn"
-                required
-                className="w-full rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]">
-                Tin nhắn
-              </label>
-              <textarea
-                placeholder="Nội dung tin nhắn..."
-                required
-                rows={6}
-                className="min-h-36 w-full resize-y rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="submit-btn w-full rounded-full bg-[#7A1218] px-6 py-3.5 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition hover:-translate-y-0.5 hover:bg-[#6B1218] sm:w-auto sm:px-10"
-            >
-              Gửi Tin Nhắn
-            </button>
-          </form>
+          <ModalContact />
         </div>
 
         <div className="contact-info rounded-2xl bg-[#7A1218] p-6 text-[#F5F0E8] shadow-[0_18px_48px_rgba(44,8,12,0.16)] sm:p-8 lg:p-10">

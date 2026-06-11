@@ -1,6 +1,18 @@
 import prisma from "../prisma";
 import { AddToCartInput } from "../validations/cart.schema";
 
+const cartInclude = {
+    items: {
+        include: {
+            color: true,
+            packaging: true,
+            product: true,
+            scent: true,
+            size: true,
+        },
+    },
+};
+
 export const CartService = {
 
     async getOrCreateCart(userId?: string, sessionId?: string) {
@@ -8,11 +20,15 @@ export const CartService = {
 
         const where = userId ? { user_id: userId } : { session_id: sessionId }
 
-        const existing = await prisma.cart.findFirst({ where })
+        const existing = await prisma.cart.findFirst({
+            where,
+            include: cartInclude,
+        })
         if (existing) return existing
 
         return prisma.cart.create({
             data: userId ? { user_id: userId } : { session_id: sessionId },
+            include: cartInclude,
         })
     },
 
