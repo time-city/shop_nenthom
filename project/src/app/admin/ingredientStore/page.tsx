@@ -4,17 +4,19 @@ import {
   Flame,
   Flower2,
   Palette,
-  Pencil,
   Plus,
   Ruler,
   Sparkles,
-  Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import ModalDeleteConfirm from "../../../components/admin/modalDeleteConfirm";
 import ModalEditIngre from "../../../components/admin/modalEditIngre";
 import ModalIngredient from "../../../components/admin/modalIngredient";
+import {
+  AdminDeleteButton,
+  AdminEditButton,
+} from "../../../components/ui/actionButtons";
 import type {
   AdminCustomizationOptionsSuccessResponseInterface,
   AdminOptionItemInterface,
@@ -649,23 +651,9 @@ export default function IngredientStorePage() {
 
 function ActionButtons({ onDelete, onEdit }: AdminIngredientActionButtonsProps) {
   return (
-    <div className="flex gap-2">
-      <button
-        className="inline-flex size-9 items-center justify-center rounded-lg border border-[#6B4E35]/20 text-[#6B4C35] transition hover:border-[#6B1218] hover:bg-[#6B1218]/10 hover:text-[#6B1218]"
-        type="button"
-        aria-label="Sửa"
-        onClick={onEdit}
-      >
-        <Pencil className="size-4" aria-hidden="true" />
-      </button>
-      <button
-        className="inline-flex size-9 items-center justify-center rounded-lg border border-[#6B4E35]/20 text-[#6B4C35] transition hover:border-[#B91C1C] hover:bg-[#B91C1C]/10 hover:text-[#B91C1C]"
-        type="button"
-        aria-label="Xóa"
-        onClick={onDelete}
-      >
-        <Trash2 className="size-4" aria-hidden="true" />
-      </button>
+    <div className="product-row-actions">
+      <AdminEditButton onClick={onEdit} ariaLabel="Sửa" />
+      <AdminDeleteButton onClick={onDelete} ariaLabel="Xóa" />
     </div>
   );
 }

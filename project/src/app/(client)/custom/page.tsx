@@ -3,7 +3,7 @@ import type { ClientCustomizationOptionsSuccessResponseInterface } from "../../.
 import { getCurrentUser } from "../../../lib/action/auth.action";
 import { getCustomizationOptionsAction } from "../../../lib/action/product.action";
 
-export default async function TuyChinh() {
+export default async function CustomPage() {
   // action-(lấy options tùy chỉnh nến)
   const [result, currentUser] = await Promise.all([
     getCustomizationOptionsAction(),
