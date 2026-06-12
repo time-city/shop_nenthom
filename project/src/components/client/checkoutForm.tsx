@@ -2,30 +2,59 @@
 
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { getCurrentUser } from "../../lib/action/auth.action";
 import type {
   CartPaymentMethod,
   CheckoutFormProps,
+  CheckoutFormValues,
 } from "../../lib/types/client";
 
 const inputClass =
   "rounded-xl border-[1.5px] border-[#6B4C35]/20 bg-white px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#6B4C35]/35 focus:border-[#6B1218] focus:ring-4 focus:ring-[#6B1218]/10";
 
-const getStoredValue = (key: string) => {
-  if (typeof window === "undefined") return "";
-  return localStorage.getItem(key) ?? "";
+const initialCheckoutFormValues: CheckoutFormValues = {
+  company: "",
+  email: "",
+  fullname: "",
+  phone: "",
 };
 
 export default function CheckoutForm({ onComplete }: CheckoutFormProps) {
   const [payment, setPayment] = useState<CartPaymentMethod>("cod");
-  const [fullname, setFullname] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [formValues, setFormValues] = useState<CheckoutFormValues>(
+    initialCheckoutFormValues,
+  );
 
   useEffect(() => {
-    setFullname(getStoredValue("fullname"));
-    setEmail(getStoredValue("email"));
-    setPhone(getStoredValue("phone"));
+    let isMounted = true;
+
+    const loadCurrentUser = async () => {
+      // action-(lấy user checkout)
+      const user = await getCurrentUser();
+
+      if (!isMounted || !user) return;
+
+      setFormValues((currentValues) => ({
+        ...currentValues,
+        email: currentValues.email || user.email || "",
+        fullname: currentValues.fullname || user.fullname || "",
+        phone: currentValues.phone || user.phone || "",
+      }));
+    };
+
+    void loadCurrentUser();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const updateField = (field: keyof CheckoutFormValues, value: string) => {
+    setFormValues((currentValues) => ({
+      ...currentValues,
+      [field]: value,
+    }));
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -54,8 +83,8 @@ export default function CheckoutForm({ onComplete }: CheckoutFormProps) {
             Họ và Tên
             <input
               required
-              value={fullname}
-              onChange={(event) => setFullname(event.target.value)}
+              value={formValues.fullname}
+              onChange={(event) => updateField("fullname", event.target.value)}
               className={inputClass}
             />
           </label>
@@ -64,8 +93,8 @@ export default function CheckoutForm({ onComplete }: CheckoutFormProps) {
             <input
               required
               type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              value={formValues.email}
+              onChange={(event) => updateField("email", event.target.value)}
               className={inputClass}
             />
           </label>
@@ -75,14 +104,18 @@ export default function CheckoutForm({ onComplete }: CheckoutFormProps) {
               required
               type="tel"
               placeholder="+84..."
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
+              value={formValues.phone}
+              onChange={(event) => updateField("phone", event.target.value)}
               className={inputClass}
             />
           </label>
           <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35]">
             Công Ty (Tùy Chọn)
-            <input className={inputClass} />
+            <input
+              value={formValues.company}
+              onChange={(event) => updateField("company", event.target.value)}
+              className={inputClass}
+            />
           </label>
         </div>
       </section>

@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { getCurrentUser, logoutUser } from "../../../lib/action/auth.action";
+import { logoutUser } from "../../../lib/action/auth.action";
 import type {
   ClientProfileUserData,
+  ProfilePageContentProps,
   ProfileFieldProps,
   ProfileHeaderProps,
 } from "../../../lib/types/client";
@@ -126,29 +128,13 @@ function Field({
   );
 }
 
-export function ProfilePageContent() {
-  const [user, setUser] = useState<Required<ClientProfileUserData>>(defaultUser);
-
-  useEffect(() => {
-    // action-(lấy user hiện tại)
-    void getCurrentUser().then((currentUser) => {
-      if (!currentUser) {
-        toast.error("Bạn cần đăng nhập để xem thông tin cá nhân");
-        window.location.href = "/login";
-        return;
-      }
-
-      setUser({
-        address: "",
-        city: "",
-        email: currentUser.email,
-        fullname: currentUser.fullname ?? "",
-        phone: currentUser.phone ?? "",
-        role: currentUser.role,
-        zip: "",
-      });
-    });
-  }, []);
+export function ProfilePageContent({
+  initialUser,
+}: ProfilePageContentProps) {
+  const router = useRouter();
+  const [user, setUser] = useState<Required<ClientProfileUserData>>(
+    initialUser ?? defaultUser,
+  );
 
   const updateField = (field: keyof Required<ClientProfileUserData>, value: string) => {
     setUser((current) => ({ ...current, [field]: value }));
@@ -176,7 +162,8 @@ export function ProfilePageContent() {
       toast.success(message);
 
       window.setTimeout(() => {
-        window.location.href = "/login";
+        router.replace("/login");
+        router.refresh();
       }, 900);
     });
   };

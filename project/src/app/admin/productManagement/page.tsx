@@ -2,7 +2,7 @@
 
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import ModalDeleteProduct from "../../../components/admin/modalDeleteProduct";
+import ModalDeleteConfirm from "../../../components/admin/modalDeleteConfirm";
 import ModalEditProduct from "../../../components/admin/modalEditProduct";
 import ModalProduct from "../../../components/admin/modalProduct";
 import type {
@@ -279,10 +279,12 @@ export default function ProductManagementPage() {
         onClose={() => setEditProduct(null)}
         onSave={loadProducts}
       />
-      <ModalDeleteProduct
+      <ModalDeleteConfirm
         open={Boolean(deleteProduct)}
         productName={deleteProduct?.name}
         isDeleting={isDeletingProduct}
+        title="Xóa sản phẩm?"
+        confirmLabel="Xóa sản phẩm"
         onClose={() => setDeleteProduct(null)}
         onConfirm={handleDeleteProduct}
       />

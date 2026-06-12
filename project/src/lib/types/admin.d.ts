@@ -4,6 +4,14 @@ import type { ReactNode } from "react";
 /** Loại nguyên liệu có thể quản lý trong kho admin. */
 export type AdminIngredientType = "scent" | "color" | "size" | "topping" | "type";
 
+/** Loại option gửi lên action xoá option trong admin. */
+export type AdminDeleteOptionType =
+  | "packaging"
+  | "scent"
+  | "size"
+  | "topping"
+  | "waxColor";
+
 /** Cấu hình tab nguyên liệu trong trang kho admin. */
 export type AdminMaterialTab = {
   addLabel: string;
@@ -80,6 +88,27 @@ export type AdminModalProductProps = {
   onClose: () => void;
   onSave?: () => Promise<void> | void;
   open: boolean;
+};
+
+/** Props cho modal thêm danh mục trong admin. */
+export type AdminModalCategoryProps = {
+  onClose: () => void;
+  onSave?: () => Promise<void> | void;
+  open: boolean;
+};
+
+/** Props cho modal sửa danh mục trong admin. */
+export type AdminModalEditCategoryProps = {
+  category: import("../../interface/adminInterface").AdminProductCategoryInterface | null;
+  onClose: () => void;
+  onSave?: () => Promise<void> | void;
+  open: boolean;
+};
+
+/** Values form tạo/sửa danh mục trong admin. */
+export type AdminCategoryFormValues = {
+  description: string;
+  name: string;
 };
 
 /** Props cho modal chỉnh sửa sản phẩm trong admin. */

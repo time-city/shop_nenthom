@@ -1,0 +1,21 @@
+.idColumn {
+  width: 80px;
+}
+
+.idCell {
+  color: #6b4c35;
+  font-weight: 600;
+}
+
+.categoryName {
+  font-weight: 600;
+}
+
+.descriptionCell {
+  max-width: 400px;
+  overflow: hidden;
+  color: #6b4c35;
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
