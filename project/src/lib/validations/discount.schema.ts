@@ -30,8 +30,17 @@ export const updateDiscountSchema = discountBaseSchema.partial().superRefine((da
   validatePercentageDiscount(data, ctx)
 })
 
+export const getDiscountsSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  search: z.string().trim().optional(),
+  type: z.enum(['PERCENTAGE', 'FIXED']).optional(),
+  is_active: z.boolean().optional(),
+})
+
 export type CreateDiscountInput = z.infer<typeof createDiscountSchema>
 export type UpdateDiscountInput = z.infer<typeof updateDiscountSchema>
+export type GetDiscountsParams = z.infer<typeof getDiscountsSchema>
 
 export const discountIdSchema = z.object({
     id: z.string().uuid('Mã giảm giá không hợp lệ'),
