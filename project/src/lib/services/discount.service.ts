@@ -1,6 +1,6 @@
-import { DiscountType } from "@prisma/client";
+import { DiscountType, Prisma } from "@prisma/client";
 import prisma from "../prisma";
-import { CreateDiscountInput, UpdateDiscountInput } from "../validations/discount.schema";
+import { CreateDiscountInput, GetDiscountsParams, UpdateDiscountInput } from "../validations/discount.schema";
 
 // Chuẩn hóa mã để so sánh/lưu trữ thống nhất, tránh lệch do khoảng trắng hoặc chữ thường.
 function normalizeCode(code: string) {
@@ -15,6 +15,44 @@ function assertValidDiscountAmount(type: DiscountType, amount: number) {
 }
 
 export const DiscountService = {
+    // Lấy danh sách mã giảm giá cho admin, có phân trang và bộ lọc cơ bản.
+    async getDiscounts(params: GetDiscountsParams) {
+        const { page, limit, search, type, is_active } = params;
+        const skip = (page - 1) * limit;
+        const keyword = search?.trim();
+
+        const where: Prisma.DiscountCodeWhereInput = {
+            ...(type && { type }),
+            ...(is_active !== undefined && { is_active }),
+            ...(keyword && {
+                code: {
+                    contains: keyword,
+                    mode: 'insensitive',
+                },
+            }),
+        };
+
+        const [discounts, total] = await prisma.$transaction([
+            prisma.discountCode.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { code: 'asc' },
+            }),
+            prisma.discountCode.count({ where }),
+        ]);
+
+        return {
+            data: discounts,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    },
+
     // Tạo mã giảm giá mới sau khi chuẩn hóa mã code và kiểm tra trùng.
     async createDiscount(data: CreateDiscountInput) {
         const code = normalizeCode(data.code);
