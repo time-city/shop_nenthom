@@ -5,6 +5,10 @@ import { toast } from "react-toastify";
 import ModalDeleteConfirm from "../../../components/admin/modalDeleteConfirm";
 import ModalEditProduct from "../../../components/admin/modalEditProduct";
 import ModalProduct from "../../../components/admin/modalProduct";
+import {
+  AdminDeleteButton,
+  AdminEditButton,
+} from "../../../components/ui/actionButtons";
 import type {
   AdminProductListItemInterface,
   AdminProductsSuccessResponseInterface,
@@ -194,53 +198,20 @@ export default function ProductManagementPage() {
                         </td>
                         <td>
                           <div className="product-row-actions">
-                            <button
-                              className="orders-icon-btn"
-                              type="button"
-                              aria-label={`Sửa ${productRow.name}`}
+                            <AdminEditButton
+                              ariaLabel={`Sửa ${productRow.name}`}
                               onClick={(event) => {
                                 stopRowClick(event);
                                 setEditProduct(product);
                               }}
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                aria-hidden="true"
-                              >
-                                <path d="M12 20h9" />
-                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-                              </svg>
-                            </button>
-                            <button
-                              className="orders-icon-btn product-danger-btn"
-                              type="button"
-                              aria-label={`Xóa ${productRow.name}`}
+                            />
+                            <AdminDeleteButton
+                              ariaLabel={`Xóa ${productRow.name}`}
                               onClick={(event) => {
                                 stopRowClick(event);
                                 setDeleteProduct(product);
                               }}
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                aria-hidden="true"
-                              >
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                                <path d="M10 11v6" />
-                                <path d="M14 11v6" />
-                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                              </svg>
-                            </button>
+                            />
                           </div>
                         </td>
                       </tr>

@@ -30,7 +30,7 @@ const buildCollectionHref = (
 };
 
 //get product action
-export default async function BoSuuTap({
+export default async function CollectionPage({
   searchParams,
 }: CollectionPageProps = {}) {
   const params = (await searchParams) ?? {};

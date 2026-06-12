@@ -20,7 +20,7 @@ const contactItems = [
 
 const socialLinks = ["INSTAGRAM", "SHOPEE", "TIKTOK"];
 
-export default function LienHe() {
+export default function ContactPage() {
   return (
     <section
       id="contact"

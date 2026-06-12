@@ -18,7 +18,7 @@ const categoryBgClasses = [
   "bg-[#8B363A]",
 ];
 
-export default function TrangChu() {
+export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [categories, setCategories] = useState<ClientProductCategoryInterface[]>([]);
   const categorySlides = useMemo(

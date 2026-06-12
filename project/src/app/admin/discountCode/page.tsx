@@ -1,11 +1,93 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import ModalDeleteProduct from "../../../components/admin/modalDeleteProduct";
 import ModalDiscount from "../../../components/admin/modalDiscount";
+import ModalEditDiscount from "../../../components/admin/modalEditDiscount";
+import { AdminEditButton } from "../../../components/ui/actionButtons";
+import { disableDiscountAction, getDiscountsAction } from "../../../lib/action/discount.action";
+import type {
+  AdminDiscountItem,
+  AdminDiscountsSuccessResponse,
+} from "../../../lib/types/admin";
+
+const formatValue = (item: AdminDiscountItem) => {
+  if (item.type === "PERCENTAGE") return `${item.discount_amount_cents}%`;
+  return new Intl.NumberFormat("vi-VN").format(item.discount_amount_cents) + " đ";
+};
+
+const formatDate = (date: Date | null) => {
+  if (!date) return "Không giới hạn";
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(date));
+};
 
 export default function DiscountCodePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editDiscount, setEditDiscount] = useState<AdminDiscountItem | null>(null);
+  const [disableDiscount, setDisableDiscount] = useState<AdminDiscountItem | null>(null);
+  const [isDisabling, setIsDisabling] = useState(false);
+  const [discounts, setDiscounts] = useState<AdminDiscountItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadDiscounts = useCallback(async () => {
+    setIsLoading(true);
+
+    // action-(lấy danh sách mã giảm giá admin)
+    const result = await getDiscountsAction({ limit: 100, page: 1 });
+
+    if ("error" in result && result.error) {
+      setError(result.error);
+      toast.error(result.error);
+      setDiscounts([]);
+      setIsLoading(false);
+      return;
+    }
+
+    if ("success" in result && result.success) {
+      const response = result as unknown as AdminDiscountsSuccessResponse;
+      setError("");
+      setDiscounts(response.data);
+    }
+
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void loadDiscounts();
+  }, [loadDiscounts]);
+
+  const handleDisable = async () => {
+    if (!disableDiscount) return;
+    setIsDisabling(true);
+
+    // action-(vô hiệu hóa mã giảm giá)
+    const result = await disableDiscountAction({ id: disableDiscount.id });
+
+    if ("error" in result && result.error) {
+      toast.error(result.error);
+      setIsDisabling(false);
+      return;
+    }
+
+    if ("success" in result && result.success) {
+      toast.success("Đã vô hiệu hóa mã giảm giá");
+      setDisableDiscount(null);
+      await loadDiscounts();
+    }
+
+    setIsDisabling(false);
+  };
+
+  const stopRowClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+  };
 
   return (
     <>
@@ -36,7 +118,7 @@ export default function DiscountCodePage() {
 
         <div className="dashboard-top-header-right">
           <button
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#6B1218] px-4 py-2 text-sm font-semibold text-[#F5F0E8] shadow-[0_8px_18px_rgba(107,18,24,0.18)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] hover:shadow-[0_12px_24px_rgba(107,18,24,0.25)]"
+            className="product-btn product-btn-primary"
             type="button"
             onClick={() => setIsModalOpen(true)}
           >
@@ -47,45 +129,179 @@ export default function DiscountCodePage() {
       </header>
 
       <div className="dashboard-page-content">
-        <section className="rounded-2xl border border-[#6B4E35]/15 bg-[#F8F0E4] shadow-[0_6px_18px_rgba(44,24,16,0.08)]">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[920px] border-collapse text-left">
+        <section className="dashboard-card product-table-card">
+          <div className="dashboard-card-body no-padding">
+            <div className="dashboard-table-wrapper">
+            <table className="dashboard-admin-table">
               <thead>
                 <tr>
-                  {[
-                    "Mã code",
-                    "Loại giảm",
-                    "Giá trị",
-                    "Đã dùng / Tối đa",
-                    "Ngày hết hạn",
-                    "Trạng thái",
-                    "",
-                  ].map((header) => (
-                    <th
-                      key={header}
-                      className="bg-[#F2E8D9]/70 px-5 py-3 text-xs font-bold uppercase tracking-[0.1em] text-[#6B4C35]"
-                    >
-                      {header}
-                    </th>
-                  ))}
+                  <th>Mã code</th>
+                  <th>Loại giảm</th>
+                  <th>Giá trị</th>
+                  <th>Đã dùng / Tối đa</th>
+                  <th>Ngày hết hạn</th>
+                  <th>Trạng thái</th>
+                  <th className="product-action-col">
+                    <span className="sr-only">Thao tác</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
+                {discounts.map((discount) => (
+                  <tr
+                    key={discount.id}
+                    className="transition hover:bg-[#6B1218]/[0.03]"
+                  >
+                    {/* Mã code */}
+                    <td>
+                      <span className="rounded-md bg-[#F2E8D9] px-2.5 py-1 font-mono text-sm font-bold tracking-wider text-[#6B1218]">
+                        {discount.code}
+                      </span>
+                    </td>
+
+                    {/* Loại giảm */}
+                    <td>
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                        discount.type === "PERCENTAGE"
+                          ? "bg-blue-50 text-blue-700"
+                          : "bg-amber-50 text-amber-700"
+                      }`}>
+                        {discount.type === "PERCENTAGE" ? "Phần trăm" : "Số tiền cố định"}
+                      </span>
+                    </td>
+
+                    {/* Giá trị */}
+                    <td className="orders-table-amount">
+                      {formatValue(discount)}
+                    </td>
+
+                    {/* Đã dùng / Tối đa */}
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">{discount.used_count}</span>
+                        <span className="text-[#6B4C35]">/</span>
+                        <span className="text-[#6B4C35]">{discount.max_uses}</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 w-24 overflow-hidden rounded-full bg-[#6B4E35]/15">
+                        <div
+                          className="h-full rounded-full bg-[#6B1218]"
+                          style={{
+                            width: `${Math.min((discount.used_count / discount.max_uses) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </td>
+
+                    {/* Ngày hết hạn */}
+                    <td>
+                      <span className="text-sm text-[#6B4C35]">{formatDate(discount.expires_at)}</span>
+                    </td>
+
+                    {/* Trạng thái */}
+                    <td>
+                      {discount.is_active ? (
+                        <span className="dashboard-status completed">Đang hoạt động</span>
+                      ) : (
+                        <span className="dashboard-status cancelled">Đã vô hiệu</span>
+                      )}
+                    </td>
+
+                    {/* Action buttons */}
+                    <td>
+                      <div className="product-row-actions">
+                        {/* Nút sửa */}
+                        <AdminEditButton
+                          ariaLabel={`Sửa mã ${discount.code}`}
+                          onClick={(event) => {
+                            stopRowClick(event);
+                            setEditDiscount(discount);
+                          }}
+                        />
+
+                        {/* Nút vô hiệu hóa — chỉ hiện khi còn active */}
+                        {discount.is_active ? (
+                          <button
+                            className="orders-icon-btn product-danger-btn"
+                            type="button"
+                            aria-label={`Vô hiệu hóa mã ${discount.code}`}
+                            onClick={(event) => {
+                              stopRowClick(event);
+                              setDisableDiscount(discount);
+                            }}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              aria-hidden="true"
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                            </svg>
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+
+                {isLoading ? (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="border-t border-[#6B4E35]/10 px-5 py-8 text-center text-sm text-[#6B4C35]"
-                    >
+                    <td colSpan={7} className="px-5 py-8 text-center text-sm text-[#6B4C35]">
+                      Đang tải danh sách mã giảm giá...
+                    </td>
+                  </tr>
+                ) : null}
+
+                {!isLoading && error ? (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-8 text-center text-sm text-[#8A1119]">
+                      {error}
+                    </td>
+                  </tr>
+                ) : null}
+
+                {!isLoading && !error && discounts.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-8 text-center text-sm text-[#6B4C35]">
                       Chưa có dữ liệu mã giảm giá
                     </td>
                   </tr>
+                ) : null}
               </tbody>
             </table>
+            </div>
           </div>
         </section>
       </div>
 
-      <ModalDiscount open={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <ModalDiscount
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={loadDiscounts}
+      />
+
+      <ModalEditDiscount
+        open={Boolean(editDiscount)}
+        discount={editDiscount}
+        onClose={() => setEditDiscount(null)}
+        onSave={loadDiscounts}
+      />
+
+      <ModalDeleteProduct
+        open={Boolean(disableDiscount)}
+        itemName={disableDiscount?.code}
+        isDeleting={isDisabling}
+        title="Vô hiệu hóa mã giảm giá?"
+        confirmLabel="Vô hiệu hóa"
+        loadingLabel="Đang xử lý..."
+        description={`Mã "${disableDiscount?.code ?? ""}" sẽ không còn sử dụng được nữa. Thao tác này không thể hoàn tác.`}
+        onClose={() => setDisableDiscount(null)}
+        onConfirm={handleDisable}
+      />
     </>
   );
 }

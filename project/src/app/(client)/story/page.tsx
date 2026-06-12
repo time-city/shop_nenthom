@@ -51,7 +51,7 @@ const features = [
   },
 ];
 
-export default function CauChuyen() {
+export default function StoryPage() {
   return (
     <section
       id="story"

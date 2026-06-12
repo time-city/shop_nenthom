@@ -180,6 +180,38 @@ export type AdminDiscountFormValues = {
   type: "FIXED" | "PERCENTAGE";
 };
 
+/** Một mã giảm giá hiển thị trong danh sách admin. */
+export type AdminDiscountItem = {
+  code: string;
+  discount_amount_cents: number;
+  expires_at: Date | null;
+  id: string;
+  is_active: boolean;
+  max_uses: number;
+  type: "FIXED" | "PERCENTAGE";
+  used_count: number;
+};
+
+/** Response thành công khi lấy danh sách mã giảm giá admin. */
+export type AdminDiscountsSuccessResponse = {
+  data: AdminDiscountItem[];
+  meta: {
+    limit: number;
+    page: number;
+    total: number;
+    totalPages: number;
+  };
+  success: true;
+};
+
+/** Props cho modal chỉnh sửa mã giảm giá trong admin. */
+export type AdminModalEditDiscountProps = {
+  discount: AdminDiscountItem | null;
+  onClose: () => void;
+  onSave?: () => Promise<void> | void;
+  open: boolean;
+};
+
 /** Item điều hướng trong sidebar admin. */
 export type AdminNavItem = {
   badge?: number;
@@ -261,3 +293,20 @@ export type AdminModalSupportProps = {
   onMarkReplied?: (contactId: number | string) => void;
   open: boolean;
 };
+
+/** Props cho nút Edit dùng chung. */
+export type AdminEditButtonProps = {
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  title?: string;
+  ariaLabel?: string;
+  disabled?: boolean;
+};
+
+/** Props cho nút Delete dùng chung. */
+export type AdminDeleteButtonProps = {
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  title?: string;
+  ariaLabel?: string;
+  disabled?: boolean;
+};
+
