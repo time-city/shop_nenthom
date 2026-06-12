@@ -8,6 +8,7 @@ import {
   type FormikHelpers,
 } from "formik";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { z } from "zod";
@@ -58,6 +59,7 @@ const validateSignIn = (values: SignInValues) => {
 };
 
 export default function FormSignIn() {
+  const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [formInitialValues, setFormInitialValues] =
     useState<SignInValues>(initialValues);
@@ -123,14 +125,14 @@ export default function FormSignIn() {
     const redirect = new URLSearchParams(window.location.search).get("redirect");
 
     window.setTimeout(() => {
-      if (result.user?.role === "ADMIN") {
-        window.location.href = "/admin/dashboard";
-      } else if (redirect) {
-        window.location.href = redirect;
-      } else {
-        window.location.href = "/profile";
-      }
-    }, 1500);
+      const targetPath =
+        result.user?.role === "ADMIN"
+          ? "/admin/dashboard"
+          : redirect || "/profile";
+
+      router.replace(targetPath);
+      router.refresh();
+    }, 900);
 
     actions.setSubmitting(false);
   };

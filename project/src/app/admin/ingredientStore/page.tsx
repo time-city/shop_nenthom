@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import ModalDeleteProduct from "../../../components/admin/modalDeleteProduct";
+import ModalDeleteConfirm from "../../../components/admin/modalDeleteConfirm";
 import ModalEditIngre from "../../../components/admin/modalEditIngre";
 import ModalIngredient from "../../../components/admin/modalIngredient";
 import type {
@@ -39,6 +39,7 @@ import {
 } from "../../../lib/action/option.action";
 import { getCustomizationOptionsAction } from "../../../lib/action/product.action";
 import type {
+  AdminDeleteOptionType,
   AdminIngredientActionButtonsProps,
   AdminIngredientEditTarget,
   AdminIngredientFormValues,
@@ -50,8 +51,6 @@ import type {
   AdminTableShellProps,
 } from "../../../lib/types/admin";
 import ingredientStyles from "../../../styles/adminIngredientStore.module.css";
-
-type AdminDeleteOptionType = "scent" | "waxColor" | "size" | "packaging" | "topping";
 
 const tabs: AdminMaterialTab[] = [
   { addLabel: "Thêm mùi hương", icon: Flower2, id: "scent", label: "Mùi hương" },
@@ -634,7 +633,7 @@ export default function IngredientStorePage() {
         onClose={() => setEditTarget(null)}
         onSave={saveEditedIngredient}
       />
-      <ModalDeleteProduct
+      <ModalDeleteConfirm
         open={Boolean(deleteTarget)}
         title="Xóa nguyên liệu?"
         itemName={deleteTarget?.item.name}

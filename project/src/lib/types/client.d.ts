@@ -155,6 +155,14 @@ export type CartSummaryProps = {
 /** Phương thức thanh toán trong checkout. */
 export type CartPaymentMethod = "bank" | "cod";
 
+/** Dữ liệu form thanh toán phía client. */
+export type CheckoutFormValues = {
+  company: string;
+  email: string;
+  fullname: string;
+  phone: string;
+};
+
 /** Props form thanh toán. */
 export type CheckoutFormProps = {
   onComplete: () => void;
@@ -189,6 +197,11 @@ export type ClientProfileTab = "orders" | "profile";
 export type ProfileHeaderProps = {
   activeTab: ClientProfileTab;
   user: Required<ClientProfileUserData>;
+};
+
+/** Props nội dung trang profile. */
+export type ProfilePageContentProps = {
+  initialUser: Required<ClientProfileUserData>;
 };
 
 /** Props field trong form profile. */

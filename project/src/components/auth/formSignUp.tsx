@@ -8,6 +8,7 @@ import {
   type FormikHelpers,
 } from "formik";
 import Link from "next/link";
+import { type ChangeEvent, useState } from "react";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { registerUser } from "../../lib/action/auth.action";
@@ -77,6 +78,8 @@ const validateSignUp = (values: SignUpValues) => {
 };
 
 export default function FormSignUp() {
+  const [showTermsPopup, setShowTermsPopup] = useState(false);
+
   const handleSubmit = async (
     values: SignUpValues,
     actions: FormikHelpers<SignUpValues>,
@@ -113,27 +116,49 @@ export default function FormSignUp() {
 
   return (
     <main>
-      <div className="flex min-h-[calc(100dvh-5rem)] items-center justify-center bg-[#7A1218] px-4 pb-6 pt-24 sm:px-6 sm:pb-8 md:px-8 md:pt-[7.5rem]">
-        <div className="max-h-[calc(100dvh-8rem)] w-full max-w-[760px] overflow-auto rounded-2xl border border-[#2c1810]/10 bg-[#F5F0E8] p-6 text-[#2C1810] sm:p-8 md:max-h-[calc(100dvh-9rem)] md:p-12">
-          <h1 className="text-center font-serif text-[2rem] font-light leading-tight text-[#2C1810] sm:text-[2.2rem]">
-            Đăng Ký
-          </h1>
-          <p className="mb-7 mt-2 text-center text-[0.86rem] font-normal leading-relaxed text-[#2c1810]/70 sm:mb-8 sm:text-[0.88rem]">
-            Tạo tài khoản để lưu các sáng tạo của bạn
-          </p>
+      <div className="flex min-h-dvh items-center justify-center bg-[#7A1218] px-4 py-24 sm:px-6 lg:px-8">
+        <div className="grid w-full max-w-[980px] overflow-hidden rounded-[24px] border border-[#f5f0e8]/20 bg-[#F5F0E8] text-[#2C1810] shadow-[0_24px_70px_rgba(30,6,8,0.28)] lg:grid-cols-[0.85fr_1.15fr]">
+          <aside className="hidden bg-[#4A0C10] px-9 py-10 text-[#F5F0E8] lg:flex lg:flex-col lg:justify-between">
+            <div>
+              <div className="mb-10 flex size-16 items-center justify-center rounded-full border border-[#F5F0E8]/18 bg-[#7A1218] font-serif text-xl font-semibold shadow-[0_14px_30px_rgba(0,0,0,0.2)]">
+                C
+              </div>
+              <p className="mb-4 text-[0.72rem] uppercase tracking-[0.24em] text-[#F5F0E8]/55">
+                ChamCham Studio
+              </p>
+              <h2 className="font-serif text-[2.6rem] font-light leading-[1.06]">
+                Lưu lại hương thơm của riêng bạn.
+              </h2>
+              <p className="mt-6 max-w-[280px] text-sm font-light leading-7 text-[#F5F0E8]/72">
+                Tạo tài khoản để theo dõi đơn hàng, lưu cấu hình nến và nhận ưu
+                đãi dành riêng cho thành viên.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-[#F5F0E8]/12 bg-[#F5F0E8]/8 p-4 text-sm leading-6 text-[#F5F0E8]/78">
+              Nến thủ công, phối hương tinh tế, đóng gói tối giản.
+            </div>
+          </aside>
+
+          <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
+            <h1 className="text-center font-serif text-[2rem] font-light leading-tight text-[#2C1810] sm:text-[2.45rem]">
+              Đăng Ký
+            </h1>
+            <p className="mb-6 mt-2 text-center text-[0.84rem] font-normal leading-relaxed text-[#2c1810]/70 sm:text-[0.9rem]">
+              Tạo tài khoản để lưu các sáng tạo của bạn
+            </p>
 
           <Formik
             initialValues={initialValues}
             validate={validateSignUp}
             onSubmit={handleSubmit}
           >
-            {({ errors, isSubmitting, touched }) => (
+            {({ errors, isSubmitting, setFieldValue, touched, values }) => (
               <Form>
-                <div className="grid grid-cols-1 items-start gap-x-6 md:grid-cols-2">
-                  <div className="mb-6">
+                <div className="grid grid-cols-1 items-start gap-x-5 sm:grid-cols-2">
+                  <div className="mb-4">
                     <label
                       htmlFor="fullname"
-                      className="mb-2 block text-[0.7rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
+                      className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
                     >
                       Họ Tên
                     </label>
@@ -142,7 +167,7 @@ export default function FormSignUp() {
                       name="fullname"
                       type="text"
                       placeholder="Nguyễn Văn A"
-                      className={`w-full border bg-[#F5F0E8] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.fullname && errors.fullname
+                      className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.fullname && errors.fullname
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
                         }`}
@@ -154,10 +179,10 @@ export default function FormSignUp() {
                     ) : null}
                   </div>
 
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <label
                       htmlFor="email"
-                      className="mb-2 block text-[0.7rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
+                      className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
                     >
                       Email
                     </label>
@@ -166,7 +191,7 @@ export default function FormSignUp() {
                       name="email"
                       type="email"
                       placeholder="your@email.com"
-                      className={`w-full border bg-[#F5F0E8] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.email && errors.email
+                      className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.email && errors.email
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
                         }`}
@@ -178,10 +203,10 @@ export default function FormSignUp() {
                     ) : null}
                   </div>
 
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <label
                       htmlFor="password"
-                      className="mb-2 block text-[0.7rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
+                      className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
                     >
                       Mật Khẩu
                     </label>
@@ -190,7 +215,7 @@ export default function FormSignUp() {
                       name="password"
                       type="password"
                       placeholder="••••••••"
-                      className={`w-full border bg-[#F5F0E8] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.password && errors.password
+                      className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.password && errors.password
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
                         }`}
@@ -205,10 +230,10 @@ export default function FormSignUp() {
                     </div>
                   </div>
 
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <label
                       htmlFor="confirmPassword"
-                      className="mb-2 block text-[0.7rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
+                      className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
                     >
                       Xác Nhận Mật Khẩu
                     </label>
@@ -217,7 +242,7 @@ export default function FormSignUp() {
                       name="confirmPassword"
                       type="password"
                       placeholder="••••••••"
-                      className={`w-full border bg-[#F5F0E8] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.confirmPassword && errors.confirmPassword
+                      className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.confirmPassword && errors.confirmPassword
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
                         }`}
@@ -229,10 +254,10 @@ export default function FormSignUp() {
                     ) : null}
                   </div>
 
-                  <div className="mb-6 md:col-span-2">
+                  <div className="mb-4 sm:col-span-2">
                     <label
                       htmlFor="phone"
-                      className="mb-2 block text-[0.7rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
+                      className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
                     >
                       Số Điện Thoại
                     </label>
@@ -241,7 +266,7 @@ export default function FormSignUp() {
                       name="phone"
                       type="tel"
                       placeholder="0123456789"
-                      className={`w-full border bg-[#F5F0E8] p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.phone && errors.phone
+                      className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.phone && errors.phone
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
                         }`}
@@ -256,13 +281,22 @@ export default function FormSignUp() {
 
                 <label
                   htmlFor="terms"
-                  className="mb-6 flex cursor-pointer items-start text-[0.84rem] leading-relaxed text-[#2c1810]/70 sm:text-[0.85rem]"
+                  className="mb-4 flex cursor-pointer items-start rounded-xl border border-[#2c1810]/10 bg-[#F8F0E4] px-3.5 py-3 text-[0.8rem] leading-relaxed text-[#2c1810]/70 sm:text-[0.85rem]"
                 >
                   <Field
                     id="terms"
                     name="terms"
                     type="checkbox"
-                    className="mr-2 mt-1 cursor-pointer accent-[#7A1218]"
+                    checked={values.terms}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                      const checked = event.target.checked;
+                      void setFieldValue("terms", checked);
+
+                      if (checked) {
+                        setShowTermsPopup(true);
+                      }
+                    }}
+                    className="mr-2 mt-1 size-4 shrink-0 cursor-pointer accent-[#7A1218]"
                   />
                   <span className="flex-1">
                     Tôi đồng ý với{" "}
@@ -283,13 +317,13 @@ export default function FormSignUp() {
 
                 <label
                   htmlFor="newsletter"
-                  className="mb-6 flex cursor-pointer items-start text-[0.84rem] leading-relaxed text-[#2c1810]/70 sm:text-[0.85rem]"
+                  className="mb-5 flex cursor-pointer items-start rounded-xl border border-[#2c1810]/10 bg-[#F8F0E4] px-3.5 py-3 text-[0.8rem] leading-relaxed text-[#2c1810]/70 sm:text-[0.85rem]"
                 >
                   <Field
                     id="newsletter"
                     name="newsletter"
                     type="checkbox"
-                    className="mr-2 mt-1 cursor-pointer accent-[#7A1218]"
+                    className="mr-2 mt-1 size-4 shrink-0 cursor-pointer accent-[#7A1218]"
                   />
                   <span className="flex-1">
                     Gửi cho tôi các tin tức và ưu đãi từ ChamCham
@@ -298,20 +332,77 @@ export default function FormSignUp() {
 
                 <button
                   type="submit"
-                  className="mb-4 w-full bg-[#7A1218] p-3.5 text-[0.76rem] uppercase tracking-[0.12em] text-[#F5F0E8] transition-colors hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
+                  className="mb-3 min-h-12 w-full rounded-full bg-[#7A1218] px-4 py-3.5 text-[0.74rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_14px_28px_rgba(107,18,24,0.22)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Đang tạo tài khoản..." : "Tạo Tài Khoản"}
                 </button>
+
+                {showTermsPopup ? (
+                  <div
+                    className="fixed inset-0 z-[200] flex items-center justify-center bg-[#2C1810]/55 px-4 py-6 backdrop-blur-sm"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="terms-popup-title"
+                  >
+                    <div className="w-full max-w-[520px] rounded-2xl border border-[#6B1218]/15 bg-[#F8F0E4] p-5 text-[#2C1810] shadow-[0_24px_70px_rgba(30,6,8,0.35)] sm:p-7">
+                      <div className="mb-4 flex items-start justify-between gap-4">
+                        <div>
+                          <h2
+                            id="terms-popup-title"
+                            className="font-serif text-[1.45rem] font-semibold leading-tight text-[#6B1218] sm:text-[1.7rem]"
+                          >
+                            Điều khoản & Chính sách
+                          </h2>
+                          <p className="mt-2 text-sm leading-6 text-[#6B4C35]">
+                            Cảm ơn bạn đã đồng ý với các điều khoản của ChamCham.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowTermsPopup(false)}
+                          className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#6B1218]/20 text-lg text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8]"
+                          aria-label="Đóng popup điều khoản"
+                        >
+                          ×
+                        </button>
+                      </div>
+
+                      <div className="space-y-3 rounded-xl bg-[#F2E8D9] p-4 text-[0.85rem] leading-7 text-[#2C1810]/80">
+                        <p>
+                          Chúng tôi chỉ sử dụng thông tin đăng ký để quản lý tài
+                          khoản, hỗ trợ đơn hàng và cá nhân hóa trải nghiệm mua
+                          sắm của bạn.
+                        </p>
+                        <p>
+                          Bạn có thể cập nhật thông tin cá nhân hoặc đăng xuất
+                          khỏi tài khoản bất cứ lúc nào trong trang hồ sơ.
+                        </p>
+                        <p>
+                          Khi tiếp tục, bạn xác nhận thông tin cung cấp là chính
+                          xác và đồng ý nhận hỗ trợ từ ChamCham khi cần thiết.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowTermsPopup(false)}
+                        className="mt-5 min-h-11 w-full rounded-full bg-[#7A1218] px-5 py-3 text-[0.76rem] font-medium uppercase tracking-[0.12em] text-[#F5F0E8] transition hover:bg-[#4A0C10]"
+                      >
+                        Tôi đã hiểu
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </Form>
             )}
           </Formik>
 
-          <div className="my-6 text-center text-[0.85rem] text-[#2c1810]/45">
+          <div className="my-4 text-center text-[0.82rem] text-[#2c1810]/45 sm:text-[0.85rem]">
             hoặc
           </div>
 
-          <div className="flex items-center justify-between gap-4 text-center">
+          <div className="flex items-center justify-between gap-3 text-center sm:gap-4">
             <button
               type="button"
               onClick={() => window.history.back()}
@@ -320,7 +411,7 @@ export default function FormSignUp() {
             >
               ←
             </button>
-            <p className="m-0 flex-1 text-[0.84rem] font-light leading-relaxed text-[#2C1810] sm:text-[0.85rem]">
+            <p className="m-0 flex-1 text-[0.8rem] font-light leading-relaxed text-[#2C1810] sm:text-[0.85rem]">
               Đã có tài khoản?{" "}
               <Link
                 href="/login"
@@ -330,6 +421,7 @@ export default function FormSignUp() {
               </Link>
             </p>
             <div className="size-[34px] shrink-0" />
+          </div>
           </div>
         </div>
       </div>
