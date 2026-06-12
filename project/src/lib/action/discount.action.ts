@@ -6,8 +6,10 @@ import {
     createDiscountSchema, 
     disableDiscountSchema, 
     discountIdSchema, 
+    getDiscountsSchema,
     updateDiscountSchema,
     CreateDiscountInput,
+    GetDiscountsParams,
     UpdateDiscountInput,
     DisableDiscountInput
 } from "../validations/discount.schema";
@@ -18,6 +20,22 @@ async function requireAdmin() {
     if (!session || session.role !== 'ADMIN') return { error: 'Không có quyền truy cập' };
 
     return null;
+}
+
+// Server Action lấy danh sách mã giảm giá cho trang Admin.
+export async function getDiscountsAction(params: Partial<GetDiscountsParams> = {}) {
+    const authError = await requireAdmin();
+    if (authError) return authError;
+
+    const parsed = getDiscountsSchema.safeParse(params);
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+    try {
+        const discounts = await DiscountService.getDiscounts(parsed.data);
+        return { success: true, ...discounts };
+    } catch (err) {
+        return { error: (err as Error).message };
+    }
 }
 
 // Server Action tạo mã giảm giá mới, chỉ cho phép ADMIN thao tác.
