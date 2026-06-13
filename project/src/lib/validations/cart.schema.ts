@@ -1,7 +1,7 @@
 import z from "zod"
 
 export const addToCartSchema = z.object({
-  product_id: z.string().uuid('Product ID không hợp lệ'),
+  product_id: z.string().uuid('Product ID không hợp lệ').optional(),
   quantity: z.coerce.number().min(1).default(1),
   scent_id: z.coerce.number().optional(),
   color_id: z.coerce.number().optional(),
