@@ -22,7 +22,6 @@ const contactItems = [
 
 const socialLinks = ["INSTAGRAM", "SHOPEE", "TIKTOK"];
 
-
 export default function ContactPage() {
   return (
     <section
