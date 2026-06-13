@@ -1,6 +1,10 @@
 import prisma from "../prisma";
 import { AddToCartInput } from "../validations/cart.schema";
 
+type AddToCartServiceInput = AddToCartInput & {
+    product_id: string;
+};
+
 const cartInclude = {
     items: {
         include: {
@@ -33,7 +37,7 @@ export const CartService = {
     },
 
 
-    async addToCart(data: AddToCartInput, userId?: string, sessionId?: string) {
+    async addToCart(data: AddToCartServiceInput, userId?: string, sessionId?: string) {
         const cart = await CartService.getOrCreateCart(userId, sessionId);
         // Check product tồn tại và còn active
         const product = await prisma.product.findUnique({
@@ -50,6 +54,7 @@ export const CartService = {
                 color_id: data.color_id ?? null,
                 size_id: data.size_id ?? null,
                 pack_id: data.pack_id ?? null,
+                toppings_json: { equals: data.toppings_json ?? [] },
             },
         })
 
