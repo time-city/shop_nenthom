@@ -289,6 +289,7 @@ export type AdminSupportMessage = {
 /** Props modal chi tiết tin nhắn hỗ trợ admin. */
 export type AdminModalSupportProps = {
   contact: AdminSupportMessage | null;
+  isMarkingReplied?: boolean;
   onClose: () => void;
   onMarkReplied?: (contactId: number | string) => void;
   open: boolean;
@@ -309,4 +310,3 @@ export type AdminDeleteButtonProps = {
   ariaLabel?: string;
   disabled?: boolean;
 };
-

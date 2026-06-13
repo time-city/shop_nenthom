@@ -1,8 +1,9 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { getCurrentUser } from "../../lib/action/auth.action";
 import { submitContactAction } from "../../lib/action/contact.action";
 import type { ClientContactFormValues } from "../../lib/types/client";
 
@@ -18,6 +19,29 @@ export default function ModalContact() {
     useState<ClientContactFormValues>(initialValues);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCurrentUser = async () => {
+      // action-(lấy user liên hệ)
+      const user = await getCurrentUser();
+
+      if (!isMounted || !user) return;
+
+      setFormValues((currentValues) => ({
+        ...currentValues,
+        email: currentValues.email || user.email || "",
+        name: currentValues.name || user.fullname || "",
+      }));
+    };
+
+    void loadCurrentUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const updateField = (
     field: keyof ClientContactFormValues,
     value: string,
@@ -30,6 +54,8 @@ export default function ModalContact() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (isSubmitting) return;
 
     const values: ClientContactFormValues = {
       email: formValues.email.trim(),
@@ -45,21 +71,26 @@ export default function ModalContact() {
 
     setIsSubmitting(true);
 
-    // action-(gửi liên hệ)
-    const result = await submitContactAction(values);
+    try {
+      // action-(gửi liên hệ)
+      const result = await submitContactAction(values);
 
-    if ("error" in result && result.error) {
-      toast.error(result.error);
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      if ("success" in result && result.success) {
+        toast.success("Đã gửi lời nhắn, ChamCham sẽ phản hồi sớm");
+        setFormValues((currentValues) => ({
+          ...currentValues,
+          message: "",
+          subject: "",
+        }));
+      }
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    if ("success" in result && result.success) {
-      toast.success("Đã gửi lời nhắn, ChamCham sẽ phản hồi sớm");
-      setFormValues(initialValues);
-    }
-
-    setIsSubmitting(false);
   };
 
   return (

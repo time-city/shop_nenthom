@@ -33,6 +33,7 @@ export default function ModalEditIngre({
   const [price, setPrice] = useState("");
   const [hex, setHex] = useState("#F5E6D3");
   const [inStock, setInStock] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [weightGram, setWeightGram] = useState("");
 
   const nameLabel = useMemo(() => {
@@ -51,11 +52,12 @@ export default function ModalEditIngre({
     setPrice(toNumberValue(item.price));
     setHex(item.hex ?? "#F5E6D3");
     setInStock(item.in_stock ?? true);
+    setIsSaving(false);
     setWeightGram(String(item.weight_gram ?? ""));
   }, [item]);
 
   const handleSave = async () => {
-    if (!item) return;
+    if (!item || isSaving) return;
 
     const values = {
       hex,
@@ -76,17 +78,23 @@ export default function ModalEditIngre({
           ? values.weight_gram
           : item.weight_gram,
     };
-    const shouldClose = await onSave?.(updatedItem, values);
+    setIsSaving(true);
 
-    if (shouldClose === false) return;
+    try {
+      const shouldClose = await onSave?.(updatedItem, values);
 
-    onClose();
+      if (shouldClose === false) return;
+
+      onClose();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={isSaving ? undefined : onClose}
       aria-labelledby="edit-ingredient-modal-title"
       aria-describedby="edit-ingredient-modal-description"
     >
@@ -103,6 +111,7 @@ export default function ModalEditIngre({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSaving}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -197,6 +206,7 @@ export default function ModalEditIngre({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSaving}
             className={styles.ghostButton}
           >
             Hủy
@@ -205,9 +215,10 @@ export default function ModalEditIngre({
             type="button"
             variant="contained"
             onClick={handleSave}
+            disabled={isSaving}
             className={styles.primaryButton}
           >
-            Lưu thay đổi
+            {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
           </Button>
         </Box>
       </Box>

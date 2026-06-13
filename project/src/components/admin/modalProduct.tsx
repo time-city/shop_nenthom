@@ -71,6 +71,7 @@ export default function ModalProduct({
     if (!open) return;
 
     setFormValues(initialProductFormValues);
+    setIsSubmitting(false);
 
     const loadCategories = async () => {
       setIsLoadingCategories(true);
@@ -107,6 +108,8 @@ export default function ModalProduct({
   };
 
   const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (isSubmitting) return;
+
     const file = event.target.files?.[0];
 
     if (!file) return;
@@ -138,6 +141,8 @@ export default function ModalProduct({
   };
 
   const handleSave = async () => {
+    if (isSubmitting) return;
+
     const productName = formValues.name.trim();
     const productPrice = Number(formValues.base_price_cents);
     const categoryId = Number(formValues.category_id);
@@ -165,36 +170,37 @@ export default function ModalProduct({
 
     setIsSubmitting(true);
 
-    // action-(tạo sản phẩm)
-    const result = await createProductAction({
-      base_price_cents: productPrice,
-      category_id: categoryId,
-      description: formValues.description.trim() || undefined,
-      images: [imageDataUrl],
-      is_active: formValues.is_active,
-      name: productName,
-    });
+    try {
+      // action-(tạo sản phẩm)
+      const result = await createProductAction({
+        base_price_cents: productPrice,
+        category_id: categoryId,
+        description: formValues.description.trim() || undefined,
+        images: [imageDataUrl],
+        is_active: formValues.is_active,
+        name: productName,
+      });
 
-    if ("error" in result && result.error) {
-      toast.error(result.error);
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      if ("success" in result && result.success) {
+        toast.success("Đã thêm sản phẩm");
+        await onSave?.();
+        setFormValues(initialProductFormValues);
+        onClose();
+      }
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    if ("success" in result && result.success) {
-      toast.success("Đã thêm sản phẩm");
-      await onSave?.();
-      setFormValues(initialProductFormValues);
-      onClose();
-    }
-
-    setIsSubmitting(false);
   };
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={isSubmitting ? undefined : onClose}
       aria-labelledby="product-modal-title"
       aria-describedby="product-modal-description"
     >
@@ -211,6 +217,7 @@ export default function ModalProduct({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -320,6 +327,7 @@ export default function ModalProduct({
                 accept="image/*"
                 hidden
                 onChange={handleImageChange}
+                disabled={isSubmitting}
               />
             </label>
           </Box>
@@ -345,6 +353,7 @@ export default function ModalProduct({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             className={styles.ghostButton}
           >
             Hủy

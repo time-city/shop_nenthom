@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import ModalCategory from "../../../components/admin/modalCategory";
 import ModalDeleteConfirm from "../../../components/admin/modalDeleteConfirm";
 import ModalEditCategory from "../../../components/admin/modalEditCategory";
+import LoadingState from "../../../components/ui/loadingState";
 import {
   AdminDeleteButton,
   AdminEditButton,
@@ -173,9 +174,10 @@ export default function CategoryManagementPage() {
             </div>
 
             {isLoading ? (
-              <div className="px-5 py-8 text-center text-sm text-[#6B4C35]">
-                Đang tải danh sách danh mục...
-              </div>
+              <LoadingState
+                label="Đang tải danh sách danh mục..."
+                className="m-5"
+              />
             ) : null}
             {!isLoading && error ? (
               <div className="px-5 py-8 text-center text-sm text-[#8A1119]">

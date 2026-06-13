@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import type {
   ClientOrderRecord,
   ClientOrderUserData,
+  OrdersContentProps,
   OrdersHeaderProps,
 } from "../../../lib/types/client";
 
@@ -12,6 +13,7 @@ const defaultUser: Required<ClientOrderUserData> = {
   email: "",
   fullname: "",
   phone: "",
+  role: "",
 };
 
 const statusLabel: Record<ClientOrderRecord["status"], string> = {
@@ -26,40 +28,6 @@ const statusClass: Record<ClientOrderRecord["status"], string> = {
   done: "bg-[#6B1218]/10 text-[#6B1218]",
   processing: "bg-[#F4E2B7] text-[#8B5E3C]",
   shipping: "bg-[#45A05C]/15 text-[#1F6B3A]",
-};
-
-const readUser = () => {
-  try {
-    if (typeof window === "undefined") {
-      return defaultUser;
-    }
-
-    const stored = localStorage.getItem("lumiere-user");
-    const localUser: ClientOrderUserData = {};
-    const email = localStorage.getItem("email");
-    const fullname = localStorage.getItem("fullname");
-    const phone = localStorage.getItem("phone");
-
-    if (email) {
-      localUser.email = email;
-    }
-
-    if (fullname) {
-      localUser.fullname = fullname;
-    }
-
-    if (phone) {
-      localUser.phone = phone;
-    }
-
-    if (!stored) {
-      return { ...defaultUser, ...localUser };
-    }
-
-    return { ...defaultUser, ...(JSON.parse(stored) as ClientOrderUserData), ...localUser };
-  } catch {
-    return defaultUser;
-  }
 };
 
 const readOrders = () => {
@@ -122,7 +90,7 @@ function OrdersHeader({ user }: OrdersHeaderProps) {
           ) : null}
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#F2E8D9] px-3 py-1.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-[#6B1218]">
             <span className="text-sm">✦</span>
-            Thành viên
+            {user.role === "ADMIN" ? "Quản trị" : "Thành viên"}
           </div>
         </div>
       </div>
@@ -145,8 +113,10 @@ function OrdersHeader({ user }: OrdersHeaderProps) {
   );
 }
 
-export default function Orders() {
-  const [user] = useState<Required<ClientOrderUserData>>(() => readUser());
+export default function Orders({ initialUser }: OrdersContentProps) {
+  const [user] = useState<Required<ClientOrderUserData>>(
+    initialUser ?? defaultUser,
+  );
   const [orders] = useState<ClientOrderRecord[]>(() => readOrders());
 
   return (

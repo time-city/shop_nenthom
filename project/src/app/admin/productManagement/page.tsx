@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import ModalDeleteConfirm from "../../../components/admin/modalDeleteConfirm";
 import ModalEditProduct from "../../../components/admin/modalEditProduct";
 import ModalProduct from "../../../components/admin/modalProduct";
+import LoadingState from "../../../components/ui/loadingState";
 import {
   AdminDeleteButton,
   AdminEditButton,
@@ -221,9 +222,10 @@ export default function ProductManagementPage() {
               </table>
             </div>
             {isLoadingProducts ? (
-              <div className="px-5 py-8 text-center text-sm text-[#6B4C35]">
-                Đang tải danh sách sản phẩm...
-              </div>
+              <LoadingState
+                label="Đang tải danh sách sản phẩm..."
+                className="m-5"
+              />
             ) : null}
             {!isLoadingProducts && productError ? (
               <div className="px-5 py-8 text-center text-sm text-[#8A1119]">

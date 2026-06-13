@@ -90,6 +90,20 @@ export interface ClientCustomizationOptionsSuccessResponseInterface {
   success: true;
 }
 
+/** Product nền dùng cho form nến tùy chỉnh. */
+export interface ClientCustomCandleProductInterface {
+  base_price_cents: number;
+  category?: ClientProductCategoryInterface | null;
+  id: string;
+  name: string;
+}
+
+/** Response thành công của action lấy product nền nến tùy chỉnh. */
+export interface ClientCustomCandleProductSuccessResponseInterface {
+  data: ClientCustomCandleProductInterface;
+  success: true;
+}
+
 /** Product detail trả về từ API chi tiết sản phẩm. */
 export interface ClientProductDetailInterface {
   base_price_cents: number;

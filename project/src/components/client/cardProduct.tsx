@@ -29,6 +29,7 @@ const getCandleWaxClass = (color: string) => {
 export default function CardProduct({
   candleColor,
   href,
+  index = 0,
   name,
   price,
   scentNote,
@@ -41,7 +42,11 @@ export default function CardProduct({
   };
 
   return (
-    <article className="product-card group overflow-hidden rounded-[14px] bg-[#F5F0E8] text-[#2C1810] shadow-[0_14px_30px_rgba(44,8,12,0.22)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(44,8,12,0.28)]">
+    <article
+      data-aos="fade-up"
+      data-aos-delay={index * 100}
+      className="product-card group overflow-hidden rounded-[14px] bg-[#F5F0E8] text-[#2C1810] shadow-[0_14px_30px_rgba(44,8,12,0.22)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(44,8,12,0.28)]"
+    >
       <a
         href={detailHref}
         onClick={openDetail}

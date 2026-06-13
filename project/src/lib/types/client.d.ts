@@ -4,6 +4,7 @@ export type CollectionSearchParams = {
   page?: string;
   productId?: string;
   q?: string;
+  priceRange?: string;
 };
 
 /** Props của trang collection trong App Router. */
@@ -16,6 +17,7 @@ export type CardProductProps = {
   candleColor?: string;
   href: string;
   id: number | string;
+  index?: number;
   name: string;
   price: number | string;
   scentNote?: string;
@@ -51,6 +53,8 @@ export type DetailOptionGroupProps = {
 
 /** Props form tùy chỉnh nến. */
 export type FormCustomProps = {
+  basePrice?: number;
+  baseProductId?: string;
   isAuthenticated?: boolean;
   options?: import("../../interface/clientInterface").ClientCustomizationOptionsInterface;
 };
@@ -99,6 +103,7 @@ export type ClientOrderUserData = {
   email?: string;
   fullname?: string;
   phone?: string;
+  role?: string;
 };
 
 /** Trạng thái đơn hàng phía client. */
@@ -139,6 +144,7 @@ export type CartPageStep = "cart" | "checkout";
 
 /** Props item trong trang giỏ hàng. */
 export type CartItemProps = {
+  disabled?: boolean;
   index: number;
   item: ClientCartItem;
   onQuantityChange: (index: number, change: number) => void;
@@ -147,6 +153,7 @@ export type CartItemProps = {
 
 /** Props khối tổng tóm tắt đơn ở trang giỏ hàng. */
 export type CartSummaryProps = {
+  disabled?: boolean;
   onApplyPromo: () => void;
   onCheckout: () => void;
   subtotal: number;
@@ -165,11 +172,13 @@ export type CheckoutFormValues = {
 
 /** Props form thanh toán. */
 export type CheckoutFormProps = {
-  onComplete: () => void;
+  isSubmitting?: boolean;
+  onComplete: () => Promise<void> | void;
 };
 
 /** Props khối tổng tóm tắt đơn ở trang checkout. */
 export type CheckoutSummaryProps = {
+  isSubmitting?: boolean;
   items: ClientCartItem[];
   onBackToCart: () => void;
 };
@@ -177,6 +186,11 @@ export type CheckoutSummaryProps = {
 /** Props header của trang lịch sử đơn hàng. */
 export type OrdersHeaderProps = {
   user: Required<ClientOrderUserData>;
+};
+
+/** Props nội dung trang lịch sử đơn hàng. */
+export type OrdersContentProps = {
+  initialUser: Required<ClientOrderUserData>;
 };
 
 /** Thông tin user dùng trong trang profile. */
