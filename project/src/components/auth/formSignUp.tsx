@@ -8,7 +8,7 @@ import {
   type FormikHelpers,
 } from "formik";
 import Link from "next/link";
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { registerUser } from "../../lib/action/auth.action";
@@ -79,6 +79,27 @@ const validateSignUp = (values: SignUpValues) => {
 
 export default function FormSignUp() {
   const [showTermsPopup, setShowTermsPopup] = useState(false);
+  const [isTermsPopupVisible, setIsTermsPopupVisible] = useState(false);
+
+  useEffect(() => {
+    if (!showTermsPopup) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      setIsTermsPopupVisible(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [showTermsPopup]);
+
+  const closeTermsPopup = () => {
+    setIsTermsPopupVisible(false);
+
+    window.setTimeout(() => {
+      setShowTermsPopup(false);
+    }, 220);
+  };
 
   const handleSubmit = async (
     values: SignUpValues,
@@ -115,35 +136,25 @@ export default function FormSignUp() {
   };
 
   return (
-    <main>
-      <div className="flex min-h-dvh items-center justify-center bg-[#7A1218] px-4 py-24 sm:px-6 lg:px-8">
-        <div className="grid w-full max-w-[980px] overflow-hidden rounded-[24px] border border-[#f5f0e8]/20 bg-[#F5F0E8] text-[#2C1810] shadow-[0_24px_70px_rgba(30,6,8,0.28)] lg:grid-cols-[0.85fr_1.15fr]">
-          <aside className="hidden bg-[#4A0C10] px-9 py-10 text-[#F5F0E8] lg:flex lg:flex-col lg:justify-between">
-            <div>
-              <div className="mb-10 flex size-16 items-center justify-center rounded-full border border-[#F5F0E8]/18 bg-[#7A1218] font-serif text-xl font-semibold shadow-[0_14px_30px_rgba(0,0,0,0.2)]">
-                C
-              </div>
-              <p className="mb-4 text-[0.72rem] uppercase tracking-[0.24em] text-[#F5F0E8]/55">
-                ChamCham Studio
-              </p>
-              <h2 className="font-serif text-[2.6rem] font-light leading-[1.06]">
-                Lưu lại hương thơm của riêng bạn.
-              </h2>
-              <p className="mt-6 max-w-[280px] text-sm font-light leading-7 text-[#F5F0E8]/72">
-                Tạo tài khoản để theo dõi đơn hàng, lưu cấu hình nến và nhận ưu
-                đãi dành riêng cho thành viên.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-[#F5F0E8]/12 bg-[#F5F0E8]/8 p-4 text-sm leading-6 text-[#F5F0E8]/78">
-              Nến thủ công, phối hương tinh tế, đóng gói tối giản.
-            </div>
-          </aside>
-
-          <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
-            <h1 className="text-center font-serif text-[2rem] font-light leading-tight text-[#2C1810] sm:text-[2.45rem]">
+    <main className="h-dvh overflow-hidden bg-[#7A1218]">
+      <div className="flex h-full flex-col">
+        <section className="flex min-h-0 flex-1 items-center justify-center px-3 py-3 sm:px-6 lg:px-8">
+        <div className="relative w-full max-w-[620px] rounded-[22px] border border-[#f5f0e8]/20 bg-[#F5F0E8] px-4 py-4 text-[#2C1810] shadow-[0_24px_70px_rgba(30,6,8,0.28)] sm:px-6 sm:py-5 lg:px-7">
+            <button
+              type="button"
+              onClick={() => window.history.back()}
+              className="absolute left-4 top-4 flex size-9 items-center justify-center rounded-full border border-[#7A1218]/15 bg-[#F8F0E4] text-lg text-[#7A1218] transition hover:bg-[#7A1218] hover:text-[#F5F0E8]"
+              aria-label="Quay lại"
+            >
+              ←
+            </button>
+            <p className="mb-2 text-center text-[0.7rem] uppercase tracking-[0.22em] text-[#7A1218]/75">
+              ChamCham Studio
+            </p>
+            <h1 className="text-center font-serif text-[1.85rem] font-light leading-tight text-[#2C1810] sm:text-[2.1rem]">
               Đăng Ký
             </h1>
-            <p className="mb-6 mt-2 text-center text-[0.84rem] font-normal leading-relaxed text-[#2c1810]/70 sm:text-[0.9rem]">
+            <p className="mb-4 mt-1.5 text-center text-[0.82rem] font-normal leading-relaxed text-[#2c1810]/70">
               Tạo tài khoản để lưu các sáng tạo của bạn
             </p>
 
@@ -154,8 +165,8 @@ export default function FormSignUp() {
           >
             {({ errors, isSubmitting, setFieldValue, touched, values }) => (
               <Form>
-                <div className="grid grid-cols-1 items-start gap-x-5 sm:grid-cols-2">
-                  <div className="mb-4">
+                <div className="grid grid-cols-1 items-start gap-x-4 sm:grid-cols-2">
+                  <div className="mb-3">
                     <label
                       htmlFor="fullname"
                       className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
@@ -167,7 +178,7 @@ export default function FormSignUp() {
                       name="fullname"
                       type="text"
                       placeholder="Nguyễn Văn A"
-                      className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.fullname && errors.fullname
+                      className={`min-h-10 w-full rounded-xl border bg-white px-3.5 py-2 text-[0.9rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.fullname && errors.fullname
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
                         }`}
@@ -179,7 +190,7 @@ export default function FormSignUp() {
                     ) : null}
                   </div>
 
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <label
                       htmlFor="email"
                       className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
@@ -191,7 +202,7 @@ export default function FormSignUp() {
                       name="email"
                       type="email"
                       placeholder="your@email.com"
-                      className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.email && errors.email
+                      className={`min-h-10 w-full rounded-xl border bg-white px-3.5 py-2 text-[0.9rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.email && errors.email
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
                         }`}
@@ -203,7 +214,7 @@ export default function FormSignUp() {
                     ) : null}
                   </div>
 
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <label
                       htmlFor="password"
                       className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
@@ -215,7 +226,7 @@ export default function FormSignUp() {
                       name="password"
                       type="password"
                       placeholder="••••••••"
-                      className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.password && errors.password
+                      className={`min-h-10 w-full rounded-xl border bg-white px-3.5 py-2 text-[0.9rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.password && errors.password
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
                         }`}
@@ -230,7 +241,7 @@ export default function FormSignUp() {
                     </div>
                   </div>
 
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <label
                       htmlFor="confirmPassword"
                       className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
@@ -242,7 +253,7 @@ export default function FormSignUp() {
                       name="confirmPassword"
                       type="password"
                       placeholder="••••••••"
-                      className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.confirmPassword && errors.confirmPassword
+                      className={`min-h-10 w-full rounded-xl border bg-white px-3.5 py-2 text-[0.9rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.confirmPassword && errors.confirmPassword
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
                         }`}
@@ -254,7 +265,7 @@ export default function FormSignUp() {
                     ) : null}
                   </div>
 
-                  <div className="mb-4 sm:col-span-2">
+                  <div className="mb-3 sm:col-span-2">
                     <label
                       htmlFor="phone"
                       className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
@@ -266,7 +277,7 @@ export default function FormSignUp() {
                       name="phone"
                       type="tel"
                       placeholder="0123456789"
-                      className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.phone && errors.phone
+                      className={`min-h-10 w-full rounded-xl border bg-white px-3.5 py-2 text-[0.9rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.phone && errors.phone
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
                         }`}
@@ -281,7 +292,7 @@ export default function FormSignUp() {
 
                 <label
                   htmlFor="terms"
-                  className="mb-4 flex cursor-pointer items-start rounded-xl border border-[#2c1810]/10 bg-[#F8F0E4] px-3.5 py-3 text-[0.8rem] leading-relaxed text-[#2c1810]/70 sm:text-[0.85rem]"
+                  className="mb-3 flex cursor-pointer items-start text-[0.8rem] leading-relaxed text-[#2c1810]/70 sm:text-[0.84rem]"
                 >
                   <Field
                     id="terms"
@@ -310,14 +321,14 @@ export default function FormSignUp() {
                   </span>
                 </label>
                 {touched.terms && errors.terms ? (
-                  <p className="-mt-4 mb-6 text-xs text-[#856404]">
+                  <p className="-mt-1 mb-3 text-xs text-[#856404]">
                     {errors.terms}
                   </p>
                 ) : null}
 
                 <label
                   htmlFor="newsletter"
-                  className="mb-5 flex cursor-pointer items-start rounded-xl border border-[#2c1810]/10 bg-[#F8F0E4] px-3.5 py-3 text-[0.8rem] leading-relaxed text-[#2c1810]/70 sm:text-[0.85rem]"
+                  className="mb-4 flex cursor-pointer items-start text-[0.8rem] leading-relaxed text-[#2c1810]/70 sm:text-[0.84rem]"
                 >
                   <Field
                     id="newsletter"
@@ -332,7 +343,7 @@ export default function FormSignUp() {
 
                 <button
                   type="submit"
-                  className="mb-3 min-h-12 w-full rounded-full bg-[#7A1218] px-4 py-3.5 text-[0.74rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_14px_28px_rgba(107,18,24,0.22)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
+                  className="mb-2 min-h-11 w-full rounded-full bg-[#7A1218] px-4 py-3 text-[0.74rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_14px_28px_rgba(107,18,24,0.22)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Đang tạo tài khoản..." : "Tạo Tài Khoản"}
@@ -340,12 +351,16 @@ export default function FormSignUp() {
 
                 {showTermsPopup ? (
                   <div
-                    className="fixed inset-0 z-[200] flex items-center justify-center bg-[#2C1810]/55 px-4 py-6 backdrop-blur-sm"
+                    className={`fixed inset-0 z-[200] flex items-center justify-center bg-[#2C1810]/55 px-4 py-6 backdrop-blur-sm transition-opacity duration-300 ease-out ${isTermsPopupVisible ? "opacity-100" : "opacity-0"
+                      }`}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="terms-popup-title"
                   >
-                    <div className="w-full max-w-[520px] rounded-2xl border border-[#6B1218]/15 bg-[#F8F0E4] p-5 text-[#2C1810] shadow-[0_24px_70px_rgba(30,6,8,0.35)] sm:p-7">
+                    <div
+                      className={`w-full max-w-[520px] rounded-2xl border border-[#6B1218]/15 bg-[#F8F0E4] p-5 text-[#2C1810] shadow-[0_24px_70px_rgba(30,6,8,0.35)] transition-all duration-300 ease-out sm:p-7 ${isTermsPopupVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-4 scale-95 opacity-0"
+                        }`}
+                    >
                       <div className="mb-4 flex items-start justify-between gap-4">
                         <div>
                           <h2
@@ -360,7 +375,7 @@ export default function FormSignUp() {
                         </div>
                         <button
                           type="button"
-                          onClick={() => setShowTermsPopup(false)}
+                          onClick={closeTermsPopup}
                           className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#6B1218]/20 text-lg text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8]"
                           aria-label="Đóng popup điều khoản"
                         >
@@ -386,7 +401,7 @@ export default function FormSignUp() {
 
                       <button
                         type="button"
-                        onClick={() => setShowTermsPopup(false)}
+                        onClick={closeTermsPopup}
                         className="mt-5 min-h-11 w-full rounded-full bg-[#7A1218] px-5 py-3 text-[0.76rem] font-medium uppercase tracking-[0.12em] text-[#F5F0E8] transition hover:bg-[#4A0C10]"
                       >
                         Tôi đã hiểu
@@ -398,20 +413,12 @@ export default function FormSignUp() {
             )}
           </Formik>
 
-          <div className="my-4 text-center text-[0.82rem] text-[#2c1810]/45 sm:text-[0.85rem]">
+          <div className="my-2 text-center text-[0.8rem] text-[#2c1810]/45 sm:text-[0.84rem]">
             hoặc
           </div>
 
-          <div className="flex items-center justify-between gap-3 text-center sm:gap-4">
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="flex size-[34px] shrink-0 items-center justify-center rounded-full border-0 bg-transparent text-lg text-[#7A1218] transition-opacity hover:opacity-85"
-              aria-label="Back"
-            >
-              ←
-            </button>
-            <p className="m-0 flex-1 text-[0.8rem] font-light leading-relaxed text-[#2C1810] sm:text-[0.85rem]">
+          <div className="text-center">
+            <p className="m-0 text-[0.8rem] font-light leading-relaxed text-[#2C1810] sm:text-[0.84rem]">
               Đã có tài khoản?{" "}
               <Link
                 href="/login"
@@ -420,10 +427,13 @@ export default function FormSignUp() {
                 Đăng nhập
               </Link>
             </p>
-            <div className="size-[34px] shrink-0" />
-          </div>
           </div>
         </div>
+        </section>
+
+        <footer className="shrink-0 border-t border-[#f5f0e8]/10 px-4 py-3 text-center text-[0.72rem] tracking-[0.12em] text-[#F5F0E8]/65">
+          © 2025 ChamCham · Handcrafted in Việt Nam
+        </footer>
       </div>
     </main>
   );

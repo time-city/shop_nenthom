@@ -7,6 +7,7 @@ import CartItem from "../../../components/client/cartItem";
 import CartSummary from "../../../components/client/cartSummary";
 import CheckoutForm from "../../../components/client/checkoutForm";
 import CheckoutSummary from "../../../components/client/checkoutSummary";
+import LoadingState from "../../../components/ui/loadingState";
 import type {
   ClientCartActionItemInterface,
   ClientCartActionSuccessResponseInterface,
@@ -42,7 +43,9 @@ const mapCartItem = (item: ClientCartActionItemInterface): ClientCartItem => ({
 
 export default function CartPage() {
   const [cart, setCart] = useState<ClientCartItem[]>([]);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
+  const [isMutatingCart, setIsMutatingCart] = useState(false);
   const [step, setStep] = useState<CartPageStep>("cart");
 
   const subtotal = useMemo(
@@ -59,6 +62,7 @@ export default function CartPage() {
 
     // action-(lấy giỏ hàng)
     const result = await getOrCreateCartAction();
+    console.log("[cart:getOrCreateCartAction]", result);
 
     if ("error" in result && result.error) {
       toast.error(result.error);
@@ -80,6 +84,8 @@ export default function CartPage() {
   }, [loadCart]);
 
   const updateQuantity = async (index: number, change: number) => {
+    if (isMutatingCart) return;
+
     const targetItem = cart[index];
 
     if (!targetItem?.itemId) return;
@@ -91,21 +97,29 @@ export default function CartPage() {
       return;
     }
 
-    // action-(cập nhật số lượng giỏ hàng)
-    const result = await updateCartItemAction({
-      itemId: targetItem.itemId,
-      quantity: nextQuantity,
-    });
+    setIsMutatingCart(true);
 
-    if ("error" in result && result.error) {
-      toast.error(result.error);
-      return;
+    try {
+      // action-(cập nhật số lượng giỏ hàng)
+      const result = await updateCartItemAction({
+        itemId: targetItem.itemId,
+        quantity: nextQuantity,
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      await loadCart();
+    } finally {
+      setIsMutatingCart(false);
     }
-
-    await loadCart();
   };
 
   const removeItem = async (index: number) => {
+    if (isMutatingCart) return;
+
     const targetItem = cart[index];
 
     if (!targetItem?.itemId) return;
@@ -114,16 +128,22 @@ export default function CartPage() {
 
     if (!shouldRemove) return;
 
-    // action-(xóa item khỏi giỏ hàng)
-    const result = await removeCartItemAction({ itemId: targetItem.itemId });
+    setIsMutatingCart(true);
 
-    if ("error" in result && result.error) {
-      toast.error(result.error);
-      return;
+    try {
+      // action-(xóa item khỏi giỏ hàng)
+      const result = await removeCartItemAction({ itemId: targetItem.itemId });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success("Đã xóa sản phẩm khỏi giỏ hàng");
+      await loadCart();
+    } finally {
+      setIsMutatingCart(false);
     }
-
-    toast.success("Đã xóa sản phẩm khỏi giỏ hàng");
-    await loadCart();
   };
 
   const applyPromo = () => {
@@ -131,18 +151,26 @@ export default function CartPage() {
   };
 
   const completeOrder = async () => {
+    if (isCheckingOut) return;
+
     window.alert("Đơn hàng được tạo thành công!");
 
-    // action-(xóa toàn bộ giỏ hàng)
-    const result = await clearCartAction();
+    setIsCheckingOut(true);
 
-    if ("error" in result && result.error) {
-      toast.error(result.error);
-      return;
+    try {
+      // action-(xóa toàn bộ giỏ hàng)
+      const result = await clearCartAction();
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      setCart([]);
+      setStep("cart");
+    } finally {
+      setIsCheckingOut(false);
     }
-
-    setCart([]);
-    setStep("cart");
   };
 
   if (step === "checkout" && cart.length > 0) {
@@ -165,8 +193,9 @@ export default function CartPage() {
         </section>
 
         <section className="grid gap-8 xl:grid-cols-[2fr_1fr] xl:gap-10">
-          <CheckoutForm onComplete={completeOrder} />
+          <CheckoutForm isSubmitting={isCheckingOut} onComplete={completeOrder} />
           <CheckoutSummary
+            isSubmitting={isCheckingOut}
             items={cart}
             onBackToCart={() => setStep("cart")}
           />
@@ -192,9 +221,10 @@ export default function CartPage() {
 
         {isLoadingCart ? (
           <section className="rounded-2xl bg-[#F8F0E4] px-6 py-16 text-center shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
-            <p className="text-base text-[#6B4C35]">
-              Đang tải giỏ hàng...
-            </p>
+            <LoadingState
+              label="Đang tải giỏ hàng..."
+              className="min-h-40 border-0 bg-transparent shadow-none"
+            />
           </section>
         ) : cart.length === 0 ? (
           <section className="rounded-2xl bg-[#F8F0E4] px-6 py-16 text-center shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
@@ -217,6 +247,7 @@ export default function CartPage() {
                   key={`${item.name ?? item.scent}-${index}`}
                   index={index}
                   item={item}
+                  disabled={isMutatingCart}
                   onQuantityChange={updateQuantity}
                   onRemove={removeItem}
                 />
@@ -224,6 +255,7 @@ export default function CartPage() {
             </div>
 
             <CartSummary
+              disabled={isMutatingCart}
               subtotal={subtotal}
               onApplyPromo={applyPromo}
               onCheckout={() => setStep("checkout")}

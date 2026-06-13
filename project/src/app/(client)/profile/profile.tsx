@@ -135,6 +135,7 @@ export function ProfilePageContent({
   const [user, setUser] = useState<Required<ClientProfileUserData>>(
     initialUser ?? defaultUser,
   );
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const updateField = (field: keyof Required<ClientProfileUserData>, value: string) => {
     setUser((current) => ({ ...current, [field]: value }));
@@ -148,24 +149,29 @@ export function ProfilePageContent({
     toast.info(message);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+
     // action-(đăng xuất)
-    void logoutUser().then((result) => {
-      if (!result.success) {
-        const message = "Đăng xuất thất bại";
-        toast.error(message);
-        return;
-      }
+    const result = await logoutUser();
 
-      localStorage.removeItem("remember");
-      const message = "Đăng xuất thành công";
-      toast.success(message);
+    if (!result.success) {
+      const message = "Đăng xuất thất bại";
+      toast.error(message);
+      setIsLoggingOut(false);
+      return;
+    }
 
-      window.setTimeout(() => {
-        router.replace("/login");
-        router.refresh();
-      }, 900);
-    });
+    localStorage.removeItem("remember");
+    const message = "Đăng xuất thành công";
+    toast.success(message);
+
+    window.setTimeout(() => {
+      router.replace("/login");
+      router.refresh();
+    }, 900);
   };
 
   return (
@@ -242,9 +248,10 @@ export function ProfilePageContent({
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-full border-[1.5px] border-[#2C1810]/25 bg-transparent px-6 py-3 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] sm:text-[0.8rem]"
+                disabled={isLoggingOut}
+                className="rounded-full border-[1.5px] border-[#2C1810]/25 bg-transparent px-6 py-3 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-60 sm:text-[0.8rem]"
               >
-                Đăng Xuất
+                {isLoggingOut ? "Đang Đăng Xuất..." : "Đăng Xuất"}
               </button>
             </div>
           </form>

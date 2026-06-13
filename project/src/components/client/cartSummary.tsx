@@ -7,6 +7,7 @@ const formatPrice = (price: number) =>
   new Intl.NumberFormat("vi-VN").format(price) + "đ";
 
 export default function CartSummary({
+  disabled = false,
   onApplyPromo,
   onCheckout,
   subtotal,
@@ -59,7 +60,8 @@ export default function CartSummary({
       <button
         type="button"
         onClick={onCheckout}
-        className="mb-4 w-full rounded-full bg-[#6B1218] px-6 py-3.5 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.28)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10]"
+        disabled={disabled}
+        className="mb-4 w-full rounded-full bg-[#6B1218] px-6 py-3.5 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.28)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-65 disabled:hover:translate-y-0"
       >
         Thanh Toán
       </button>

@@ -138,18 +138,30 @@ export default function FormSignIn() {
   };
 
   return (
-    <main>
-      <div className="flex min-h-[calc(100dvh-5rem)] items-center justify-center bg-[#7A1218] px-4 pb-6 pt-24 sm:px-6 sm:pb-8 md:px-8 md:pt-32">
-        <div className="w-full max-w-[420px] rounded-2xl border border-[#2c1810]/10 bg-[#F5F0E8] p-6 sm:p-8 md:p-12">
-          <h1 className="text-center font-serif text-[2rem] font-light leading-tight text-[#2C1810] sm:text-[2.2rem]">
+    <main className="h-dvh overflow-hidden bg-[#7A1218]">
+      <div className="flex h-full flex-col">
+        <section className="flex min-h-0 flex-1 items-center justify-center px-4 py-4 sm:px-6 lg:px-8">
+        <div className="relative w-full max-w-[440px] rounded-[22px] border border-[#f5f0e8]/20 bg-[#F5F0E8] px-5 py-6 text-[#2C1810] shadow-[0_24px_70px_rgba(30,6,8,0.28)] sm:px-8 sm:py-7">
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="absolute left-4 top-4 flex size-9 items-center justify-center rounded-full border border-[#7A1218]/15 bg-[#F8F0E4] text-lg text-[#7A1218] transition hover:bg-[#7A1218] hover:text-[#F5F0E8]"
+            aria-label="Quay về trang chủ"
+          >
+            ←
+          </button>
+          <p className="mb-2 text-center text-[0.7rem] uppercase tracking-[0.22em] text-[#7A1218]/75">
+            ChamCham Studio
+          </p>
+          <h1 className="text-center font-serif text-[2.05rem] font-light leading-tight text-[#2C1810] sm:text-[2.25rem]">
             Đăng Nhập
           </h1>
-          <p className="mb-7 mt-2 text-center text-[0.86rem] leading-relaxed text-[#2c1810]/70 sm:mb-8 sm:text-[0.88rem]">
+          <p className="mb-5 mt-2 text-center text-[0.86rem] leading-relaxed text-[#2c1810]/70">
             Chào mừng quay lại ChamCham
           </p>
 
           {errorMessage ? (
-            <div className="mb-6 rounded-sm border border-[#ffc107] bg-[#fff3cd] p-3 text-[0.85rem] text-[#856404]">
+            <div className="mb-4 rounded-xl border border-[#ffc107] bg-[#fff3cd] px-3.5 py-3 text-[0.82rem] text-[#856404]">
               {errorMessage}
             </div>
           ) : null}
@@ -162,10 +174,10 @@ export default function FormSignIn() {
           >
             {({ errors, isSubmitting, setFieldValue, touched, values }) => (
               <Form>
-                <div className="mb-6">
+                <div className="mb-4">
                   <label
                     htmlFor="email"
-                    className="mb-2 block text-[0.7rem] font-normal uppercase tracking-[0.1em] text-[#2C1810] sm:text-xs"
+                    className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
                   >
                     Email
                   </label>
@@ -174,7 +186,7 @@ export default function FormSignIn() {
                     name="email"
                     type="email"
                     placeholder="your@email.com"
-                    className={`w-full border bg-transparent p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none ${
+                    className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
                       touched.email && errors.email
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
@@ -187,10 +199,10 @@ export default function FormSignIn() {
                   ) : null}
                 </div>
 
-                <div className="mb-6">
+                <div className="mb-4">
                   <label
                     htmlFor="password"
-                    className="mb-2 block text-[0.7rem] font-normal uppercase tracking-[0.1em] text-[#2C1810] sm:text-xs"
+                    className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
                   >
                     Mật Khẩu
                   </label>
@@ -199,7 +211,7 @@ export default function FormSignIn() {
                     name="password"
                     type="password"
                     placeholder="••••••••"
-                    className={`w-full border bg-transparent p-3 text-[0.95rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/40 focus:border-[#7A1218] focus:outline-none ${
+                    className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
                       touched.password && errors.password
                         ? "border-[#ffc107]"
                         : "border-[#2c1810]/20"
@@ -214,7 +226,7 @@ export default function FormSignIn() {
 
                 <label
                   htmlFor="remember"
-                  className="mb-6 flex items-center text-[0.84rem] text-[#2c1810]/70 sm:text-[0.85rem]"
+                  className="mb-5 flex cursor-pointer items-center text-[0.84rem] text-[#2c1810]/70 sm:text-[0.85rem]"
                 >
                   <Field
                     id="remember"
@@ -246,7 +258,7 @@ export default function FormSignIn() {
 
                 <button
                   type="submit"
-                  className="mb-4 w-full bg-[#7A1218] p-3.5 text-[0.76rem] uppercase tracking-[0.12em] text-[#F5F0E8] transition-colors hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
+                  className="mb-3 min-h-12 w-full rounded-full bg-[#7A1218] px-4 py-3.5 text-[0.74rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_14px_28px_rgba(107,18,24,0.22)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Đang đăng nhập..." : "Đăng Nhập"}
@@ -255,7 +267,7 @@ export default function FormSignIn() {
             )}
           </Formik>
 
-          <div className="my-6 text-center text-[0.85rem] text-[#2c1810]/45">
+          <div className="my-4 text-center text-[0.82rem] text-[#2c1810]/45 sm:text-[0.85rem]">
             hoặc
           </div>
 
@@ -279,6 +291,11 @@ export default function FormSignIn() {
             </p>
           </div>
         </div>
+        </section>
+
+        <footer className="shrink-0 border-t border-[#f5f0e8]/10 px-4 py-3 text-center text-[0.72rem] tracking-[0.12em] text-[#F5F0E8]/65">
+          © 2025 ChamCham · Handcrafted in Việt Nam
+        </footer>
       </div>
     </main>
   );

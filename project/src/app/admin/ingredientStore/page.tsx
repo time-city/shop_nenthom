@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import ModalDeleteConfirm from "../../../components/admin/modalDeleteConfirm";
 import ModalEditIngre from "../../../components/admin/modalEditIngre";
 import ModalIngredient from "../../../components/admin/modalIngredient";
+import LoadingState from "../../../components/ui/loadingState";
 import {
   AdminDeleteButton,
   AdminEditButton,
@@ -579,9 +580,7 @@ export default function IngredientStorePage() {
 
           <div className="overflow-x-auto">
             {isLoadingOptions ? (
-              <div className="rounded-xl border border-[#6B4E35]/10 bg-[#F5F0E8]/70 px-5 py-8 text-center text-sm text-[#6B4C35]">
-                Đang tải dữ liệu nguyên liệu...
-              </div>
+              <LoadingState label="Đang tải dữ liệu nguyên liệu..." />
             ) : null}
             {!isLoadingOptions && activeTab === "scent" ? (
               <ScentTable

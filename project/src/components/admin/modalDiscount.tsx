@@ -40,6 +40,7 @@ export default function ModalDiscount({
     if (!open) return;
 
     setFormValues(initialDiscountFormValues);
+    setIsSubmitting(false);
   }, [open]);
 
   const updateField = (
@@ -53,6 +54,8 @@ export default function ModalDiscount({
   };
 
   const handleSave = async () => {
+    if (isSubmitting) return;
+
     const code = formValues.code.trim().toUpperCase();
     const discountAmount = Number(formValues.discount_amount_cents);
     const maxUses = Number(formValues.max_uses);
@@ -79,38 +82,39 @@ export default function ModalDiscount({
 
     setIsSubmitting(true);
 
-    // action-(tạo mã giảm giá)
-    const result = await createDiscountAction({
-      code,
-      discount_amount_cents: discountAmount,
-      expires_at: formValues.expires_at
-        ? new Date(`${formValues.expires_at}T23:59:59`)
-        : undefined,
-      is_active: true,
-      max_uses: maxUses,
-      type: formValues.type,
-    });
+    try {
+      // action-(tạo mã giảm giá)
+      const result = await createDiscountAction({
+        code,
+        discount_amount_cents: discountAmount,
+        expires_at: formValues.expires_at
+          ? new Date(`${formValues.expires_at}T23:59:59`)
+          : undefined,
+        is_active: true,
+        max_uses: maxUses,
+        type: formValues.type,
+      });
 
-    if ("error" in result && result.error) {
-      toast.error(result.error);
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      if ("success" in result && result.success) {
+        toast.success("Đã tạo mã giảm giá");
+        await onSave?.();
+        setFormValues(initialDiscountFormValues);
+        onClose();
+      }
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    if ("success" in result && result.success) {
-      toast.success("Đã tạo mã giảm giá");
-      await onSave?.();
-      setFormValues(initialDiscountFormValues);
-      onClose();
-    }
-
-    setIsSubmitting(false);
   };
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={isSubmitting ? undefined : onClose}
       aria-labelledby="discount-modal-title"
       aria-describedby="discount-modal-description"
     >
@@ -127,6 +131,7 @@ export default function ModalDiscount({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -219,6 +224,7 @@ export default function ModalDiscount({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             className={styles.ghostButton}
           >
             Hủy

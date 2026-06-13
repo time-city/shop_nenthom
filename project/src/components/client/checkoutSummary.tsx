@@ -11,6 +11,7 @@ const getItemName = (item: CheckoutSummaryProps["items"][number]) =>
   item.name ?? item.scent ?? "Nến ChamCham";
 
 export default function CheckoutSummary({
+  isSubmitting = false,
   items,
   onBackToCart,
 }: CheckoutSummaryProps) {
@@ -70,14 +71,16 @@ export default function CheckoutSummary({
       <button
         type="submit"
         form="checkoutForm"
-        className="mb-4 w-full rounded-full bg-[#6B1218] px-6 py-4 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.28)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10]"
+        disabled={isSubmitting}
+        className="mb-4 w-full rounded-full bg-[#6B1218] px-6 py-4 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.28)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-65 disabled:hover:translate-y-0"
       >
-        Hoàn Thành Đơn Hàng
+        {isSubmitting ? "Đang xử lý..." : "Hoàn Thành Đơn Hàng"}
       </button>
       <button
         type="button"
         onClick={onBackToCart}
-        className="w-full rounded-full border border-[#6B1218] px-6 py-3.5 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8]"
+        disabled={isSubmitting}
+        className="w-full rounded-full border border-[#6B1218] px-6 py-3.5 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-55"
       >
         Quay Lại Giỏ Hàng
       </button>
