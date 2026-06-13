@@ -30,7 +30,7 @@ export type GetProductsParams = z.infer<typeof productSchema>;
 
 
 export const createProductSchema = z.object({
-   category_id: z.coerce.number().int().positive('Category không hợp lệ'),
+   category_id: z.coerce.number().int().positive('Vui lòng chọn danh mục sản phẩm'),
    name: z.string().min(1, 'Tên sản phẩm không được để trống'),
    base_price_cents: z.coerce.number().min(0, 'Giá không hợp lệ'),
    description: z.string().optional(),
@@ -38,22 +38,15 @@ export const createProductSchema = z.object({
    is_active: z.boolean().default(true),
 });
 
-
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 
-
-
-
 export const updateProductSchema = createProductSchema.partial();
-
 
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 
 
-
-
 export const deleteProductSchema = z.object({
-   id: z.string().min(1, 'ID sản phẩm không hợp lệ'),
+   id: z.string().min(1, 'Không thể xác định sản phẩm cần xóa. Vui lòng tải lại trang.'),
 })
 
 
@@ -61,11 +54,10 @@ export type DeleteProductInput = z.infer<typeof deleteProductSchema>;
 
 
 export const customCandleProductSchema = z.object({
-   productId: z.string().uuid('Product ID nến tùy chỉnh không hợp lệ'),
+   productId: z.string().uuid('Chưa thể chuẩn bị nến tùy chỉnh. Vui lòng tải lại trang và thử lại.'),
 });
 
 
 export type CustomCandleProductInput = z.infer<typeof customCandleProductSchema>;
-
 
 

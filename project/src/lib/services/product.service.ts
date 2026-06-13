@@ -211,7 +211,7 @@ export const ProductService = {
               },
           }
       })
-      if (!product) throw new Error('Sản phẩm không tồn tại');
+      if (!product) throw new Error('Sản phẩm này hiện không còn khả dụng.');
 
 
 
@@ -231,7 +231,7 @@ export const ProductService = {
           where: { id: data.category_id, is_active: true }
       });
       if (!categoryExists) {
-          throw new Error('Danh mục (Category) không tồn tại hoặc đã bị ẩn');
+          throw new Error('Danh mục đã chọn hiện không còn khả dụng.');
       }
 
 
@@ -244,7 +244,7 @@ export const ProductService = {
           }
       });
       if (existingName) {
-          throw new Error('Tên sản phẩm đã tồn tại');
+          throw new Error('Tên sản phẩm này đã được sử dụng.');
       }
 
       const product = await prisma.product.create({
@@ -277,7 +277,7 @@ export const ProductService = {
       const product = await prisma.product.findUnique({
           where: { id, is_active: true }
       });
-      if (!product) throw new Error('Sản phẩm không tồn tại');
+      if (!product) throw new Error('Sản phẩm này hiện không còn khả dụng.');
 
 
 
@@ -287,7 +287,7 @@ export const ProductService = {
               where: { id: data.category_id, is_active: true }
           });
           if (!categoryExists) {
-              throw new Error('Danh mục (Category) không tồn tại hoặc đã bị ẩn');
+              throw new Error('Danh mục đã chọn hiện không còn khả dụng.');
           }
       }
 
@@ -303,7 +303,7 @@ export const ProductService = {
               }
           });
           if (existingName) {
-              throw new Error('Tên sản phẩm đã tồn tại');
+              throw new Error('Tên sản phẩm này đã được sử dụng.');
           }
       }
 
@@ -341,7 +341,7 @@ export const ProductService = {
       const product = await prisma.product.findUnique({
           where: { id, is_active: true }
       });
-      if (!product) throw new Error('Sản phẩm không tồn tại');
+      if (!product) throw new Error('Sản phẩm này hiện không còn khả dụng.');
 
 
 
@@ -356,7 +356,6 @@ export const ProductService = {
       });
   }
 }
-
 
 
 

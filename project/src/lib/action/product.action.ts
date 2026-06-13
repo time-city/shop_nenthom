@@ -39,7 +39,7 @@ export async function getProductsAction(params: Partial<GetProductsParams> = {})
 
 
 export async function getProductDetailsAction(id: string) {
-  if (!id) return { error: 'Thiếu product ID' }
+  if (!id) return { error: 'Không thể mở sản phẩm này. Vui lòng chọn lại sản phẩm.' }
 
 
 
@@ -110,7 +110,7 @@ export async function updateProductAction(id: string, params: unknown) {
 
 
 
-  if (!id) return { error: 'Thiếu product ID' }
+  if (!id) return { error: 'Không thể xác định sản phẩm cần cập nhật. Vui lòng tải lại trang.' }
 
 
 
@@ -152,7 +152,6 @@ export async function deleteProductAction(params: unknown) {
       return { error: (err as Error).message }
   }
 }
-
 
 
 

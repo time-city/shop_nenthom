@@ -20,7 +20,7 @@ const cartInclude = {
 export const CartService = {
 
     async getOrCreateCart(userId?: string, sessionId?: string) {
-        if (!userId && !sessionId) throw new Error('Thiếu thông tin định danh')
+        if (!userId && !sessionId) throw new Error('Phiên mua sắm đã hết hạn. Vui lòng tải lại trang và thử lại.')
 
         const where = userId ? { user_id: userId } : { session_id: sessionId }
 
@@ -43,7 +43,7 @@ export const CartService = {
         const product = await prisma.product.findUnique({
             where: { id: data.product_id, is_active: true },
         })
-        if (!product) throw new Error('Sản phẩm không tồn tại')
+        if (!product) throw new Error('Sản phẩm này hiện không còn khả dụng. Vui lòng chọn sản phẩm khác.')
 
         // Check item đã có trong cart chưa (cùng product + options)
         const existingItem = await prisma.cartItem.findFirst({
@@ -85,7 +85,7 @@ export const CartService = {
         const item = await prisma.cartItem.findFirst({
             where: { id: itemId, cart_id: cartId },
         })
-        if (!item) throw new Error('Sản phẩm không tồn tại trong giỏ hàng')
+        if (!item) throw new Error('Không tìm thấy sản phẩm này trong giỏ hàng. Vui lòng tải lại trang.')
 
         return prisma.cartItem.update({
             where: { id: itemId },
@@ -97,7 +97,7 @@ export const CartService = {
         const item = await prisma.cartItem.findFirst({
             where: { id: itemId, cart_id: cartId },
         })
-        if (!item) throw new Error('Sản phẩm không tồn tại trong giỏ hàng')
+        if (!item) throw new Error('Không tìm thấy sản phẩm này trong giỏ hàng. Vui lòng tải lại trang.')
 
         return prisma.cartItem.delete({ where: { id: itemId } })
     },
