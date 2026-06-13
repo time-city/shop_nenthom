@@ -1,11 +1,25 @@
 import { z } from 'zod';
 
+const optionalPriceSchema = z.preprocess(
+    (value) => value === '' || value === null ? undefined : value,
+    z.coerce.number().min(0, 'Giá không hợp lệ').optional(),
+);
+
 export const productSchema = z.object({
     page: z.coerce.number().min(1).default(1),
     limit: z.coerce.number().min(1).max(100).default(12),
     categoryId: z.coerce.number().optional(),
+    maxPrice: optionalPriceSchema,
+    minPrice: optionalPriceSchema,
     search: z.string().optional(),
-});
+}).refine(
+    ({ minPrice, maxPrice }) =>
+        minPrice === undefined || maxPrice === undefined || minPrice <= maxPrice,
+    {
+        message: 'Giá tối thiểu không được lớn hơn giá tối đa',
+        path: ['minPrice'],
+    },
+);
 
 export type GetProductsParams = z.infer<typeof productSchema>;
 

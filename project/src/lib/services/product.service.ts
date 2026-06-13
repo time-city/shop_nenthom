@@ -4,7 +4,7 @@ import { GetProductsParams, CreateProductInput, UpdateProductInput } from "../va
 
 export const ProductService = {
     async getProducts(param: GetProductsParams) {
-        const { page, limit, categoryId, search } = param;
+        const { page, limit, categoryId, search, minPrice, maxPrice } = param;
         const skip = (page - 1) * limit;
 
         const where: Prisma.ProductWhereInput = {
@@ -12,6 +12,12 @@ export const ProductService = {
             ...(categoryId && { category_id: categoryId }),
             ...(search && {
                 name: { contains: search.trim(), mode: 'insensitive' },
+            }),
+            ...((minPrice !== undefined || maxPrice !== undefined) && {
+                base_price_cents: {
+                    ...(minPrice !== undefined && { gte: minPrice }),
+                    ...(maxPrice !== undefined && { lte: maxPrice }),
+                },
             }),
         };
 
