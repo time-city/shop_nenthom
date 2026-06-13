@@ -32,6 +32,7 @@ export default function ModalCategory({
   useEffect(() => {
     if (open) {
       setFormValues(initialFormValues);
+      setIsSubmitting(false);
     }
   }, [open]);
 
@@ -43,6 +44,8 @@ export default function ModalCategory({
   };
 
   const handleSave = async () => {
+    if (isSubmitting) return;
+
     const categoryName = formValues.name.trim();
 
     if (!categoryName) {
@@ -52,31 +55,32 @@ export default function ModalCategory({
 
     setIsSubmitting(true);
 
-    const result = await createCategoryAction({
-      name: categoryName,
-      description: formValues.description.trim() || undefined,
-    });
+    try {
+      const result = await createCategoryAction({
+        name: categoryName,
+        description: formValues.description.trim() || undefined,
+      });
 
-    if ("error" in result && result.error) {
-      toast.error(result.error);
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      if ("success" in result && result.success) {
+        toast.success("Đã thêm danh mục thành công");
+        await onSave?.();
+        setFormValues(initialFormValues);
+        onClose();
+      }
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    if ("success" in result && result.success) {
-      toast.success("Đã thêm danh mục thành công");
-      await onSave?.();
-      setFormValues(initialFormValues);
-      onClose();
-    }
-
-    setIsSubmitting(false);
   };
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={isSubmitting ? undefined : onClose}
       aria-labelledby="category-modal-title"
       aria-describedby="category-modal-description"
     >
@@ -93,6 +97,7 @@ export default function ModalCategory({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -134,6 +139,7 @@ export default function ModalCategory({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             className={styles.ghostButton}
           >
             Hủy

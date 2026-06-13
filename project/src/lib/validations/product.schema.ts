@@ -38,12 +38,12 @@ export const createProductSchema = z.object({
    is_active: z.boolean().default(true),
 });
 
+
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 
 export const updateProductSchema = createProductSchema.partial();
 
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
-
 
 export const deleteProductSchema = z.object({
    id: z.string().min(1, 'Không thể xác định sản phẩm cần xóa. Vui lòng tải lại trang.'),
@@ -59,5 +59,3 @@ export const customCandleProductSchema = z.object({
 
 
 export type CustomCandleProductInput = z.infer<typeof customCandleProductSchema>;
-
-

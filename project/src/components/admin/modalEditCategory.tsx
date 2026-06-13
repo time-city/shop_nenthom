@@ -33,6 +33,7 @@ export default function ModalEditCategory({
         description: category.description ?? "",
         name: category.name,
       });
+      setIsSubmitting(false);
     }
   }, [open, category]);
 
@@ -44,7 +45,8 @@ export default function ModalEditCategory({
   };
 
   const handleSave = async () => {
-    if (!category) return;
+    if (!category || isSubmitting) return;
+
     const categoryName = formValues.name.trim();
 
     if (!categoryName) {
@@ -54,30 +56,31 @@ export default function ModalEditCategory({
 
     setIsSubmitting(true);
 
-    const result = await updateCategoryAction(category.id, {
-      name: categoryName,
-      description: formValues.description.trim() || undefined,
-    });
+    try {
+      const result = await updateCategoryAction(category.id, {
+        name: categoryName,
+        description: formValues.description.trim() || undefined,
+      });
 
-    if ("error" in result && result.error) {
-      toast.error(result.error);
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      if ("success" in result && result.success) {
+        toast.success("Đã cập nhật danh mục thành công");
+        await onSave?.();
+        onClose();
+      }
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    if ("success" in result && result.success) {
-      toast.success("Đã cập nhật danh mục thành công");
-      await onSave?.();
-      onClose();
-    }
-
-    setIsSubmitting(false);
   };
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={isSubmitting ? undefined : onClose}
       aria-labelledby="edit-category-modal-title"
       aria-describedby="edit-category-modal-description"
     >
@@ -94,6 +97,7 @@ export default function ModalEditCategory({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -135,6 +139,7 @@ export default function ModalEditCategory({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             className={styles.ghostButton}
           >
             Hủy

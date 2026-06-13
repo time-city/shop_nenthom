@@ -16,17 +16,9 @@ async function requireAdmin() {
 
 export async function getProductsAction(params: Partial<GetProductsParams> = {}) {
   const parsed = productSchema.safeParse(params);
-
-
-
-
   if (!parsed.success) {
       return { error: parsed.error.issues[0].message };
   }
-
-
-
-
   try {
       const products = await ProductService.getProducts(parsed.data);
       return { success: true, ...products };
@@ -36,14 +28,8 @@ export async function getProductsAction(params: Partial<GetProductsParams> = {})
 }
 
 
-
-
 export async function getProductDetailsAction(id: string) {
   if (!id) return { error: 'Không thể mở sản phẩm này. Vui lòng chọn lại sản phẩm.' }
-
-
-
-
   try {
       const product = await ProductService.getProductDetail(id)
       return { success: true, data: product }
@@ -51,7 +37,6 @@ export async function getProductDetailsAction(id: string) {
       return { error: (err as Error).message }
   }
 }
-
 
 
 
@@ -82,16 +67,8 @@ try {
 export async function createProductAction(params: unknown) {
   const authError = await requireAdmin()
   if (authError) return authError
-
-
-
-
   const parsed = createProductSchema.safeParse(params)
   if (!parsed.success) return { error: parsed.error.issues[0].message }
-
-
-
-
   try {
       const product = await ProductService.createProduct(parsed.data)
       return { success: true, data: product }
@@ -106,21 +83,9 @@ export async function createProductAction(params: unknown) {
 export async function updateProductAction(id: string, params: unknown) {
   const authError = await requireAdmin()
   if (authError) return authError
-
-
-
-
   if (!id) return { error: 'Không thể xác định sản phẩm cần cập nhật. Vui lòng tải lại trang.' }
-
-
-
-
   const parsed = updateProductSchema.safeParse(params)
   if (!parsed.success) return { error: parsed.error.issues[0].message }
-
-
-
-
   try {
       const product = await ProductService.updateProduct(id, parsed.data)
       return { success: true, data: product }
@@ -135,16 +100,8 @@ export async function updateProductAction(id: string, params: unknown) {
 export async function deleteProductAction(params: unknown) {
   const authError = await requireAdmin()
   if (authError) return authError
-
-
-
-
   const parsed = deleteProductSchema.safeParse(params)
   if (!parsed.success) return { error: parsed.error.issues[0].message }
-
-
-
-
   try {
       const product = await ProductService.deleteProduct(parsed.data.id)
       return { success: true, data: product }
@@ -152,11 +109,4 @@ export async function deleteProductAction(params: unknown) {
       return { error: (err as Error).message }
   }
 }
-
-
-
-
-
-
-
 

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import ModalSupport from "../../../components/admin/modalSupport";
+import LoadingState from "../../../components/ui/loadingState";
 import type {
   AdminContactItemInterface,
   AdminContactsSuccessResponseInterface,
@@ -60,6 +61,7 @@ export default function SupportPage() {
   const [activeFilter, setActiveFilter] = useState<AdminSupportFilter>("all");
   const [contacts, setContacts] = useState<AdminSupportMessage[]>([]);
   const [isLoadingContacts, setIsLoadingContacts] = useState(true);
+  const [isMarkingReplied, setIsMarkingReplied] = useState(false);
   const [selectedContact, setSelectedContact] =
     useState<AdminSupportMessage | null>(null);
 
@@ -101,28 +103,36 @@ export default function SupportPage() {
   }, [activeFilter, contacts]);
 
   const markAsReplied = async (contactId: number | string) => {
-    // action-(cập nhật trạng thái liên hệ)
-    const result = await updateContactStatusAction({
-      id: String(contactId),
-      status: "REPLIED",
-    });
+    if (isMarkingReplied) return;
 
-    if ("error" in result && result.error) {
-      toast.error(result.error);
-      return;
+    setIsMarkingReplied(true);
+
+    try {
+      // action-(cập nhật trạng thái liên hệ)
+      const result = await updateContactStatusAction({
+        id: String(contactId),
+        status: "REPLIED",
+      });
+
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success("Đã đánh dấu phản hồi");
+      setContacts((currentContacts) =>
+        currentContacts.map((contact) =>
+          contact.id === contactId ? { ...contact, status: "replied" } : contact,
+        ),
+      );
+      setSelectedContact((currentContact) =>
+        currentContact?.id === contactId
+          ? { ...currentContact, status: "replied" }
+          : currentContact,
+      );
+    } finally {
+      setIsMarkingReplied(false);
     }
-
-    toast.success("Đã đánh dấu phản hồi");
-    setContacts((currentContacts) =>
-      currentContacts.map((contact) =>
-        contact.id === contactId ? { ...contact, status: "replied" } : contact,
-      ),
-    );
-    setSelectedContact((currentContact) =>
-      currentContact?.id === contactId
-        ? { ...currentContact, status: "replied" }
-        : currentContact,
-    );
   };
 
   return (
@@ -165,6 +175,7 @@ export default function SupportPage() {
                   activeFilter === filter.value ? "active" : ""
                 }`}
                 type="button"
+                disabled={isLoadingContacts}
                 onClick={() => setActiveFilter(filter.value as AdminSupportFilter)}
               >
                 {filter.label}
@@ -191,11 +202,8 @@ export default function SupportPage() {
                 <tbody>
                   {isLoadingContacts ? (
                     <tr>
-                      <td
-                        colSpan={5}
-                        className="px-5 py-8 text-center text-sm text-[#6B4C35]"
-                      >
-                        Đang tải tin nhắn hỗ trợ...
+                      <td colSpan={5} className="px-5 py-5">
+                        <LoadingState label="Đang tải tin nhắn hỗ trợ..." />
                       </td>
                     </tr>
                   ) : null}
@@ -252,6 +260,7 @@ export default function SupportPage() {
       <ModalSupport
         open={Boolean(selectedContact)}
         contact={selectedContact}
+        isMarkingReplied={isMarkingReplied}
         onClose={() => setSelectedContact(null)}
         onMarkReplied={markAsReplied}
       />

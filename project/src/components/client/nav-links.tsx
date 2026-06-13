@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, type MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import type { ClientNavLinksProps } from "../../lib/types/client";
 
 /**
@@ -14,6 +14,47 @@ export default function NavLinks({
   linkClassName,
 }: ClientNavLinksProps) {
   const pathname = usePathname();
+  const [activeSection, setActiveSection] = useState<string>("home");
+
+  // Theo dõi scroll để xác định section đang hiển thị (scroll spy)
+  useEffect(() => {
+    if (pathname !== "/") return;
+
+    const sections = ["home", "collection", "custom", "story", "contact"];
+    const sectionElements = sections
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    const observerOptions = {
+      root: null, // viewport
+      rootMargin: "-30% 0px -60% 0px", // Kích hoạt khi mục nằm ở giữa khung nhìn
+      threshold: 0,
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    sectionElements.forEach((el) => observer.observe(el));
+
+    // Fallback khi cuộn lên đầu trang
+    const handleScroll = () => {
+      if (window.scrollY < 80) {
+        setActiveSection("home");
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [pathname]);
 
   // Xử lý scroll khi navigate từ trang khác về "/#hash"
   useEffect(() => {
@@ -44,6 +85,7 @@ export default function NavLinks({
         el.scrollIntoView({ behavior: "smooth", block: "start" });
         // Cập nhật URL mà không reload
         window.history.pushState(null, "", `/#${hash}`);
+        setActiveSection(hash);
       }
     }
     // Nếu ở trang khác → để browser navigate bình thường (về / rồi scroll)
@@ -51,17 +93,25 @@ export default function NavLinks({
 
   return (
     <ul className={className}>
-      {links.map((link) => (
-        <li key={link.href}>
-          <a
-            href={link.href}
-            onClick={(e) => handleClick(e, link.href)}
-            className={linkClassName}
-          >
-            {link.label}
-          </a>
-        </li>
-      ))}
+      {links.map((link) => {
+        const hash = link.href.split("#")[1];
+        const isActive = pathname === "/" && activeSection === hash;
+
+        return (
+          <li key={link.href}>
+            <a
+              href={link.href}
+              onClick={(e) => handleClick(e, link.href)}
+              className={`${linkClassName} ${
+                isActive ? "text-[#f5f0e8] !opacity-100 after:!w-full" : ""
+              }`}
+            >
+              {link.label}
+            </a>
+          </li>
+        );
+      })}
     </ul>
   );
 }
+

@@ -6,6 +6,7 @@ import { getProductDetailsAction } from "../../lib/action/product.action";
 import DetailCardProduct from "./detailCardProduct";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
+import LoadingState from "../ui/loadingState";
 import type {
   ClientProductDetailDataInterface,
   ClientProductDetailInterface,
@@ -78,7 +79,10 @@ export default function DetailCardModal({
       <Modal open={true} onClose={handleClose}>
         <Box className={styles.loadingShell}>
           <div className="flex h-32 w-64 items-center justify-center rounded-2xl bg-[#F8F0E4] shadow-2xl">
-            <p className="font-serif text-lg text-[#6B1218]">Đang tải...</p>
+            <LoadingState
+              label="Đang tải chi tiết sản phẩm..."
+              className="h-full w-full border-0 bg-transparent shadow-none"
+            />
           </div>
         </Box>
       </Modal>

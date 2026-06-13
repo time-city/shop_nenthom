@@ -21,6 +21,7 @@ export default function ModalIngredient({
   const [price, setPrice] = useState("");
   const [hex, setHex] = useState("#F5E6D3");
   const [inStock, setInStock] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [weightGram, setWeightGram] = useState("");
   const nameLabel =
     ingredientType === "color"
@@ -40,29 +41,38 @@ export default function ModalIngredient({
     setPrice("");
     setHex("#F5E6D3");
     setInStock(true);
+    setIsSaving(false);
     setWeightGram("");
   }, [open, ingredientType]);
 
   const handleSave = async () => {
-    const shouldClose = await onSave?.({
-      hex,
-      in_stock: inStock,
-      is_active: true,
-      name: name.trim(),
-      price_extra_cents: Number(price) || 0,
-      stock: inStock ? 1 : 0,
-      weight_gram: Number(weightGram) || 0,
-    });
+    if (isSaving) return;
 
-    if (shouldClose === false) return;
+    setIsSaving(true);
 
-    onClose();
+    try {
+      const shouldClose = await onSave?.({
+        hex,
+        in_stock: inStock,
+        is_active: true,
+        name: name.trim(),
+        price_extra_cents: Number(price) || 0,
+        stock: inStock ? 1 : 0,
+        weight_gram: Number(weightGram) || 0,
+      });
+
+      if (shouldClose === false) return;
+
+      onClose();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={isSaving ? undefined : onClose}
       aria-labelledby="ingredient-modal-title"
       aria-describedby="ingredient-modal-description"
     >
@@ -79,6 +89,7 @@ export default function ModalIngredient({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSaving}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -179,6 +190,7 @@ export default function ModalIngredient({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSaving}
             className={styles.ghostButton}
           >
             Hủy
@@ -187,9 +199,10 @@ export default function ModalIngredient({
             type="button"
             variant="contained"
             onClick={handleSave}
+            disabled={isSaving}
             className={styles.primaryButton}
           >
-            Lưu
+            {isSaving ? "Đang lưu..." : "Lưu"}
           </Button>
         </Box>
       </Box>

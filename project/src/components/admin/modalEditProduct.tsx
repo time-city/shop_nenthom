@@ -100,6 +100,7 @@ export default function ModalEditProduct({
       is_active: product.is_active,
       name: product.name,
     });
+    setIsSubmitting(false);
 
     const loadCategories = async () => {
       setIsLoadingCategories(true);
@@ -136,6 +137,8 @@ export default function ModalEditProduct({
   };
 
   const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (isSubmitting) return;
+
     const file = event.target.files?.[0];
 
     if (!file) return;
@@ -167,7 +170,7 @@ export default function ModalEditProduct({
   };
 
   const handleSave = async () => {
-    if (!product) return;
+    if (!product || isSubmitting) return;
 
     const productName = formValues.name.trim();
     const productPrice = Number(formValues.base_price_cents);
@@ -191,35 +194,36 @@ export default function ModalEditProduct({
 
     setIsSubmitting(true);
 
-    // action-(cập nhật sản phẩm)
-    const result = await updateProductAction(product.id, {
-      base_price_cents: productPrice,
-      category_id: categoryId,
-      description: formValues.description.trim() || undefined,
-      ...(imageDataUrl ? { images: [imageDataUrl] } : {}),
-      is_active: formValues.is_active,
-      name: productName,
-    });
+    try {
+      // action-(cập nhật sản phẩm)
+      const result = await updateProductAction(product.id, {
+        base_price_cents: productPrice,
+        category_id: categoryId,
+        description: formValues.description.trim() || undefined,
+        ...(imageDataUrl ? { images: [imageDataUrl] } : {}),
+        is_active: formValues.is_active,
+        name: productName,
+      });
 
-    if ("error" in result && result.error) {
-      toast.error(result.error);
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      if ("success" in result && result.success) {
+        toast.success("Đã cập nhật sản phẩm");
+        await onSave?.();
+        onClose();
+      }
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    if ("success" in result && result.success) {
-      toast.success("Đã cập nhật sản phẩm");
-      await onSave?.();
-      onClose();
-    }
-
-    setIsSubmitting(false);
   };
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={isSubmitting ? undefined : onClose}
       aria-labelledby="edit-product-modal-title"
       aria-describedby="edit-product-modal-description"
     >
@@ -236,6 +240,7 @@ export default function ModalEditProduct({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -348,6 +353,7 @@ export default function ModalEditProduct({
                 accept="image/*"
                 hidden
                 onChange={handleImageChange}
+                disabled={isSubmitting}
               />
             </label>
           </Box>
@@ -373,6 +379,7 @@ export default function ModalEditProduct({
           <Button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             className={styles.ghostButton}
           >
             Hủy

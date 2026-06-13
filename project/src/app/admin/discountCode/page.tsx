@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import ModalDeleteProduct from "../../../components/admin/modalDeleteProduct";
 import ModalDiscount from "../../../components/admin/modalDiscount";
 import ModalEditDiscount from "../../../components/admin/modalEditDiscount";
+import LoadingState from "../../../components/ui/loadingState";
 import { AdminEditButton } from "../../../components/ui/actionButtons";
 import { disableDiscountAction, getDiscountsAction } from "../../../lib/action/discount.action";
 import type {
@@ -250,8 +251,8 @@ export default function DiscountCodePage() {
 
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-sm text-[#6B4C35]">
-                      Đang tải danh sách mã giảm giá...
+                    <td colSpan={7} className="px-5 py-5">
+                      <LoadingState label="Đang tải danh sách mã giảm giá..." />
                     </td>
                   </tr>
                 ) : null}
