@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useMemo, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import { logoutUser } from "../../../lib/action/auth.action";
 import type {
   ClientProfileUserData,
@@ -131,6 +131,7 @@ function Field({
 export function ProfilePageContent({
   initialUser,
 }: ProfilePageContentProps) {
+  const { toast } = useToast();
   const router = useRouter();
   const [user, setUser] = useState<Required<ClientProfileUserData>>(
     initialUser ?? defaultUser,
@@ -145,7 +146,7 @@ export function ProfilePageContent({
     event.preventDefault();
 
     const message =
-      "Chưa có action cập nhật profile trong auth.action.ts để lưu thay đổi";
+      "Cập nhật profile thất bại";
     toast.info(message);
   };
 

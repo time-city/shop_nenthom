@@ -2,7 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import { getCurrentUser } from "../../lib/action/auth.action";
 import { submitContactAction } from "../../lib/action/contact.action";
 import type { ClientContactFormValues } from "../../lib/types/client";
@@ -15,6 +15,7 @@ const initialValues: ClientContactFormValues = {
 };
 
 export default function ModalContact() {
+  const { toast } = useToast();
   const [formValues, setFormValues] =
     useState<ClientContactFormValues>(initialValues);
   const [isSubmitting, setIsSubmitting] = useState(false);

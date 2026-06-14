@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import { z } from "zod";
 import { loginUser } from "../../lib/action/auth.action";
 import type { SignInValues } from "../../lib/types/client";
@@ -59,6 +59,7 @@ const validateSignIn = (values: SignInValues) => {
 };
 
 export default function FormSignIn() {
+  const { toast } = useToast();
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [formInitialValues, setFormInitialValues] =

@@ -3,7 +3,6 @@ import { Cormorant_Garamond, DM_Sans, Geist_Mono } from "next/font/google";
 import ToastProvider from "../components/ui/toast-provider";
 import AosProvider from "../components/ui/aos-provider";
 import { getCurrentUser } from "../lib/action/auth.action";
-import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
 
@@ -51,14 +50,14 @@ export default async function RootLayout({
        className="min-h-full flex flex-col"
        data-role={currentUser?.role ?? "GUEST"}
      >
-       {children}
-       <ToastProvider />
-       <AosProvider />
+       <ToastProvider>
+         {children}
+         <AosProvider />
+       </ToastProvider>
      </body>
    </html>
  );
 }
-
 
 
 

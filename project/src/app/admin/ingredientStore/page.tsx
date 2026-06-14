@@ -9,7 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import ModalDeleteConfirm from "../../../components/admin/modalDeleteConfirm";
 import ModalEditIngre from "../../../components/admin/modalEditIngre";
 import ModalIngredient from "../../../components/admin/modalIngredient";
@@ -129,6 +129,7 @@ const deleteOptionTypeMap: Record<AdminIngredientType, AdminDeleteOptionType> = 
 };
 
 export default function IngredientStorePage() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<AdminIngredientType>("scent");
   const [modalType, setModalType] = useState<AdminIngredientType | null>(null);
   const [editTarget, setEditTarget] = useState<AdminIngredientEditTarget | null>(null);
@@ -180,7 +181,7 @@ export default function IngredientStorePage() {
     };
 
     void loadOptions();
-  }, []);
+  }, [toast]);
 
   const openEditModal = (type: AdminIngredientType, item: AdminIngredientItem) => {
     setEditTarget({ item, type });

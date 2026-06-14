@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import ModalCategory from "../../../components/admin/modalCategory";
 import ModalDeleteConfirm from "../../../components/admin/modalDeleteConfirm";
 import ModalEditCategory from "../../../components/admin/modalEditCategory";
@@ -21,6 +21,7 @@ import {
 import styles from "../../../styles/adminCategoryManagement.module.css";
 
 export default function CategoryManagementPage() {
+  const { toast } = useToast();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editCategory, setEditCategory] = useState<AdminProductCategoryInterface | null>(null);
   const [deleteCategory, setDeleteCategory] = useState<AdminProductCategoryInterface | null>(null);
@@ -48,7 +49,7 @@ export default function CategoryManagementPage() {
     }
 
     setIsLoading(false);
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     void loadCategories();
