@@ -14,6 +14,7 @@ export default function CartItem({
   item,
   onQuantityChange,
   onRemove,
+  quantityDisabled = false,
 }: CartItemProps) {
   const quantity = Math.max(item.quantity, 1);
   const itemTotal = item.price * quantity;
@@ -60,7 +61,7 @@ export default function CartItem({
           <button
             type="button"
             onClick={() => onQuantityChange(index, -1)}
-            disabled={disabled}
+            disabled={quantityDisabled}
             className="flex size-8 items-center justify-center rounded-full border border-[#6B1218]/20 text-lg text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-45"
             aria-label="Giảm số lượng"
           >
@@ -72,7 +73,7 @@ export default function CartItem({
           <button
             type="button"
             onClick={() => onQuantityChange(index, 1)}
-            disabled={disabled}
+            disabled={quantityDisabled}
             className="flex size-8 items-center justify-center rounded-full border border-[#6B1218]/20 text-lg text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-45"
             aria-label="Tăng số lượng"
           >

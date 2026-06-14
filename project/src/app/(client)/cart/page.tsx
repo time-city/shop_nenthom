@@ -97,6 +97,13 @@ export default function CartPage() {
       return;
     }
 
+    const previousCart = cart;
+
+    setCart((currentCart) =>
+      currentCart.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, quantity: nextQuantity } : item,
+      ),
+    );
     setIsMutatingCart(true);
 
     try {
@@ -107,11 +114,10 @@ export default function CartPage() {
       });
 
       if ("error" in result && result.error) {
+        setCart(previousCart);
         toast.error(result.error);
         return;
       }
-
-      await loadCart();
     } finally {
       setIsMutatingCart(false);
     }

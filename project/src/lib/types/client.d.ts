@@ -17,6 +17,7 @@ export type CardProductProps = {
   candleColor?: string;
   href: string;
   id: number | string;
+  imageUrl?: string;
   index?: number;
   name: string;
   price: number | string;
@@ -149,6 +150,7 @@ export type CartItemProps = {
   item: ClientCartItem;
   onQuantityChange: (index: number, change: number) => void;
   onRemove: (index: number) => void;
+  quantityDisabled?: boolean;
 };
 
 /** Props khối tổng tóm tắt đơn ở trang giỏ hàng. */
