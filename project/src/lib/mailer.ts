@@ -1,10 +1,5 @@
 import nodemailer from "nodemailer";
-
-type SendResetPasswordEmailParams = {
-  email: string;
-  otp: string;
-  resetUrl: string;
-};
+import type { SendOrderBillEmailParams, SendResetPasswordEmailParams } from "./types/email";
 
 function getMailConfig() {
   const user = process.env.SMTP_USER ?? process.env.GMAIL_USER;
@@ -24,11 +19,7 @@ function getMailConfig() {
   return { from, host, pass, port, secure, user };
 }
 
-export async function sendResetPasswordEmail({
-  email,
-  otp,
-  resetUrl,
-}: SendResetPasswordEmailParams) {
+function createMailTransporter() {
   const { from, host, pass, port, secure, user } = getMailConfig();
   const transporter = nodemailer.createTransport({
     auth: {
@@ -39,6 +30,26 @@ export async function sendResetPasswordEmail({
     port,
     secure,
   });
+
+  return { from, transporter };
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("vi-VN").format(value) + "đ";
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// Gửi email OTP đặt lại mật khẩu.
+export async function sendResetPasswordEmail({ email, otp, resetUrl }: SendResetPasswordEmailParams) {
+  const { from, transporter } = createMailTransporter();
 
   await transporter.sendMail({
     from,
@@ -56,5 +67,78 @@ export async function sendResetPasswordEmail({
     `,
     subject: "Đặt lại mật khẩu ChamCham",
     to: email,
+  });
+}
+
+// Gửi bill đơn hàng cho cả khách vãng lai và user đã đăng nhập sau khi tạo đơn thành công.
+export async function sendOrderBillEmail(params: SendOrderBillEmailParams) {
+  const { from, transporter } = createMailTransporter();
+  const paymentText =
+    params.paymentMethod === "cod"
+      ? "Thanh toán khi nhận hàng"
+      : "Chuyển khoản ngân hàng";
+  const itemRows = params.items
+    .map((item) => {
+      const optionText = [item.scent, item.size, item.color, item.pack]
+        .filter(Boolean)
+        .map((value) => escapeHtml(String(value)))
+        .join(", ");
+
+      return `
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #eadfd2;">
+            <div style="font-weight: 700; color: #2C1810;">${escapeHtml(item.name)}</div>
+            <div style="font-size: 13px; color: #6B4C35;">${optionText}</div>
+            <div style="font-size: 13px; color: #6B4C35;">Số lượng: ${item.quantity}</div>
+          </td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #eadfd2; text-align: right; white-space: nowrap;">
+            ${formatCurrency(item.price * item.quantity)}
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  await transporter.sendMail({
+    from,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #2C1810; background: #F8F0E4; padding: 24px;">
+        <div style="max-width: 640px; margin: 0 auto; background: #fffaf3; border: 1px solid #eadfd2; padding: 28px;">
+          <h2 style="margin: 0 0 8px; color: #6B1218;">ChamCham đã nhận đơn hàng của bạn</h2>
+          <p style="margin: 0 0 20px;">Cảm ơn ${escapeHtml(params.fullname)} đã đặt hàng. Dưới đây là thông tin đơn hàng của bạn.</p>
+
+          <div style="background: #F8F0E4; padding: 16px; margin-bottom: 20px;">
+            <div><strong>Mã đơn hàng:</strong> #${escapeHtml(params.orderNumber)}</div>
+            <div><strong>Phương thức thanh toán:</strong> ${paymentText}</div>
+            <div><strong>Người nhận:</strong> ${escapeHtml(params.fullname)}</div>
+            <div><strong>Số điện thoại:</strong> ${escapeHtml(params.phone)}</div>
+            <div><strong>Địa chỉ:</strong> ${escapeHtml(params.address)}, ${escapeHtml(params.city)}</div>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse;">
+            <tbody>${itemRows}</tbody>
+          </table>
+
+          <div style="margin-top: 20px; border-top: 2px solid #eadfd2; padding-top: 16px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span>Tạm tính:</span>
+              <strong>${formatCurrency(params.subtotal)}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Phí vận chuyển:</span>
+              <strong>${formatCurrency(params.shipping)}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 18px; color: #6B1218; margin-top: 8px;">
+              <span>Tổng cộng:</span>
+              <strong>${formatCurrency(params.total)}</strong>
+            </div>
+          </div>
+
+          <p style="margin-top: 24px; color: #6B4C35;">ChamCham sẽ liên hệ nếu cần xác nhận thêm thông tin giao hàng.</p>
+        </div>
+      </div>
+    `,
+    subject: `Hóa đơn đơn hàng #${params.orderNumber}`,
+    to: params.email,
   });
 }
