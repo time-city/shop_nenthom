@@ -139,6 +139,7 @@ model Product {
   description      String?  @db.Text
   images           Json     // Lưu mảng chuỗi URL hình ảnh
   is_active        Boolean  @default(true)
+  is_custom        Boolean  @default(false)
   created_at       DateTime @default(now())
 
   // Relations
