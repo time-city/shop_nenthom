@@ -11,6 +11,7 @@ export const productSchema = z.object({
    page: z.coerce.number().min(1).default(1),
    limit: z.coerce.number().min(1).max(100).default(12),
    categoryId: z.coerce.number().optional(),
+   includeCustom: z.coerce.boolean().default(false),
    maxPrice: optionalPriceSchema,
    minPrice: optionalPriceSchema,
    search: z.string().optional(),
