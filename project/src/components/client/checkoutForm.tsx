@@ -13,7 +13,6 @@ const inputClass =
   "rounded-xl border-[1.5px] border-[#6B4C35]/20 bg-white px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#6B4C35]/35 focus:border-[#6B1218] focus:ring-4 focus:ring-[#6B1218]/10";
 
 const initialCheckoutFormValues: CheckoutFormValues = {
-  company: "",
   email: "",
   fullname: "",
   phone: "",
@@ -58,7 +57,22 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await onComplete();
+    const formData = new FormData(event.currentTarget);
+    const address = (formData.get("address") as string) || "";
+    const city = (formData.get("city") as string) || "";
+    const zip = (formData.get("zip") as string) || "";
+    const note = (formData.get("note") as string) || "";
+
+    await onComplete({
+      address,
+      city,
+      email: formValues.email,
+      fullname: formValues.fullname,
+      note,
+      paymentMethod: payment,
+      phone: formValues.phone,
+      zip,
+    });
   };
 
   return (
@@ -110,14 +124,6 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
                 className={inputClass}
               />
             </label>
-            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35]">
-              Công Ty (Tùy Chọn)
-              <input
-                value={formValues.company}
-                onChange={(event) => updateField("company", event.target.value)}
-                className={inputClass}
-              />
-            </label>
           </div>
         </section>
 
@@ -126,25 +132,27 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
             Địa Chỉ Giao Hàng
           </h2>
           <div className="grid gap-5 md:grid-cols-2">
-            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35] md:col-span-2">
+             <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35] md:col-span-2">
               Địa Chỉ
               <input
                 required
+                name="address"
                 placeholder="Số nhà, tên đường..."
                 className={inputClass}
               />
             </label>
             <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35]">
               Thành Phố
-              <input required className={inputClass} />
+              <input required name="city" className={inputClass} />
             </label>
             <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35]">
               Mã Bưu Chính
-              <input className={inputClass} />
+              <input name="zip" className={inputClass} />
             </label>
             <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35] md:col-span-2">
               Ghi Chú Đơn Hàng (Tùy Chọn)
               <textarea
+                name="note"
                 placeholder="Hướng dẫn giao hàng, yêu cầu đặc biệt..."
                 className={`${inputClass} min-h-24 resize-y`}
               />
@@ -172,7 +180,7 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
                 onChange={() => setPayment("cod")}
                 className="sr-only"
               />
-              🏠 COD&nbsp;&nbsp; Thanh Toán Khi Nhận Hàng
+              Thanh Toán Khi Nhận Hàng
             </label>
             <label
               className={`relative cursor-pointer rounded-xl border-[1.5px] px-5 py-4 text-center text-sm transition ${
@@ -189,7 +197,7 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
                 onChange={() => setPayment("bank")}
                 className="sr-only"
               />
-              🏦 Chuyển khoản&nbsp;&nbsp; Ngân Hàng
+              Chuyển Khoản Ngân Hàng
             </label>
           </div>
 

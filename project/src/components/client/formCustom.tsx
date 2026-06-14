@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
-import type { ClientProductOptionItemInterface } from "../../interface/clientInterface";
-import { addToCartAction } from "../../lib/action/cart.action";
-import { getCustomCandleProductAction } from "../../lib/action/product.action";
-import type { FormCustomProps } from "../../lib/types/client";
 
+import { useEffect, useMemo, useState } from "react";
+import type { ClientProductOptionItemInterface } from "../../interface/clientInterface";
+import { useToast } from "@/src/components/ui/toast-provider";
+import { addToCartAction } from "../../lib/action/cart.action";
+import type { FormCustomProps } from "../../lib/types/client";
 
 const customBasePrice = 189000;
 const emptyOptions: ClientProductOptionItemInterface[] = [];
@@ -15,8 +14,12 @@ const formatPrice = (price: number) =>
     new Intl.NumberFormat("vi-VN").format(price) + "đ";
 
 
+
+
 const getSizeLabel = (size: ClientProductOptionItemInterface) =>
     size.weight_gram ? `${size.name} — ${size.weight_gram}g` : size.name;
+
+
 
 
 const getScentDescription = (scent?: ClientProductOptionItemInterface) =>
@@ -24,15 +27,25 @@ const getScentDescription = (scent?: ClientProductOptionItemInterface) =>
         ? `Hương ${scent.name} được chọn cho nến tùy chỉnh của bạn`
         : "Chưa chọn hương thơm";
 
+
+
+
+
+
+
+
 const getColorHex = (color?: ClientProductOptionItemInterface) =>
     color?.hex_code ?? "#F5E6D3";
 
 
 
 
+
+
+
+
 export default function FormCustom({
     basePrice = customBasePrice,
-    baseProductId,
     options,
 }: FormCustomProps) {
     const { toast } = useToast();
@@ -42,13 +55,13 @@ export default function FormCustom({
     const packOptions = options?.packagings ?? emptyOptions;
     const toppingOptions = options?.toppings ?? emptyOptions;
 
+
     const [selectedScentId, setSelectedScentId] = useState(scentOptions[0]?.id ?? 0);
     const [selectedColorId, setSelectedColorId] = useState(colorOptions[0]?.id ?? 0);
     const [selectedSizeId, setSelectedSizeId] = useState(sizeOptions[0]?.id ?? 0);
     const [selectedPackId, setSelectedPackId] = useState(packOptions[0]?.id ?? 0);
     const [selectedToppings, setSelectedToppings] = useState<number[]>([]);
-    const [currentBasePrice, setCurrentBasePrice] = useState(basePrice);
-    const [currentBaseProductId, setCurrentBaseProductId] = useState(baseProductId);
+
 
     const selectedScent =
         scentOptions.find((item) => item.id === selectedScentId) ?? scentOptions[0];
@@ -60,26 +73,27 @@ export default function FormCustom({
         packOptions.find((item) => item.id === selectedPackId) ?? packOptions[0];
     const selectedColorHex = getColorHex(selectedColor);
 
-
-
-
     useEffect(() => {
         const frame = window.requestAnimationFrame(() => {
             if (!scentOptions.some((item) => item.id === selectedScentId)) {
                 setSelectedScentId(scentOptions[0]?.id ?? 0);
             }
 
+
             if (!colorOptions.some((item) => item.id === selectedColorId)) {
                 setSelectedColorId(colorOptions[0]?.id ?? 0);
             }
+
 
             if (!sizeOptions.some((item) => item.id === selectedSizeId)) {
                 setSelectedSizeId(sizeOptions[0]?.id ?? 0);
             }
 
+
             if (!packOptions.some((item) => item.id === selectedPackId)) {
                 setSelectedPackId(packOptions[0]?.id ?? 0);
             }
+
 
             setSelectedToppings((currentToppings) => {
                 const nextToppings = currentToppings.filter((id) =>
@@ -89,11 +103,17 @@ export default function FormCustom({
 
 
 
+
+
+
+
                 return nextToppings.length === currentToppings.length
                     ? currentToppings
                     : nextToppings;
             });
         });
+
+
 
 
         return () => window.cancelAnimationFrame(frame);
@@ -109,6 +129,13 @@ export default function FormCustom({
         toppingOptions,
     ]);
 
+
+
+
+
+
+
+
     const toppingTotal = useMemo(
         () =>
             toppingOptions
@@ -117,12 +144,22 @@ export default function FormCustom({
         [selectedToppings, toppingOptions],
     );
 
+
+
+
     const optionTotal =
         (selectedScent?.price_extra_cents ?? 0) +
         (selectedColor?.price_extra_cents ?? 0) +
         (selectedSize?.price_extra_cents ?? 0) +
         (selectedPack?.price_extra_cents ?? 0);
-    const totalPrice = currentBasePrice + optionTotal + toppingTotal;
+    const totalPrice = basePrice + optionTotal + toppingTotal;
+
+
+
+
+
+
+
 
     const toggleTopping = (id: number) => {
         setSelectedToppings((current) =>
@@ -132,51 +169,42 @@ export default function FormCustom({
         );
     };
 
+
+
+
+
+
+
+
     const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+
 
 
     const handleAddToCart = async () => {
         if (isAddingToCart) return;
+
+
+
+
         setIsAddingToCart(true);
 
+
+
+
         try {
-            let productId = currentBaseProductId;
-
-
-            if (!productId) {
-                // action-(lấy hoặc tạo sản phẩm nền nến tùy chỉnh)
-                const customProductResult = await getCustomCandleProductAction();
-
-
-                if ("error" in customProductResult && customProductResult.error) {
-                    toast.error(customProductResult.error);
-                    return;
-                }
-
-
-                if ("success" in customProductResult && customProductResult.success) {
-                    productId = customProductResult.data.id;
-                    setCurrentBaseProductId(productId);
-                    setCurrentBasePrice(customProductResult.data.base_price_cents);
-                }
-            }
-
-
-            if (!productId) {
-                toast.error("Không thể chuẩn bị sản phẩm tùy chỉnh");
-                return;
-            }
-
             // action-(thêm nến tùy chỉnh vào giỏ hàng)
             const result = await addToCartAction({
                 color_id: selectedColor?.id,
                 pack_id: selectedPack?.id,
-                product_id: productId,
                 quantity: 1,
                 scent_id: selectedScent?.id,
                 size_id: selectedSize?.id,
                 toppings_json: selectedToppings,
             });
+
+
+
 
             if ("error" in result && result.error) {
                 toast.error(result.error);
@@ -184,11 +212,19 @@ export default function FormCustom({
             }
 
 
+
+
             toast.success("Đã thêm nến tùy chỉnh vào giỏ hàng");
         } finally {
             setIsAddingToCart(false);
         }
     };
+
+
+
+
+
+
 
 
     return (
@@ -252,6 +288,10 @@ export default function FormCustom({
                                 {colorOptions.map((color) => {
                                     const active = selectedColor?.id === color.id;
                                     const colorHex = getColorHex(color);
+
+
+
+
 
 
 
@@ -369,6 +409,10 @@ export default function FormCustom({
 
 
 
+
+
+
+
                     <div>
                         <div className="preview-box flex min-h-[480px] flex-col items-start rounded-2xl bg-[#F5F0E8] p-6 text-left text-[#2C1810] md:p-7 lg:p-8">
                             <div
@@ -412,6 +456,10 @@ export default function FormCustom({
 
 
 
+
+
+
+
                             <div className="preview-toppings my-2 w-full" id="preview-toppings">
                                 <div className="topping-list flex flex-wrap gap-2" id="topping-list">
                                     {selectedToppings.length === 0 ? (
@@ -436,7 +484,15 @@ export default function FormCustom({
 
 
 
+
+
+
+
                             <div className="preview-divider my-3 h-px w-full bg-[#6B1218]/15" />
+
+
+
+
 
 
 
@@ -447,7 +503,7 @@ export default function FormCustom({
                             >
                                 <div className="price-line flex justify-between gap-3 leading-6">
                                     <span>Nến cơ bản:</span>
-                                    <span>{formatPrice(currentBasePrice)}</span>
+                                    <span>{formatPrice(basePrice)}</span>
                                 </div>
                                 {optionTotal > 0 ? (
                                     <div className="price-line flex justify-between gap-3 leading-6">
@@ -489,7 +545,6 @@ export default function FormCustom({
                                 </div>
                             </div>
                         </div>
-
                         <div className="price-row mt-8 flex flex-col gap-4 border-t border-[#F5F0E8]/20 pt-6 sm:flex-row sm:items-center sm:justify-between">
                             <button
                                 type="button"
@@ -506,8 +561,4 @@ export default function FormCustom({
         </section>
     );
 }
-
-
-
-
 
