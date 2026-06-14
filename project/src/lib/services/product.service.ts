@@ -2,10 +2,6 @@ import { Prisma } from "@prisma/client";
 import prisma from "../prisma";
 import { GetProductsParams, CreateProductInput, UpdateProductInput } from "../validations/product.schema";
 
-const CUSTOM_CANDLE_CATEGORY_NAME = "Nến Tùy Chỉnh";
-const CUSTOM_CANDLE_PRODUCT_NAME = "Nến Tùy Chỉnh";
-const CUSTOM_CANDLE_BASE_PRICE_CENTS = 189000;
-
 export const ProductService = {
     async getProducts(param: GetProductsParams) {
         const { page, limit, categoryId, includeCustom, search, minPrice, maxPrice } = param;
@@ -24,8 +20,6 @@ export const ProductService = {
                 },
             }),
         };
-
-
         const [products, total] = await prisma.$transaction([
             prisma.product.findMany({
                 where,
@@ -96,7 +90,7 @@ export const ProductService = {
 
 
     async getCustomCandleProduct() {
-        const existingProduct = await prisma.product.findFirst({
+        const product = await prisma.product.findFirst({
             where: {
                 is_active: true,
                 is_custom: true,
@@ -115,53 +109,12 @@ export const ProductService = {
                 },
             },
         });
-        if (existingProduct) {
-            return existingProduct;
+
+        if (!product) {
+            throw new Error('Nến tùy chỉnh hiện chưa sẵn sàng. Vui lòng thử lại sau.');
         }
 
-        const category = await prisma.category.findFirst({
-            where: {
-                is_active: true,
-                name: {
-                    equals: CUSTOM_CANDLE_CATEGORY_NAME,
-                    mode: "insensitive",
-                },
-            },
-            select: {
-                id: true,
-            },
-        }) ?? await prisma.category.create({
-            data: {
-                name: CUSTOM_CANDLE_CATEGORY_NAME,
-            },
-            select: {
-                id: true,
-            },
-        });
-
-        return prisma.product.create({
-            data: {
-                base_price_cents: CUSTOM_CANDLE_BASE_PRICE_CENTS,
-                category_id: category.id,
-                images: [],
-                is_active: true,
-                is_custom: true,
-                name: CUSTOM_CANDLE_PRODUCT_NAME,
-            },
-            select: {
-                id: true,
-                name: true,
-                base_price_cents: true,
-                is_custom: true,
-                category: {
-                    select: {
-                        id: true,
-                        name: true,
-                        description: true,
-                    },
-                },
-            },
-        });
+        return product;
     },
 
 
