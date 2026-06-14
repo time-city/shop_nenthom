@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import CardProduct from "../../../components/client/cardProduct";
 import DetailCardModal from "../../../components/client/detailCardModal";
 import type {
+  ClientProductCategoryInterface,
   ClientProductsSuccessResponseInterface,
 } from "../../../interface/clientInterface";
 import { getCurrentUser } from "../../../lib/action/auth.action";
@@ -13,7 +14,19 @@ import type {
   CollectionSearchParams,
 } from "../../../lib/types/client";
 
-const pageSize = 10;
+const pageSize = 4;
+
+const getFirstImage = (images: unknown) => {
+  if (Array.isArray(images) && typeof images[0] === "string") {
+    return images[0];
+  }
+
+  if (typeof images === "string") {
+    return images;
+  }
+
+  return "";
+};
 
 const buildCollectionHref = (
   params: CollectionSearchParams,
@@ -112,7 +125,7 @@ export default async function CollectionPage({
             >
               <option value="">Tất cả</option>
               {categories &&
-                categories.map((category: any) => (
+                categories.map((category: ClientProductCategoryInterface) => (
                   <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
@@ -181,7 +194,7 @@ export default async function CollectionPage({
         ) : null}
 
         <div
-          className="collection-grid mx-auto mt-10 grid max-w-[1220px] gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+          className="collection-grid mx-auto mt-10 grid max-w-[1180px] gap-7 sm:grid-cols-2 xl:grid-cols-4"
           id="collection-grid"
         >
           {pageProducts.map((product, index) => (
@@ -189,6 +202,7 @@ export default async function CollectionPage({
               key={product.id}
               href={buildCollectionHref(params, { productId: product.id })}
               id={product.id}
+              imageUrl={getFirstImage(product.images)}
               index={index}
               name={product.name}
               price={product.base_price_cents}
