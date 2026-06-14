@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import { addToCartAction } from "../../lib/action/cart.action";
 import type {
  DetailCardProductProps,
@@ -53,6 +53,7 @@ export default function DetailCardProduct({
  product,
  onClose,
 }: DetailCardProductProps) {
+ const { toast } = useToast();
  const router = useRouter();
  const [open, setOpen] = useState(true);
  const [quantity, setQuantity] = useState(1);

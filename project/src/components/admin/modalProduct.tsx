@@ -14,7 +14,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { ChangeEvent } from "react";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import type {
   AdminCategoriesSuccessResponseInterface,
   AdminProductCategoryInterface,
@@ -60,6 +60,7 @@ export default function ModalProduct({
   onSave,
   open,
 }: AdminModalProductProps) {
+  const { toast } = useToast();
   const [categories, setCategories] = useState<AdminProductCategoryInterface[]>([]);
   const [formValues, setFormValues] = useState<AdminProductFormValues>(
     initialProductFormValues,

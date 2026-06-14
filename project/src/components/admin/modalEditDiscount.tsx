@@ -10,7 +10,7 @@ import RadioGroup from "@mui/material/RadioGroup";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import { updateDiscountAction } from "../../lib/action/discount.action";
 import type {
   AdminDiscountFormValues,
@@ -24,6 +24,7 @@ export default function ModalEditDiscount({
   onSave,
   open,
 }: AdminModalEditDiscountProps) {
+  const { toast } = useToast();
   const [formValues, setFormValues] = useState<AdminDiscountFormValues>({
     code: "",
     discount_amount_cents: "",
