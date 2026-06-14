@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import CartItem from "../../../components/client/cartItem";
+import ModalDeleteConfirm from "../../../components/admin/modalDeleteConfirm";
 import CartSummary from "../../../components/client/cartSummary";
 import CheckoutForm from "../../../components/client/checkoutForm";
 import CheckoutSummary from "../../../components/client/checkoutSummary";
@@ -42,11 +43,13 @@ const mapCartItem = (item: ClientCartActionItemInterface): ClientCartItem => ({
 });
 
 export default function CartPage() {
+  const { toast } = useToast();
   const [cart, setCart] = useState<ClientCartItem[]>([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
   const [isMutatingCart, setIsMutatingCart] = useState(false);
   const [step, setStep] = useState<CartPageStep>("cart");
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
 
   const subtotal = useMemo(
     () =>
@@ -77,7 +80,7 @@ export default function CartPage() {
     }
 
     setIsLoadingCart(false);
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     void loadCart();
@@ -123,16 +126,17 @@ export default function CartPage() {
     }
   };
 
-  const removeItem = async (index: number) => {
-    if (isMutatingCart) return;
+  const removeItem = (index: number) => {
+    setDeleteIndex(index);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (deleteIndex === null || isMutatingCart) return;
+
+    const index = deleteIndex;
     const targetItem = cart[index];
 
     if (!targetItem?.itemId) return;
-
-    const shouldRemove = window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?");
-
-    if (!shouldRemove) return;
 
     setIsMutatingCart(true);
 
@@ -146,6 +150,7 @@ export default function CartPage() {
       }
 
       toast.success("Đã xóa sản phẩm khỏi giỏ hàng");
+      setDeleteIndex(null);
       await loadCart();
     } finally {
       setIsMutatingCart(false);
@@ -211,64 +216,76 @@ export default function CartPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F2E8D9] text-[#2C1810]">
-      <div className="px-4 py-14 sm:px-8 lg:px-12 xl:px-16">
-        <div className="mb-10 flex flex-wrap items-center justify-between gap-4 lg:mb-14">
-          <h1 className="w-fit border-b-[3px] border-[#6B1218] pb-3 font-serif text-[2.35rem] font-bold leading-tight text-[#2C1810] sm:text-[2.7rem]">
-            Giỏ Hàng
-          </h1>
-          <Link
-            href="/#collection"
-            className="text-sm font-light text-[#8B7355] transition hover:text-[#6B1218]"
-          >
-            ← Tiếp tục mua sắm
-          </Link>
-        </div>
-
-        {isLoadingCart ? (
-          <section className="rounded-2xl bg-[#F8F0E4] px-6 py-16 text-center shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
-            <LoadingState
-              label="Đang tải giỏ hàng..."
-              className="min-h-40 border-0 bg-transparent shadow-none"
-            />
-          </section>
-        ) : cart.length === 0 ? (
-          <section className="rounded-2xl bg-[#F8F0E4] px-6 py-16 text-center shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
-            <div className="mb-4 text-5xl text-[#6B4C35]/35">🛍</div>
-            <p className="mb-8 text-base text-[#6B4C35]">
-              Giỏ hàng của bạn đang trống
-            </p>
+    <>
+      <main className="min-h-screen bg-[#F2E8D9] text-[#2C1810]">
+        <div className="px-4 py-14 sm:px-8 lg:px-12 xl:px-16">
+          <div className="mb-10 flex flex-wrap items-center justify-between gap-4 lg:mb-14">
+            <h1 className="w-fit border-b-[3px] border-[#6B1218] pb-3 font-serif text-[2.35rem] font-bold leading-tight text-[#2C1810] sm:text-[2.7rem]">
+              Giỏ Hàng
+            </h1>
             <Link
               href="/#collection"
-              className="inline-flex rounded-full bg-[#6B1218] px-8 py-3 text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.28)] transition hover:bg-[#4A0C10]"
+              className="text-sm font-light text-[#8B7355] transition hover:text-[#6B1218]"
             >
-              Bắt Đầu Mua Sắm
+              ← Tiếp tục mua sắm
             </Link>
-          </section>
-        ) : (
-          <section className="grid gap-8 xl:grid-cols-[2fr_1fr] xl:gap-10">
-            <div className="min-h-[360px] overflow-hidden rounded-2xl bg-[#F8F0E4] shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
-              {cart.map((item, index) => (
-                <CartItem
-                  key={`${item.name ?? item.scent}-${index}`}
-                  index={index}
-                  item={item}
-                  disabled={isMutatingCart}
-                  onQuantityChange={updateQuantity}
-                  onRemove={removeItem}
-                />
-              ))}
-            </div>
+          </div>
 
-            <CartSummary
-              disabled={isMutatingCart}
-              subtotal={subtotal}
-              onApplyPromo={applyPromo}
-              onCheckout={() => setStep("checkout")}
-            />
-          </section>
-        )}
-      </div>
-    </main>
+          {isLoadingCart ? (
+            <section className="rounded-2xl bg-[#F8F0E4] px-6 py-16 text-center shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
+              <LoadingState
+                label="Đang tải giỏ hàng..."
+                className="min-h-40 border-0 bg-transparent shadow-none"
+              />
+            </section>
+          ) : cart.length === 0 ? (
+            <section className="rounded-2xl bg-[#F8F0E4] px-6 py-16 text-center shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
+              <div className="mb-4 text-5xl text-[#6B4C35]/35">🛍</div>
+              <p className="mb-8 text-base text-[#6B4C35]">
+                Giỏ hàng của bạn đang trống
+              </p>
+              <Link
+                href="/#collection"
+                className="inline-flex rounded-full bg-[#6B1218] px-8 py-3 text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.28)] transition hover:bg-[#4A0C10]"
+              >
+                Bắt Đầu Mua Sắm
+              </Link>
+            </section>
+          ) : (
+            <section className="grid gap-8 xl:grid-cols-[2fr_1fr] xl:gap-10">
+              <div className="min-h-[360px] overflow-hidden rounded-2xl bg-[#F8F0E4] shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
+                {cart.map((item, index) => (
+                  <CartItem
+                    key={`${item.name ?? item.scent}-${index}`}
+                    index={index}
+                    item={item}
+                    disabled={isMutatingCart}
+                    onQuantityChange={updateQuantity}
+                    onRemove={removeItem}
+                  />
+                ))}
+              </div>
+
+              <CartSummary
+                disabled={isMutatingCart}
+                subtotal={subtotal}
+                onApplyPromo={applyPromo}
+                onCheckout={() => setStep("checkout")}
+              />
+            </section>
+          )}
+        </div>
+      </main>
+
+      <ModalDeleteConfirm
+        open={deleteIndex !== null}
+        itemName={deleteIndex !== null ? (cart[deleteIndex]?.name ?? cart[deleteIndex]?.scent ?? "sản phẩm") : ""}
+        isDeleting={isMutatingCart}
+        title="Xóa sản phẩm khỏi giỏ hàng?"
+        confirmLabel="Xóa sản phẩm"
+        onClose={() => setDeleteIndex(null)}
+        onConfirm={handleConfirmDelete}
+      />
+    </>
   );
 }

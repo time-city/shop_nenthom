@@ -2,18 +2,17 @@ import { Prisma } from "@prisma/client";
 import prisma from "../prisma";
 import { GetProductsParams, CreateProductInput, UpdateProductInput } from "../validations/product.schema";
 
-
 const CUSTOM_CANDLE_CATEGORY_NAME = "Nến Tùy Chỉnh";
 const CUSTOM_CANDLE_PRODUCT_NAME = "Nến Tùy Chỉnh";
-const CUSTOM_CANDLE_BASE_PRICE = 189000;
-
+const CUSTOM_CANDLE_BASE_PRICE_CENTS = 189000;
 
 export const ProductService = {
     async getProducts(param: GetProductsParams) {
-        const { page, limit, categoryId, search, minPrice, maxPrice } = param;
+        const { page, limit, categoryId, includeCustom, search, minPrice, maxPrice } = param;
         const skip = (page - 1) * limit;
         const where: Prisma.ProductWhereInput = {
             is_active: true,
+            ...(!includeCustom && { is_custom: false }),
             ...(categoryId && { category_id: categoryId }),
             ...(search && {
                 name: { contains: search.trim(), mode: 'insensitive' },
@@ -90,7 +89,7 @@ export const ProductService = {
                 select: { id: true, name: true, price_extra_cents: true },
             }),
         ])
-        return { scents, colors, sizes, packagings, toppings }
+        return { scents, colors, waxColors: colors, sizes, packagings, toppings }
     },
 
 
@@ -100,16 +99,13 @@ export const ProductService = {
         const existingProduct = await prisma.product.findFirst({
             where: {
                 is_active: true,
-                OR: [
-                    { name: { equals: CUSTOM_CANDLE_PRODUCT_NAME, mode: "insensitive" } },
-                    { name: { contains: "Tùy Chỉnh", mode: "insensitive" } },
-                    { name: { contains: "Custom", mode: "insensitive" } },
-                ],
+                is_custom: true,
             },
             select: {
                 id: true,
                 name: true,
                 base_price_cents: true,
+                is_custom: true,
                 category: {
                     select: {
                         id: true,
@@ -123,43 +119,40 @@ export const ProductService = {
             return existingProduct;
         }
 
-        const category =
-            await prisma.category.findFirst({
-                where: {
-                    is_active: true,
-                    name: { equals: CUSTOM_CANDLE_CATEGORY_NAME, mode: "insensitive" },
+        const category = await prisma.category.findFirst({
+            where: {
+                is_active: true,
+                name: {
+                    equals: CUSTOM_CANDLE_CATEGORY_NAME,
+                    mode: "insensitive",
                 },
-                select: {
-                    description: true,
-                    id: true,
-                    name: true,
-                },
-            }) ??
-            await prisma.category.create({
-                data: {
-                    description: "Danh mục tự động cho sản phẩm nến tùy chỉnh",
-                    is_active: true,
-                    name: CUSTOM_CANDLE_CATEGORY_NAME,
-                },
-                select: {
-                    description: true,
-                    id: true,
-                    name: true,
-                },
-            });
+            },
+            select: {
+                id: true,
+            },
+        }) ?? await prisma.category.create({
+            data: {
+                name: CUSTOM_CANDLE_CATEGORY_NAME,
+            },
+            select: {
+                id: true,
+            },
+        });
+
         return prisma.product.create({
             data: {
-                base_price_cents: CUSTOM_CANDLE_BASE_PRICE,
+                base_price_cents: CUSTOM_CANDLE_BASE_PRICE_CENTS,
                 category_id: category.id,
-                description: "Sản phẩm nền dùng cho luồng tự tạo nến theo lựa chọn của khách hàng",
                 images: [],
                 is_active: true,
+                is_custom: true,
                 name: CUSTOM_CANDLE_PRODUCT_NAME,
             },
             select: {
                 id: true,
                 name: true,
                 base_price_cents: true,
+                is_custom: true,
                 category: {
                     select: {
                         id: true,
@@ -191,7 +184,8 @@ export const ProductService = {
         // Lấy options liên quan song song
         const options = await ProductService.getCustomizationOptions();
         return {
-            ...product, options
+            product,
+            options,
         }
     },
 

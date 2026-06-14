@@ -9,7 +9,7 @@ import {
 } from "formik";
 import Link from "next/link";
 import { type ChangeEvent, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import { z } from "zod";
 import { registerUser } from "../../lib/action/auth.action";
 import type { SignUpValues } from "../../lib/types/client";
@@ -78,6 +78,7 @@ const validateSignUp = (values: SignUpValues) => {
 };
 
 export default function FormSignUp() {
+  const { toast } = useToast();
   const [showTermsPopup, setShowTermsPopup] = useState(false);
   const [isTermsPopupVisible, setIsTermsPopupVisible] = useState(false);
 

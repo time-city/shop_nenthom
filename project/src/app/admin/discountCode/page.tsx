@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import ModalDeleteProduct from "../../../components/admin/modalDeleteProduct";
 import ModalDiscount from "../../../components/admin/modalDiscount";
 import ModalEditDiscount from "../../../components/admin/modalEditDiscount";
@@ -29,6 +29,7 @@ const formatDate = (date: Date | null) => {
 };
 
 export default function DiscountCodePage() {
+  const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editDiscount, setEditDiscount] = useState<AdminDiscountItem | null>(null);
   const [disableDiscount, setDisableDiscount] = useState<AdminDiscountItem | null>(null);
@@ -58,7 +59,7 @@ export default function DiscountCodePage() {
     }
 
     setIsLoading(false);
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     void loadDiscounts();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import ModalSupport from "../../../components/admin/modalSupport";
 import LoadingState from "../../../components/ui/loadingState";
 import type {
@@ -58,6 +58,7 @@ const normalizeContact = (
 });
 
 export default function SupportPage() {
+  const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState<AdminSupportFilter>("all");
   const [contacts, setContacts] = useState<AdminSupportMessage[]>([]);
   const [isLoadingContacts, setIsLoadingContacts] = useState(true);
@@ -94,7 +95,7 @@ export default function SupportPage() {
     };
 
     void loadContacts();
-  }, [activeFilter]);
+  }, [activeFilter, toast]);
 
   const filteredContacts = useMemo(() => {
     if (activeFilter === "all") return contacts;

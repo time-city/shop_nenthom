@@ -7,7 +7,7 @@ import Modal from "@mui/material/Modal";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import { createCategoryAction } from "../../lib/action/category.action";
 import type {
   AdminCategoryFormValues,
@@ -25,6 +25,7 @@ export default function ModalCategory({
   onSave,
   open,
 }: AdminModalCategoryProps) {
+  const { toast } = useToast();
   const [formValues, setFormValues] =
     useState<AdminCategoryFormValues>(initialFormValues);
   const [isSubmitting, setIsSubmitting] = useState(false);

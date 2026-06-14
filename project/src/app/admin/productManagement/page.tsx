@@ -1,7 +1,7 @@
 "use client";
 
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toast-provider";
 import ModalDeleteConfirm from "../../../components/admin/modalDeleteConfirm";
 import ModalEditProduct from "../../../components/admin/modalEditProduct";
 import ModalProduct from "../../../components/admin/modalProduct";
@@ -35,6 +35,7 @@ const mapProductToRow = (
 });
 
 export default function ProductManagementPage() {
+  const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editProduct, setEditProduct] =
     useState<AdminProductListItemInterface | null>(null);
@@ -66,7 +67,7 @@ export default function ProductManagementPage() {
     }
 
     setIsLoadingProducts(false);
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     void loadProducts();
