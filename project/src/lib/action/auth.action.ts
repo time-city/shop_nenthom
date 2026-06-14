@@ -71,22 +71,26 @@ export async function logoutUser() {
     return { success: true };
 }
 
-export async function forgotPassword(data: ForgotPasswordInput) {
+export async function forgotPassword(data: ForgotPasswordInput): Promise<
+ | { success: true; data: { email: string; token: string }; message: string }
+ | { success: false; error: string }
+> {
     const parsed = forgotPasswordSchema.safeParse(data);
 
     if (!parsed.success) {
-        return { error: parsed.error.issues[0].message };
+        return { success: false, error: parsed.error.issues[0].message };
     }
 
     try {
-        await AuthService.requestPasswordReset(parsed.data);
+        const reset = await AuthService.requestPasswordReset(parsed.data);
 
         return {
             success: true,
-            message: 'Nếu email tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.',
+            data: reset,
+            message: 'Chúng tôi đã gửi mã OTP đặt lại mật khẩu.',
         };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { success: false, error: (err as Error).message };
     }
 }
 

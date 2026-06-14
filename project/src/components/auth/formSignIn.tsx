@@ -284,7 +284,7 @@ export default function FormSignIn() {
             </p>
             <p className="mb-2 text-[0.84rem] font-light leading-relaxed text-[#2C1810] sm:text-[0.85rem]">
               <Link
-                href="#forgot"
+                href="/forgot-password"
                 className="text-[0.85rem] text-[#7A1218] no-underline transition-colors hover:text-[#6B1218]"
               >
                 Quên mật khẩu?
