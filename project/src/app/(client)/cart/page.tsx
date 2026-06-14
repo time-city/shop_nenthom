@@ -84,6 +84,8 @@ export default function CartPage() {
   }, [loadCart]);
 
   const updateQuantity = async (index: number, change: number) => {
+    if (isMutatingCart) return;
+
     const targetItem = cart[index];
 
     if (!targetItem?.itemId) return;

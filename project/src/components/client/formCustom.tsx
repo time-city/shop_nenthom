@@ -1,8 +1,5 @@
 "use client";
 
-
-
-
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import type { ClientProductOptionItemInterface } from "../../interface/clientInterface";
@@ -11,24 +8,15 @@ import { getCustomCandleProductAction } from "../../lib/action/product.action";
 import type { FormCustomProps } from "../../lib/types/client";
 
 
-
-
 const customBasePrice = 189000;
 const emptyOptions: ClientProductOptionItemInterface[] = [];
-
-
-
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("vi-VN").format(price) + "đ";
 
 
-
-
 const getSizeLabel = (size: ClientProductOptionItemInterface) =>
   size.weight_gram ? `${size.name} — ${size.weight_gram}g` : size.name;
-
-
 
 
 const getScentDescription = (scent?: ClientProductOptionItemInterface) =>
@@ -89,29 +77,17 @@ export default function FormCustom({
               setSelectedScentId(scentOptions[0]?.id ?? 0);
           }
 
-
-
-
           if (!colorOptions.some((item) => item.id === selectedColorId)) {
               setSelectedColorId(colorOptions[0]?.id ?? 0);
           }
-
-
-
 
           if (!sizeOptions.some((item) => item.id === selectedSizeId)) {
               setSelectedSizeId(sizeOptions[0]?.id ?? 0);
           }
 
-
-
-
           if (!packOptions.some((item) => item.id === selectedPackId)) {
               setSelectedPackId(packOptions[0]?.id ?? 0);
           }
-
-
-
 
           setSelectedToppings((currentToppings) => {
               const nextToppings = currentToppings.filter((id) =>
@@ -151,8 +127,6 @@ export default function FormCustom({
               .reduce((sum, item) => sum + item.price_extra_cents, 0),
       [selectedToppings, toppingOptions],
   );
-
-
 
 
   const optionTotal =
@@ -254,19 +228,11 @@ export default function FormCustom({
               <div className="section-sub mt-2 text-[0.85rem] uppercase tracking-[0.1em] text-[#F5F0E8]/62">
                   Chọn từng thành phần
               </div>
-
-
-
-
               <div className="configurator mt-12 grid gap-8 rounded-2xl bg-[#2C1810] p-6 text-[#F5F0E8] shadow-[0_18px_50px_rgba(44,24,16,0.22)] md:grid-cols-2 md:p-8 lg:gap-12 lg:p-12">
                   <div className="config-panel">
                       <h3 className="mb-5 text-[0.72rem] uppercase tracking-[0.15em] text-[#F5F0E8]">
                           Thành phần
                       </h3>
-
-
-
-
                       <div className="option-group mb-8">
                           <div className="option-label mb-3 text-[0.8rem] text-[#F5F0E8]/78">
                               Hương thơm
@@ -298,10 +264,6 @@ export default function FormCustom({
                               })}
                           </div>
                       </div>
-
-
-
-
                       <div className="option-group mb-8">
                           <div className="option-label mb-3 text-[0.8rem] text-[#F5F0E8]/78">
                               Màu sáp
@@ -335,10 +297,6 @@ export default function FormCustom({
                               })}
                           </div>
                       </div>
-
-
-
-
                       <div className="option-group mb-8">
                           <div className="option-label mb-3 text-[0.8rem] text-[#F5F0E8]/78">
                               Kích thước
@@ -351,10 +309,6 @@ export default function FormCustom({
                               ) : null}
                               {sizeOptions.map((size) => {
                                   const active = selectedSize?.id === size.id;
-
-
-
-
                                   return (
                                       <button
                                           key={size.id}
@@ -371,10 +325,6 @@ export default function FormCustom({
                               })}
                           </div>
                       </div>
-
-
-
-
                       <div className="option-group mb-8">
                           <div className="option-label mb-3 text-[0.8rem] text-[#F5F0E8]/78">
                               Bao bì
@@ -387,10 +337,6 @@ export default function FormCustom({
                               ) : null}
                               {packOptions.map((pack) => {
                                   const active = selectedPack?.id === pack.id;
-
-
-
-
                                   return (
                                       <button
                                           key={pack.id}
@@ -407,10 +353,6 @@ export default function FormCustom({
                               })}
                           </div>
                       </div>
-
-
-
-
                       <div className="option-group">
                           <div className="option-label mb-3 text-[0.8rem] text-[#F5F0E8]/78">
                               Topping
@@ -423,10 +365,6 @@ export default function FormCustom({
                               ) : null}
                               {toppingOptions.map((topping) => {
                                   const active = selectedToppings.includes(topping.id);
-
-
-
-
                                   return (
                                       <button
                                           key={topping.id}
@@ -465,10 +403,6 @@ export default function FormCustom({
                               <div className="mini-wick absolute -top-3 left-1/2 h-2.5 w-0.5 -translate-x-1/2 bg-[#2C1810]" />
                               <div className="mini-flame absolute -top-[26px] left-1/2 h-4 w-2 -translate-x-1/2 animate-[candle-flicker_1.2s_ease-in-out_infinite] rounded-[50%_50%_30%_30%] bg-[radial-gradient(ellipse_at_50%_80%,#fff_0%,#FFE566_35%,#FF9A00_70%,transparent_100%)]" />
                           </div>
-
-
-
-
                           <div
                               className="preview-name mt-4 font-serif text-[1.6rem] font-semibold text-[#6B1218]"
                               id="prev-name"
@@ -481,15 +415,7 @@ export default function FormCustom({
                           >
                               {getScentDescription(selectedScent)}
                           </div>
-
-
-
-
                           <div className="preview-divider my-3 h-px w-full bg-[#6B1218]/15" />
-
-
-
-
                           <div className="preview-details w-full text-[0.82rem] leading-7 text-[#2C1810]">
                               <div className="preview-detail-row flex justify-between gap-3">
                                   <span className="detail-label font-medium">Kích thước:</span>
@@ -506,10 +432,6 @@ export default function FormCustom({
                                   <span id="prev-pack">{selectedPack?.name ?? "Chưa chọn"}</span>
                               </div>
                           </div>
-
-
-
-
                           <div className="preview-divider my-3 h-px w-full bg-[#6B1218]/15" />
 
 
