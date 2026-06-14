@@ -1,6 +1,8 @@
 import prisma from '../prisma';
 import bcryptjs from 'bcryptjs';
-import { RegisterFormState } from '../validations/auth.schema';
+import { createOtpToken, generateOtp, verifyOtpToken } from '../otp';
+import { sendResetPasswordEmail } from '../resend';
+import { ForgotPasswordInput, RegisterFormState, ResetPasswordInput } from '../validations/auth.schema';
 
 function normalizeEmail(email: string) {
     return email.trim().toLowerCase();
@@ -77,5 +79,68 @@ export const AuthService = {
             role: user.role,
             status: user.status,
         };
+    },
+
+    async requestPasswordReset(data: ForgotPasswordInput) {
+        const email = normalizeEmail(data.email);
+        const user = await prisma.user.findFirst({
+            where: {
+                email: {
+                    equals: email,
+                    mode: 'insensitive',
+                },
+                status: 'ACTIVE',
+            },
+            select: {
+                email: true,
+            },
+        });
+
+        if (!user) {
+            return;
+        }
+
+        const otp = generateOtp();
+        const token = createOtpToken(email, otp);
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? 'http://localhost:3000';
+        const resetUrl = `${appUrl}/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+
+        await sendResetPasswordEmail({
+            email,
+            otp,
+            resetUrl,
+        });
+    },
+
+    async resetPassword(data: ResetPasswordInput) {
+        const email = normalizeEmail(data.email);
+        const isValidOtp = verifyOtpToken(data.token, email, data.otp);
+
+        if (!isValidOtp) {
+            throw new Error('Mã xác nhận không đúng hoặc đã hết hạn');
+        }
+
+        const user = await prisma.user.findFirst({
+            where: {
+                email: {
+                    equals: email,
+                    mode: 'insensitive',
+                },
+                status: 'ACTIVE',
+            },
+            select: { id: true },
+        });
+
+        if (!user) {
+            throw new Error('Không tìm thấy tài khoản phù hợp');
+        }
+
+        const salt = await bcryptjs.genSalt(10);
+        const hashPassword = await bcryptjs.hash(data.newPassword, salt);
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { password_hash: hashPassword },
+        });
     },
 }

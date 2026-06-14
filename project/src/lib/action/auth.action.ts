@@ -2,7 +2,16 @@
 import prisma from "../prisma";
 import { AuthService } from "../services/auth.service";
 import { createSession, deleteSession, getSession } from "../session";
-import { LoginFormState, RegisterFormState, loginSchema, registerSchema } from "../validations/auth.schema";
+import {
+    ForgotPasswordInput,
+    LoginFormState,
+    RegisterFormState,
+    ResetPasswordInput,
+    forgotPasswordSchema,
+    loginSchema,
+    registerSchema,
+    resetPasswordSchema,
+} from "../validations/auth.schema";
 
 export async function registerUser(data: RegisterFormState) {
     const parsed = registerSchema.safeParse({
@@ -60,6 +69,44 @@ export async function logoutUser() {
     await deleteSession();
 
     return { success: true };
+}
+
+export async function forgotPassword(data: ForgotPasswordInput) {
+    const parsed = forgotPasswordSchema.safeParse(data);
+
+    if (!parsed.success) {
+        return { error: parsed.error.issues[0].message };
+    }
+
+    try {
+        await AuthService.requestPasswordReset(parsed.data);
+
+        return {
+            success: true,
+            message: 'Nếu email tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.',
+        };
+    } catch (err) {
+        return { error: (err as Error).message };
+    }
+}
+
+export async function resetPassword(data: ResetPasswordInput) {
+    const parsed = resetPasswordSchema.safeParse(data);
+
+    if (!parsed.success) {
+        return { error: parsed.error.issues[0].message };
+    }
+
+    try {
+        await AuthService.resetPassword(parsed.data);
+
+        return {
+            success: true,
+            message: 'Mật khẩu đã được cập nhật. Bạn có thể đăng nhập lại.',
+        };
+    } catch (err) {
+        return { error: (err as Error).message };
+    }
 }
 
 export async function getCurrentUser() {
