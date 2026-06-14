@@ -8,10 +8,11 @@ const CUSTOM_CANDLE_BASE_PRICE_CENTS = 189000;
 
 export const ProductService = {
     async getProducts(param: GetProductsParams) {
-        const { page, limit, categoryId, search, minPrice, maxPrice } = param;
+        const { page, limit, categoryId, includeCustom, search, minPrice, maxPrice } = param;
         const skip = (page - 1) * limit;
         const where: Prisma.ProductWhereInput = {
             is_active: true,
+            ...(!includeCustom && { is_custom: false }),
             ...(categoryId && { category_id: categoryId }),
             ...(search && {
                 name: { contains: search.trim(), mode: 'insensitive' },
@@ -88,7 +89,7 @@ export const ProductService = {
                 select: { id: true, name: true, price_extra_cents: true },
             }),
         ])
-        return { scents, colors, sizes, packagings, toppings }
+        return { scents, colors, waxColors: colors, sizes, packagings, toppings }
     },
 
 
@@ -183,7 +184,8 @@ export const ProductService = {
         // Lấy options liên quan song song
         const options = await ProductService.getCustomizationOptions();
         return {
-            ...product, options
+            product,
+            options,
         }
     },
 
