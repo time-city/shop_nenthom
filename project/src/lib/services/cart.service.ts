@@ -1,9 +1,6 @@
 import prisma from "../prisma";
+import { ProductService } from "./product.service";
 import { AddToCartInput } from "../validations/cart.schema";
-
-type AddToCartServiceInput = AddToCartInput & {
-    product_id: string;
-};
 
 const cartInclude = {
     items: {
@@ -17,6 +14,42 @@ const cartInclude = {
     },
 };
 
+const getToppingIds = (value: unknown) =>
+    Array.isArray(value)
+        ? value.filter((id): id is number => Number.isInteger(id)).sort((a, b) => a - b)
+        : [];
+
+async function attachToppingsToCart<T extends { items: Array<{ toppings_json: unknown }> }>(cart: T) {
+    const toppingIds = [
+        ...new Set(cart.items.flatMap((item) => getToppingIds(item.toppings_json))),
+    ];
+
+    const toppings = toppingIds.length
+        ? await prisma.topping.findMany({
+            where: {
+                id: { in: toppingIds },
+                is_active: true,
+            },
+            select: {
+                id: true,
+                name: true,
+                price_extra_cents: true,
+            },
+        })
+        : [];
+    const toppingById = new Map(toppings.map((topping) => [topping.id, topping]));
+
+    return {
+        ...cart,
+        items: cart.items.map((item) => ({
+            ...item,
+            toppings: getToppingIds(item.toppings_json)
+                .map((id) => toppingById.get(id))
+                .filter((topping): topping is NonNullable<typeof topping> => Boolean(topping)),
+        })),
+    };
+}
+
 export const CartService = {
 
     async getOrCreateCart(userId?: string, sessionId?: string) {
@@ -28,33 +61,40 @@ export const CartService = {
             where,
             include: cartInclude,
         })
-        if (existing) return existing
+        if (existing) return attachToppingsToCart(existing)
 
-        return prisma.cart.create({
+        const created = await prisma.cart.create({
             data: userId ? { user_id: userId } : { session_id: sessionId },
             include: cartInclude,
         })
+
+        return attachToppingsToCart(created)
     },
 
 
-    async addToCart(data: AddToCartServiceInput, userId?: string, sessionId?: string) {
+    async addToCart(data: AddToCartInput, userId?: string, sessionId?: string) {
         const cart = await CartService.getOrCreateCart(userId, sessionId);
+        const product = data.product_id
+            ? await prisma.product.findUnique({
+                where: { id: data.product_id, is_active: true },
+            })
+            : await ProductService.getCustomCandleProduct();
+        const productId = product?.id;
+        const toppingIds = getToppingIds(data.toppings_json);
+
         // Check product tồn tại và còn active
-        const product = await prisma.product.findUnique({
-            where: { id: data.product_id, is_active: true },
-        })
-        if (!product) throw new Error('Sản phẩm này hiện không còn khả dụng. Vui lòng chọn sản phẩm khác.')
+        if (!productId) throw new Error('Sản phẩm này hiện không còn khả dụng. Vui lòng chọn sản phẩm khác.')
 
         // Check item đã có trong cart chưa (cùng product + options)
         const existingItem = await prisma.cartItem.findFirst({
             where: {
                 cart_id: cart.id,
-                product_id: data.product_id,
+                product_id: productId,
                 scent_id: data.scent_id ?? null,
                 color_id: data.color_id ?? null,
                 size_id: data.size_id ?? null,
                 pack_id: data.pack_id ?? null,
-                toppings_json: { equals: data.toppings_json ?? [] },
+                toppings_json: { equals: toppingIds },
             },
         })
 
@@ -69,13 +109,13 @@ export const CartService = {
         return prisma.cartItem.create({
             data: {
                 cart_id: cart.id,
-                product_id: data.product_id,
+                product_id: productId,
                 quantity: data.quantity,
                 scent_id: data.scent_id,
                 color_id: data.color_id,
                 size_id: data.size_id,
                 pack_id: data.pack_id,
-                toppings_json: data.toppings_json ?? [],
+                toppings_json: toppingIds,
             },
         })
     },
