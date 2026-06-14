@@ -299,12 +299,10 @@ body.intro-ready footer {
   }
 }
 
-
 /* ============================================
   Admin Sidebar
   Scoped with admin-* classes to avoid client UI conflicts
   ============================================ */
-
 
 :root {
   --admin-primary: #6B1218;
