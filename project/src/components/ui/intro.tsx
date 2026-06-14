@@ -12,13 +12,25 @@ const flowers = Array.from({ length: 34 }, (_, index) => index);
 const petals = Array.from({ length: 6 }, (_, index) => index);
 const fireflies = Array.from({ length: 22 }, (_, index) => index);
 
+const markIntroReady = (emitEvent = true) => {
+  document.body.classList.remove("intro-playing");
+  document.body.classList.add("intro-ready");
+
+  if (emitEvent) {
+    window.dispatchEvent(new Event("chamcham:intro-ready"));
+  }
+};
+
 export default function Intro() {
   const [phase, setPhase] = useState<IntroPhase>("black");
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     if (sessionStorage.getItem("intro-shown") === "true") {
-      window.requestAnimationFrame(() => setVisible(false));
+      window.requestAnimationFrame(() => {
+        markIntroReady();
+        setVisible(false);
+      });
       return;
     }
 
@@ -30,11 +42,13 @@ export default function Intro() {
       window.setTimeout(() => setPhase("garden"), 1700),
       window.setTimeout(() => {
         setPhase("hide");
-        document.body.classList.remove("intro-playing");
-        document.body.classList.add("intro-ready");
+        markIntroReady(false);
         sessionStorage.setItem("intro-shown", "true");
       }, 3800),
-      window.setTimeout(() => setVisible(false), 4800),
+      window.setTimeout(() => {
+        setVisible(false);
+        window.dispatchEvent(new Event("chamcham:intro-ready"));
+      }, 4800),
     ];
 
     return () => {
@@ -45,10 +59,12 @@ export default function Intro() {
 
   const dismiss = () => {
     setPhase("hide");
-    document.body.classList.remove("intro-playing");
-    document.body.classList.add("intro-ready");
+    markIntroReady(false);
     sessionStorage.setItem("intro-shown", "true");
-    window.setTimeout(() => setVisible(false), 700);
+    window.setTimeout(() => {
+      setVisible(false);
+      window.dispatchEvent(new Event("chamcham:intro-ready"));
+    }, 700);
   };
 
   if (!visible) return null;
