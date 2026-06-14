@@ -3,7 +3,6 @@
 import { randomUUID } from "crypto";
 import { cookies } from "next/headers";
 import { CartService } from "../services/cart.service";
-import { ProductService } from "../services/product.service";
 import { getSession } from "../session";
 import { addToCartSchema, removeCartItemSchema, updateCartItemSchema } from "../validations/cart.schema";
 
@@ -47,12 +46,7 @@ export async function addToCartAction(params: unknown) {
 
   try {
     const { userId, sessionId } = await getCartIdentity()
-    const productId = parsed.data.product_id ?? (await ProductService.getCustomCandleProduct()).id
-    const item = await CartService.addToCart(
-      { ...parsed.data, product_id: productId },
-      userId,
-      sessionId,
-    )
+    const item = await CartService.addToCart(parsed.data, userId, sessionId)
     return { success: true, data: item }
   } catch (err) {
     return { error: (err as Error).message }
