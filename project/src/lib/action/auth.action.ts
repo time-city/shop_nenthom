@@ -3,10 +3,12 @@ import prisma from "../prisma";
 import { AuthService } from "../services/auth.service";
 import { createSession, deleteSession, getSession } from "../session";
 import {
+    ChangePasswordInput,
     ForgotPasswordInput,
     LoginFormState,
     RegisterFormState,
     ResetPasswordInput,
+    changePasswordSchema,
     forgotPasswordSchema,
     loginSchema,
     registerSchema,
@@ -107,6 +109,31 @@ export async function resetPassword(data: ResetPasswordInput) {
         return {
             success: true,
             message: 'Mật khẩu đã được cập nhật. Bạn có thể đăng nhập lại.',
+        };
+    } catch (err) {
+        return { error: (err as Error).message };
+    }
+}
+
+export async function changePassword(data: ChangePasswordInput) {
+    const parsed = changePasswordSchema.safeParse(data);
+
+    if (!parsed.success) {
+        return { error: parsed.error.issues[0].message };
+    }
+
+    const session = await getSession();
+
+    if (!session) {
+        return { error: 'Vui lòng đăng nhập để đổi mật khẩu' };
+    }
+
+    try {
+        await AuthService.changePassword(session.sub, parsed.data);
+
+        return {
+            success: true,
+            message: 'Mật khẩu đã được cập nhật.',
         };
     } catch (err) {
         return { error: (err as Error).message };

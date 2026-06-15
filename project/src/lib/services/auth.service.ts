@@ -2,7 +2,7 @@ import prisma from '../prisma';
 import bcryptjs from 'bcryptjs';
 import { createOtpToken, generateOtp, verifyOtpToken } from '../otp';
 import { sendResetPasswordEmail } from '../mailer';
-import { ForgotPasswordInput, RegisterFormState, ResetPasswordInput } from '../validations/auth.schema';
+import { ChangePasswordInput, ForgotPasswordInput, RegisterFormState, ResetPasswordInput } from '../validations/auth.schema';
 
 function normalizeEmail(email: string) {
     return email.trim().toLowerCase();
@@ -135,6 +135,35 @@ export const AuthService = {
 
         if (!user) {
             throw new Error('Không tìm thấy tài khoản phù hợp');
+        }
+
+        const salt = await bcryptjs.genSalt(10);
+        const hashPassword = await bcryptjs.hash(data.newPassword, salt);
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { password_hash: hashPassword },
+        });
+    },
+
+    async changePassword(userId: string, data: ChangePasswordInput) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                password_hash: true,
+                status: true,
+            },
+        });
+
+        if (!user || user.status === 'LOCKED') {
+            throw new Error('Tài khoản không thể đổi mật khẩu lúc này');
+        }
+
+        const isValidPassword = await bcryptjs.compare(data.currentPassword, user.password_hash);
+
+        if (!isValidPassword) {
+            throw new Error('Mật khẩu hiện tại chưa đúng');
         }
 
         const salt = await bcryptjs.genSalt(10);
