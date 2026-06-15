@@ -15,8 +15,8 @@ export const loginSchema = z.object({
 export type LoginFormState = z.infer<typeof loginSchema>;
 
 export const updateProfileSchema = z.object({
-    fullname: z.string().min(3, 'Họ và tên phải có ít nhất 3 ký tự'),
-    phone: z.string().regex(/^(0[3|5|7|8|9])+([0-9]{8})$/, 'Số điện thoại không hợp lệ'), 
+    fullname: z.string().trim().min(3, 'Họ và tên phải có ít nhất 3 ký tự'),
+    phone: z.string().trim().regex(/^(0[3|5|7|8|9])+([0-9]{8})$/, 'Số điện thoại không hợp lệ'),
 })
 export type UpdateProfileFormState = z.infer<typeof updateProfileSchema>;
 
@@ -31,5 +31,18 @@ export const resetPasswordSchema = z.object({
   newPassword: z.string().min(6, 'Mật khẩu mới phải có ít nhất 6 ký tự'),
 })
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Vui lòng nhập mật khẩu hiện tại'),
+  newPassword: z.string().min(6, 'Mật khẩu mới phải có ít nhất 6 ký tự'),
+  confirmPassword: z.string().min(1, 'Vui lòng nhập lại mật khẩu mới'),
+}).refine(({ currentPassword, newPassword }) => currentPassword !== newPassword, {
+  message: 'Mật khẩu mới cần khác mật khẩu hiện tại',
+  path: ['newPassword'],
+}).refine(({ newPassword, confirmPassword }) => newPassword === confirmPassword, {
+  message: 'Mật khẩu nhập lại chưa khớp',
+  path: ['confirmPassword'],
+})
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
