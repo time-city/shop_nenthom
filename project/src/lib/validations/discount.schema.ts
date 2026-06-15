@@ -38,9 +38,15 @@ export const getDiscountsSchema = z.object({
   is_active: z.boolean().optional(),
 })
 
+export const applyDiscountSchema = z.object({
+  code: z.string().trim().min(1, 'Vui lòng nhập mã giảm giá').toUpperCase(),
+  subtotal_cents: z.coerce.number().int().min(1, 'Giỏ hàng chưa có sản phẩm để áp dụng mã'),
+})
+
 export type CreateDiscountInput = z.infer<typeof createDiscountSchema>
 export type UpdateDiscountInput = z.infer<typeof updateDiscountSchema>
 export type GetDiscountsParams = z.infer<typeof getDiscountsSchema>
+export type ApplyDiscountInput = z.infer<typeof applyDiscountSchema>
 
 export const discountIdSchema = z.object({
     id: z.string().uuid('Mã giảm giá không hợp lệ'),

@@ -3,6 +3,7 @@
 import { DiscountService } from "../services/discount.service";
 import { getSession } from "../session";
 import { 
+    applyDiscountSchema,
     createDiscountSchema, 
     disableDiscountSchema, 
     discountIdSchema, 
@@ -11,7 +12,8 @@ import {
     CreateDiscountInput,
     GetDiscountsParams,
     UpdateDiscountInput,
-    DisableDiscountInput
+    DisableDiscountInput,
+    ApplyDiscountInput
 } from "../validations/discount.schema";
 
 // Kiểm tra người dùng hiện tại có quyền ADMIN để thao tác quản trị mã giảm giá.
@@ -20,6 +22,23 @@ async function requireAdmin() {
     if (!session || session.role !== 'ADMIN') return { error: 'Không có quyền truy cập' };
 
     return null;
+}
+
+// Server Action kiểm tra và tính số tiền giảm cho khách đã đăng nhập trước khi tạo đơn.
+export async function applyDiscountAction(params: ApplyDiscountInput) {
+    const session = await getSession();
+    if (!session) return { error: 'Vui lòng đăng nhập để sử dụng mã giảm giá' };
+    if (session.role === 'ADMIN') return { error: 'Tài khoản quản trị không thể dùng mã giảm giá' };
+
+    const parsed = applyDiscountSchema.safeParse(params);
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+    try {
+        const discount = await DiscountService.applyDiscount(parsed.data, session.sub);
+        return { success: true, data: discount };
+    } catch (err) {
+        return { error: (err as Error).message };
+    }
 }
 
 // Server Action lấy danh sách mã giảm giá cho trang Admin.

@@ -175,6 +175,20 @@ export const OrderService = {
       throw new Error("Mã giảm giá đã hết lượt sử dụng.");
     }
 
+    if (discount && userId) {
+      const existingUsage = await prisma.discountUsage.findFirst({
+        where: {
+          discount_code_id: discount.id,
+          user_id: userId,
+        },
+        select: { id: true },
+      });
+
+      if (existingUsage) {
+        throw new Error("Bạn đã sử dụng mã giảm giá này rồi.");
+      }
+    }
+
     const discountCents = discount
       ? discount.type === DiscountType.PERCENTAGE
         ? Math.floor((subtotal * discount.discount_amount_cents) / 100)
