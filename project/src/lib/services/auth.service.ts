@@ -1,7 +1,7 @@
 import prisma from '../prisma';
 import bcryptjs from 'bcryptjs';
 import { createOtpToken, generateOtp, verifyOtpToken } from '../otp';
-import { sendResetPasswordEmail } from '../resend';
+import { sendResetPasswordEmail } from '../mailer';
 import { ForgotPasswordInput, RegisterFormState, ResetPasswordInput } from '../validations/auth.schema';
 
 function normalizeEmail(email: string) {
@@ -97,7 +97,7 @@ export const AuthService = {
         });
 
         if (!user) {
-            return;
+            throw new Error('Email này chưa được đăng ký');
         }
 
         const otp = generateOtp();
@@ -110,6 +110,8 @@ export const AuthService = {
             otp,
             resetUrl,
         });
+
+        return { email, token };
     },
 
     async resetPassword(data: ResetPasswordInput) {

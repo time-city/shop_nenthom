@@ -292,6 +292,7 @@ model Order {
   // Tổng tiền
   subtotal_cents    Int
   discount_cents    Int           @default(0)
+  discount_code_text String?      // 
   shipping_cents    Int           @default(0)
   total_cents       Int
 
