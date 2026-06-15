@@ -2,80 +2,32 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import type {
+  ClientOrderRecord,
+  ClientOrderUserData,
+  OrdersContentProps,
+  OrdersHeaderProps,
+} from "../../../lib/types/client";
 
-type UserData = {
-  email?: string;
-  fullname?: string;
-  phone?: string;
-};
-
-type OrderItem = {
-  detail?: string;
-  name: string;
-  price: number;
-  quantity: number;
-};
-
-type OrderRecord = {
-  date: string;
-  id: string;
-  items: OrderItem[];
-  status: "processing" | "shipping" | "done" | "canceled";
-  total: number;
-};
-
-const defaultUser: Required<UserData> = {
-  email: "user@example.com",
-  fullname: "User",
+const defaultUser: Required<ClientOrderUserData> = {
+  email: "",
+  fullname: "",
   phone: "",
+  role: "",
 };
 
-const statusLabel: Record<OrderRecord["status"], string> = {
+const statusLabel: Record<ClientOrderRecord["status"], string> = {
   canceled: "Đã hủy",
   done: "Hoàn thành",
   processing: "Đang xử lý",
   shipping: "Đang giao",
 };
 
-const statusClass: Record<OrderRecord["status"], string> = {
+const statusClass: Record<ClientOrderRecord["status"], string> = {
   canceled: "bg-[#2c1810]/10 text-[#6B4C35]",
   done: "bg-[#6B1218]/10 text-[#6B1218]",
   processing: "bg-[#F4E2B7] text-[#8B5E3C]",
   shipping: "bg-[#45A05C]/15 text-[#1F6B3A]",
-};
-
-const readUser = () => {
-  try {
-    if (typeof window === "undefined") {
-      return defaultUser;
-    }
-
-    const stored = localStorage.getItem("lumiere-user");
-    const localUser: UserData = {};
-    const email = localStorage.getItem("email");
-    const fullname = localStorage.getItem("fullname");
-    const phone = localStorage.getItem("phone");
-
-    if (email) {
-      localUser.email = email;
-    }
-
-    if (fullname) {
-      localUser.fullname = fullname;
-    }
-
-    if (phone) {
-      localUser.phone = phone;
-    }
-
-    if (!stored) {
-      return { ...defaultUser, ...localUser };
-    }
-
-    return { ...defaultUser, ...(JSON.parse(stored) as UserData), ...localUser };
-  } catch {
-    return defaultUser;
-  }
 };
 
 const readOrders = () => {
@@ -90,7 +42,7 @@ const readOrders = () => {
       return [];
     }
 
-    return JSON.parse(stored) as OrderRecord[];
+    return JSON.parse(stored) as ClientOrderRecord[];
   } catch {
     return [];
   }
@@ -115,7 +67,7 @@ const formatPrice = (value: number) =>
     style: "currency",
   }).format(value);
 
-function OrdersHeader({ user }: { user: Required<UserData> }) {
+function OrdersHeader({ user }: OrdersHeaderProps) {
   const initials = useMemo(() => getInitials(user.fullname), [user.fullname]);
 
   return (
@@ -129,14 +81,16 @@ function OrdersHeader({ user }: { user: Required<UserData> }) {
         </div>
         <div className="min-w-0">
           <div className="truncate font-serif text-[1.35rem] font-bold leading-tight text-[#F5F0E8] sm:text-2xl">
-            {user.fullname}
+            {user.fullname || "Tài khoản"}
           </div>
-          <div className="mt-1 truncate text-[0.82rem] font-light text-[#f5f0e8]/70 sm:text-[0.85rem]">
-            {user.email}
-          </div>
+          {user.email ? (
+            <div className="mt-1 truncate text-[0.82rem] font-light text-[#f5f0e8]/70 sm:text-[0.85rem]">
+              {user.email}
+            </div>
+          ) : null}
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#F2E8D9] px-3 py-1.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-[#6B1218]">
             <span className="text-sm">✦</span>
-            Thành viên
+            {user.role === "ADMIN" ? "Quản trị" : "Thành viên"}
           </div>
         </div>
       </div>
@@ -159,9 +113,11 @@ function OrdersHeader({ user }: { user: Required<UserData> }) {
   );
 }
 
-export default function Orders() {
-  const [user] = useState<Required<UserData>>(() => readUser());
-  const [orders] = useState<OrderRecord[]>(() => readOrders());
+export default function Orders({ initialUser }: OrdersContentProps) {
+  const [user] = useState<Required<ClientOrderUserData>>(
+    initialUser ?? defaultUser,
+  );
+  const [orders] = useState<ClientOrderRecord[]>(() => readOrders());
 
   return (
     <main className="min-h-[calc(100dvh-5rem)] bg-[#F2E8D9] text-[#2C1810]">
@@ -240,7 +196,7 @@ export default function Orders() {
               Bạn chưa có đơn hàng nào
             </div>
             <Link
-              href="/#boSuuTap"
+              href="/#collection"
               className="rounded-full bg-[#6B1218] px-6 py-3 text-[0.75rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] no-underline"
             >
               Khám Phá Bộ Sưu Tập

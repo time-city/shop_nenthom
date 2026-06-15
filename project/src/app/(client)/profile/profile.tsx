@@ -1,27 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { toast } from "react-toastify";
-import { getCurrentUser, logoutUser } from "../../../lib/action/auth.action";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useMemo, useState } from "react";
+import { useToast } from "@/src/components/ui/toast-provider";
+import { logoutUser } from "../../../lib/action/auth.action";
+import type {
+  ClientProfileUserData,
+  ProfilePageContentProps,
+  ProfileFieldProps,
+  ProfileHeaderProps,
+} from "../../../lib/types/client";
 
-type UserData = {
-  address?: string;
-  city?: string;
-  email?: string;
-  fullname?: string;
-  phone?: string;
-  role?: string;
-  zip?: string;
-};
-
-const defaultUser: Required<UserData> = {
+const defaultUser: Required<ClientProfileUserData> = {
   address: "",
   city: "",
-  email: "user@example.com",
-  fullname: "User",
+  email: "",
+  fullname: "",
   phone: "",
-  role: "user",
+  role: "",
   zip: "",
 };
 
@@ -40,10 +37,7 @@ const getInitials = (name: string) => {
 function ProfileHeader({
   activeTab,
   user,
-}: {
-  activeTab: "orders" | "profile";
-  user: Required<UserData>;
-}) {
+}: ProfileHeaderProps) {
   const initials = useMemo(() => getInitials(user.fullname), [user.fullname]);
 
   return (
@@ -58,11 +52,13 @@ function ProfileHeader({
 
         <div className="min-w-0">
           <div className="truncate font-serif text-[1.35rem] font-bold leading-tight text-[#F5F0E8] sm:text-2xl">
-            {user.fullname}
+            {user.fullname || "Tài khoản"}
           </div>
-          <div className="mt-1 truncate text-[0.82rem] font-light text-[#f5f0e8]/70 sm:text-[0.85rem]">
-            {user.email}
-          </div>
+          {user.email ? (
+            <div className="mt-1 truncate text-[0.82rem] font-light text-[#f5f0e8]/70 sm:text-[0.85rem]">
+              {user.email}
+            </div>
+          ) : null}
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#F2E8D9] px-3 py-1.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-[#6B1218]">
             <span className="text-sm">✦</span>
             {user.role === "ADMIN" ? "Quản trị" : "Thành viên"}
@@ -111,14 +107,7 @@ function Field({
   onChange,
   type = "text",
   value,
-}: {
-  className?: string;
-  id: keyof Required<UserData>;
-  label: string;
-  onChange: (field: keyof Required<UserData>, value: string) => void;
-  type?: string;
-  value: string;
-}) {
+}: ProfileFieldProps) {
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
       <label
@@ -139,31 +128,17 @@ function Field({
   );
 }
 
-export function ProfilePageContent() {
-  const [user, setUser] = useState<Required<UserData>>(defaultUser);
+export function ProfilePageContent({
+  initialUser,
+}: ProfilePageContentProps) {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [user, setUser] = useState<Required<ClientProfileUserData>>(
+    initialUser ?? defaultUser,
+  );
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  useEffect(() => {
-    // action-(lấy user hiện tại)
-    void getCurrentUser().then((currentUser) => {
-      if (!currentUser) {
-        toast.error("Bạn cần đăng nhập để xem thông tin cá nhân");
-        window.location.href = "/login";
-        return;
-      }
-
-      setUser({
-        address: "",
-        city: "",
-        email: currentUser.email,
-        fullname: currentUser.fullname ?? "",
-        phone: currentUser.phone ?? "",
-        role: currentUser.role,
-        zip: "",
-      });
-    });
-  }, []);
-
-  const updateField = (field: keyof Required<UserData>, value: string) => {
+  const updateField = (field: keyof Required<ClientProfileUserData>, value: string) => {
     setUser((current) => ({ ...current, [field]: value }));
   };
 
@@ -171,30 +146,33 @@ export function ProfilePageContent() {
     event.preventDefault();
 
     const message =
-      "Chưa có action cập nhật profile trong auth.action.ts để lưu thay đổi";
-    console.log(message);
+      "Cập nhật profile thất bại";
     toast.info(message);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+
     // action-(đăng xuất)
-    void logoutUser().then((result) => {
-      if (!result.success) {
-        const message = "Đăng xuất thất bại";
-        console.log(message);
-        toast.error(message);
-        return;
-      }
+    const result = await logoutUser();
 
-      localStorage.removeItem("remember");
-      const message = "Đăng xuất thành công";
-      console.log(message);
-      toast.success(message);
+    if (!result.success) {
+      const message = "Đăng xuất thất bại";
+      toast.error(message);
+      setIsLoggingOut(false);
+      return;
+    }
 
-      window.setTimeout(() => {
-        window.location.href = "/login";
-      }, 900);
-    });
+    localStorage.removeItem("remember");
+    const message = "Đăng xuất thành công";
+    toast.success(message);
+
+    window.setTimeout(() => {
+      router.replace("/login");
+      router.refresh();
+    }, 900);
   };
 
   return (
@@ -262,7 +240,6 @@ export function ProfilePageContent() {
                 type="button"
                 onClick={() => {
                   const message = "Tính năng đổi mật khẩu sẽ được cập nhật";
-                  console.log(message);
                   toast.info(message);
                 }}
                 className="rounded-full border-[1.5px] border-[#6B1218] bg-transparent px-6 py-3 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8] sm:text-[0.8rem]"
@@ -272,9 +249,10 @@ export function ProfilePageContent() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-full border-[1.5px] border-[#2C1810]/25 bg-transparent px-6 py-3 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] sm:text-[0.8rem]"
+                disabled={isLoggingOut}
+                className="rounded-full border-[1.5px] border-[#2C1810]/25 bg-transparent px-6 py-3 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-60 sm:text-[0.8rem]"
               >
-                Đăng Xuất
+                {isLoggingOut ? "Đang Đăng Xuất..." : "Đăng Xuất"}
               </button>
             </div>
           </form>

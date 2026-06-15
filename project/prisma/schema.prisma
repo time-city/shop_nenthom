@@ -139,6 +139,7 @@ model Product {
   description      String?  @db.Text
   images           Json     // Lưu mảng chuỗi URL hình ảnh
   is_active        Boolean  @default(true)
+  is_custom        Boolean  @default(false)
   created_at       DateTime @default(now())
 
   // Relations
@@ -291,6 +292,7 @@ model Order {
   // Tổng tiền
   subtotal_cents    Int
   discount_cents    Int           @default(0)
+  discount_code_text String?      // 
   shipping_cents    Int           @default(0)
   total_cents       Int
 

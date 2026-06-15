@@ -1,6 +1,6 @@
 import { DiscountType, Prisma } from "@prisma/client";
 import prisma from "../prisma";
-import { CreateDiscountInput, GetDiscountsParams, UpdateDiscountInput } from "../validations/discount.schema";
+import { ApplyDiscountInput, CreateDiscountInput, GetDiscountsParams, UpdateDiscountInput } from "../validations/discount.schema";
 
 // Chuẩn hóa mã để so sánh/lưu trữ thống nhất, tránh lệch do khoảng trắng hoặc chữ thường.
 function normalizeCode(code: string) {
@@ -15,6 +15,52 @@ function assertValidDiscountAmount(type: DiscountType, amount: number) {
 }
 
 export const DiscountService = {
+    async applyDiscount(data: ApplyDiscountInput, userId: string) {
+        const code = normalizeCode(data.code);
+        const discount = await prisma.discountCode.findFirst({
+            where: {
+                code: { equals: code, mode: "insensitive" },
+                is_active: true,
+            },
+        });
+
+        if (!discount) {
+            throw new Error("Mã giảm giá không hợp lệ hoặc đã hết hạn.");
+        }
+
+        if (discount.expires_at && discount.expires_at < new Date()) {
+            throw new Error("Mã giảm giá đã hết hạn.");
+        }
+
+        if (discount.used_count >= discount.max_uses) {
+            throw new Error("Mã giảm giá đã hết lượt sử dụng.");
+        }
+
+        const existingUsage = await prisma.discountUsage.findFirst({
+            where: {
+                discount_code_id: discount.id,
+                user_id: userId,
+            },
+            select: { id: true },
+        });
+
+        if (existingUsage) {
+            throw new Error("Bạn đã sử dụng mã giảm giá này rồi.");
+        }
+
+        const discount_cents =
+            discount.type === DiscountType.PERCENTAGE
+                ? Math.floor((data.subtotal_cents * discount.discount_amount_cents) / 100)
+                : Math.min(discount.discount_amount_cents, data.subtotal_cents);
+
+        return {
+            code: discount.code,
+            discount_cents,
+            subtotal_cents: data.subtotal_cents,
+            total_cents: Math.max(data.subtotal_cents - discount_cents, 0),
+        };
+    },
+
     // Lấy danh sách mã giảm giá cho admin, có phân trang và bộ lọc cơ bản.
     async getDiscounts(params: GetDiscountsParams) {
         const { page, limit, search, type, is_active } = params;

@@ -4,17 +4,22 @@ import { GetProductsParams, CreateProductInput, UpdateProductInput } from "../va
 
 export const ProductService = {
     async getProducts(param: GetProductsParams) {
-        const { page, limit, categoryId, search } = param;
+        const { page, limit, categoryId, includeCustom, search, minPrice, maxPrice } = param;
         const skip = (page - 1) * limit;
-
         const where: Prisma.ProductWhereInput = {
             is_active: true,
+            ...(!includeCustom && { is_custom: false }),
             ...(categoryId && { category_id: categoryId }),
             ...(search && {
                 name: { contains: search.trim(), mode: 'insensitive' },
             }),
+            ...((minPrice !== undefined || maxPrice !== undefined) && {
+                base_price_cents: {
+                    ...(minPrice !== undefined && { gte: minPrice }),
+                    ...(maxPrice !== undefined && { lte: maxPrice }),
+                },
+            }),
         };
-
         const [products, total] = await prisma.$transaction([
             prisma.product.findMany({
                 where,
@@ -43,7 +48,6 @@ export const ProductService = {
             }),
             prisma.product.count({ where }),
         ]);
-
         return {
             data: products,
             meta: {
@@ -54,6 +58,7 @@ export const ProductService = {
             },
         };
     },
+
 
     async getCustomizationOptions() {
         const [scents, colors, sizes, packagings, toppings] = await Promise.all([
@@ -78,9 +83,40 @@ export const ProductService = {
                 select: { id: true, name: true, price_extra_cents: true },
             }),
         ])
-
-        return { scents, colors, sizes, packagings, toppings }
+        return { scents, colors, waxColors: colors, sizes, packagings, toppings }
     },
+
+
+
+
+    async getCustomCandleProduct() {
+        const product = await prisma.product.findFirst({
+            where: {
+                is_active: true,
+                is_custom: true,
+            },
+            select: {
+                id: true,
+                name: true,
+                base_price_cents: true,
+                is_custom: true,
+                category: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                    },
+                },
+            },
+        });
+
+        if (!product) {
+            throw new Error('Nến tùy chỉnh hiện chưa sẵn sàng. Vui lòng thử lại sau.');
+        }
+
+        return product;
+    },
+
 
     async getProductDetail(id: string) {
         const product = await prisma.product.findUnique({
@@ -97,23 +133,25 @@ export const ProductService = {
                 },
             }
         })
-        if (!product) throw new Error('Sản phẩm không tồn tại');
-
+        if (!product) throw new Error('Sản phẩm này hiện không còn khả dụng.');
         // Lấy options liên quan song song
         const options = await ProductService.getCustomizationOptions();
         return {
-            ...product, options
+            product,
+            options,
         }
     },
+
+
+
 
     async createProduct(data: CreateProductInput) {
         const categoryExists = await prisma.category.findUnique({
             where: { id: data.category_id, is_active: true }
         });
         if (!categoryExists) {
-            throw new Error('Danh mục (Category) không tồn tại hoặc đã bị ẩn');
+            throw new Error('Danh mục đã chọn hiện không còn khả dụng.');
         }
-
         const existingName = await prisma.product.findFirst({
             where: {
                 name: { equals: data.name, mode: 'insensitive' },
@@ -121,9 +159,8 @@ export const ProductService = {
             }
         });
         if (existingName) {
-            throw new Error('Tên sản phẩm đã tồn tại');
+            throw new Error('Tên sản phẩm này đã được sử dụng.');
         }
-
         const product = await prisma.product.create({
             data: {
                 category_id: data.category_id,
@@ -147,21 +184,22 @@ export const ProductService = {
         return product;
     },
 
+
+
+
     async updateProduct(id: string, data: UpdateProductInput) {
         const product = await prisma.product.findUnique({
             where: { id, is_active: true }
         });
-        if (!product) throw new Error('Sản phẩm không tồn tại');
-
+        if (!product) throw new Error('Sản phẩm này hiện không còn khả dụng.');
         if (data.category_id !== undefined) {
             const categoryExists = await prisma.category.findUnique({
                 where: { id: data.category_id, is_active: true }
             });
             if (!categoryExists) {
-                throw new Error('Danh mục (Category) không tồn tại hoặc đã bị ẩn');
+                throw new Error('Danh mục đã chọn hiện không còn khả dụng.');
             }
         }
-
         if (data.name) {
             const existingName = await prisma.product.findFirst({
                 where: {
@@ -171,10 +209,9 @@ export const ProductService = {
                 }
             });
             if (existingName) {
-                throw new Error('Tên sản phẩm đã tồn tại');
+                throw new Error('Tên sản phẩm này đã được sử dụng.');
             }
         }
-
         const updated = await prisma.product.update({
             where: { id },
             data: {
@@ -199,12 +236,14 @@ export const ProductService = {
         return updated;
     },
 
+
+
+
     async deleteProduct(id: string) {
         const product = await prisma.product.findUnique({
             where: { id, is_active: true }
         });
-        if (!product) throw new Error('Sản phẩm không tồn tại');
-
+        if (!product) throw new Error('Sản phẩm này hiện không còn khả dụng.');
         return prisma.product.update({
             where: { id },
             data: { is_active: false },

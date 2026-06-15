@@ -1,47 +1,91 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { MouseEvent } from "react";
+import type {
+  ClientCategoriesSuccessResponseInterface,
+  ClientProductCategoryInterface,
+} from "../../../interface/clientInterface";
+import { getCategoriesAction } from "../../../lib/action/category.action";
+import LoadingState from "../../../components/ui/loadingState";
 
 const scentTags = ["Vanilla & Cedar", "Linen & Sage", "Oud & Amber"];
-const bannerSlides = [
-  {
-    title: "Nến Tùy Chỉnh Premium",
-    description:
-      "Tạo nên thơm của riêng mình với những mùi hương độc đáo và màu sắc tinh tế.",
-    buttonLabel: "Khám Phá",
-    bgClass: "bg-[#6B543A]",
-    href: "/#tuyChinh",
-  },
-  {
-    title: "Sáp Đậu Nành Tự Nhiên",
-    description:
-      "Được làm từ nguyên liệu tự nhiên 100%, an toàn cho gia đình bạn.",
-    buttonLabel: "Tìm Hiểu Thêm",
-    bgClass: "bg-[#9C8A73]",
-    href: "/#boSuuTap",
-  },
-  {
-    title: "Quà Tặng Hoàn Hảo",
-    description:
-      "Mỗi nến ChamCham là một tác phẩm độc lập, hoàn hảo để tặng người thân.",
-    buttonLabel: "Mua Ngay",
-    bgClass: "bg-[#8DA089]",
-    href: "/#boSuuTap",
-  },
+const categoryBgClasses = [
+  "bg-[#6B543A]",
+  "bg-[#9C8A73]",
+  "bg-[#8DA089]",
+  "bg-[#7A1218]",
+  "bg-[#8B363A]",
 ];
 
-export default function TrangChu() {
+export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [categories, setCategories] = useState<ClientProductCategoryInterface[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const categorySlides = useMemo(
+    () =>
+      categories.map((category, index) => ({
+          title: category.name,
+          description:
+            category.description ||
+            "Khám phá những sáng tạo nến thơm được chọn lọc kỹ lưỡng.",
+          buttonLabel: "Xem Danh Mục",
+          bgClass: categoryBgClasses[index % categoryBgClasses.length],
+          href: "/#collection",
+        })),
+    [categories],
+  );
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      setIsLoadingCategories(true);
+
+      // action-(lấy danh sách category trang chủ)
+      const result = await getCategoriesAction();
+
+      if ("success" in result && result.success) {
+        const response = result as ClientCategoriesSuccessResponseInterface;
+        setCategories(response.categories);
+      }
+
+      setIsLoadingCategories(false);
+    };
+
+    void loadCategories();
+  }, []);
+
+  useEffect(() => {
+    if (activeSlide >= categorySlides.length) {
+      setActiveSlide(0);
+    }
+  }, [activeSlide, categorySlides.length]);
+
   const previousSlide = () => {
+    if (categorySlides.length === 0) return;
+
     setActiveSlide((current) =>
-      current === 0 ? bannerSlides.length - 1 : current - 1,
+      current === 0 ? categorySlides.length - 1 : current - 1,
     );
   };
   const nextSlide = () => {
+    if (categorySlides.length === 0) return;
+
     setActiveSlide((current) =>
-      current === bannerSlides.length - 1 ? 0 : current + 1,
+      current === categorySlides.length - 1 ? 0 : current + 1,
     );
+  };
+  const scrollToCollection = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+
+    const collectionSection = document.getElementById("collection");
+    if (!collectionSection) {
+      window.location.href = "/#collection";
+      return;
+    }
+
+    collectionSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.history.pushState(null, "", "/#collection");
   };
 
   return (
@@ -77,13 +121,12 @@ export default function TrangChu() {
         </div>
       </div>
 
-      <div id="trangChu" className="bg-[#7A1218] text-[#F5F0E8] scroll-mt-20">
+      <div className="bg-[#6B1218] text-[#F5F0E8]">
         <section
-          id="home"
-          className="hero fade-section visible observed grid h-[calc(100vh-5rem)] min-h-[560px] grid-cols-1 items-center gap-4 overflow-hidden bg-[#7A1218] px-6 py-6 md:grid-cols-2 md:gap-8 md:px-8 lg:gap-16 lg:px-16"
+          className="hero fade-section visible observed grid h-[calc(100vh-5rem)] min-h-[560px] grid-cols-1 items-center gap-4 overflow-hidden bg-[#6B1218] px-6 py-6 md:grid-cols-2 md:gap-8 md:px-8 lg:gap-16 lg:px-16"
         >
           <div className="hero-text flex w-full max-w-[480px] flex-col items-center text-center opacity-100 md:block md:max-w-none md:text-left">
-            <h1 className="mb-4 break-keep text-center font-serif text-[clamp(1.9rem,7vw,2.35rem)] font-light leading-[1.14] text-[#F5F0E8] md:text-left md:text-[clamp(3rem,5vw,4.5rem)] md:leading-[1.08]">
+            <h1 data-aos="fade-right" className="mb-4 break-keep text-center font-serif text-[clamp(1.9rem,7vw,2.35rem)] font-light leading-[1.14] text-[#F5F0E8] md:text-left md:text-[clamp(3rem,5vw,4.5rem)] md:leading-[1.08]">
               Nến thơm
               <br />
               <em className="font-serif italic text-[#F5F0E8]">thuần khiết,</em>
@@ -92,19 +135,19 @@ export default function TrangChu() {
               <br />
               cho bạn
             </h1>
-            <p className="mb-5 max-w-[420px] text-center text-[0.85rem] leading-[1.6] text-[#F5F0E8]/80 md:max-w-[380px] md:text-left md:text-[0.95rem] md:leading-[1.8] lg:mb-8">
+            <p data-aos="fade-right" className="mb-5 max-w-[420px] text-center text-[0.85rem] leading-[1.6] text-[#F5F0E8]/80 md:max-w-[380px] md:text-left md:text-[0.95rem] md:leading-[1.8] lg:mb-8">
               Tự tạo nên thơm của riêng mình — chọn hương, màu sáp, kích thước
               và bao bì theo phong cách tối giản độc đáo.
             </p>
             <div className="btn-group flex w-full flex-col items-center justify-center gap-2.5 md:w-auto md:flex-row md:flex-wrap md:justify-start lg:gap-4">
               <Link
-                href="/#tuyChinh"
+                href="/#custom"
                 className="btn-primary w-full max-w-[260px] rounded-full border-[1.5px] border-transparent bg-[#F5F0E8] px-6 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] shadow-[0_10px_28px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#F2E8D9] hover:text-[#2C1810] hover:shadow-[0_14px_36px_rgba(0,0,0,0.22)] lg:w-auto lg:px-9 lg:py-3.5"
               >
                 Tùy chỉnh ngay
               </Link>
               <Link
-                href="/#boSuuTap"
+                href="/#collection"
                 className="btn-secondary w-full max-w-[260px] rounded-full border-[1.5px] border-[#f5f0e8]/45 bg-transparent px-6 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f5f0e8]/10 hover:text-[#F5F0E8] lg:w-auto lg:px-[34px]"
               >
                 Xem bộ sưu tập
@@ -112,8 +155,8 @@ export default function TrangChu() {
             </div>
           </div>
 
-          <div className="candle-scene relative flex w-full flex-col items-center justify-center gap-4 opacity-100 md:flex-row md:gap-0">
-            <div className="candle-3d relative h-[170px] w-[110px] animate-[candle-float_4s_ease-in-out_infinite] transform-3d sm:h-[200px] sm:w-[130px] md:h-[240px] md:w-[150px] lg:h-[280px] lg:w-[180px]">
+          <div  className="candle-scene relative flex w-full flex-col items-center justify-center gap-4 opacity-100 md:flex-row md:gap-0">
+            <div data-aos="fade-left" className="candle-3d relative h-[170px] w-[110px] animate-[candle-float_4s_ease-in-out_infinite] transform-3d sm:h-[200px] sm:w-[130px] md:h-[240px] md:w-[150px] lg:h-[280px] lg:w-[180px]">
               <div className="candle-fire-axis absolute left-1/2 top-0 z-10 h-0 w-0">
                 <div className="glow absolute left-[-40px] top-[-80px] h-20 w-20 rounded-full bg-[radial-gradient(circle,rgba(255,180,50,0.3)_0%,transparent_70%)] animate-[candle-glow-centered_1.5s_ease-in-out_infinite]" />
                 <div className="flame absolute left-[-8px] top-[-70px] h-[35px] w-4 animate-[candle-flicker-centered_1.2s_ease-in-out_infinite]">
@@ -129,9 +172,11 @@ export default function TrangChu() {
             </div>
 
             <div className="scent-tags relative flex w-full max-w-[300px] flex-wrap justify-center gap-1.5 md:absolute md:right-[-30px] md:top-[50px] md:w-auto md:max-w-none md:flex-col md:flex-nowrap lg:right-[-80px] lg:gap-2.5">
-              {scentTags.map((tag) => (
+              {scentTags.map((tag, index) => (
                 <div
                   key={tag}
+                  data-aos="fade-left"
+                  data-aos-delay={index * 150}
                   className="tag whitespace-nowrap rounded-[20px] border-[1.5px] border-[#f5f0e8]/50 bg-[#f5f0e8]/35 px-2.5 py-1 text-[0.65rem] font-normal tracking-widest text-[#F5F0E8] backdrop-blur md:px-2.5 md:py-1 md:text-[0.65rem] lg:px-4 lg:py-1.5 lg:text-xs"
                 >
                   {tag}
@@ -140,66 +185,87 @@ export default function TrangChu() {
             </div>
           </div>
         </section>
-
-        <div className="banner-slider relative my-16 w-full max-w-full overflow-hidden rounded-[2px] bg-[#4A0B0E]">
+          
+        {/* category */}
+        <div className="banner-slider relative mt-16 w-full max-w-full overflow-hidden rounded-[2px] bg-[#4A0B0E]">
           <div className="slider-container relative flex h-[200px] w-full bg-[#4A0B0E] md:h-[240px] lg:h-[320px]">
-            {bannerSlides.map((slide, index) => (
-              <div
-                key={slide.title}
-                className={`slide absolute left-0 top-0 flex h-full min-w-full items-center justify-center bg-cover bg-center transition-opacity duration-800 ease-in-out ${slide.bgClass} ${activeSlide === index
+            {isLoadingCategories ? (
+              <div className="flex size-full items-center justify-center px-6">
+                <LoadingState
+                  label="Đang tải danh mục..."
+                  className="border-[#F5F0E8]/10 bg-[#F5F0E8]/10 text-[#F5F0E8]"
+                />
+              </div>
+            ) : categorySlides.length > 0 ? (
+              categorySlides.map((slide, index) => (
+                <div
+                  key={slide.title}
+                  className={`slide absolute left-0 top-0 flex h-full min-w-full items-center justify-center bg-cover bg-center transition-opacity duration-800 ease-in-out ${slide.bgClass} ${activeSlide === index
                     ? "relative opacity-100"
                     : "pointer-events-none opacity-0"
                   }`}
-              >
-                <div className="slide-content absolute z-2 flex size-full box-border flex-col items-center justify-center px-6 py-8 text-center md:px-14 lg:flex-row lg:justify-between lg:px-24 lg:text-left">
-                  <div className="slide-text mb-8 max-w-full text-[#F5F0E8] drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)] md:mb-0 lg:max-w-[50%]">
-                    <h2 className="mb-3 font-serif text-[1.2rem] font-normal leading-tight text-[#F5F0E8] md:text-[1.6rem] lg:text-[2.2rem]">
-                      {slide.title}
-                    </h2>
-                    <p className="mb-5 text-[0.85rem] font-light leading-[1.6] text-[#F5F0E8] md:text-[0.95rem] lg:mb-6">
-                      {slide.description}
-                    </p>
-                    <Link
-                      href={slide.href}
-                      className="slide-btn inline-block rounded-full border-none bg-[#F5F0E8] px-5 py-2.5 text-[0.7rem] font-medium uppercase tracking-widest text-[#6B1218] shadow-[0_10px_24px_rgba(107,18,24,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#F2E8D9] hover:shadow-[0_14px_32px_rgba(107,18,24,0.4)] md:px-7 md:py-3 md:text-[0.8rem]"
-                    >
-                      {slide.buttonLabel}
-                    </Link>
+                >
+                  <div className="slide-content absolute z-2 flex size-full box-border flex-col items-center justify-center px-6 py-8 text-center md:px-14 lg:flex-row lg:justify-between lg:px-24 lg:text-left">
+                    <div className="slide-text mb-8 max-w-full text-[#F5F0E8] drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)] md:mb-0 lg:max-w-[50%]">
+                      <h2 className="mb-3 font-serif text-[1.2rem] font-normal leading-tight text-[#F5F0E8] md:text-[1.6rem] lg:text-[2.2rem]">
+                        {slide.title}
+                      </h2>
+                      <p className="mb-5 text-[0.85rem] font-light leading-[1.6] text-[#F5F0E8] md:text-[0.95rem] lg:mb-6">
+                        {slide.description}
+                      </p>
+                      <a
+                        href={slide.href}
+                        onClick={scrollToCollection}
+                        className="slide-btn inline-block rounded-full border-none bg-[#F5F0E8] px-5 py-2.5 text-[0.7rem] font-medium uppercase tracking-widest text-[#6B1218] shadow-[0_10px_24px_rgba(107,18,24,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#F2E8D9] hover:shadow-[0_14px_32px_rgba(107,18,24,0.4)] md:px-7 md:py-3 md:text-[0.8rem]"
+                      >
+                        {slide.buttonLabel}
+                      </a>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="flex size-full items-center justify-center px-6 text-center">
+                <p className="text-sm font-light leading-7 text-[#F5F0E8]/75">
+                  Chưa có danh mục để hiển thị.
+                </p>
               </div>
-            ))}
+            )}
           </div>
-          <button
-            type="button"
-            className="slider-nav slider-prev absolute left-4 top-1/2 z-10 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[2px] border-none bg-[#f5f0e8]/10 text-[1.2rem] text-[#F5F0E8] transition-all duration-300 hover:bg-[#f5f0e8]/25 md:left-6 md:size-[50px] md:text-2xl"
-            aria-label="Banner trước"
-            onClick={previousSlide}
-          >
-            &#10094;
-          </button>
-          <button
-            type="button"
-            className="slider-nav slider-next absolute right-4 top-1/2 z-10 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[2px] border-none bg-[#f5f0e8]/10 text-[1.2rem] text-[#F5F0E8] transition-all duration-300 hover:bg-[#f5f0e8]/25 md:right-6 md:size-[50px] md:text-2xl"
-            aria-label="Banner sau"
-            onClick={nextSlide}
-          >
-            &#10095;
-          </button>
-          <div className="dots absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-3 md:bottom-6">
-            {bannerSlides.map((slide, index) => (
+          {categorySlides.length > 1 ? (
+            <>
               <button
-                key={slide.title}
                 type="button"
-                aria-label={`Chuyển đến banner ${index + 1}`}
-                className={`dot h-2.5 cursor-pointer rounded-full border-2 border-transparent transition-all duration-300 hover:bg-[#f5f0e8]/70 ${activeSlide === index
+                className="slider-nav slider-prev absolute left-4 top-1/2 z-10 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[2px] border-none bg-[#f5f0e8]/10 text-[1.2rem] text-[#F5F0E8] transition-all duration-300 hover:bg-[#f5f0e8]/25 md:left-6 md:size-[50px] md:text-2xl"
+                aria-label="Banner trước"
+                onClick={previousSlide}
+              >
+                &#10094;
+              </button>
+              <button
+                type="button"
+                className="slider-nav slider-next absolute right-4 top-1/2 z-10 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[2px] border-none bg-[#f5f0e8]/10 text-[1.2rem] text-[#F5F0E8] transition-all duration-300 hover:bg-[#f5f0e8]/25 md:right-6 md:size-[50px] md:text-2xl"
+                aria-label="Banner sau"
+                onClick={nextSlide}
+              >
+                &#10095;
+              </button>
+              <div className="dots absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-3 md:bottom-6">
+                {categorySlides.map((slide, index) => (
+                  <button
+                    key={slide.title}
+                    type="button"
+                    aria-label={`Chuyển đến banner ${index + 1}`}
+                    className={`dot h-2.5 cursor-pointer rounded-full border-2 border-transparent transition-all duration-300 hover:bg-[#f5f0e8]/70 ${activeSlide === index
                     ? "w-7 bg-[#F5F0E8]"
                     : "w-2.5 bg-[#f5f0e8]/35"
                   }`}
-                onClick={() => setActiveSlide(index)}
-              />
-            ))}
-          </div>
+                    onClick={() => setActiveSlide(index)}
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
         </div>
       </div>
     </>

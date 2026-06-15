@@ -2,13 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, User } from "lucide-react";
 import { getCurrentUser } from "../../lib/action/auth.action";
+import NavLinks from "./nav-links";
 
 const navLinks = [
-  { href: "#trangChu", label: "Trang chủ" },
-  { href: "#cauChuyen", label: "Câu chuyện" },
-  { href: "#boSuuTap", label: "Bộ sưu tập" },
-  { href: "#tuVan", label: "Tùy chỉnh" },
-  { href: "#lienHe", label: "Liên hệ" },
+  { href: "/#home", label: "Trang chủ" },
+  { href: "/#collection", label: "Bộ sưu tập" },
+  { href: "/#custom", label: "Tùy chỉnh" },
+  { href: "/#story", label: "Câu chuyện" },
+  { href: "/#contact", label: "Liên hệ" },
 ];
 
 const getInitials = (name: string) => {
@@ -27,10 +28,14 @@ export default async function Header() {
   // action-(lấy user hiện tại)
   const currentUser = await getCurrentUser();
   const userHref =
-    currentUser?.role === "ADMIN" ? "/admin" : currentUser ? "/profile" : "/login";
+    currentUser?.role === "ADMIN"
+      ? "/admin/dashboard"
+      : currentUser
+        ? "/profile"
+        : "/login";
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[100] border-b border-[#f5f0e8]/10 bg-[#6B1218]/95 shadow-lg shadow-black/10 backdrop-blur">
+    <header className="fixed inset-x-0 top-0 z-[100] border-b border-[#f5f0e8]/10 bg-[#4A0C10]/95 shadow-lg shadow-black/10 backdrop-blur">
       <nav className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between gap-6 px-4 sm:px-8 lg:px-16">
         <Link
           href="/"
@@ -46,18 +51,11 @@ export default async function Header() {
           />
         </Link>
 
-        <ul className="nav-links hidden items-center gap-10 md:flex">
-          {navLinks.map((link) => (
-            <li key={link.href}>
-              <a
-                href={link.href}
-                className="nav-anchor relative pb-1 text-xs font-normal uppercase tracking-[0.12em] text-[#f5f0e8]/85 opacity-75 transition-all duration-300 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-[#f5f0e8]/90 after:transition-all after:duration-300 hover:text-[#f5f0e8] hover:opacity-100 hover:after:w-full"
-              >
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <NavLinks
+          links={navLinks}
+          className="nav-links hidden items-center gap-10 md:flex"
+          linkClassName="nav-anchor relative pb-1 text-xs font-normal uppercase tracking-[0.12em] text-[#f5f0e8]/85 opacity-75 transition-all duration-300 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-[#f5f0e8]/90 after:transition-all after:duration-300 hover:text-[#f5f0e8] hover:opacity-100 hover:after:w-full"
+        />
 
         <div className="nav-actions flex shrink-0 items-center gap-3">
           <Link
@@ -77,10 +75,10 @@ export default async function Header() {
             )}
           </Link>
 
-          <a
-            href="/cart.html"
+          <Link
+            href="/cart"
             className="cart-link relative flex size-10 items-center justify-center rounded-full border border-[#f5f0e8]/20 text-[#f5f0e8] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f5f0e8]/40 hover:text-[#F8F0E4] hover:opacity-90"
-            aria-label="Cart"
+            aria-label="Giỏ hàng"
           >
             <ShoppingCart className="size-5" aria-hidden="true" />
             <span
@@ -89,7 +87,7 @@ export default async function Header() {
             >
               0
             </span>
-          </a>
+          </Link>
         </div>
       </nav>
     </header>
