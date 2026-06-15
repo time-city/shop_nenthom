@@ -4,12 +4,19 @@ import { GetProductsParams, CreateProductInput, UpdateProductInput } from "../va
 
 export const ProductService = {
     async getProducts(param: GetProductsParams) {
-        const { page, limit, categoryId, includeCustom, search, minPrice, maxPrice } = param;
+        const { page, limit, categoryId, includeCustom, search, minPrice, maxPrice, scentId } = param;
         const skip = (page - 1) * limit;
         const where: Prisma.ProductWhereInput = {
             is_active: true,
             ...(!includeCustom && { is_custom: false }),
             ...(categoryId && { category_id: categoryId }),
+            ...(scentId && {
+                scents: {
+                    some: {
+                        scent_id: scentId,
+                    },
+                },
+            }),
             ...(search && {
                 name: { contains: search.trim(), mode: 'insensitive' },
             }),
@@ -57,6 +64,19 @@ export const ProductService = {
                 totalPages: Math.ceil(total / limit),
             },
         };
+    },
+
+
+    async getScents() {
+        return prisma.scent.findMany({
+            where: { is_active: true },
+            orderBy: { name: 'asc' },
+            select: {
+                id: true,
+                name: true,
+                price_extra_cents: true,
+            },
+        });
     },
 
 
@@ -169,6 +189,11 @@ export const ProductService = {
                 description: data.description,
                 images: data.images,
                 is_active: data.is_active,
+                scents: {
+                    create: (data.scentIds ?? []).map(scentId => ({
+                        scent_id: scentId
+                    }))
+                }
             },
             select: {
                 id: true,
@@ -179,6 +204,11 @@ export const ProductService = {
                 images: true,
                 is_active: true,
                 created_at: true,
+                scents: {
+                    select: {
+                        scent_id: true
+                    }
+                }
             }
         });
         return product;
@@ -221,6 +251,14 @@ export const ProductService = {
                 description: data.description,
                 images: data.images,
                 is_active: data.is_active,
+                ...(data.scentIds !== undefined && {
+                    scents: {
+                        deleteMany: {},
+                        create: data.scentIds.map(scentId => ({
+                            scent_id: scentId
+                        }))
+                    }
+                })
             },
             select: {
                 id: true,
@@ -231,6 +269,11 @@ export const ProductService = {
                 images: true,
                 is_active: true,
                 created_at: true,
+                scents: {
+                    select: {
+                        scent_id: true
+                    }
+                }
             }
         });
         return updated;

@@ -146,8 +146,22 @@ model Product {
   category         Category @relation(fields: [category_id], references: [id])
   cart_items       CartItem[]
   order_items      OrderItem[]
+  scents           ProductScent[]
 
   @@map("products")
+  @@schema("public")
+}
+
+model ProductScent {
+  product_id String @db.Uuid
+  scent_id   Int
+
+  // Relations
+  product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  scent      Scent   @relation(fields: [scent_id], references: [id], onDelete: Cascade)
+
+  @@id([product_id, scent_id])
+  @@map("product_scents")
   @@schema("public")
 }
 
@@ -160,6 +174,7 @@ model Scent {
   // Relations
   cart_items        CartItem[]
   order_items       OrderItem[]
+  products          ProductScent[]
 
   @@map("scents")
   @@schema("public")
