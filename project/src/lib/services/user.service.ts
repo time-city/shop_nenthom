@@ -1,130 +1,135 @@
-import { Prisma } from "@prisma/client"
 import prisma from "../prisma"
 import { UpdateProfileFormState } from "../validations/auth.schema"
-import { GetUsersParams, UpdateUserStatusInput } from "../validations/user.schema"
+
 
 export const UserService = {
-    async getUsers(params: GetUsersParams) {
-        const { page, limit, status, search } = params
-        const skip = (page - 1) * limit
-        const keyword = search?.trim()
+   async updateProfile(id: string, data: UpdateProfileFormState) {
+       const existingUser = await prisma.user.findFirst({
+           where: {
+               id: {
+                   not: id,
+               },
+               phone: data.phone,
+           },
+       });
 
-        const where: Prisma.UserWhereInput = {
-            role: 'CUSTOMER',
-            ...(status && { status }),
-            ...(keyword && {
-                OR: [
-                    { fullname: { contains: keyword, mode: 'insensitive' } },
-                    { email: { contains: keyword, mode: 'insensitive' } },
-                    { phone: { contains: keyword, mode: 'insensitive' } },
-                ],
-            }),
-        }
 
-        const [users, total] = await prisma.$transaction([
-            prisma.user.findMany({
-                where,
-                skip,
-                take: limit,
-                orderBy: { created_at: 'desc' },
-                select: {
-                    id: true,
-                    fullname: true,
-                    email: true,
-                    phone: true,
-                    status: true,
-                    created_at: true,
-                    updated_at: true,
-                },
-            }),
-            prisma.user.count({ where }),
-        ])
+       if (existingUser) {
+           throw new Error('Số điện thoại đã tồn tại');
+       }
 
-        return {
-            data: users,
-            meta: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-        }
-    },
 
-    async updateProfile(id: string, data: UpdateProfileFormState){
-        const currentUser = await prisma.user.findUnique({
-            where: { id },
-            select: {
-                id: true,
-                status: true,
-            },
-        });
+       const user = await prisma.user.update({
+           where: { id },
+           data: {
+               fullname: data.fullname,
+               phone: data.phone,
+           },
+           select: {
+               id: true,
+               fullname: true,
+               email: true,
+               phone: true,
+               role: true,
+           },
+       });
 
-        if (!currentUser || currentUser.status === 'LOCKED') {
-            throw new Error('Tài khoản không thể cập nhật thông tin lúc này');
-        }
 
-        const existingUser = await prisma.user.findFirst({
-            where: {
-                id: {
-                    not: id,
-                },
-                phone: data.phone,
-            },
-        });
+       return user;
+   },
 
-        if (existingUser) {
-            throw new Error('Số điện thoại đã tồn tại');
-        }
 
-        const user = await prisma.user.update({
-            where: { id },
-            data: {
-                fullname: data.fullname.trim(),
-                phone: data.phone.trim(),
-            },
-            select: {
-                id: true,
-                fullname: true,
-                email: true,
-                phone: true,
-                role: true,
-            },
-        });
+   async getAllUsers() {
+       return prisma.user.findMany({
+           orderBy: { created_at: "desc" },
+           select: {
+               id: true,
+               fullname: true,
+               email: true,
+               phone: true,
+               role: true,
+               status: true,
+               created_at: true,
+           }
+       });
+   },
 
-        return user;
-    },
 
-    async updateUserStatus(data: UpdateUserStatusInput) {
-        const user = await prisma.user.findUnique({
-            where: { id: data.id },
-            select: {
-                id: true,
-                role: true,
-                status: true,
-            },
-        })
+   async toggleUserStatus(id: string) {
+       const user = await prisma.user.findUnique({
+           where: { id },
+           select: { status: true },
+       });
 
-        if (!user) {
-            throw new Error('Không tìm thấy tài khoản phù hợp')
-        }
 
-        if (user.role !== 'CUSTOMER') {
-            throw new Error('Không thể thay đổi trạng thái tài khoản này')
-        }
+       if (!user) {
+           throw new Error("Không tìm thấy người dùng");
+       }
 
-        return prisma.user.update({
-            where: { id: data.id },
-            data: { status: data.status },
-            select: {
-                id: true,
-                fullname: true,
-                email: true,
-                phone: true,
-                status: true,
-                created_at: true,
-                updated_at: true,
-            },
-        })
-    },
+
+       const newStatus = user.status === "ACTIVE" ? "LOCKED" : "ACTIVE";
+
+
+       return prisma.user.update({
+           where: { id },
+           data: { status: newStatus },
+       });
+   },
+
+
+   async toggleUserRole(id: string) {
+       const user = await prisma.user.findUnique({
+           where: { id },
+           select: { role: true },
+       });
+
+
+       if (!user) {
+           throw new Error("Không tìm thấy người dùng");
+       }
+
+
+       const newRole = user.role === "ADMIN" ? "CUSTOMER" : "ADMIN";
+
+
+       return prisma.user.update({
+           where: { id },
+           data: { role: newRole },
+       });
+   },
+
+
+   async getUserOrders(userId: string) {
+       const orders = await prisma.order.findMany({
+           where: { user_id: userId },
+           orderBy: { created_at: "desc" },
+           include: {
+               items: {
+                   include: {
+                       product: true,
+                   }
+               }
+           }
+       });
+
+
+       return orders.map((order) => {
+           const statusText = order.status === "DELIVERED"
+               ? "Hoàn thành"
+               : order.status === "SHIPPED"
+                   ? "Đang giao"
+                   : order.status === "CANCELLED"
+                       ? "Đã hủy"
+                       : "Đang xử lý";
+
+
+           return {
+               id: order.order_number,
+               date: order.created_at.toLocaleDateString("vi-VN"),
+               total: `${(order.total_cents).toLocaleString("vi-VN")} đ`,
+               status: statusText,
+               items: order.items.map(item => `${item.quantity}x ${item.product.name}`).join(", "),
+           };
+       });
+   }
 }
