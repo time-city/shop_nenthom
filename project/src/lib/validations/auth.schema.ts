@@ -19,6 +19,10 @@ export const forgotPasswordSchema = z.object({
   email: z.string().email('Vui lòng nhập email hợp lệ'),
 })
 
+export const resendOtpSchema = z.object({
+  email: z.string().email('Vui lòng nhập email hợp lệ'),
+})
+
 export const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Liên kết đặt lại mật khẩu không hợp lệ'),
   email: z.string().email('Vui lòng nhập email hợp lệ'),
@@ -40,4 +44,5 @@ export const changePasswordSchema = z.object({
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
+export type ResendOtpInput = z.infer<typeof resendOtpSchema>
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>

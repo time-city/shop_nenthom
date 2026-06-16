@@ -1,5 +1,4 @@
 'use server'
-import prisma from "../prisma";
 import { AuthService } from "../services/auth.service";
 import { createSession, deleteSession, getSession } from "../session";
 import {
@@ -7,11 +6,13 @@ import {
     ForgotPasswordInput,
     LoginFormState,
     RegisterFormState,
+    ResendOtpInput,
     ResetPasswordInput,
     changePasswordSchema,
     forgotPasswordSchema,
     loginSchema,
     registerSchema,
+    resendOtpSchema,
     resetPasswordSchema,
 } from "../validations/auth.schema";
 
@@ -115,6 +116,29 @@ export async function resetPassword(data: ResetPasswordInput) {
     }
 }
 
+export async function resendResetPasswordOtp(data: ResendOtpInput): Promise<
+    | { success: true; data: { email: string; token: string }; message: string }
+    | { success: false; error: string }
+> {
+    const parsed = resendOtpSchema.safeParse(data);
+
+    if (!parsed.success) {
+        return { success: false, error: parsed.error.issues[0].message };
+    }
+
+    try {
+        const reset = await AuthService.resendPasswordResetOtp(parsed.data);
+
+        return {
+            success: true,
+            data: reset,
+            message: 'Mã OTP mới đã được gửi đến email của bạn.',
+        };
+    } catch (err) {
+        return { success: false, error: (err as Error).message };
+    }
+}
+
 export async function changePassword(data: ChangePasswordInput) {
     const parsed = changePasswordSchema.safeParse(data);
 
@@ -140,4 +164,4 @@ export async function changePassword(data: ChangePasswordInput) {
     }
 }
 
-
+export { getCurrentUser } from "./user.action";

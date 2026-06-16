@@ -17,6 +17,7 @@ export async function updateProfileAction(data: UpdateProfileFormState) {
        city: data.city,
        fullname: data.fullname,
        phone: data.phone,
+       postal_code: data.postal_code,
    })
 
 
@@ -129,6 +130,7 @@ export async function getCurrentUser() {
                 select: {
                     address: true,
                     city: true,
+                    postal_code: true,
                 },
             },
         },
@@ -149,5 +151,6 @@ export async function getCurrentUser() {
         status: user.status,
         address: defaultAddress?.address ?? "",
         city: defaultAddress?.city ?? "",
+        postal_code: defaultAddress?.postal_code ?? "",
     };
 }

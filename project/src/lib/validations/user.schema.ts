@@ -14,6 +14,7 @@ export const updateProfileSchema = z.object({
     phone: z.string().trim().regex(/^(0[3|5|7|8|9])+([0-9]{8})$/, 'Số điện thoại không hợp lệ'),
     address: z.string().trim().min(3, 'Địa chỉ không được để trống'),
     city: z.string().trim().min(3, 'Thành phố không được để trống'),
+    postal_code: z.string().trim().optional(),
 })
 
 export type UpdateProfileFormState = z.infer<typeof updateProfileSchema>;
