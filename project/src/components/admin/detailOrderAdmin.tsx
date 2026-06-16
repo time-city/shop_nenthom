@@ -129,11 +129,6 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
             <h1 className="dashboard-page-title">
               Chi tiết Đơn hàng: {order.id}
             </h1>
-            <p className="dashboard-page-subtitle">
-              <Link href="/admin/ordersManagement" style={{ color: "var(--admin-primary)", textDecoration: "underline" }}>
-                ← Quay lại danh sách đơn hàng
-              </Link>
-            </p>
           </div>
         </div>
         <div className="dashboard-top-header-right">
@@ -146,8 +141,8 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
       <div className="dashboard-page-content">
         {/* Customer Info + Payment */}
         <div className="dashboard-grid-2" style={{ marginBottom: "1.5rem", marginTop: 0 }}>
-          <div className="dashboard-info-card">
-            <div className="dashboard-info-card-title flex items-center">
+          <div className="dashboard-card" style={{ padding: "1.5rem" }}>
+            <div className="dashboard-card-title flex items-center" style={{ fontSize: "1.1rem", color: "#6B1218", borderBottom: "1px solid rgba(107, 78, 53, 0.15)", paddingBottom: "0.75rem", marginBottom: "0.75rem" }}>
               <svg
                 width="16"
                 height="16"
@@ -162,21 +157,21 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
               </svg>
               Thông tin khách hàng
             </div>
-            <div className="dashboard-info-row">
-              <span className="label">Họ tên</span>
-              <span className="value">{order.shippingFullname}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
+              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Họ tên:</span>
+              <span style={{ color: "#2C1810", fontWeight: 500 }}>{order.shippingFullname}</span>
             </div>
-            <div className="dashboard-info-row">
-              <span className="label">Điện thoại</span>
-              <span className="value">{order.phone}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
+              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Điện thoại:</span>
+              <span style={{ color: "#2C1810", fontWeight: 500 }}>{order.phone}</span>
             </div>
-            <div className="dashboard-info-row">
-              <span className="label">Email</span>
-              <span className="value">{order.email || "-"}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
+              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Email:</span>
+              <span style={{ color: "#2C1810", fontWeight: 500 }}>{order.email || "-"}</span>
             </div>
-            <div className="dashboard-info-row">
-              <span className="label">Địa chỉ</span>
-              <span className="value">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0" }}>
+              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Địa chỉ:</span>
+              <span style={{ color: "#2C1810", fontWeight: 500, textAlign: "right", marginLeft: "20px" }}>
                 {order.shippingAddress}, {order.shippingCity}
               </span>
             </div>
@@ -197,8 +192,8 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
             )}
           </div>
 
-          <div className="dashboard-info-card">
-            <div className="dashboard-info-card-title flex items-center">
+          <div className="dashboard-card" style={{ padding: "1.5rem" }}>
+            <div className="dashboard-card-title flex items-center" style={{ fontSize: "1.1rem", color: "#6B1218", borderBottom: "1px solid rgba(107, 78, 53, 0.15)", paddingBottom: "0.75rem", marginBottom: "0.75rem" }}>
               <svg
                 width="16"
                 height="16"
@@ -213,44 +208,44 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
               </svg>
               Thanh toán & Giao hàng
             </div>
-            <div className="dashboard-info-row">
-              <span className="label">Phương thức thanh toán</span>
-              <span className="value">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
+              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Phương thức thanh toán:</span>
+              <span style={{ color: "#2C1810", fontWeight: 500, textAlign: "right", marginLeft: "20px" }}>
                 {order.paymentMethod === "bank" ? "Chuyển khoản ngân hàng" : "COD (Thanh toán khi nhận hàng)"}
               </span>
             </div>
-            <div className="dashboard-info-row">
-              <span className="label">Trạng thái thanh toán</span>
-              <span className={`value font-bold ${order.paymentStatus === "paid" ? "text-green-700" : "text-red-700"}`}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
+              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Trạng thái thanh toán:</span>
+              <span className={`font-bold ${order.paymentStatus === "paid" ? "text-green-700" : "text-red-700"}`}>
                 {order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
               </span>
             </div>
-            <div className="dashboard-info-row">
-              <span className="label">Ngày đặt</span>
-              <span className="value">{order.date}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
+              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Ngày đặt:</span>
+              <span style={{ color: "#2C1810", fontWeight: 500 }}>{order.date}</span>
             </div>
-            <div className="dashboard-info-row">
-              <span className="label">Tổng tiền hàng</span>
-              <span className="value">{formatCurrency(order.subtotal)}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
+              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Tổng tiền hàng:</span>
+              <span style={{ color: "#2C1810", fontWeight: 500 }}>{formatCurrency(order.subtotal)}</span>
             </div>
             {order.discount > 0 && (
-              <div className="dashboard-info-row text-[#8A1119]">
-                <span className="label text-[#8A1119]">Giảm giá {order.discountCode ? `(${order.discountCode})` : ""}</span>
-                <span className="value font-bold">-{formatCurrency(order.discount)}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }} className="text-[#8A1119]">
+                <span className="text-[#8A1119]" style={{ fontWeight: 600 }}>Giảm giá {order.discountCode ? `(${order.discountCode})` : ""}:</span>
+                <span className="font-bold">-{formatCurrency(order.discount)}</span>
               </div>
             )}
-            <div className="dashboard-info-row">
-              <span className="label">Phí giao hàng</span>
-              <span className="value">{formatCurrency(order.shipping)}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
+              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Phí giao hàng:</span>
+              <span style={{ color: "#2C1810", fontWeight: 500 }}>{formatCurrency(order.shipping)}</span>
             </div>
-            <div className="dashboard-info-row border-t border-[rgba(107,78,53,0.15)] pt-2 mt-2">
-              <span className="label font-bold text-[#2C1810]">Tổng cộng</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0 0 0", borderTop: "1px solid rgba(107, 78, 53, 0.15)", marginTop: "4px" }}>
+              <span style={{ color: "#2C1810", fontWeight: 700 }}>Tổng cộng:</span>
               <span
-                className="value font-bold"
                 style={{
                   color: "var(--admin-primary)",
                   fontFamily: "var(--admin-font-display)",
                   fontSize: "1.2rem",
+                  fontWeight: 700,
                 }}
               >
                 {formatCurrency(order.total)}

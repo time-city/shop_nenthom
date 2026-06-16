@@ -19,6 +19,7 @@ interface CartStore {
   setLastOrder: (order: Order) => void;
   clearLastOrder: () => void;
   setHasHydrated: (state: boolean) => void;
+  clearCart: () => void;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -41,6 +42,8 @@ export const useCartStore = create<CartStore>()(
       clearLastOrder: () => set({ lastOrder: null }),
 
       setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
+
+      clearCart: () => set({ cartCount: 0, lastOrder: null }),
     }),
     {
       name: "chamcham-cart",

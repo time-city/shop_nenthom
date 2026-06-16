@@ -11,80 +11,13 @@ import LoadingState from "../ui/loadingState";
 
 import type { AdminUser as User } from "@/src/lib/types/admin";
 
-const MOCK_USERS: User[] = [
-  {
-    id: "user-1",
-    name: "Nguyễn Văn A",
-    email: "vana@gmail.com",
-    phone: "0901234567",
-    role: "CUSTOMER",
-    isActive: true,
-    createdAt: "2026-06-01",
-  },
-  {
-    id: "user-2",
-    name: "Trần Thị B",
-    email: "thib@gmail.com",
-    phone: "0912345678",
-    role: "ADMIN",
-    isActive: true,
-    createdAt: "2026-06-02",
-  },
-  {
-    id: "user-3",
-    name: "Lê Văn C",
-    email: "vanc@gmail.com",
-    phone: "0923456789",
-    role: "CUSTOMER",
-    isActive: false,
-    createdAt: "2026-06-03",
-  },
-  {
-    id: "user-4",
-    name: "Phạm Minh D",
-    email: "minhd@gmail.com",
-    phone: "0934567890",
-    role: "CUSTOMER",
-    isActive: true,
-    createdAt: "2026-06-04",
-  },
-  {
-    id: "user-5",
-    name: "Hoàng Thị E",
-    email: "thie@gmail.com",
-    phone: "0945678901",
-    role: "CUSTOMER",
-    isActive: true,
-    createdAt: "2026-06-05",
-  },
-];
+import {
+  getAllUsersAction,
+  toggleUserStatusAction,
+  toggleUserRoleAction,
+} from "../../lib/action/user.action";
 
-let localUsers = [...MOCK_USERS];
-
-const getAllUsersAction = async (): Promise<{ success: boolean; data?: User[]; error?: string }> => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return { success: true, data: localUsers };
-};
-
-const toggleUserStatusAction = async (userId: string): Promise<{ success: boolean; error?: string }> => {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  localUsers = localUsers.map((u) =>
-    u.id === userId ? { ...u, isActive: !u.isActive } : u
-  );
-  return { success: true };
-};
-
-const toggleUserRoleAction = async (userId: string): Promise<{ success: boolean; error?: string }> => {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  localUsers = localUsers.map((u) =>
-    u.id === userId
-      ? { ...u, role: u.role === "ADMIN" ? "CUSTOMER" : "ADMIN" }
-      : u
-  );
-  return { success: true };
-};
-
-const itemsPerPage = 4;
+const itemsPerPage = 10;
 
 export default function ClientManagement() {
   const { toast } = useToast();

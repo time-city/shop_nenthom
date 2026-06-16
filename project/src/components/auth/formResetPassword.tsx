@@ -12,7 +12,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useToast } from "@/src/components/ui/toast-provider";
-import { resetPassword as resetPasswordAction, resendResetPasswordOtp } from "../../lib/action/auth.action";
+import {
+  resetPassword as resetPasswordAction,
+  resendResetPasswordOtp,
+} from "../../lib/action/auth.action";
 import type { ResetPasswordValues } from "../../lib/types/client";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 
@@ -77,7 +80,7 @@ export default function FormResetPassword() {
   const [step, setStep] = useState<"otp" | "password">("otp");
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(6).fill(""));
   const [isResending, setIsResending] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+  const [countdown, setCountdown] = useState(60);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -97,6 +100,10 @@ export default function FormResetPassword() {
       if (result.success) {
         toast.success(result.message || "Đã gửi lại mã OTP vào email của bạn");
         setCountdown(60);
+        if (result.data?.token) {
+          setToken(result.data.token);
+          sessionStorage.setItem(resetTokenKey, result.data.token);
+        }
       } else {
         toast.error(result.error ? getFriendlyResponseError(result.error) : "Gửi lại OTP thất bại");
       }

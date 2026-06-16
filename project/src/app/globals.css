@@ -1912,3 +1912,47 @@ body.intro-ready footer {
     width: min(300px, calc(100vw - 48px));
   }
 }
+
+/* Dashboard Info Cards & Info Rows (Admin Order Details) */
+.dashboard-info-card {
+  background: #F8F0E4;
+  border: 1px solid rgba(107, 78, 53, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(44, 24, 16, 0.08);
+  padding: 1.5rem;
+}
+
+.dashboard-info-card-title {
+  font-family: var(--admin-font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #6B1218;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid rgba(107, 78, 53, 0.15);
+  padding-bottom: 0.5rem;
+}
+
+.dashboard-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0;
+  border-bottom: 1px dashed rgba(107, 78, 53, 0.08);
+  font-size: 0.9rem;
+}
+
+.dashboard-info-row:last-of-type {
+  border-bottom: none;
+}
+
+.dashboard-info-row .label {
+  color: #6B4C35;
+  font-weight: 600;
+}
+
+.dashboard-info-row .value {
+  color: #2C1810;
+  text-align: right;
+  font-weight: 500;
+}
+

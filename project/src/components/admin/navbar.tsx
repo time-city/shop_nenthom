@@ -3,9 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { logoutUser } from "../../lib/action/auth.action";
 import { useSupportStore } from "@/src/store/useSupportStore";
+import { useCartStore } from "@/src/store/useCartStore";
+import { useUserStore } from "@/src/store/useUserStore";
+import { getOrdersAction } from "../../lib/action/order.action";
 import type { AdminNavItem, AdminSidebarSectionProps } from "../../lib/types/admin";
 
 const overviewLinks: AdminNavItem[] = [
@@ -110,14 +113,48 @@ export default function Navbar() {
   const unreadCount = useSupportStore((state) => state.unreadCount);
   const hasHydrated = useSupportStore((state) => state._hasHydrated);
 
+  const [pendingOrdersCount, setPendingOrdersCount] = useState<number>(0);
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchPendingOrders = async () => {
+      try {
+        const result = await getOrdersAction({ status: "PENDING", limit: 1 });
+        if (cancelled) return;
+        if (result && "success" in result && result.success && result.meta) {
+          setPendingOrdersCount(result.meta.total);
+        }
+      } catch (err) {
+        // Ignore error
+      }
+    };
+    void fetchPendingOrders();
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
   // Badge chỉ hiển thị sau khi mount và store đã hydrate
   const supportBadge = mounted && hasHydrated && unreadCount > 0
     ? unreadCount > 99 ? "99+" : String(unreadCount)
     : undefined;
+
+  const ordersBadge = mounted && pendingOrdersCount > 0
+    ? pendingOrdersCount > 99 ? "99+" : String(pendingOrdersCount)
+    : undefined;
+
+  const managementLinksWithBadge = useMemo(() => {
+    return managementLinks.map((link) => {
+      if (link.href === "/admin/ordersManagement") {
+        return { ...link, badge: ordersBadge };
+      }
+      return link;
+    });
+  }, [ordersBadge]);
 
   const otherLinksWithBadge: AdminNavItem[] = [
     {
@@ -142,6 +179,9 @@ export default function Navbar() {
         return;
       }
 
+      useCartStore.getState().clearCart();
+      useUserStore.getState().clearUser();
+      useSupportStore.getState().clearSupport();
       router.replace("/login");
       router.refresh();
     });
@@ -192,7 +232,7 @@ export default function Navbar() {
           <SidebarSection
             pathname={pathname}
             title="Quản lý"
-            links={managementLinks}
+            links={managementLinksWithBadge}
             setIsOpen={setIsOpen}
           />
           <SidebarSection
