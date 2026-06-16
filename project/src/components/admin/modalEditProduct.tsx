@@ -21,6 +21,7 @@ import type {
 } from "../../interface/adminInterface";
 import { getCategoriesAction } from "../../lib/action/category.action";
 import { updateProductAction } from "../../lib/action/product.action";
+import { getFriendlyError, getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import type {
   AdminModalEditProductProps,
   AdminProductFormValues,
@@ -36,24 +37,6 @@ const initialProductFormValues: AdminProductFormValues = {
   is_active: true,
   name: "",
 };
-
-const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
-
-const readImageFile = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-        return;
-      }
-
-      reject(new Error("Không thể đọc file ảnh"));
-    };
-    reader.onerror = () => reject(new Error("Không thể đọc file ảnh"));
-    reader.readAsDataURL(file);
-  });
 
 const getFirstImageUrl = (images: unknown) => {
   if (Array.isArray(images) && typeof images[0] === "string") {
@@ -86,9 +69,17 @@ export default function ModalEditProduct({
   );
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // CHANGED: Thêm 2 state để quản lý tải ảnh lên Cloudinary
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageUploaded, setImageUploaded] = useState(false);
 
   useEffect(() => {
-    if (!open || !product) return;
+    if (!open || !product) {
+      // CHANGED: reset state khi modal đóng
+      setImageUploaded(false);
+      setIsUploadingImage(false);
+      return;
+    }
 
     const currentImage = getFirstImageUrl(product.images);
 
@@ -102,6 +93,9 @@ export default function ModalEditProduct({
       name: product.name,
     });
     setIsSubmitting(false);
+    // CHANGED: reset state khi modal mở
+    setImageUploaded(false);
+    setIsUploadingImage(false);
 
     const loadCategories = async () => {
       setIsLoadingCategories(true);
@@ -110,7 +104,7 @@ export default function ModalEditProduct({
       const result = await getCategoriesAction();
 
       if ("error" in result && result.error) {
-        toast.error(result.error);
+        toast.error(getFriendlyResponseError(result.error));
         setCategories([]);
         setIsLoadingCategories(false);
         return;
@@ -137,40 +131,104 @@ export default function ModalEditProduct({
     }));
   };
 
+  // CHANGED: Sửa handleImageChange — bỏ hoàn toàn FileReader, tải trực tiếp lên Cloudinary
   const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (isSubmitting) return;
+  const file = event.target.files?.[0];
+  if (!file) return;
 
-    const file = event.target.files?.[0];
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-    if (!file) return;
+  console.log("Cloudinary cloudName:", cloudName);
+  console.log("Cloudinary uploadPreset:", uploadPreset);
+  console.log("Selected file:", {
+    name: file.name,
+    type: file.type,
+    size: file.size,
+  });
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("Vui lòng chọn đúng file ảnh");
-      event.target.value = "";
-      return;
+  if (!cloudName || !uploadPreset) {
+    toast.error("Thiếu cấu hình Cloudinary trong .env.local");
+    return;
+  }
+
+  if (!file.type.startsWith("image/")) {
+    toast.error("File được chọn không phải ảnh");
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    toast.error("Ảnh vượt quá 5MB");
+    return;
+  }
+
+  setIsUploadingImage(true);
+  setImageUploaded(false);
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", uploadPreset);
+
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+
+    console.log("Cloudinary status:", res.status);
+    console.log("Cloudinary full response:", data);
+    console.log("Cloudinary error message:", data?.error?.message);
+
+    if (!res.ok) {
+      throw new Error(data?.error?.message || "Upload ảnh thất bại");
     }
 
-    if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      toast.error("Ảnh tối đa 5MB");
-      event.target.value = "";
-      return;
+    if (!data.secure_url) {
+      throw new Error("Cloudinary không trả về secure_url");
     }
 
-    try {
-      const imageDataUrl = await readImageFile(file);
-      setFormValues((currentValues) => ({
-        ...currentValues,
-        image_data_url: imageDataUrl,
-        image_file_name: file.name,
-      }));
-    } catch (error) {
-      toast.error((error as Error).message);
-    } finally {
-      event.target.value = "";
-    }
+    setFormValues((prev) => ({
+      ...prev,
+      image_data_url: data.secure_url,
+      image_file_name: file.name,
+    }));
+
+    setImageUploaded(true);
+    toast.success("Tải ảnh lên thành công");
+  } catch (err) {
+    console.error("Cloudinary Upload Error:", err);
+
+    const message =
+      err instanceof Error ? err.message : "Tải ảnh thất bại, vui lòng thử lại";
+
+    toast.error(message);
+  } finally {
+    setIsUploadingImage(false);
+    event.target.value = "";
+  }
+};
+
+  // CHANGED: Hàm xoá ảnh đã chọn và ghi log debug
+  const handleRemoveImage = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log("Xoá ảnh hiện tại. URL cũ:", formValues.image_data_url);
+    setFormValues((prev) => ({
+      ...prev,
+      image_data_url: "",
+      image_file_name: "",
+    }));
+    setImageUploaded(false);
   };
 
+  // CHANGED: Thêm guard chặn lưu khi ảnh đang tải lên Cloudinary
   const handleSave = async () => {
+    if (isUploadingImage) return;
     if (!product || isSubmitting) return;
 
     const productName = formValues.name.trim();
@@ -207,7 +265,7 @@ export default function ModalEditProduct({
       });
 
       if ("error" in result && result.error) {
-        toast.error(result.error);
+        toast.error(getFriendlyResponseError(result.error));
         return;
       }
 
@@ -326,17 +384,51 @@ export default function ModalEditProduct({
             >
               {formValues.image_data_url ? (
                 <>
-                  <Box
-                    component="img"
-                    src={formValues.image_data_url}
-                    alt={formValues.image_file_name || "Ảnh sản phẩm"}
-                    className="mb-3 h-32 w-32 rounded-xl object-cover shadow-[0_14px_34px_rgba(44,24,16,0.16)]"
-                  />
+                  {/* CHANGED: hiển thị ảnh preview kèm badge nếu đã tải lên Cloudinary thành công và nút xoá ảnh */}
+                  <div
+                    style={{ position: "relative", display: "inline-block" }}
+                  >
+                    <Box
+                      component="img"
+                      src={formValues.image_data_url}
+                      alt={formValues.image_file_name || "Ảnh sản phẩm"}
+                      className="mb-3 h-32 w-32 rounded-xl object-cover shadow-[0_14px_34px_rgba(44,24,16,0.16)]"
+                    />
+                    {imageUploaded && (
+                      <span style={{
+                        position: "absolute", top: 4, right: 4,
+                        background: "#22c55e", borderRadius: "50%",
+                        color: "white", fontSize: 11, padding: "2px 5px",
+                        fontWeight: "bold"
+                      }}>✓</span>
+                    )}
+                    {/* CHANGED: nút X ở góc trên bên trái để xoá ảnh (chữ đen nền trắng) */}
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      style={{
+                        position: "absolute", top: 4, left: 4,
+                        background: "white", borderRadius: "50%",
+                        color: "black", border: "1px solid rgba(0,0,0,0.15)", width: 20, height: 20,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 12, cursor: "pointer", fontWeight: "bold",
+                        lineHeight: 1,
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                      }}
+                      title="Xoá ảnh"
+                    >
+                      ✕
+                    </button>
+                  </div>
                   <span className={styles.uploadText}>
                     Đã chọn <strong>{formValues.image_file_name}</strong>
                   </span>
                   <span className={styles.uploadHint}>
-                    Bấm để chọn ảnh khác
+                    {isUploadingImage
+                      ? "Đang tải ảnh lên..."
+                      : imageUploaded
+                      ? "✅ Đã tải lên thành công"
+                      : "Bấm để chọn ảnh khác"}
                   </span>
                 </>
               ) : (
@@ -345,16 +437,23 @@ export default function ModalEditProduct({
                   <span className={styles.uploadText}>
                     Kéo thả ảnh hoặc <strong>chọn file từ máy</strong>
                   </span>
-                  <span className={styles.uploadHint}>PNG, JPG tối đa 5MB</span>
+                  <span className={styles.uploadHint}>
+                    {isUploadingImage
+                      ? "Đang tải ảnh lên..."
+                      : imageUploaded
+                      ? "✅ Đã tải lên thành công"
+                      : "PNG, JPG tối đa 5MB"}
+                  </span>
                 </>
               )}
+              {/* CHANGED: disabled input khi đang upload ảnh hoặc đang submit */}
               <input
                 id="edit-product-image-upload"
                 type="file"
                 accept="image/*"
                 hidden
                 onChange={handleImageChange}
-                disabled={isSubmitting}
+                disabled={isUploadingImage || isSubmitting}
               />
             </label>
           </Box>
@@ -389,7 +488,7 @@ export default function ModalEditProduct({
             type="button"
             variant="contained"
             onClick={handleSave}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
             className={styles.primaryButton}
           >
             {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}

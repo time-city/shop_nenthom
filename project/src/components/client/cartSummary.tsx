@@ -1,5 +1,6 @@
 "use client";
 
+import { useOptimistic, useState } from "react";
 import Link from "next/link";
 import type { CartSummaryProps } from "../../lib/types/client";
 
@@ -11,7 +12,14 @@ export default function CartSummary({
   onApplyPromo,
   onCheckout,
   subtotal,
+  appliedDiscountCode,
+  discountAmount = 0,
 }: CartSummaryProps) {
+  const [optimisticSubtotal] = useOptimistic(subtotal);
+  const [promoInput, setPromoInput] = useState("");
+
+  const total = Math.max(optimisticSubtotal - discountAmount, 0);
+
   return (
     <aside className="h-fit rounded-2xl bg-[#F8F0E4] p-6 shadow-[0_16px_36px_rgba(44,24,16,0.08)] sm:p-8">
       <div className="mb-8 border-b border-[#6B4C35]/15 pb-8">
@@ -26,11 +34,13 @@ export default function CartSummary({
             id="promoCode"
             type="text"
             placeholder="Nhập mã khuyến mãi..."
+            value={promoInput}
+            onChange={(e) => setPromoInput(e.target.value)}
             className="min-w-0 flex-1 rounded-full border-[1.5px] border-[#6B4C35]/25 bg-white px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#6B4C35]/45 focus:border-[#6B1218] focus:ring-4 focus:ring-[#6B1218]/10"
           />
           <button
             type="button"
-            onClick={onApplyPromo}
+            onClick={() => onApplyPromo(promoInput)}
             className="rounded-full border border-[#6B1218] bg-[#6B1218] px-6 py-3 text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition hover:bg-[#4A0C10]"
           >
             Áp dụng
@@ -44,8 +54,14 @@ export default function CartSummary({
 
       <div className="mb-4 flex justify-between gap-4 text-sm font-light text-[#6B4C35]">
         <span>Tạm tính:</span>
-        <span>{formatPrice(subtotal)}</span>
+        <span>{formatPrice(optimisticSubtotal)}</span>
       </div>
+      {discountAmount > 0 && appliedDiscountCode && (
+        <div className="mb-4 flex justify-between gap-4 text-sm font-medium text-[#8A1119]">
+          <span>Giảm giá ({appliedDiscountCode}):</span>
+          <span>-{formatPrice(discountAmount)}</span>
+        </div>
+      )}
       <div className="mb-5 flex justify-between gap-4 text-sm font-light text-[#6B4C35]">
         <span>Phí vận chuyển:</span>
         <span className="italic text-[#8B5E3C]">Miễn phí</span>
@@ -53,7 +69,7 @@ export default function CartSummary({
       <div className="mb-8 flex justify-between gap-4 border-t border-[#6B4C35]/15 pt-5 text-[#2C1810]">
         <span>Tổng cộng:</span>
         <span className="font-serif text-[1.6rem] font-bold text-[#6B1218]">
-          {formatPrice(subtotal)}
+          {formatPrice(total)}
         </span>
       </div>
 
@@ -74,3 +90,4 @@ export default function CartSummary({
     </aside>
   );
 }
+

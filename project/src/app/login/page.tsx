@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import FormSignIn from "../../components/auth/formSignIn";
-import { getCurrentUser } from "../../lib/action/auth.action";
+import { getCurrentUser } from "../../lib/action/user.action";
 
 export default async function LoginPage() {
   // action-(kiểm tra đăng nhập)

@@ -14,6 +14,7 @@ import { z } from "zod";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { forgotPassword as forgotPasswordAction } from "../../lib/action/auth.action";
 import type { ForgotPasswordValues } from "../../lib/types/client";
+import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 
 const initialValues: ForgotPasswordValues = {
   email: "",
@@ -65,7 +66,7 @@ export default function FormForgotPassword() {
     console.log("[forgot-password:client] result", result);
 
     if (!result.success) {
-      const message = result.error ?? "Không thể gửi mã OTP";
+      const message = result.error ? getFriendlyResponseError(result.error) : "Không thể gửi mã OTP";
       setErrorMessage(message);
       toast.error(message);
       actions.setSubmitting(false);
@@ -136,16 +137,16 @@ export default function FormForgotPassword() {
                     <Field
                       id="email"
                       name="email"
-                      type="email"
+                      type="text"
                       placeholder="your@email.com"
                       className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
                         touched.email && errors.email
-                          ? "border-[#ffc107]"
+                          ? "border-[#6B1218]"
                           : "border-[#2c1810]/20"
                       }`}
                     />
                     {touched.email && errors.email ? (
-                      <p className="mt-2 text-xs text-[#856404]">
+                      <p className="mt-2 text-xs text-[#6B1218]">
                         {errors.email}
                       </p>
                     ) : null}

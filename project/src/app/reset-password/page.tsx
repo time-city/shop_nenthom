@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import FormResetPassword from "../../components/auth/formResetPassword";
-import { getCurrentUser } from "../../lib/action/auth.action";
+import { getCurrentUser } from "../../lib/action/user.action";
 
 export default async function ResetPasswordPage() {
   // action-(kiểm tra đăng nhập)

@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   ClientOrderRecord,
   ClientOrderUserData,
   OrdersContentProps,
   OrdersHeaderProps,
-} from "../../../lib/types/client";
+} from "@/src/lib/types/client";
+import { getMyOrdersAction } from "@/src/lib/action/order.action";
+import DetailOrder from "@/src/components/client/detailOrder";
 
 const defaultUser: Required<ClientOrderUserData> = {
   email: "",
@@ -28,24 +30,6 @@ const statusClass: Record<ClientOrderRecord["status"], string> = {
   done: "bg-[#6B1218]/10 text-[#6B1218]",
   processing: "bg-[#F4E2B7] text-[#8B5E3C]",
   shipping: "bg-[#45A05C]/15 text-[#1F6B3A]",
-};
-
-const readOrders = () => {
-  try {
-    if (typeof window === "undefined") {
-      return [];
-    }
-
-    const stored = localStorage.getItem("lumiere-orders");
-
-    if (!stored) {
-      return [];
-    }
-
-    return JSON.parse(stored) as ClientOrderRecord[];
-  } catch {
-    return [];
-  }
 };
 
 const getInitials = (name: string) => {
@@ -113,11 +97,47 @@ function OrdersHeader({ user }: OrdersHeaderProps) {
   );
 }
 
-export default function Orders({ initialUser }: OrdersContentProps) {
+export default function OrdersClient({ initialUser }: OrdersContentProps) {
   const [user] = useState<Required<ClientOrderUserData>>(
     initialUser ?? defaultUser,
   );
-  const [orders] = useState<ClientOrderRecord[]>(() => readOrders());
+  const [orders, setOrders] = useState<ClientOrderRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedOrderNumber, setSelectedOrderNumber] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+
+    const fetchOrders = async () => {
+      try {
+        const response = await getMyOrdersAction();
+        if (cancelled) return;
+
+        if ("error" in response && response.error) {
+          setError(response.error);
+        } else if (response.success && response.data) {
+          setOrders(response.data as ClientOrderRecord[]);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void fetchOrders();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main className="min-h-[calc(100dvh-5rem)] bg-[#F2E8D9] text-[#2C1810]">
@@ -128,7 +148,15 @@ export default function Orders({ initialUser }: OrdersContentProps) {
           Lịch Sử Đơn Hàng
         </h2>
 
-        {orders.length > 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center gap-4 rounded-2xl bg-[#F8F0E4] px-4 py-12 text-center shadow-[0_4px_20px_rgba(44,24,16,0.07)]">
+            <div className="text-xl text-[#6B4C35]">Đang tải lịch sử đơn hàng...</div>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center gap-4 rounded-2xl bg-[#F8F0E4] px-4 py-12 text-center shadow-[0_4px_20px_rgba(44,24,16,0.07)]">
+            <div className="text-xl text-[#6B1218] font-medium">{error}</div>
+          </div>
+        ) : orders.length > 0 ? (
           <div className="flex flex-col gap-4">
             {orders.map((order) => (
               <article
@@ -174,6 +202,7 @@ export default function Orders({ initialUser }: OrdersContentProps) {
 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <button
+                    onClick={() => setSelectedOrderNumber(order.id)}
                     type="button"
                     className="w-full rounded-full border-[1.5px] border-[#6B1218] bg-transparent px-4 py-2.5 text-[0.74rem] font-medium uppercase tracking-[0.12em] text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8] sm:w-auto"
                   >
@@ -204,6 +233,13 @@ export default function Orders({ initialUser }: OrdersContentProps) {
           </div>
         )}
       </section>
+
+      {selectedOrderNumber && (
+        <DetailOrder
+          orderNumber={selectedOrderNumber}
+          onClose={() => setSelectedOrderNumber(null)}
+        />
+      )}
     </main>
   );
 }

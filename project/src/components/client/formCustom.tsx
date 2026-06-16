@@ -7,6 +7,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { ClientProductOptionItemInterface } from "../../interface/clientInterface";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { addToCartAction } from "../../lib/action/cart.action";
+import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import { useCartStore } from "@/src/store/useCartStore";
 import type { FormCustomProps } from "../../lib/types/client";
 
 
@@ -35,6 +37,7 @@ export default function FormCustom({
    options,
 }: FormCustomProps) {
    const { toast } = useToast();
+   const { incrementCartCount } = useCartStore();
    const scentOptions = options?.scents ?? emptyOptions;
    const colorOptions = options?.colors ?? emptyOptions;
    const sizeOptions = options?.sizes ?? emptyOptions;
@@ -244,7 +247,7 @@ export default function FormCustom({
 
 
            if ("error" in result && result.error) {
-               toast.error(result.error);
+               toast.error(getFriendlyResponseError(result.error));
                return;
            }
 
@@ -256,6 +259,8 @@ export default function FormCustom({
 
 
            toast.success("Đã thêm nến tùy chỉnh vào giỏ hàng");
+           // Cập nhật badge số lượng trên header
+           incrementCartCount(1);
        } finally {
            setIsAddingToCart(false);
        }

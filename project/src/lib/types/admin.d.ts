@@ -214,7 +214,7 @@ export type AdminModalEditDiscountProps = {
 
 /** Item điều hướng trong sidebar admin. */
 export type AdminNavItem = {
-  badge?: number;
+  badge?: number | string;
   href: string;
   icon: ReactNode;
   label: string;
@@ -309,4 +309,15 @@ export type AdminDeleteButtonProps = {
   title?: string;
   ariaLabel?: string;
   disabled?: boolean;
+};
+
+/** Thông tin tài khoản người dùng hiển thị trong trang quản lý khách hàng. */
+export type AdminUser = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
 };

@@ -52,21 +52,23 @@ export default function CardProduct({
         href={detailHref}
         onClick={openDetail}
         aria-label={`Xem chi tiết ${name}`}
-        className="product-image flex h-48 items-center justify-center overflow-hidden bg-[#F5F0E8] p-5 transition group-hover:bg-[#F2E8D9] sm:h-52 xl:h-56"
+        className="product-image relative block w-full aspect-[4/5] overflow-hidden bg-[#FAF6F0] p-0 transition duration-300"
       >
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={name}
-            className="h-full w-full rounded-lg object-contain transition duration-300 group-hover:scale-[1.03]"
+            className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
           />
         ) : (
-          <div className="candle-preview relative h-[104px] w-[76px] rounded-[6px_6px_5px_5px] shadow-[0_16px_30px_rgba(44,24,16,0.12),inset_-9px_0_16px_rgba(126,93,56,0.08),inset_7px_0_13px_rgba(255,255,255,0.26)] sm:h-[122px] sm:w-[90px]">
-            <div
-              className={`${styles.candleWax} ${getCandleWaxClass(candleColor ?? "#F5E6D3")}`}
-            />
-            <div className="absolute -top-3 left-1/2 h-4 w-5 -translate-x-1/2 rounded-[4px_4px_0_0] bg-[#D6A15F]" />
-            <div className="absolute -top-2 left-1/2 h-3 w-1.5 -translate-x-1/2 rounded-full bg-[#FF9800] shadow-[0_0_16px_rgba(255,152,0,0.68)]" />
+          <div className="flex h-full w-full items-center justify-center bg-[#2C1810]/5">
+            <div className="candle-preview relative h-[104px] w-[76px] rounded-[6px_6px_5px_5px] shadow-[0_16px_30px_rgba(44,24,16,0.12),inset_-9px_0_16px_rgba(126,93,56,0.08),inset_7px_0_13px_rgba(255,255,255,0.26)] sm:h-[122px] sm:w-[90px]">
+              <div
+                className={`${styles.candleWax} ${getCandleWaxClass(candleColor ?? "#F5E6D3")}`}
+              />
+              <div className="absolute -top-3 left-1/2 h-4 w-5 -translate-x-1/2 rounded-[4px_4px_0_0] bg-[#D6A15F]" />
+              <div className="absolute -top-2 left-1/2 h-3 w-1.5 -translate-x-1/2 rounded-full bg-[#FF9800] shadow-[0_0_16px_rgba(255,152,0,0.68)]" />
+            </div>
           </div>
         )}
       </a>
