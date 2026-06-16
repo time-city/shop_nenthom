@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { logoutUser } from "../../lib/action/auth.action";
+import { useCartStore } from "@/src/store/useCartStore";
+import { useUserStore } from "@/src/store/useUserStore";
+import { useSupportStore } from "@/src/store/useSupportStore";
 
 interface MobileMenuProps {
   links: { href: string; label: string }[];
@@ -36,6 +39,9 @@ export default function MobileMenu({ links, currentUser }: MobileMenuProps) {
 
   const handleLogout = async () => {
     await logoutUser();
+    useCartStore.getState().clearCart();
+    useUserStore.getState().clearUser();
+    useSupportStore.getState().clearSupport();
     window.location.href = "/login";
   };
 

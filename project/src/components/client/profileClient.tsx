@@ -8,6 +8,8 @@ import { logoutUser } from "@/src/lib/action/auth.action";
 import { getCurrentUser, updateProfileAction } from "@/src/lib/action/user.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import { useUserStore } from "@/src/store/useUserStore";
+import { useCartStore } from "@/src/store/useCartStore";
+import { useSupportStore } from "@/src/store/useSupportStore";
 import type {
   ClientProfileUserData,
   ProfilePageContentProps,
@@ -147,6 +149,7 @@ export default function ProfilePageContent({
   const { toast } = useToast();
   const router = useRouter();
   const { user: storedUser, setUser, updateAddress, clearUser } = useUserStore();
+  const { clearCart } = useCartStore();
   
   const [profile, setProfile] = useState<Required<ClientProfileUserData>>(
     initialUser ?? defaultUser,
@@ -309,6 +312,8 @@ export default function ProfilePageContent({
     localStorage.removeItem("remember");
     // Xóa user khỏi Zustand store khi logout
     clearUser();
+    clearCart();
+    useSupportStore.getState().clearSupport();
     const message = "Đăng xuất thành công";
     toast.success(message);
 

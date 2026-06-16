@@ -154,12 +154,12 @@ export default function CategoryManagementClient() {
                   </tr>
                 </thead>
                 <tbody>
-                  {!isLoading && !error && categories.map((category) => (
+                  {!isLoading && !error && categories.map((category, index) => (
                     <tr
                       key={category.id}
                       className="transition hover:bg-[#6B1218]/[0.03]"
                     >
-                      <td className={styles.idCell}>#{category.id}</td>
+                      <td className={styles.idCell}>#{index + 1}</td>
                       <td>
                         <div className={`dashboard-product-name ${styles.categoryName}`}>
                           {category.name}

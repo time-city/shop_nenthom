@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type {
   AdminOrder,
@@ -50,6 +51,7 @@ type Props = {
 };
 
 export default function OrdersManagementClient({ orders: initialOrders }: Props) {
+  const router = useRouter();
   const [orders, setOrders] = useState<AdminOrder[]>(initialOrders || []);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -204,7 +206,11 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
                 </thead>
                 <tbody>
                   {!isLoading && !error && filteredOrders.map((order) => (
-                    <tr key={order.id}>
+                    <tr
+                      key={order.id}
+                      className="cursor-pointer transition hover:bg-[#6B1218]/[0.03]"
+                      onClick={() => router.push(`/admin/ordersManagement/${order.id}`)}
+                    >
                       <td>
                         <Link
                           href={`/admin/ordersManagement/${order.id}`}

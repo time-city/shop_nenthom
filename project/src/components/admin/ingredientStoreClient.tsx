@@ -713,9 +713,9 @@ function TableCell({ children }: AdminTableCellProps) {
 function ScentTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Tên mùi hương", "Giá cộng thêm", ""]}>
-      {items.map((item) => (
+      {items.map((item, index) => (
         <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
-          <TableCell>{item.id}</TableCell>
+          <TableCell>{index + 1}</TableCell>
           <TableCell>
             <span className="font-bold">{item.name}</span>
           </TableCell>
@@ -737,9 +737,9 @@ function ScentTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
 function ColorTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Màu sắc", "Tên màu", "Mã hex", "Giá cộng thêm", ""]}>
-      {items.map((item) => (
+      {items.map((item, index) => (
         <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
-          <TableCell>{item.id}</TableCell>
+          <TableCell>{index + 1}</TableCell>
           <TableCell>
             <span
               className={ingredientStyles.colorSwatch}
@@ -768,9 +768,9 @@ function ColorTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
 function SizeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Kích thước", "Giá cộng thêm", ""]}>
-      {items.map((item) => (
+      {items.map((item, index) => (
         <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
-          <TableCell>{item.id}</TableCell>
+          <TableCell>{index + 1}</TableCell>
           <TableCell>
             <span className="font-bold">{item.name}</span>
           </TableCell>
@@ -792,9 +792,9 @@ function SizeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
 function ToppingTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Tên topping", "Giá cộng thêm", "Trạng thái", ""]}>
-      {items.map((item) => (
+      {items.map((item, index) => (
         <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
-          <TableCell>{item.id}</TableCell>
+          <TableCell>{index + 1}</TableCell>
           <TableCell>
             <span className="font-bold">{item.name}</span>
           </TableCell>
@@ -827,9 +827,9 @@ function ToppingTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
 function TypeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Bao bì", "Giá cộng thêm", ""]}>
-      {items.map((item) => (
+      {items.map((item, index) => (
         <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
-          <TableCell>{item.id}</TableCell>
+          <TableCell>{index + 1}</TableCell>
           <TableCell>
             <span className="font-bold">{item.name}</span>
           </TableCell>

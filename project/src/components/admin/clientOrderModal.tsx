@@ -1,38 +1,58 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { AdminUser as User } from "@/src/lib/types/admin";
+import { getUserOrdersAction } from "../../lib/action/user.action";
 
 interface ClientOrderModalProps {
     user: User | null;
     onClose: () => void;
 }
 
-const mockUserOrders: Record<
-    string,
-    { id: string; date: string; total: string; status: string; items: string }[]
-> = {
-    "1": [
-        { id: "DH-1001", date: "15/01/2024", total: "250.000 đ", status: "Hoàn thành", items: "1x Nến thơm Cozy Home" },
-        { id: "DH-1002", date: "10/02/2024", total: "380.000 đ", status: "Hoàn thành", items: "1x Nến thơm Forest Mist, 1x Sáp thơm" }
-    ],
-    "2": [
-        { id: "DH-2001", date: "22/02/2024", total: "620.000 đ", status: "Hoàn thành", items: "2x Nến Lavender Dream" }
-    ],
-    "4": [
-        { id: "DH-4001", date: "16/03/2024", total: "180.000 đ", status: "Đang giao", items: "1x Nến thơm Autumn Woods" }
-    ],
-    "5": [
-        { id: "DH-5001", date: "02/04/2024", total: "490.000 đ", status: "Hoàn thành", items: "1x Nến Cinnamon, 1x Topping Cam Lát" }
-    ],
-    "7": [
-        { id: "DH-7001", date: "08/05/2024", total: "310.000 đ", status: "Đang giao", items: "1x Nến Jasmine Kiss" }
-    ]
-};
+interface UserOrder {
+    id: string;
+    date: string;
+    total: string;
+    status: string;
+    items: string;
+}
 
 export default function ClientOrderModal({ user, onClose }: ClientOrderModalProps) {
-    if (!user) return null;
+    const [orders, setOrders] = useState<UserOrder[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const orders = mockUserOrders[user.id] ?? [];
+    useEffect(() => {
+        if (!user) return;
+        let cancelled = false;
+        const fetchOrders = async () => {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const res = await getUserOrdersAction(user.id);
+                if (cancelled) return;
+                if ("error" in res && res.error) {
+                    setError(res.error);
+                } else if ("success" in res && res.success && res.data) {
+                    setOrders(res.data);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setError(err instanceof Error ? err.message : String(err));
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
+            }
+        };
+        void fetchOrders();
+        return () => {
+            cancelled = true;
+        };
+    }, [user]);
+
+    if (!user) return null;
 
     return (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
@@ -83,7 +103,19 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                                 </tr>
                             </thead>
                             <tbody>
-                                {orders.length > 0 ? (
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-4 py-8 text-center text-[#6B4C35] text-sm">
+                                            Đang tải danh sách đơn hàng...
+                                        </td>
+                                    </tr>
+                                ) : error ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-4 py-8 text-center text-[#C62828] text-sm">
+                                            {error}
+                                        </td>
+                                    </tr>
+                                ) : orders.length > 0 ? (
                                     orders.map((order) => (
                                         <tr
                                             key={order.id}

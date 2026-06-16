@@ -14,6 +14,7 @@ interface SupportStore {
   incrementUnread: () => void;
   decrementUnread: (by?: number) => void;
   setHasHydrated: (state: boolean) => void;
+  clearSupport: () => void;
 }
 
 export const useSupportStore = create<SupportStore>()(
@@ -31,6 +32,8 @@ export const useSupportStore = create<SupportStore>()(
         set((state) => ({ unreadCount: Math.max(0, state.unreadCount - by) })),
 
       setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
+
+      clearSupport: () => set({ unreadCount: 0 }),
     }),
     {
       name: "chamcham-support",
