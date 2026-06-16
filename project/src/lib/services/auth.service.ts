@@ -2,7 +2,7 @@ import prisma from '../prisma';
 import bcryptjs from 'bcryptjs';
 import { createOtpToken, generateOtp, verifyOtpToken } from '../otp';
 import { sendResetPasswordEmail } from '../mailer';
-import { ChangePasswordInput, ForgotPasswordInput, RegisterFormState, ResetPasswordInput } from '../validations/auth.schema';
+import { ChangePasswordInput, ForgotPasswordInput, RegisterFormState, ResendOtpInput, ResetPasswordInput } from '../validations/auth.schema';
 
 function normalizeEmail(email: string) {
     return email.trim().toLowerCase();
@@ -112,6 +112,10 @@ export const AuthService = {
         });
 
         return { email, token };
+    },
+
+    async resendPasswordResetOtp(data: ResendOtpInput) {
+        return AuthService.requestPasswordReset(data);
     },
 
     async resetPassword(data: ResetPasswordInput) {

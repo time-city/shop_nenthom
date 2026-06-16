@@ -12,6 +12,7 @@ export const createOrderSchema = z.object({
   shipping_city: z.string().trim().min(1, 'Vui lòng chọn thành phố'),
   shipping_fullname: z.string().trim().min(1, 'Vui lòng nhập họ tên'),
   shipping_note: z.string().trim().optional(),
+  shipping_postal_code: z.string().trim().optional(),
   shipping_phone: z
     .string()
     .trim()
