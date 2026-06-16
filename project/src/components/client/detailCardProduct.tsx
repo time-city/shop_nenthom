@@ -1,12 +1,14 @@
 "use client";
 
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useOptimistic, useTransition } from "react";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { addToCartAction } from "../../lib/action/cart.action";
+import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import { useCartStore } from "@/src/store/useCartStore";
 import type {
  DetailCardProductProps,
  DetailOptionGroupProps,
@@ -55,6 +57,7 @@ export default function DetailCardProduct({
 }: DetailCardProductProps) {
  const { toast } = useToast();
  const router = useRouter();
+ const { incrementCartCount } = useCartStore();
  const [open, setOpen] = useState(true);
  const [quantity, setQuantity] = useState(1);
  const [activeTab, setActiveTab] = useState<"description" | "ingredients" | "usage">(
@@ -69,7 +72,12 @@ export default function DetailCardProduct({
  const [selectedPackaging, setSelectedPackaging] = useState(
    product.options?.packagings?.[0] ?? null,
  );
- const [isAddingToCart, setIsAddingToCart] = useState(false);
+ const [isAddingToCart] = useState(false);
+ const [isPending, startTransition] = useTransition();
+ const [optimisticAdding, setOptimisticAdding] = useOptimistic(
+   isAddingToCart,
+   (state, update: boolean) => update
+ );
 
 
  const image = getFirstImage(product.images);
@@ -102,36 +110,36 @@ export default function DetailCardProduct({
  };
 
 
- const handleAddToCart = async () => {
-   if (isAddingToCart) return;
+ const handleAddToCart = () => {
+   if (optimisticAdding) return;
 
+   startTransition(async () => {
+     setOptimisticAdding(true);
+     try {
+       // action-(thêm sản phẩm vào giỏ hàng)
+       const result = await addToCartAction({
+         color_id: selectedColor?.id,
+         pack_id: selectedPackaging?.id,
+         product_id: product.id,
+         quantity,
+         scent_id: product.options?.scents?.[0]?.id,
+         size_id: selectedSize?.id,
+       });
 
-   setIsAddingToCart(true);
+       if ("error" in result && result.error) {
+         toast.error(getFriendlyResponseError(result.error));
+         return;
+       }
 
-
-   try {
-     // action-(thêm sản phẩm vào giỏ hàng)
-     const result = await addToCartAction({
-       color_id: selectedColor?.id,
-       pack_id: selectedPackaging?.id,
-       product_id: product.id,
-       quantity,
-       scent_id: product.options?.scents?.[0]?.id,
-       size_id: selectedSize?.id,
-     });
-
-
-     if ("error" in result && result.error) {
-       toast.error(result.error);
-       return;
+       toast.success("Đã thêm sản phẩm vào giỏ hàng");
+       // Cập nhật badge số lượng trên header
+       incrementCartCount(quantity);
+     } catch (err) {
+       // Rollback is automatic
      }
-
-
-     toast.success("Đã thêm sản phẩm vào giỏ hàng");
-   } finally {
-     setIsAddingToCart(false);
-   }
+   });
  };
+
 
 
  return (
@@ -158,20 +166,22 @@ export default function DetailCardProduct({
 
          <div className="grid gap-8 rounded-2xl bg-[#F8F0E4] lg:grid-cols-2 lg:gap-12">
            <div className="product-visual">
-             <div className="flex aspect-square items-center justify-center rounded-xl bg-[#F5F0E8] p-8 shadow-[0_8px_22px_rgba(44,24,16,0.08)]">
+             <div className="flex aspect-[4/5] items-center justify-center rounded-2xl bg-white p-6 border border-[#2C1810]/5 shadow-[0_20px_50px_rgba(44,24,16,0.06)] overflow-hidden">
                {image ? (
                  <img
                    src={image}
                    alt={product.name}
-                   className="max-h-full max-w-full rounded-lg object-contain"
+                   className="max-h-full max-w-full rounded-xl object-contain transition duration-700 ease-out hover:scale-105"
                  />
                ) : (
-                 <div className="relative h-[220px] w-[165px] rounded-[8px_8px_6px_6px] shadow-[0_28px_54px_rgba(44,24,16,0.14),inset_-16px_0_28px_rgba(126,93,56,0.1),inset_12px_0_22px_rgba(255,255,255,0.28)] sm:h-[250px] sm:w-[185px]">
-                   <div
-                     className={`${styles.productCandleWax} ${getProductCandleWaxClass(candleColor)}`}
-                   />
-                   <div className="absolute -top-5 left-1/2 h-7 w-8 -translate-x-1/2 rounded-[6px_6px_0_0] bg-[#D6A15F]" />
-                   <div className="absolute -top-4 left-1/2 h-5 w-2.5 -translate-x-1/2 rounded-full bg-[#FF9800] shadow-[0_0_20px_rgba(255,152,0,0.72)]" />
+                 <div className="flex h-full w-full items-center justify-center bg-[#FAF6F0]">
+                   <div className="relative h-[220px] w-[165px] rounded-[8px_8px_6px_6px] shadow-[0_28px_54px_rgba(44,24,16,0.14),inset_-16px_0_28px_rgba(126,93,56,0.1),inset_12px_0_22px_rgba(255,255,255,0.28)] sm:h-[250px] sm:w-[185px]">
+                     <div
+                       className={`${styles.productCandleWax} ${getProductCandleWaxClass(candleColor)}`}
+                     />
+                     <div className="absolute -top-5 left-1/2 h-7 w-8 -translate-x-1/2 rounded-[6px_6px_0_0] bg-[#D6A15F]" />
+                     <div className="absolute -top-4 left-1/2 h-5 w-2.5 -translate-x-1/2 rounded-full bg-[#FF9800] shadow-[0_0_20px_rgba(255,152,0,0.72)]" />
+                   </div>
                  </div>
                )}
              </div>
@@ -257,10 +267,10 @@ export default function DetailCardProduct({
                  <button
                    type="button"
                    onClick={handleAddToCart}
-                   disabled={isAddingToCart}
+                   disabled={optimisticAdding}
                    className="w-full rounded-full bg-[#6B1218] px-6 py-4 text-[0.85rem] font-medium uppercase tracking-[0.08em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.3)] transition hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-65"
                  >
-                   {isAddingToCart ? "Đang thêm..." : "Thêm vào giỏ"}
+                   {optimisticAdding ? "Đang thêm..." : "Thêm vào giỏ"}
                  </button>
                  <button
                    type="button"

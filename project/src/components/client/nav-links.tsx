@@ -12,6 +12,7 @@ export default function NavLinks({
   links,
   className,
   linkClassName,
+  onLinkClick,
 }: ClientNavLinksProps) {
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<string>("home");
@@ -74,6 +75,10 @@ export default function NavLinks({
   }, [pathname]);
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (onLinkClick) {
+      onLinkClick();
+    }
+
     const hash = href.split("#")[1];
     if (!hash) return;
 

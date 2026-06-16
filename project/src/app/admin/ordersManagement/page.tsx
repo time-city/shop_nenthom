@@ -1,5 +1,5 @@
 import { getListOrderAction } from "../../../lib/action/order.action";
-import OrdersManagementClient from "./ordersManagementClient";
+import OrdersManagementClient from "@/src/components/admin/ordersManagementClient";
 
 export default async function OrdersManagementPage() {
   const result = await getListOrderAction({ limit: 100, page: 1 });
@@ -9,3 +9,4 @@ export default async function OrdersManagementPage() {
 
   return <OrdersManagementClient orders={orders} />;
 }
+

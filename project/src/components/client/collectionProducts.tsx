@@ -1,23 +1,25 @@
 "use client";
 
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useContext, useEffect } from "react";
 import CardProduct from "@/src/components/client/cardProduct";
 import type {
- ClientProductCategoryInterface,
+ ClientProductOptionItemInterface,
  ClientProductItemInterface,
  ClientProductsMetaInterface,
  ClientProductsSuccessResponseInterface,
 } from "@/src/interface/clientInterface";
 import { getProductsAction } from "@/src/lib/action/product.action";
+import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import type { CollectionSearchParams } from "@/src/lib/types/client";
+import { CollectionContext } from "./collectionClient";
 
 
 type CollectionProductsClientProps = {
- categories: ClientProductCategoryInterface[];
+ scents: ClientProductOptionItemInterface[];
  initialError?: string;
  initialFilters: {
-   categoryId: string;
+   scentId: string;
    priceRange: string;
    search: string;
  };
@@ -42,7 +44,7 @@ const getFirstImage = (images: unknown) => {
 const buildCollectionHref = (
  params: CollectionSearchParams,
  overrides: Partial<CollectionSearchParams>,
-) => {
+ ) => {
  const nextParams = new URLSearchParams();
  const merged = { ...params, ...overrides };
 
@@ -74,7 +76,7 @@ const parsePriceRange = (priceRange: string) => {
 
 
 export default function CollectionProducts({
- categories,
+ scents,
  initialError = "",
  initialFilters,
  initialMeta,
@@ -82,15 +84,43 @@ export default function CollectionProducts({
  initialProducts,
  pageSize,
 }: CollectionProductsClientProps) {
- const [categoryId, setCategoryId] = useState(initialFilters.categoryId);
- const [errorMessage, setErrorMessage] = useState(initialError);
- const [isLoading, setIsLoading] = useState(false);
+ const context = useContext(CollectionContext);
+
+ const [localScentId, setLocalScentId] = useState(initialFilters.scentId);
+ const [localErrorMessage, setLocalErrorMessage] = useState(initialError);
+ const [localIsLoading, setLocalIsLoading] = useState(false);
  const [isPaginating, setIsPaginating] = useState(false);
- const [meta, setMeta] = useState(initialMeta);
- const [pageProducts, setPageProducts] = useState(initialProducts);
- const [priceRange, setPriceRange] = useState(initialFilters.priceRange);
+ const [localMeta, setLocalMeta] = useState(initialMeta);
+ const [localPageProducts, setLocalPageProducts] = useState(initialProducts);
+ const [localPriceRange, setLocalPriceRange] = useState(initialFilters.priceRange);
  const [search, setSearch] = useState(initialFilters.search);
  const [urlParams, setUrlParams] = useState<CollectionSearchParams>(initialParams);
+
+ const scentId = context ? context.selectedFilter.scentId : localScentId;
+ const setScentId = context
+   ? (val: string) => context.setSelectedFilter((prev: any) => ({ ...prev, scentId: val }))
+   : setLocalScentId;
+
+ const priceRange = context ? context.selectedFilter.priceRange : localPriceRange;
+ const setPriceRange = context
+   ? (val: string) => context.setSelectedFilter((prev: any) => ({ ...prev, priceRange: val }))
+   : setLocalPriceRange;
+
+ const pageProducts = context ? context.products : localPageProducts;
+ const isLoading = context ? context.isLoading : localIsLoading;
+ const errorMessage = context ? context.error : localErrorMessage;
+ const meta = context ? context.meta : localMeta;
+
+ const setPageProducts = setLocalPageProducts;
+ const setErrorMessage = context ? context.setError : setLocalErrorMessage;
+ const setIsLoading = setLocalIsLoading;
+ const setMeta = setLocalMeta;
+
+ useEffect(() => {
+   if (context) {
+     setSearch(context.selectedFilter.search);
+   }
+ }, [context?.selectedFilter.search]);
 
 
  const totalPages = Math.max(meta.totalPages ?? 1, 1);
@@ -118,18 +148,29 @@ export default function CollectionProducts({
 
 
  const loadProducts = async ({
-   nextCategoryId = categoryId,
+   nextScentId = scentId,
    nextPage = currentPage,
    nextPriceRange = priceRange,
    nextSearch = search,
    isPaginationClick = false,
  }: {
-   nextCategoryId?: string;
+   nextScentId?: string;
    nextPage?: number;
    nextPriceRange?: string;
    nextSearch?: string;
    isPaginationClick?: boolean;
  }) => {
+   if (context) {
+     const nextParams: CollectionSearchParams = {
+       scentId: nextScentId || undefined,
+       page: nextPage > 1 ? String(nextPage) : undefined,
+       priceRange: nextPriceRange || undefined,
+       q: nextSearch.trim() || undefined,
+     };
+     updateUrl(nextParams);
+     return;
+   }
+
    if (isPaginationClick) {
      setIsPaginating(true);
    } else {
@@ -139,7 +180,7 @@ export default function CollectionProducts({
 
 
    const result = await getProductsAction({
-     categoryId: nextCategoryId ? Number(nextCategoryId) : undefined,
+     scentId: nextScentId ? Number(nextScentId) : undefined,
      limit: pageSize,
      maxPrice,
      minPrice,
@@ -149,7 +190,7 @@ export default function CollectionProducts({
 
 
    if ("error" in result && result.error) {
-     setErrorMessage(result.error);
+     setErrorMessage(getFriendlyResponseError(result.error));
      setPageProducts([]);
      setIsLoading(false);
      setIsPaginating(false);
@@ -163,7 +204,7 @@ export default function CollectionProducts({
        (product) => product.is_custom !== true,
      );
      const nextParams: CollectionSearchParams = {
-       categoryId: nextCategoryId || undefined,
+       scentId: nextScentId || undefined,
        page: nextPage > 1 ? String(nextPage) : undefined,
        priceRange: nextPriceRange || undefined,
        q: nextSearch.trim() || undefined,
@@ -202,26 +243,26 @@ export default function CollectionProducts({
      >
        <div className="filter-group">
          <label
-           htmlFor="category-filter"
+           htmlFor="scent-filter"
            className="mb-3 block text-[0.7rem] uppercase tracking-[0.14em] text-[#F5F0E8]"
          >
            Hương liệu
          </label>
          <select
-           id="category-filter"
-           name="categoryId"
-           value={categoryId}
+           id="scent-filter"
+           name="scentId"
+           value={scentId}
            onChange={(event) => {
-             const nextCategoryId = event.target.value;
-             setCategoryId(nextCategoryId);
-             void loadProducts({ nextCategoryId, nextPage: 1 });
+             const nextScentId = event.target.value;
+             setScentId(nextScentId);
+             void loadProducts({ nextScentId, nextPage: 1 });
            }}
            className="filter-input h-12 w-full rounded-md border border-[#F5F0E8]/25 bg-[#8B363A] px-4 text-sm text-[#F5F0E8] outline-none transition focus:border-[#F5F0E8]/70 focus:ring-4 focus:ring-[#F5F0E8]/10"
          >
            <option value="">Tất cả</option>
-           {categories.map((category) => (
-             <option key={category.id} value={category.id}>
-               {category.name}
+           {scents.map((scent) => (
+             <option key={scent.id} value={scent.id}>
+               {scent.name}
              </option>
            ))}
          </select>
@@ -284,11 +325,11 @@ export default function CollectionProducts({
          <button
            type="button"
            onClick={() => {
-             setCategoryId("");
+             setScentId("");
              setPriceRange("");
              setSearch("");
              void loadProducts({
-               nextCategoryId: "",
+               nextScentId: "",
                nextPage: 1,
                nextPriceRange: "",
                nextSearch: "",

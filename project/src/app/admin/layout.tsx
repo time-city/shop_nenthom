@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Navbar from "../../components/admin/navbar";
-import { getCurrentUser } from "../../lib/action/auth.action";
+import { getCurrentUser } from "../../lib/action/user.action";
 
 export default async function AdminLayout({
   children,

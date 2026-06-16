@@ -1,6 +1,7 @@
 "use client";
 
 
+import { useOptimistic, useTransition } from "react";
 import type { CartItemProps } from "../../lib/types/client";
 
 
@@ -13,97 +14,136 @@ const getItemName = (item: CartItemProps["item"]) =>
 
 
 export default function CartItem({
- disabled = false,
- index,
- item,
- onQuantityChange,
- onSelectChange,
- quantityDisabled = false,
- selected = false,
+  disabled = false,
+  index,
+  item,
+  onQuantityChange,
+  onSelectChange,
+  quantityDisabled = false,
+  selected = false,
 }: CartItemProps) {
- const quantity = Math.max(item.quantity, 1);
- const itemTotal = item.price * quantity;
- const packLabel =
-   item.pack && String(item.pack).toLowerCase() !== "undefined"
-     ? item.pack
-     : "";
+  const [isPending, startTransition] = useTransition();
+
+  const [optimisticItem, setOptimisticItem] = useOptimistic(
+    { quantity: item.quantity, isVisible: true },
+    (state, update: { quantity?: number; isVisible?: boolean }) => ({
+      quantity: update.quantity !== undefined ? update.quantity : state.quantity,
+      isVisible: update.isVisible !== undefined ? update.isVisible : state.isVisible,
+    })
+  );
+
+  const handleQuantityChange = (change: number) => {
+    const nextQty = optimisticItem.quantity + change;
+    startTransition(async () => {
+      if (nextQty <= 0) {
+        setOptimisticItem({ isVisible: false });
+      } else {
+        setOptimisticItem({ quantity: nextQty });
+      }
+      try {
+        await onQuantityChange(index, change);
+      } catch (error) {
+        // Rollback is automatic
+      }
+    });
+  };
+
+  if (!optimisticItem.isVisible) {
+    return null;
+  }
+
+  const quantity = Math.max(optimisticItem.quantity, 1);
+  const itemTotal = item.price * quantity;
+  const packLabel =
+    item.pack && String(item.pack).toLowerCase() !== "undefined"
+      ? item.pack
+      : "";
 
 
- return (
-   <article className="grid gap-5 border-b border-[#6B4C35]/10 px-5 py-6 last:border-b-0 sm:px-7 md:grid-cols-[auto_116px_1fr_auto] md:gap-8 md:py-8">
-     <label className="flex items-start pt-1">
-       <span className="sr-only">Chọn sản phẩm {getItemName(item)}</span>
-       <input
-         type="checkbox"
-         checked={selected}
-         onChange={(event) => onSelectChange(index, event.target.checked)}
-         disabled={disabled}
-         className="size-5 rounded border-[#6B4C35]/30 accent-[#6B1218] disabled:cursor-not-allowed disabled:opacity-45"
-       />
-     </label>
+  return (
+    <article className="grid gap-5 border-b border-[#6B4C35]/10 px-5 py-6 last:border-b-0 sm:px-7 md:grid-cols-[auto_116px_1fr_auto] md:gap-8 md:py-8">
+      <label className="flex items-start pt-1">
+        <span className="sr-only">Chọn sản phẩm {getItemName(item)}</span>
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={(event) => onSelectChange(index, event.target.checked)}
+          disabled={disabled || isPending}
+          className="size-5 rounded border-[#6B4C35]/30 accent-[#6B1218] disabled:cursor-not-allowed disabled:opacity-45"
+        />
+      </label>
 
 
-     <div
-       className="relative flex size-[92px] items-center justify-center overflow-hidden rounded-xl bg-[linear-gradient(135deg,#F8EFCF_0%,#F8F0E4_52%,#EAD7B0_100%)] text-xl text-[#8B5E3C] shadow-[0_14px_26px_rgba(44,24,16,0.08)] md:size-[116px]"
-       aria-hidden="true"
-     >
-       🕯
-     </div>
+      <div
+        className="relative flex size-[92px] items-center justify-center overflow-hidden rounded-xl bg-[#FAF6F0] shadow-[0_14px_26px_rgba(44,24,16,0.08)] md:size-[116px]"
+        aria-hidden="true"
+      >
+        {item.imageUrl ? (
+          <img
+            src={item.imageUrl}
+            alt={getItemName(item)}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span className="text-xl">🕯</span>
+        )}
+      </div>
 
 
-     <div>
-       <h3 className="mb-3 font-serif text-[1.4rem] font-medium leading-tight text-[#2C1810]">
-         {getItemName(item)}
-       </h3>
-       {item.color ? (
-         <p className="mb-2 text-sm font-light text-[#6B4C35]">
-           Màu: {item.color}
-         </p>
-       ) : null}
-       {item.size ? (
-         <p className="mb-2 text-sm font-light text-[#6B4C35]">
-           Kích thước: {item.size}
-         </p>
-       ) : null}
-       {packLabel ? (
-         <p className="mb-2 text-sm font-light text-[#6B4C35]">
-           Bao bì: {packLabel}
-         </p>
-       ) : null}
-     </div>
+      <div>
+        <h3 className="mb-3 font-serif text-[1.4rem] font-medium leading-tight text-[#2C1810]">
+          {getItemName(item)}
+        </h3>
+        {item.color ? (
+          <p className="mb-2 text-sm font-light text-[#6B4C35]">
+            Màu: {item.color}
+          </p>
+        ) : null}
+        {item.size ? (
+          <p className="mb-2 text-sm font-light text-[#6B4C35]">
+            Kích thước: {item.size}
+          </p>
+        ) : null}
+        {packLabel ? (
+          <p className="mb-2 text-sm font-light text-[#6B4C35]">
+            Bao bì: {packLabel}
+          </p>
+        ) : null}
+      </div>
 
 
-     <div className="text-left md:text-right">
-       <div className="mb-5 font-serif text-[1.45rem] font-bold text-[#6B1218]">
-         {formatPrice(itemTotal)}
-       </div>
-       <div className="mb-5 ml-0 flex w-fit items-center gap-2 rounded-full border border-[#6B4C35]/20 bg-[#F8F0E4] p-1 md:ml-auto">
-         <button
-           type="button"
-           onClick={() => onQuantityChange(index, -1)}
-           disabled={quantityDisabled}
-           className="flex size-8 items-center justify-center rounded-full border border-[#6B1218]/20 text-lg text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-45"
-           aria-label="Giảm số lượng"
-         >
-           −
-         </button>
-         <span className="min-w-9 text-center font-serif text-base font-bold">
-           {quantity}
-         </span>
-         <button
-           type="button"
-           onClick={() => onQuantityChange(index, 1)}
-           disabled={quantityDisabled}
-           className="flex size-8 items-center justify-center rounded-full border border-[#6B1218]/20 text-lg text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-45"
-           aria-label="Tăng số lượng"
-         >
-           +
-         </button>
-       </div>
-     </div>
-   </article>
- );
+      <div className="text-left md:text-right">
+        <div className="mb-5 font-serif text-[1.45rem] font-bold text-[#6B1218]">
+          {formatPrice(itemTotal)}
+        </div>
+        <div className="mb-5 ml-0 flex w-fit items-center gap-2 rounded-full border border-[#6B4C35]/20 bg-[#F8F0E4] p-1 md:ml-auto">
+          <button
+            type="button"
+            onClick={() => handleQuantityChange(-1)}
+            disabled={quantityDisabled || isPending}
+            className="flex size-8 items-center justify-center rounded-full border border-[#6B1218]/20 text-lg text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-45"
+            aria-label="Giảm số lượng"
+          >
+            −
+          </button>
+          <span className="min-w-9 text-center font-serif text-base font-bold">
+            {quantity}
+          </span>
+          <button
+            type="button"
+            onClick={() => handleQuantityChange(1)}
+            disabled={quantityDisabled || isPending}
+            className="flex size-8 items-center justify-center rounded-full border border-[#6B1218]/20 text-lg text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-45"
+            aria-label="Tăng số lượng"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </article>
+  );
 }
+
 
 
 

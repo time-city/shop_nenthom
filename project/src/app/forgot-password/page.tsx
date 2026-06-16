@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import FormForgotPassword from "../../components/auth/formForgotPassword";
-import { getCurrentUser } from "../../lib/action/auth.action";
+import { getCurrentUser } from "../../lib/action/user.action";
 
 export default async function ForgotPasswordPage() {
   // action-(kiểm tra đăng nhập)

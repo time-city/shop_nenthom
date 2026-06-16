@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "../../../lib/action/auth.action";
-import Orders from "./orders";
+import { getCurrentUser } from "../../../lib/action/user.action";
+import OrdersClient from "@/src/components/client/ordersClient";
 
 export default async function OrdersPage() {
   // action-(check user orders)
@@ -15,7 +15,7 @@ export default async function OrdersPage() {
   }
 
   return (
-    <Orders
+    <OrdersClient
       initialUser={{
         email: currentUser.email,
         fullname: currentUser.fullname ?? "",
@@ -25,3 +25,4 @@ export default async function OrdersPage() {
     />
   );
 }
+

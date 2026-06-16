@@ -75,8 +75,8 @@ export async function logoutUser() {
 }
 
 export async function forgotPassword(data: ForgotPasswordInput): Promise<
- | { success: true; data: { email: string; token: string }; message: string }
- | { success: false; error: string }
+    | { success: true; data: { email: string; token: string }; message: string }
+    | { success: false; error: string }
 > {
     const parsed = forgotPasswordSchema.safeParse(data);
 
@@ -164,4 +164,3 @@ export async function changePassword(data: ChangePasswordInput) {
     }
 }
 
-export { getCurrentUser } from "./user.action";

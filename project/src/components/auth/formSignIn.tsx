@@ -14,6 +14,7 @@ import { useToast } from "@/src/components/ui/toast-provider";
 import { z } from "zod";
 import { loginUser } from "../../lib/action/auth.action";
 import type { SignInValues } from "../../lib/types/client";
+import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 
 const initialValues: SignInValues = {
   email: "",
@@ -104,7 +105,7 @@ export default function FormSignIn() {
     });
 
     if (!result.success) {
-      showError(result.error ?? "Đăng nhập thất bại");
+      showError(getFriendlyResponseError(result.error ?? "Đăng nhập thất bại"));
       actions.setSubmitting(false);
       return;
     }
@@ -185,16 +186,16 @@ export default function FormSignIn() {
                   <Field
                     id="email"
                     name="email"
-                    type="email"
+                    type="text"
                     placeholder="your@email.com"
                     className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
                       touched.email && errors.email
-                        ? "border-[#ffc107]"
+                        ? "border-[#6B1218]"
                         : "border-[#2c1810]/20"
                     }`}
                   />
                   {touched.email && errors.email ? (
-                    <p className="mt-2 text-xs text-[#856404]">
+                    <p className="mt-2 text-xs text-[#6B1218]">
                       {errors.email}
                     </p>
                   ) : null}
@@ -205,7 +206,7 @@ export default function FormSignIn() {
                     htmlFor="password"
                     className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
                   >
-                    Mật Khẩu
+                    Mật khẩu
                   </label>
                   <Field
                     id="password"
@@ -214,12 +215,12 @@ export default function FormSignIn() {
                     placeholder="••••••••"
                     className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
                       touched.password && errors.password
-                        ? "border-[#ffc107]"
+                        ? "border-[#6B1218]"
                         : "border-[#2c1810]/20"
                     }`}
                   />
                   {touched.password && errors.password ? (
-                    <p className="mt-2 text-xs text-[#856404]">
+                    <p className="mt-2 text-xs text-[#6B1218]">
                       {errors.password}
                     </p>
                   ) : null}

@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   AdminOrder,
   AdminOrderStatus,
   AdminPaymentStatus,
-} from "../../../lib/types/admin";
+} from "@/src/lib/types/admin";
+import LoadingState from "@/src/components/ui/loadingState";
+import { getOrdersAction, getListOrderAction } from "@/src/lib/action/order.action";
+import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 
 const statusLabels: Record<AdminOrderStatus, string> = {
   cancelled: "Đã hủy",
@@ -46,9 +49,43 @@ type Props = {
   orders: AdminOrder[];
 };
 
-export default function OrdersManagementClient({ orders }: Props) {
+export default function OrdersManagementClient({ orders: initialOrders }: Props) {
+  const [orders, setOrders] = useState<AdminOrder[]>(initialOrders || []);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<AdminOrderStatus | "">("");
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadOrders = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await getListOrderAction({ limit: 100 });
+        if (cancelled) return;
+        if ("error" in result && result.error) {
+          setError(getFriendlyResponseError(result.error));
+        } else if ("success" in result && result.success) {
+          // getListOrderAction returns the data in result.data or similar
+          const data = (result.data || []) as AdminOrder[];
+          setOrders(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+    void loadOrders();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredOrders = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -68,7 +105,12 @@ export default function OrdersManagementClient({ orders }: Props) {
     <>
       <header className="dashboard-top-header">
         <div className="dashboard-top-header-left">
-          <button className="dashboard-mobile-toggle" type="button" aria-label="Menu">
+          <button
+            className="dashboard-mobile-toggle"
+            type="button"
+            aria-label="Menu"
+            onClick={() => window.dispatchEvent(new Event("toggle-admin-sidebar"))}
+          >
             <svg
               width="24"
               height="24"
@@ -161,12 +203,12 @@ export default function OrdersManagementClient({ orders }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOrders.map((order) => (
+                  {!isLoading && !error && filteredOrders.map((order) => (
                     <tr key={order.id}>
                       <td>
                         <Link
-                          className="orders-code-link"
                           href={`/admin/ordersManagement/${order.id}`}
+                          className="orders-code-link"
                         >
                           {order.id}
                         </Link>
@@ -190,8 +232,8 @@ export default function OrdersManagementClient({ orders }: Props) {
                       </td>
                       <td>
                         <Link
-                          className="orders-icon-btn"
                           href={`/admin/ordersManagement/${order.id}`}
+                          className="orders-icon-btn"
                           title="Xem chi tiết"
                           aria-label={`Xem chi tiết đơn ${order.id}`}
                         >
@@ -215,7 +257,20 @@ export default function OrdersManagementClient({ orders }: Props) {
               </table>
             </div>
 
-            {filteredOrders.length === 0 ? (
+            {isLoading ? (
+              <LoadingState
+                label="Đang tải danh sách đơn hàng..."
+                className="m-5"
+              />
+            ) : null}
+
+            {!isLoading && error ? (
+              <div className="px-5 py-8 text-center text-sm text-[#8A1119]">
+                {error}
+              </div>
+            ) : null}
+
+            {!isLoading && !error && filteredOrders.length === 0 ? (
               <div className="orders-empty-state">
                 {orders.length === 0
                   ? "Chưa có đơn hàng nào"

@@ -3,12 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { logoutUser } from "../../lib/action/auth.action";
-import type {
-  AdminNavItem,
-  AdminSidebarSectionProps,
-} from "../../lib/types/admin";
+import { useSupportStore } from "@/src/store/useSupportStore";
+import type { AdminNavItem, AdminSidebarSectionProps } from "../../lib/types/admin";
 
 const overviewLinks: AdminNavItem[] = [
   {
@@ -79,6 +77,18 @@ const managementLinks: AdminNavItem[] = [
       </>
     ),
   },
+  {
+    href: "/admin/clientManagement",
+    label: "Thành viên",
+    icon: (
+      <>
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </>
+    ),
+  },
 ];
 
 const otherLinks: AdminNavItem[] = [
@@ -95,10 +105,37 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const unreadCount = useSupportStore((state) => state.unreadCount);
+  const hasHydrated = useSupportStore((state) => state._hasHydrated);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Badge chỉ hiển thị sau khi mount và store đã hydrate
+  const supportBadge = mounted && hasHydrated && unreadCount > 0
+    ? unreadCount > 99 ? "99+" : String(unreadCount)
+    : undefined;
+
+  const otherLinksWithBadge: AdminNavItem[] = [
+    {
+      ...otherLinks[0],
+      badge: supportBadge,
+    },
+  ];
+
+  useEffect(() => {
+    const handleToggle = () => setIsOpen((prev) => !prev);
+    window.addEventListener("toggle-admin-sidebar", handleToggle);
+    return () => {
+      window.removeEventListener("toggle-admin-sidebar", handleToggle);
+    };
+  }, []);
 
   const handleLogout = () => {
     startTransition(async () => {
-      // action-(đăng xuất)
       const result = await logoutUser();
 
       if (!result.success) {
@@ -111,77 +148,108 @@ export default function Navbar() {
   };
 
   return (
-    <aside className="admin-sidebar">
-      <div className="admin-sidebar-header">
-        <Image
-          src="/logo.svg"
-          alt="ChamCham"
-          width={56}
-          height={56}
-          className="admin-sidebar-logo"
-          priority
+    <>
+      {isOpen && (
+        <div
+          className="admin-sidebar-backdrop"
+          onClick={() => setIsOpen(false)}
         />
-        <div className="admin-sidebar-brand">
-          <span className="admin-sidebar-brand-name">ChamCham</span>
-          <span className="admin-sidebar-brand-sub">Admin Panel</span>
-        </div>
-      </div>
-
-      <nav className="admin-sidebar-nav" aria-label="Admin navigation">
-        <SidebarSection
-          pathname={pathname}
-          title="Tổng quan"
-          links={overviewLinks}
-        />
-        <SidebarSection
-          pathname={pathname}
-          title="Quản lý"
-          links={managementLinks}
-        />
-        <SidebarSection pathname={pathname} title="Khác" links={otherLinks} />
-      </nav>
-
-      <div className="admin-sidebar-footer">
-        <div className="admin-sidebar-user">
-          <div className="admin-sidebar-avatar">AD</div>
-          <div className="admin-sidebar-user-info">
-            <div className="admin-sidebar-user-name">Admin ChamCham</div>
-            <div className="admin-sidebar-user-role">Quản trị viên</div>
+      )}
+      <aside className={`admin-sidebar ${isOpen ? "open" : ""}`}>
+        <div className="admin-sidebar-header">
+          <Image
+            src="/logo.svg"
+            alt="ChamCham"
+            width={56}
+            height={56}
+            className="admin-sidebar-logo"
+            priority
+          />
+          <div className="admin-sidebar-brand">
+            <span className="admin-sidebar-brand-name">ChamCham</span>
+            <span className="admin-sidebar-brand-sub">Admin Panel</span>
           </div>
-        </div>
-        <button
-          className="admin-sidebar-logout"
-          type="button"
-          onClick={handleLogout}
-          disabled={isPending}
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+          <button
+            className="admin-sidebar-close"
+            type="button"
+            onClick={() => setIsOpen(false)}
+            aria-label="Đóng menu"
           >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16,17 21,12 16,7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-          {isPending ? "Đang đăng xuất..." : "Đăng xuất"}
-        </button>
-      </div>
-    </aside>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <nav className="admin-sidebar-nav" aria-label="Admin navigation">
+          <SidebarSection
+            pathname={pathname}
+            title="Tổng quan"
+            links={overviewLinks}
+            setIsOpen={setIsOpen}
+          />
+          <SidebarSection
+            pathname={pathname}
+            title="Quản lý"
+            links={managementLinks}
+            setIsOpen={setIsOpen}
+          />
+          <SidebarSection
+            pathname={pathname}
+            title="Khác"
+            links={otherLinksWithBadge}
+            setIsOpen={setIsOpen}
+          />
+        </nav>
+
+        <div className="admin-sidebar-footer">
+          <div className="admin-sidebar-user">
+            <div className="admin-sidebar-avatar">AD</div>
+            <div className="admin-sidebar-user-info">
+              <div className="admin-sidebar-user-name">Admin ChamCham</div>
+              <div className="admin-sidebar-user-role">Quản trị viên</div>
+            </div>
+          </div>
+          <button
+            className="admin-sidebar-logout"
+            type="button"
+            onClick={handleLogout}
+            disabled={isPending}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16,17 21,12 16,7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            {isPending ? "Đang đăng xuất..." : "Đăng xuất"}
+          </button>
+        </div>
+      </aside>
+    </>
   );
+}
+
+interface SidebarSectionProps extends AdminSidebarSectionProps {
+  setIsOpen: (open: boolean) => void;
 }
 
 function SidebarSection({
   links,
   pathname,
   title,
-}: AdminSidebarSectionProps) {
+  setIsOpen,
+}: SidebarSectionProps) {
   return (
     <div className="admin-sidebar-section">
       <div className="admin-sidebar-section-title">{title}</div>
@@ -193,6 +261,7 @@ function SidebarSection({
           <Link
             key={link.href}
             href={link.href}
+            onClick={() => setIsOpen(false)}
             className={`admin-sidebar-link${active ? " active" : ""}`}
           >
             <svg

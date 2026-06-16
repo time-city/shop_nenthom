@@ -12,8 +12,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useToast } from "@/src/components/ui/toast-provider";
-import { resetPassword as resetPasswordAction } from "../../lib/action/auth.action";
+import { resetPassword as resetPasswordAction, resendResetPasswordOtp } from "../../lib/action/auth.action";
 import type { ResetPasswordValues } from "../../lib/types/client";
+import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 
 const initialValues: ResetPasswordValues = {
   confirmPassword: "",
@@ -75,6 +76,36 @@ export default function FormResetPassword() {
   const [token, setToken] = useState("");
   const [step, setStep] = useState<"otp" | "password">("otp");
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(6).fill(""));
+  const [isResending, setIsResending] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  const handleResendOtp = async () => {
+    if (!email) {
+      toast.error("Không tìm thấy email đăng ký");
+      return;
+    }
+    setIsResending(true);
+    try {
+      const result = await resendResetPasswordOtp({ email });
+      if (result.success) {
+        toast.success(result.message || "Đã gửi lại mã OTP vào email của bạn");
+        setCountdown(60);
+      } else {
+        toast.error(result.error ? getFriendlyResponseError(result.error) : "Gửi lại OTP thất bại");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi gửi lại OTP");
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const handleOtpChange = (
     value: string,
@@ -168,7 +199,7 @@ export default function FormResetPassword() {
     });
 
     if (!result.success) {
-      const message = result.error ?? "OTP sai hoặc đã hết hạn";
+      const message = result.error ? getFriendlyResponseError(result.error) : "OTP sai hoặc đã hết hạn";
       setErrorMessage(message);
       toast.error(message);
       actions.setSubmitting(false);
@@ -254,7 +285,7 @@ export default function FormResetPassword() {
                             onPaste={(e) => handleOtpPaste(e, setFieldValue)}
                             className={`size-11 sm:size-12 rounded-xl border bg-white text-center text-[1.22rem] font-bold text-[#2C1810] transition-colors focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
                               touched.otp && errors.otp
-                                ? "border-[#ffc107]"
+                                ? "border-[#6B1218]"
                                 : "border-[#2c1810]/20"
                             }`}
                             id={`otp-digit-${index}`}
@@ -262,7 +293,7 @@ export default function FormResetPassword() {
                         ))}
                       </div>
                       {touched.otp && errors.otp ? (
-                        <p className="mt-2 text-center text-xs text-[#856404]">{errors.otp}</p>
+                        <p className="mt-2 text-center text-xs text-[#6B1218]">{errors.otp}</p>
                       ) : null}
                     </div>
                   ) : (
@@ -281,12 +312,12 @@ export default function FormResetPassword() {
                           placeholder="••••••••"
                           className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
                             touched.newPassword && errors.newPassword
-                              ? "border-[#ffc107]"
+                              ? "border-[#6B1218]"
                               : "border-[#2c1810]/20"
                           }`}
                         />
                         {touched.newPassword && errors.newPassword ? (
-                          <p className="mt-2 text-xs text-[#856404]">
+                          <p className="mt-2 text-xs text-[#6B1218]">
                             {errors.newPassword}
                           </p>
                         ) : null}
@@ -306,12 +337,12 @@ export default function FormResetPassword() {
                           placeholder="••••••••"
                           className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
                             touched.confirmPassword && errors.confirmPassword
-                              ? "border-[#ffc107]"
+                              ? "border-[#6B1218]"
                               : "border-[#2c1810]/20"
                           }`}
                         />
                         {touched.confirmPassword && errors.confirmPassword ? (
-                          <p className="mt-2 text-xs text-[#856404]">
+                          <p className="mt-2 text-xs text-[#6B1218]">
                             {errors.confirmPassword}
                           </p>
                         ) : null}
@@ -349,12 +380,18 @@ export default function FormResetPassword() {
 
             <p className="mt-5 text-center text-[0.84rem] font-light text-[#2C1810]">
               Chưa nhận được mã?{" "}
-              <Link
-                href="/forgot-password"
-                className="text-[#7A1218] transition-colors hover:text-[#6B1218]"
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={isResending || countdown > 0}
+                className="text-[#7A1218] transition-colors hover:text-[#6B1218] disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
-                Gửi lại OTP
-              </Link>
+                {isResending
+                  ? "Đang gửi..."
+                  : countdown > 0
+                  ? `Gửi lại sau (${countdown}s)`
+                  : "Gửi lại OTP"}
+              </button>
             </p>
           </div>
         </section>

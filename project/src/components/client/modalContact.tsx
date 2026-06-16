@@ -3,8 +3,10 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
-import { getCurrentUser } from "../../lib/action/auth.action";
+import { getCurrentUser } from "../../lib/action/user.action";
 import { submitContactAction } from "../../lib/action/contact.action";
+import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import { useSupportStore } from "@/src/store/useSupportStore";
 import type { ClientContactFormValues } from "../../lib/types/client";
 
 const initialValues: ClientContactFormValues = {
@@ -16,8 +18,10 @@ const initialValues: ClientContactFormValues = {
 
 export default function ModalContact() {
   const { toast } = useToast();
+  const { incrementUnread } = useSupportStore();
   const [formValues, setFormValues] =
     useState<ClientContactFormValues>(initialValues);
+  const [errors, setErrors] = useState<Partial<Record<keyof ClientContactFormValues, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -43,14 +47,50 @@ export default function ModalContact() {
     };
   }, []);
 
-  const updateField = (
-    field: keyof ClientContactFormValues,
-    value: string,
-  ) => {
-    setFormValues((currentValues) => ({
-      ...currentValues,
+  const validateField = (field: keyof ClientContactFormValues, value: string): string => {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      return "Vui lòng không để trống";
+    }
+
+    if (field === "email") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.(com|vn|net|org|edu|gov|io|co|info|biz|me|cc|us|uk|jp|kr|tw|sg|live|store|shop|online|xyz|pro|work|tech|dev|app|asia|eu|ca|fr|de|au)(?:\.[a-z]{2,})?$/i;
+      if (!emailRegex.test(trimmed)) {
+        return "Email không đúng định dạng";
+      }
+    }
+
+    return "";
+  };
+
+  const handleChange = (field: keyof ClientContactFormValues, value: string) => {
+    setFormValues((prev) => ({
+      ...prev,
       [field]: value,
     }));
+
+    if (errors[field]) {
+      const errorMsg = validateField(field, value);
+      setErrors((prev) => {
+        const next = { ...prev };
+        if (errorMsg) {
+          next[field] = errorMsg;
+        } else {
+          delete next[field];
+        }
+        return next;
+      });
+    }
+  };
+
+  const getInputClass = (fieldName: keyof ClientContactFormValues) => {
+    const hasError = Boolean(errors[fieldName]);
+    return `w-full rounded-md border ${
+      hasError
+        ? "border-[#6B1218] focus:ring-[#6B1218]/10"
+        : "border-[#2c1810]/15 focus:border-[#7A1218] focus:ring-[#6B1218]/10"
+    } bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:ring-4`;
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -58,36 +98,54 @@ export default function ModalContact() {
 
     if (isSubmitting) return;
 
-    const values: ClientContactFormValues = {
-      email: formValues.email.trim(),
-      message: formValues.message.trim(),
-      name: formValues.name.trim(),
-      subject: formValues.subject.trim(),
-    };
+    const newErrors: Partial<Record<keyof ClientContactFormValues, string>> = {};
+    const fieldsToValidate: Array<keyof ClientContactFormValues> = ["name", "email", "subject", "message"];
 
-    if (!values.name || !values.email || !values.subject || !values.message) {
-      toast.error("Vui lòng điền đầy đủ thông tin liên hệ");
+    fieldsToValidate.forEach((field) => {
+      const errorMsg = validateField(field, formValues[field]);
+      if (errorMsg) {
+        newErrors[field] = errorMsg;
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      const firstErrorField = Object.keys(newErrors)[0] as keyof ClientContactFormValues;
+      const element = document.getElementById(`contact-${firstErrorField}`);
+      if (element) {
+        element.focus();
+      }
       return;
     }
 
     setIsSubmitting(true);
 
     try {
+      const values: ClientContactFormValues = {
+        email: formValues.email.trim(),
+        message: formValues.message.trim(),
+        name: formValues.name.trim(),
+        subject: formValues.subject.trim(),
+      };
+
       // action-(gửi liên hệ)
       const result = await submitContactAction(values);
 
       if ("error" in result && result.error) {
-        toast.error(result.error);
+        toast.error(getFriendlyResponseError(result.error));
         return;
       }
 
       if ("success" in result && result.success) {
         toast.success("Đã gửi lời nhắn, ChamCham sẽ phản hồi sớm");
+        // Tăng số tin chưa phản hồi để badge navbar admin cập nhật
+        incrementUnread();
         setFormValues((currentValues) => ({
           ...currentValues,
           message: "",
           subject: "",
         }));
+        setErrors({});
       }
     } finally {
       setIsSubmitting(false);
@@ -108,10 +166,14 @@ export default function ModalContact() {
           type="text"
           placeholder="Nhập tên"
           value={formValues.name}
-          onChange={(event) => updateField("name", event.target.value)}
-          required
-          className="w-full rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
+          onChange={(event) => handleChange("name", event.target.value)}
+          className={getInputClass("name")}
         />
+        {errors.name && (
+          <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
+            {errors.name}
+          </span>
+        )}
       </div>
 
       <div className="form-group">
@@ -123,13 +185,17 @@ export default function ModalContact() {
         </label>
         <input
           id="contact-email"
-          type="email"
+          type="text"
           placeholder="your@email.com"
           value={formValues.email}
-          onChange={(event) => updateField("email", event.target.value)}
-          required
-          className="w-full rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
+          onChange={(event) => handleChange("email", event.target.value)}
+          className={getInputClass("email")}
         />
+        {errors.email && (
+          <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
+            {errors.email}
+          </span>
+        )}
       </div>
 
       <div className="form-group">
@@ -144,10 +210,14 @@ export default function ModalContact() {
           type="text"
           placeholder="Chủ đề của bạn"
           value={formValues.subject}
-          onChange={(event) => updateField("subject", event.target.value)}
-          required
-          className="w-full rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
+          onChange={(event) => handleChange("subject", event.target.value)}
+          className={getInputClass("subject")}
         />
+        {errors.subject && (
+          <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
+            {errors.subject}
+          </span>
+        )}
       </div>
 
       <div className="form-group">
@@ -161,11 +231,15 @@ export default function ModalContact() {
           id="contact-message"
           placeholder="Nội dung tin nhắn..."
           value={formValues.message}
-          onChange={(event) => updateField("message", event.target.value)}
-          required
+          onChange={(event) => handleChange("message", event.target.value)}
           rows={6}
-          className="min-h-36 w-full resize-y rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
+          className={`${getInputClass("message")} min-h-36 w-full resize-y rounded-md border outline-none transition placeholder:text-[#2c1810]/38 focus:ring-4`}
         />
+        {errors.message && (
+          <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
+            {errors.message}
+          </span>
+        )}
       </div>
 
       <button

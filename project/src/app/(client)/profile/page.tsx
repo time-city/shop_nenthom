@@ -1,6 +1,6 @@
-import { ProfilePageContent } from "./profile";
+import ProfilePageContent from "@/src/components/client/profileClient";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "../../../lib/action/auth.action";
+import { getCurrentUser } from "../../../lib/action/user.action";
 
 export default async function ProfilePage() {
   // action-(check user profile)
@@ -17,14 +17,15 @@ export default async function ProfilePage() {
   return (
     <ProfilePageContent
       initialUser={{
-        address: "",
-        city: "",
+        address: currentUser.address ?? "",
+        city: currentUser.city ?? "",
         email: currentUser.email,
         fullname: currentUser.fullname ?? "",
         phone: currentUser.phone ?? "",
         role: currentUser.role,
-        zip: "",
+        zip: currentUser.postal_code ?? "",
       }}
     />
   );
 }
+

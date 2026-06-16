@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, User } from "lucide-react";
-import { getCurrentUser } from "../../lib/action/auth.action";
+import { getCurrentUser } from "../../lib/action/user.action";
 import NavLinks from "./nav-links";
+import MobileMenu from "./mobileMenu";
+import CartBadge from "./cartBadge";
 
 const navLinks = [
   { href: "/#home", label: "Trang chủ" },
@@ -81,13 +83,10 @@ export default async function Header() {
             aria-label="Giỏ hàng"
           >
             <ShoppingCart className="size-5" aria-hidden="true" />
-            <span
-              className="cart-count hidden absolute -right-2 -top-2 size-[18px] items-center justify-center rounded-full bg-[#F8F0E4] text-[0.7rem] font-extrabold leading-none text-[#6B1218]"
-              id="cartCount"
-            >
-              0
-            </span>
+            <CartBadge />
           </Link>
+
+          <MobileMenu links={navLinks} currentUser={currentUser} />
         </div>
       </nav>
     </header>

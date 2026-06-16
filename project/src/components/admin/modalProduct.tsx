@@ -21,6 +21,7 @@ import type {
 } from "../../interface/adminInterface";
 import { getCategoriesAction } from "../../lib/action/category.action";
 import { createProductAction } from "../../lib/action/product.action";
+import { getFriendlyError, getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import type {
   AdminModalProductProps,
   AdminProductFormValues,
@@ -81,7 +82,7 @@ export default function ModalProduct({
       const result = await getCategoriesAction();
 
       if ("error" in result && result.error) {
-        toast.error(result.error);
+        toast.error(getFriendlyResponseError(result.error));
         setCategories([]);
         setIsLoadingCategories(false);
         return;
@@ -135,7 +136,7 @@ export default function ModalProduct({
         image_file_name: file.name,
       }));
     } catch (error) {
-      toast.error((error as Error).message);
+      toast.error(getFriendlyError(error));
     } finally {
       event.target.value = "";
     }
@@ -183,7 +184,7 @@ export default function ModalProduct({
       });
 
       if ("error" in result && result.error) {
-        toast.error(result.error);
+        toast.error(getFriendlyResponseError(result.error));
         return;
       }
 

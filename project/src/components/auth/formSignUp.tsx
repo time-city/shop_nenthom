@@ -13,6 +13,7 @@ import { useToast } from "@/src/components/ui/toast-provider";
 import { z } from "zod";
 import { registerUser } from "../../lib/action/auth.action";
 import type { SignUpValues } from "../../lib/types/client";
+import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 
 const initialValues: SignUpValues = {
   fullname: "",
@@ -120,7 +121,7 @@ export default function FormSignUp() {
     });
 
     if (!result.success) {
-      const message = result.error ?? "Đăng ký thất bại";
+      const message = result.error ? getFriendlyResponseError(result.error) : "Đăng ký thất bại";
       toast.error(message);
       actions.setSubmitting(false);
       return;
@@ -180,12 +181,12 @@ export default function FormSignUp() {
                       type="text"
                       placeholder="Nguyễn Văn A"
                       className={`min-h-10 w-full rounded-xl border bg-white px-3.5 py-2 text-[0.9rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.fullname && errors.fullname
-                        ? "border-[#ffc107]"
+                        ? "border-[#6B1218]"
                         : "border-[#2c1810]/20"
                         }`}
                     />
                     {touched.fullname && errors.fullname ? (
-                      <p className="mt-2 text-xs text-[#856404]">
+                      <p className="mt-2 text-xs text-[#6B1218]">
                         {errors.fullname}
                       </p>
                     ) : null}
@@ -201,15 +202,15 @@ export default function FormSignUp() {
                     <Field
                       id="email"
                       name="email"
-                      type="email"
+                      type="text"
                       placeholder="your@email.com"
                       className={`min-h-10 w-full rounded-xl border bg-white px-3.5 py-2 text-[0.9rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.email && errors.email
-                        ? "border-[#ffc107]"
+                        ? "border-[#6B1218]"
                         : "border-[#2c1810]/20"
                         }`}
                     />
                     {touched.email && errors.email ? (
-                      <p className="mt-2 text-xs text-[#856404]">
+                      <p className="mt-2 text-xs text-[#6B1218]">
                         {errors.email}
                       </p>
                     ) : null}
@@ -228,12 +229,12 @@ export default function FormSignUp() {
                       type="password"
                       placeholder="••••••••"
                       className={`min-h-10 w-full rounded-xl border bg-white px-3.5 py-2 text-[0.9rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.password && errors.password
-                        ? "border-[#ffc107]"
+                        ? "border-[#6B1218]"
                         : "border-[#2c1810]/20"
                         }`}
                     />
                     {touched.password && errors.password ? (
-                      <p className="mt-2 text-xs text-[#856404]">
+                      <p className="mt-2 text-xs text-[#6B1218]">
                         {errors.password}
                       </p>
                     ) : null}
@@ -255,12 +256,12 @@ export default function FormSignUp() {
                       type="password"
                       placeholder="••••••••"
                       className={`min-h-10 w-full rounded-xl border bg-white px-3.5 py-2 text-[0.9rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.confirmPassword && errors.confirmPassword
-                        ? "border-[#ffc107]"
+                        ? "border-[#6B1218]"
                         : "border-[#2c1810]/20"
                         }`}
                     />
                     {touched.confirmPassword && errors.confirmPassword ? (
-                      <p className="mt-2 text-xs text-[#856404]">
+                      <p className="mt-2 text-xs text-[#6B1218]">
                         {errors.confirmPassword}
                       </p>
                     ) : null}
@@ -276,15 +277,15 @@ export default function FormSignUp() {
                     <Field
                       id="phone"
                       name="phone"
-                      type="tel"
+                      type="text"
                       placeholder="0123456789"
                       className={`min-h-10 w-full rounded-xl border bg-white px-3.5 py-2 text-[0.9rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${touched.phone && errors.phone
-                        ? "border-[#ffc107]"
+                        ? "border-[#6B1218]"
                         : "border-[#2c1810]/20"
                         }`}
                     />
                     {touched.phone && errors.phone ? (
-                      <p className="mt-2 text-xs text-[#856404]">
+                      <p className="mt-2 text-xs text-[#6B1218]">
                         {errors.phone}
                       </p>
                     ) : null}
@@ -322,7 +323,7 @@ export default function FormSignUp() {
                   </span>
                 </label>
                 {touched.terms && errors.terms ? (
-                  <p className="-mt-1 mb-3 text-xs text-[#856404]">
+                  <p className="-mt-1 mb-3 text-xs text-[#6B1218]">
                     {errors.terms}
                   </p>
                 ) : null}
