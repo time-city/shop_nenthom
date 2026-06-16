@@ -92,6 +92,7 @@ model ShippingAddress {
   phone      String
   address    String
   city       String
+  postal_code String?
   is_default Boolean @default(false)
 
   // Relations
@@ -295,6 +296,7 @@ model Order {
   shipping_phone    String
   shipping_address  String
   shipping_city     String
+  shipping_postal_code String?
   shipping_note     String?       @db.Text
 
   // Trạng thái đơn & Thanh toán

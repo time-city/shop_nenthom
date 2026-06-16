@@ -15,6 +15,7 @@ export const UserService = {
        if (existingUser) {
            throw new Error('Số điện thoại đã tồn tại');
        }
+
        // update inf user
        const updateUser = await prisma.$transaction(async (tx) => {
             // Lấy địa chỉ mặc định hiện tại của user (nếu có)
@@ -48,21 +49,23 @@ export const UserService = {
                     await tx.shippingAddress.update({
                         where: {id: defaultAddress.id},
                         data: {
+                            city: data.city,
                             fullname: data.fullname ?? userResult.fullname ?? "Người nhận",
                             phone: data.phone ?? userResult.phone ?? "",
                             address: data.address,
-                            city: data.city
+                            postal_code: data.postal_code || null,
                         }
                     });
                 }else{
                     await tx.shippingAddress.create({
                         data: {
-                            user_id: id,
+                            city: data.city,
                             fullname: data.fullname ?? userResult.fullname ?? "Người nhận",
                             phone: data.phone ?? userResult.phone ?? "",
                             address: data.address,
-                            city: data.city,
-                            is_default: true
+                            is_default: true,
+                            postal_code: data.postal_code || null,
+                            user_id: id,
                         }
                     });
                 }
