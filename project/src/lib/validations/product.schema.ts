@@ -14,6 +14,7 @@ export const productSchema = z.object({
    includeCustom: z.coerce.boolean().default(false),
    maxPrice: optionalPriceSchema,
    minPrice: optionalPriceSchema,
+   scentId: z.coerce.number().int().positive('Hương liệu không hợp lệ').optional(),
    search: z.string().optional(),
 }).refine(
    ({ minPrice, maxPrice }) =>
@@ -37,6 +38,7 @@ export const createProductSchema = z.object({
    description: z.string().optional(),
    images: z.array(z.string().url('URL ảnh không hợp lệ')).min(1, 'Cần ít nhất 1 ảnh'),
    is_active: z.boolean().default(true),
+   scentIds: z.array(z.coerce.number().int().positive()).optional(),
 });
 
 

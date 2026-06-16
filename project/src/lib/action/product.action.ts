@@ -50,6 +50,16 @@ try {
 }
 
 
+export async function getScentsAction() {
+  try {
+    const scents = await ProductService.getScents()
+    return { success: true, data: scents }
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
+}
+
+
 
 
 export async function getCustomCandleProductAction() {
@@ -109,4 +119,3 @@ export async function deleteProductAction(params: unknown) {
       return { error: (err as Error).message }
   }
 }
-
