@@ -93,6 +93,8 @@ export const AuthService = {
             },
             select: {
                 email: true,
+                id: true,
+                reset_otp_version: true,
             },
         });
 
@@ -101,7 +103,16 @@ export const AuthService = {
         }
 
         const otp = generateOtp();
-        const token = createOtpToken(email, otp);
+        const nextOtpVersion = user.reset_otp_version + 1;
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                reset_otp_version: {
+                    increment: 1,
+                },
+            },
+        });
+        const token = createOtpToken(email, otp, nextOtpVersion);
         const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? 'http://localhost:3000';
         const resetUrl = `${appUrl}/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
 
@@ -120,12 +131,6 @@ export const AuthService = {
 
     async resetPassword(data: ResetPasswordInput) {
         const email = normalizeEmail(data.email);
-        const isValidOtp = verifyOtpToken(data.token, email, data.otp);
-
-        if (!isValidOtp) {
-            throw new Error('Mã xác nhận không đúng hoặc đã hết hạn');
-        }
-
         const user = await prisma.user.findFirst({
             where: {
                 email: {
@@ -134,11 +139,20 @@ export const AuthService = {
                 },
                 status: 'ACTIVE',
             },
-            select: { id: true },
+            select: {
+                id: true,
+                reset_otp_version: true,
+            },
         });
 
         if (!user) {
             throw new Error('Không tìm thấy tài khoản phù hợp');
+        }
+
+        const isValidOtp = verifyOtpToken(data.token, email, data.otp, user.reset_otp_version);
+
+        if (!isValidOtp) {
+            throw new Error('Mã xác nhận không đúng hoặc đã hết hạn');
         }
 
         const salt = await bcryptjs.genSalt(10);
@@ -146,7 +160,12 @@ export const AuthService = {
 
         await prisma.user.update({
             where: { id: user.id },
-            data: { password_hash: hashPassword },
+            data: {
+                password_hash: hashPassword,
+                reset_otp_version: {
+                    increment: 1,
+                },
+            },
         });
     },
 

@@ -1,21 +1,22 @@
 import { createHmac, timingSafeEqual, randomInt } from 'crypto'
 
 const OTP_SECRET = process.env.AUTH_SECRET ?? 'dev-only-secret'
-const OTP_EXPIRE_SECONDS = 5 * 60 // 5 phút
+const OTP_EXPIRE_SECONDS = 60 // 60 giây
 
 export function generateOtp() {
   return randomInt(0, 1_000_000).toString().padStart(6, '0')
 }
 
-function hashOtp(email: string, otp: string) {
-  return createHmac('sha256', OTP_SECRET).update(`${email}:${otp}`).digest('base64url')
+function hashOtp(email: string, otp: string, version: number) {
+  return createHmac('sha256', OTP_SECRET).update(`${email}:${otp}:${version}`).digest('base64url')
 }
 
-export function createOtpToken(email: string, otp: string) {
+export function createOtpToken(email: string, otp: string, version: number) {
   const payload = {
     email,
-    otpHash: hashOtp(email, otp),
-    exp: Math.floor(Date.now() / 1000) + OTP_EXPIRE_SECONDS,
+    otpHash: hashOtp(email, otp, version),
+    exp: Math.floor(Date.now() / 1000) + OTP_EXPIRE_SECONDS, // tồn tại 
+    version,
   }
 
   const data = Buffer.from(JSON.stringify(payload)).toString('base64url')
@@ -24,7 +25,7 @@ export function createOtpToken(email: string, otp: string) {
   return `${data}.${sig}`
 }
 
-export function verifyOtpToken(token: string, email: string, otp: string) {
+export function verifyOtpToken(token: string, email: string, otp: string, version: number) {
   const [data, sig] = token.split('.')
   if (!data || !sig) return false
 
@@ -39,7 +40,8 @@ export function verifyOtpToken(token: string, email: string, otp: string) {
 
     if (payload.exp < Math.floor(Date.now() / 1000)) return false
     if (payload.email !== email) return false
-    if (payload.otpHash !== hashOtp(email, otp)) return false
+    if (payload.version !== version) return false
+    if (payload.otpHash !== hashOtp(email, otp, version)) return false
 
     return true
   } catch {
