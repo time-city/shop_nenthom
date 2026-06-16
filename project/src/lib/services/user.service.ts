@@ -1,5 +1,5 @@
 import prisma from "../prisma"
-import { UpdateProfileFormState } from "../validations/auth.schema"
+import { UpdateProfileFormState } from "../validations/user.schema"
 
 
 export const UserService = {
@@ -12,30 +12,65 @@ export const UserService = {
                phone: data.phone,
            },
        });
-
-
        if (existingUser) {
            throw new Error('Số điện thoại đã tồn tại');
        }
+       // update inf user
+       const updateUser = await prisma.$transaction(async (tx) => {
+            // Lấy địa chỉ mặc định hiện tại của user (nếu có)
+            const defaultAddress = await tx.shippingAddress.findFirst({
+                where: {
+                    user_id: id,
+                    is_default: true,
+                },
+                select: {id: true}
+            });
 
+            // Cap nhat thong tin ca nhan
+            const userResult = await tx.user.update({
+               where: {id},
+               data: {
+                    fullname: data.fullname,
+                    phone: data.phone
+               },
+               select: {
+                    id: true,
+                    fullname: true,
+                    email: true,
+                    phone: true,
+                    role: true
+               }
+            });
 
-       const user = await prisma.user.update({
-           where: { id },
-           data: {
-               fullname: data.fullname,
-               phone: data.phone,
-           },
-           select: {
-               id: true,
-               fullname: true,
-               email: true,
-               phone: true,
-               role: true,
-           },
-       });
+            // xử lý địa chỉ từ form
+            if(data.address && data.city){
+                if(defaultAddress){
+                    await tx.shippingAddress.update({
+                        where: {id: defaultAddress.id},
+                        data: {
+                            fullname: data.fullname ?? userResult.fullname ?? "Người nhận",
+                            phone: data.phone ?? userResult.phone ?? "",
+                            address: data.address,
+                            city: data.city
+                        }
+                    });
+                }else{
+                    await tx.shippingAddress.create({
+                        data: {
+                            user_id: id,
+                            fullname: data.fullname ?? userResult.fullname ?? "Người nhận",
+                            phone: data.phone ?? userResult.phone ?? "",
+                            address: data.address,
+                            city: data.city,
+                            is_default: true
+                        }
+                    });
+                }
+            }
 
-
-       return user;
+            return userResult;
+       })
+       return updateUser;
    },
 
 

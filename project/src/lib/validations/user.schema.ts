@@ -9,6 +9,16 @@ export const getUsersSchema = z.object({
   search: z.string().trim().optional(),
 })
 
+export const updateProfileSchema = z.object({
+    fullname: z.string().trim().min(3, 'Họ và tên không được để trống'),
+    phone: z.string().trim().regex(/^(0[3|5|7|8|9])+([0-9]{8})$/, 'Số điện thoại không hợp lệ'),
+    address: z.string().trim().min(3, 'Địa chỉ không được để trống'),
+    city: z.string().trim().min(3, 'Thành phố không được để trống'),
+})
+
+export type UpdateProfileFormState = z.infer<typeof updateProfileSchema>;
+
+
 export type GetUsersParams = z.infer<typeof getUsersSchema>
 
 export const userIdSchema = z.object({
