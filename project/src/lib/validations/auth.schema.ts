@@ -14,11 +14,6 @@ export const loginSchema = z.object({
 })
 export type LoginFormState = z.infer<typeof loginSchema>;
 
-export const updateProfileSchema = z.object({
-    fullname: z.string().trim().min(3, 'Họ và tên phải có ít nhất 3 ký tự'),
-    phone: z.string().trim().regex(/^(0[3|5|7|8|9])+([0-9]{8})$/, 'Số điện thoại không hợp lệ'),
-})
-export type UpdateProfileFormState = z.infer<typeof updateProfileSchema>;
 
 export const forgotPasswordSchema = z.object({
   email: z.string().email('Vui lòng nhập email hợp lệ'),

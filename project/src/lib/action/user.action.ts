@@ -1,9 +1,8 @@
 'use server'
-
-
 import { getSession } from "../session";
-import { UpdateProfileFormState, updateProfileSchema } from "../validations/auth.schema";
+import { UpdateProfileFormState, updateProfileSchema } from "../validations/user.schema";
 import { UserService } from "../services/user.service";
+import prisma from "../prisma";
 
 
 export async function updateProfileAction(data: UpdateProfileFormState) {
@@ -14,8 +13,10 @@ export async function updateProfileAction(data: UpdateProfileFormState) {
 
    // 2. validate
    const parsed = updateProfileSchema.safeParse({
+       address: data.address,
+       city: data.city,
        fullname: data.fullname,
-       phone: data.phone
+       phone: data.phone,
    })
 
 
@@ -105,3 +106,48 @@ export async function getUserOrdersAction(userId: string) {
    }
 }
 
+
+export async function getCurrentUser() {
+    const session = await getSession();
+
+    if (!session) {
+        return null;
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { id: session.sub },
+        select: {
+            id: true,
+            fullname: true,
+            email: true,
+            phone: true,
+            role: true,
+            status: true,
+            shipping_addresses: {
+                where: { is_default: true },
+                take: 1,
+                select: {
+                    address: true,
+                    city: true,
+                },
+            },
+        },
+    });
+
+    if (!user || user.status === 'LOCKED') {
+        return null;
+    }
+
+    const defaultAddress = user.shipping_addresses[0] ?? null;
+
+    return {
+        id: user.id,
+        fullname: user.fullname,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        status: user.status,
+        address: defaultAddress?.address ?? "",
+        city: defaultAddress?.city ?? "",
+    };
+}
