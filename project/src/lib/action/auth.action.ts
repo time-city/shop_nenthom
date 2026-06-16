@@ -140,28 +140,4 @@ export async function changePassword(data: ChangePasswordInput) {
     }
 }
 
-export async function getCurrentUser() {
-    const session = await getSession();
 
-    if (!session) {
-        return null;
-    }
-
-    const user = await prisma.user.findUnique({
-        where: { id: session.sub },
-        select: {
-            id: true,
-            fullname: true,
-            email: true,
-            phone: true,
-            role: true,
-            status: true,
-        },
-    });
-
-    if (!user || user.status === 'LOCKED') {
-        return null;
-    }
-
-    return user;
-}
