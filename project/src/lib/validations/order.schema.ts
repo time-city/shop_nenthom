@@ -23,6 +23,7 @@ export const getListOrdersSchema = z.object({
   end_date: z.coerce.date().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
   page: z.coerce.number().int().min(1).default(1),
+  processing_status: z.enum(['PENDING', 'PROCESSED']).optional(),
   search: z.string().trim().optional(),
   search_keyword: z.string().trim().optional(),
   start_date: z.coerce.date().optional(),

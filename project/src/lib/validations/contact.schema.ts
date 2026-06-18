@@ -4,7 +4,7 @@ export const submitContactSchema = z.object({
   name: z.string().min(1, 'Tên không được để trống'),
   email: z.string().email('Email không hợp lệ'),
   subject: z.string().min(1, 'Tiêu đề không được để trống'),
-  message: z.string().min(10, 'Nội dung ít nhất 10 ký tự'),
+  message: z.string().nonempty('Không được để trống')
 })
 
 export type SubmitContactInput = z.infer<typeof submitContactSchema>

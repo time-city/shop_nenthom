@@ -27,3 +27,10 @@ export type SendOrderBillEmailParams = {
   subtotal: number;
   total: number;
 };
+
+export type SendOrderCancellationEmailParams = {
+  email: string;
+  fullname: string;
+  orderNumber: string;
+  reason: string;
+};

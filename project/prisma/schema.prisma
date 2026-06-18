@@ -70,7 +70,7 @@ model User {
   role             Role     @default(CUSTOMER)
   status           UserStatus @default(ACTIVE)
   fullname         String?
-  phone            String?
+  phone            String?  @unique
   reset_otp_version Int     @default(0)
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
@@ -82,6 +82,7 @@ model User {
   discount_usages    DiscountUsage[]
   history_logs       OrderHistoryLog[] @relation("AdminLogs")
 
+  @@index([role, created_at])
   @@map("users")
   @@schema("public")
 }
@@ -99,6 +100,7 @@ model ShippingAddress {
   // Relations
   user       User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  @@index([user_id, is_default])
   @@map("shipping_addresses")
   @@schema("public")
 }
@@ -150,6 +152,9 @@ model Product {
   order_items      OrderItem[]
   scents           ProductScent[]
 
+  @@index([category_id, is_active, base_price_cents])
+  @@index([created_at(sort: Desc)])
+  @@index([is_custom, is_active])
   @@map("products")
   @@schema("public")
 }
@@ -163,6 +168,7 @@ model ProductScent {
   scent      Scent   @relation(fields: [scent_id], references: [id], onDelete: Cascade)
 
   @@id([product_id, scent_id])
+  @@index([scent_id])
   @@map("product_scents")
   @@schema("public")
 }
@@ -252,6 +258,8 @@ model Cart {
   user       User?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   items      CartItem[]
 
+  @@index([user_id])
+  @@index([session_id])
   @@map("carts")
   @@schema("public")
 }
@@ -275,6 +283,7 @@ model CartItem {
   size          CandleSize? @relation(fields: [size_id], references: [id])
   packaging     Packaging?  @relation(fields: [pack_id], references: [id])
 
+  @@index([cart_id, product_id, scent_id, color_id, size_id, pack_id])
   @@map("cart_items")
   @@schema("public")
 }
@@ -310,7 +319,7 @@ model Order {
   // Tổng tiền
   subtotal_cents    Int
   discount_cents    Int           @default(0)
-  discount_code_text String?      // 
+  discount_code_text String?
   shipping_cents    Int           @default(0)
   total_cents       Int
 
@@ -322,6 +331,8 @@ model Order {
   history_logs      OrderHistoryLog[]
   discount_usages   DiscountUsage[]
 
+  @@index([status, created_at(sort: Desc)])
+  @@index([shipping_phone])
   @@map("orders")
   @@schema("public")
 }
@@ -348,6 +359,7 @@ model OrderItem {
   size             CandleSize? @relation(fields: [size_id], references: [id])
   packaging        Packaging?  @relation(fields: [pack_id], references: [id])
 
+  @@index([order_id, product_id])
   @@map("order_items")
   @@schema("public")
 }

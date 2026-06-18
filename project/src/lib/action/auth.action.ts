@@ -163,4 +163,3 @@ export async function changePassword(data: ChangePasswordInput) {
         return { error: (err as Error).message };
     }
 }
-

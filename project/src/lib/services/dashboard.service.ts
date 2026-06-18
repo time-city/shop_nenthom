@@ -3,22 +3,42 @@ import prisma from '../prisma'
 import { orderStatusMap } from '../types/order'
 import { GetDashboardOverviewParams } from '../validations/dashboard.schema'
 
+type DashboardQueryRow = {
+  customer_count: number | bigint
+  latest_orders: Array<{
+    createdAt: string
+    customer: string
+    orderNumber: string
+    status: OrderStatus
+    totalCents: number
+  }>
+  order_count: number | bigint
+  revenue_cents: number | bigint
+  sold_product_count: number | bigint
+  top_products: Array<{
+    name: string
+    productId: string
+    revenueCents: number
+    soldQuantity: number
+  }>
+}
+
 function getPeriodDateRange(period: GetDashboardOverviewParams['period']) {
   const now = new Date()
   const start = new Date(now)
 
   if (period === 'today') {
-    start.setHours(0, 0, 0, 0)
+    start.setUTCHours(0, 0, 0, 0)
   }
 
   if (period === 'week') {
-    start.setDate(now.getDate() - 6)
-    start.setHours(0, 0, 0, 0)
+    start.setUTCDate(now.getUTCDate() - 6)
+    start.setUTCHours(0, 0, 0, 0)
   }
 
   if (period === 'month') {
-    start.setDate(1)
-    start.setHours(0, 0, 0, 0)
+    start.setUTCDate(1)
+    start.setUTCHours(0, 0, 0, 0)
   }
 
   return { end: now, start }
@@ -26,116 +46,128 @@ function getPeriodDateRange(period: GetDashboardOverviewParams['period']) {
 
 export const DashboardService = {
   async getOverview(params: GetDashboardOverviewParams) {
-    const { end, start } = getPeriodDateRange(params.period)
-    const orderWhere: Prisma.OrderWhereInput = {
-      created_at: {
-        gte: start,
-        lte: end,
-      },
-      status: {
-        not: OrderStatus.CANCELLED,
-      },
-    }
+    try {
+      const { end, start } = getPeriodDateRange(params.period)
+      const rows = await prisma.$queryRaw<DashboardQueryRow[]>(Prisma.sql`
+        WITH filtered_orders AS (
+          SELECT
+            "id",
+            "created_at",
+            "order_number",
+            "shipping_fullname",
+            "status",
+            "total_cents"
+          FROM "public"."orders"
+          WHERE "created_at" >= ${start}
+            AND "created_at" <= ${end}
+            AND "status" <> 'CANCELLED'
+        ),
+        order_stats AS (
+          SELECT
+            COUNT(*) AS "order_count",
+            COALESCE(SUM("total_cents"), 0) AS "revenue_cents"
+          FROM filtered_orders
+        ),
+        customer_stats AS (
+          SELECT COUNT(*) AS "customer_count"
+          FROM "public"."users"
+          WHERE "role" = 'CUSTOMER'
+            AND "created_at" >= ${start}
+            AND "created_at" <= ${end}
+        ),
+        product_stats AS (
+          SELECT
+            COALESCE(SUM(oi."quantity"), 0) AS "sold_product_count"
+          FROM "public"."order_items" oi
+          INNER JOIN filtered_orders orders ON orders."id" = oi."order_id"
+        ),
+        latest_orders AS (
+          SELECT COALESCE(
+            JSONB_AGG(
+              JSONB_BUILD_OBJECT(
+                'createdAt', latest."created_at",
+                'customer', latest."shipping_fullname",
+                'orderNumber', latest."order_number",
+                'status', latest."status",
+                'totalCents', latest."total_cents"
+              )
+              ORDER BY latest."created_at" DESC
+            ),
+            '[]'::JSONB
+          ) AS "items"
+          FROM (
+            SELECT *
+            FROM filtered_orders
+            ORDER BY "created_at" DESC
+            LIMIT 5
+          ) latest
+        ),
+        top_products AS (
+          SELECT COALESCE(
+            JSONB_AGG(
+              JSONB_BUILD_OBJECT(
+                'productId', ranked."product_id",
+                'name', ranked."name",
+                'soldQuantity', ranked."sold_quantity",
+                'revenueCents', ranked."revenue_cents"
+              )
+              ORDER BY ranked."sold_quantity" DESC, ranked."revenue_cents" DESC
+            ),
+            '[]'::JSONB
+          ) AS "items"
+          FROM (
+            SELECT
+              oi."product_id",
+              COALESCE(product."name", 'Sản phẩm ẩn') AS "name",
+              SUM(oi."quantity") AS "sold_quantity",
+              SUM(oi."unit_price_cents" * oi."quantity") AS "revenue_cents"
+            FROM "public"."order_items" oi
+            INNER JOIN filtered_orders orders ON orders."id" = oi."order_id"
+            LEFT JOIN "public"."products" product ON product."id" = oi."product_id"
+            GROUP BY oi."product_id", product."name"
+            ORDER BY "sold_quantity" DESC, "revenue_cents" DESC
+            LIMIT 5
+          ) ranked
+        )
+        SELECT
+          order_stats."order_count",
+          order_stats."revenue_cents",
+          customer_stats."customer_count",
+          product_stats."sold_product_count",
+          latest_orders."items" AS "latest_orders",
+          top_products."items" AS "top_products"
+        FROM order_stats
+        CROSS JOIN customer_stats
+        CROSS JOIN product_stats
+        CROSS JOIN latest_orders
+        CROSS JOIN top_products
+      `)
 
-    const [
-      revenue,
-      orderCount,
-      customerCount,
-      orderItems,
-      latestOrders,
-    ] = await prisma.$transaction([
-      prisma.order.aggregate({
-        where: orderWhere,
-        _sum: { total_cents: true },
-      }),
-      prisma.order.count({ where: orderWhere }),
-      prisma.user.count({
-        where: {
-          role: 'CUSTOMER',
-          created_at: {
-            gte: start,
-            lte: end,
-          },
-        },
-      }),
-      prisma.orderItem.findMany({
-        where: {
-          order: orderWhere,
-        },
-        select: {
-          product_id: true,
-          quantity: true,
-          unit_price_cents: true,
-          product: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      }),
-      prisma.order.findMany({
-        where: orderWhere,
-        orderBy: { created_at: 'desc' },
-        take: 5,
-        select: {
-          created_at: true,
-          order_number: true,
-          shipping_fullname: true,
-          status: true,
-          total_cents: true,
-        },
-      }),
-    ])
+      const overview = rows[0]
 
-    const topProductMap = new Map<
-      string,
-      { name: string; productId: string; revenueCents: number; soldQuantity: number }
-    >()
-
-    for (const item of orderItems) {
-      const current = topProductMap.get(item.product_id) ?? {
-        name: item.product.name,
-        productId: item.product_id,
-        revenueCents: 0,
-        soldQuantity: 0,
+      if (!overview) {
+        throw new Error('Không thể tải dữ liệu tổng quan. Vui lòng thử lại.')
       }
 
-      current.soldQuantity += item.quantity
-      current.revenueCents += item.unit_price_cents * item.quantity
-      topProductMap.set(item.product_id, current)
-    }
-
-    const topProducts = [...topProductMap.values()]
-      .sort((first, second) => {
-        if (second.soldQuantity !== first.soldQuantity) {
-          return second.soldQuantity - first.soldQuantity
-        }
-
-        return second.revenueCents - first.revenueCents
-      })
-      .slice(0, 5)
-
-    const soldProductCount = orderItems.reduce(
-      (total, item) => total + item.quantity,
-      0,
-    )
-
-    return {
-      latestOrders: latestOrders.map((order) => ({
-        createdAt: order.created_at.toISOString(),
-        customer: order.shipping_fullname,
-        orderNumber: order.order_number,
-        status: orderStatusMap[order.status],
-        totalCents: order.total_cents,
-      })),
-      period: params.period,
-      stats: {
-        customerCount,
-        orderCount,
-        revenueCents: revenue._sum.total_cents ?? 0,
-        soldProductCount,
-      },
-      topProducts,
-    }
+      return {
+        latestOrders: overview.latest_orders.map((order) => ({
+          ...order,
+          createdAt: new Date(order.createdAt).toISOString(),
+          status: orderStatusMap[order.status],
+        })),
+        period: params.period,
+        stats: {
+          customerCount: Number(overview.customer_count),
+          orderCount: Number(overview.order_count),
+          revenueCents: Number(overview.revenue_cents),
+          soldProductCount: Number(overview.sold_product_count),
+        },
+        topProducts: overview.top_products.map((product) => ({
+          ...product,
+          revenueCents: Number(product.revenueCents),
+          soldQuantity: Number(product.soldQuantity),
+        })),
+      }
+    } finally {}
   },
 }
