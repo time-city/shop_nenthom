@@ -1,3 +1,4 @@
+import Link from "next/link";
 import NotFoundButtons from "../components/client/notFoundButtons";
 
 export default function NotFound() {
@@ -50,44 +51,44 @@ export default function NotFound() {
                     </h2>
                     <ul className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
                         <li>
-                            <a
+                            <Link
                                 href="/#home"
                                 className="block p-2 text-xs text-[#2C1810] hover:text-[#6B1218] transition-all duration-200 border border-[#6B4C35]/10 rounded hover:border-[#6B1218]/30 bg-white/50"
                             >
                                 Trang Chủ
-                            </a>
+                            </Link>
                         </li>
                         <li>
-                            <a
+                            <Link
                                 href="/#custom"
                                 className="block p-2 text-xs text-[#2C1810] hover:text-[#6B1218] transition-all duration-200 border border-[#6B4C35]/10 rounded hover:border-[#6B1218]/30 bg-white/50"
                             >
                                 Tùy Chỉnh
-                            </a>
+                            </Link>
                         </li>
                         <li>
-                            <a
+                            <Link
                                 href="/#story"
                                 className="block p-2 text-xs text-[#2C1810] hover:text-[#6B1218] transition-all duration-200 border border-[#6B4C35]/10 rounded hover:border-[#6B1218]/30 bg-white/50"
                             >
                                 Câu Chuyện
-                            </a>
+                            </Link>
                         </li>
                         <li>
-                            <a
+                            <Link
                                 href="/#contact"
                                 className="block p-2 text-xs text-[#2C1810] hover:text-[#6B1218] transition-all duration-200 border border-[#6B4C35]/10 rounded hover:border-[#6B1218]/30 bg-white/50"
                             >
                                 Liên Hệ
-                            </a>
+                            </Link>
                         </li>
                         <li>
-                            <a
+                            <Link
                                 href="/cart"
                                 className="block p-2 text-xs text-[#2C1810] hover:text-[#6B1218] transition-all duration-200 border border-[#6B4C35]/10 rounded hover:border-[#6B1218]/30 bg-white/50 col-span-2 sm:col-span-1"
                             >
                                 Giỏ Hàng
-                            </a>
+                            </Link>
                         </li>
                     </ul>
                 </div>

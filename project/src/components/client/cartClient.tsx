@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import CartItem from "@/src/components/client/cartItem";
@@ -61,7 +61,7 @@ const mapCartItem = (item: ClientCartActionItemInterface): ClientCartItem => ({
 export default function CartClient() {
   const router = useRouter();
   const { toast } = useToast();
-  const { setCartCount, setLastOrder } = useCartStore();
+  const { setCartCount, setLastOrder, incrementOrderCount } = useCartStore();
   const [cart, setCart] = useState<ClientCartItem[]>([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
@@ -72,12 +72,9 @@ export default function CartClient() {
   const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
   const [deleteAllOpen, setDeleteAllOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [appliedDiscount, setAppliedDiscount] = useState<{
-    code: string;
-    discount_cents: number;
-    subtotal_cents: number;
-    total_cents: number;
-  } | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
+  const pendingUpdatesRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const { appliedDiscount, setAppliedDiscount } = useCartStore();
 
   const selectedCart = useMemo(
     () =>
@@ -96,11 +93,10 @@ export default function CartClient() {
 
   // Reset applied discount when subtotal changes to avoid out-of-sync discounts
   useEffect(() => {
-    if (appliedDiscount) {
+    if (!isLoadingCart && appliedDiscount && subtotal !== appliedDiscount.subtotal_cents) {
       setAppliedDiscount(null);
-      toast.info("Vui lòng áp dụng lại mã giảm giá do giỏ hàng đã thay đổi.");
     }
-  }, [subtotal]);
+  }, [subtotal, appliedDiscount, isLoadingCart, setAppliedDiscount]);
 
   const loadCart = useCallback(async (cancelled: { value: boolean }) => {
     setIsLoadingCart(true);
@@ -108,8 +104,6 @@ export default function CartClient() {
 
     // action-(lấy giỏ hàng)
     const result = await getOrCreateCartAction();
-    console.log("[cart:getOrCreateCartAction]", result);
-
     if (cancelled.value) return;
 
     if ("error" in result && result.error) {
@@ -133,20 +127,27 @@ export default function CartClient() {
     }
 
     setIsLoadingCart(false);
-  }, [toast]);
+  }, [toast, setCartCount]);
 
   useEffect(() => {
     const cancelled = { value: false };
-    void loadCart(cancelled);
+    setTimeout(() => {
+      void loadCart(cancelled);
+    }, 0);
 
     return () => {
       cancelled.value = true;
     };
   }, [loadCart]);
 
-  const updateQuantity = async (index: number, change: number) => {
-    if (isMutatingCart) return;
+  useEffect(() => {
+    const pendingUpdates = pendingUpdatesRef.current;
+    return () => {
+      Object.values(pendingUpdates).forEach(clearTimeout);
+    };
+  }, []);
 
+  const updateQuantity = async (index: number, change: number) => {
     const targetItem = cart[index];
 
     if (!targetItem?.itemId) return;
@@ -158,30 +159,46 @@ export default function CartClient() {
       return;
     }
 
-    const previousCart = cart;
-
+    // Cập nhật state UI ngay lập tức để trải nghiệm mượt mà không bị đứng
     setCart((currentCart) =>
       currentCart.map((item, itemIndex) =>
         itemIndex === index ? { ...item, quantity: nextQuantity } : item,
       ),
     );
-    setIsMutatingCart(true);
 
-    try {
-      // action-(cập nhật số lượng giỏ hàng)
-      const result = await updateCartItemAction({
-        itemId: targetItem.itemId,
-        quantity: nextQuantity,
-      });
+    const itemId = targetItem.itemId;
 
-      if ("error" in result && result.error) {
-        setCart(previousCart);
-        toast.error(getFriendlyResponseError(result.error));
-        return;
-      }
-    } finally {
-      setIsMutatingCart(false);
+    if (pendingUpdatesRef.current[itemId]) {
+      clearTimeout(pendingUpdatesRef.current[itemId]);
+    } else {
+      setPendingCount((prev) => prev + 1);
     }
+
+    pendingUpdatesRef.current[itemId] = setTimeout(async () => {
+      delete pendingUpdatesRef.current[itemId];
+      setPendingCount((prev) => Math.max(0, prev - 1));
+      setIsMutatingCart(true);
+
+      try {
+        // action-(cập nhật số lượng giỏ hàng)
+        const result = await updateCartItemAction({
+          itemId,
+          quantity: nextQuantity,
+        });
+
+        if ("error" in result && result.error) {
+          const cancelled = { value: false };
+          await loadCart(cancelled);
+          toast.error(getFriendlyResponseError(result.error));
+        }
+      } catch (err) {
+        const cancelled = { value: false };
+        await loadCart(cancelled);
+        toast.error(err instanceof Error ? err.message : "Cập nhật giỏ hàng thất bại");
+      } finally {
+        setIsMutatingCart(false);
+      }
+    }, 500);
   };
 
   const removeItem = (index: number) => {
@@ -287,7 +304,6 @@ export default function CartClient() {
 
   const applyPromo = async (code: string) => {
     if (!code.trim()) {
-      toast.error("Vui lòng nhập mã khuyến mãi.");
       return;
     }
 
@@ -335,7 +351,8 @@ export default function CartClient() {
   }) => {
     if (isCheckingOut) return;
     if (selectedCart.length === 0) {
-      toast.error("Vui lòng chọn sản phẩm muốn thanh toán");
+      setError("Vui lòng chọn sản phẩm muốn thanh toán");
+      setStep("cart");
       return;
     }
 
@@ -363,6 +380,7 @@ export default function CartClient() {
       if (response.success && response.data) {
         // Lưu đơn hàng vào store Zustand (thay vì localStorage)
         setLastOrder(response.data);
+        incrementOrderCount();
 
         // Cập nhật lại giỏ hàng local và chuyển hướng sang trang xác nhận đơn hàng
         const nextCart = cart.filter(
@@ -505,12 +523,13 @@ export default function CartClient() {
               </div>
 
               <CartSummary
-                disabled={isMutatingCart || selectedCart.length === 0}
+                disabled={isMutatingCart || selectedCart.length === 0 || pendingCount > 0}
                 subtotal={subtotal}
                 onApplyPromo={applyPromo}
                 onCheckout={() => setStep("checkout")}
                 appliedDiscountCode={appliedDiscount?.code}
                 discountAmount={appliedDiscount?.discount_cents}
+                discountType={appliedDiscount?.type}
               />
             </section>
           )}

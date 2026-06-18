@@ -8,7 +8,7 @@ import { useSupportStore } from "@/src/store/useSupportStore";
 
 interface MobileMenuProps {
   links: { href: string; label: string }[];
-  currentUser?: any;
+  currentUser?: unknown;
 }
 
 export default function MobileMenu({ links, currentUser }: MobileMenuProps) {
@@ -122,7 +122,7 @@ export default function MobileMenu({ links, currentUser }: MobileMenuProps) {
             </a>
           ))}
 
-          {currentUser && (
+          {Boolean(currentUser) && (
             <button
               onClick={handleLogout}
               className="w-full mt-4 bg-[rgba(245,240,232,0.1)] text-[#F5F0E8] hover:text-[#6B1218] hover:bg-[#F5F0E8] py-2.5 px-4 rounded-[8px] text-center transition-all duration-200 font-semibold block"

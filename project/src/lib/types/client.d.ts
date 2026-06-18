@@ -41,6 +41,7 @@ export type DetailCardProductProps = {
   isAuthenticated?: boolean;
   product: import("../../interface/clientInterface").ClientProductDetailInterface;
   onClose?: () => void;
+  isModal?: boolean;
 };
 
 
@@ -185,6 +186,7 @@ export type CartSummaryProps = {
   subtotal: number;
   appliedDiscountCode?: string;
   discountAmount?: number;
+  discountType?: string;
 };
 
 

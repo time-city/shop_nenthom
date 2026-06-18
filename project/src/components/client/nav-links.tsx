@@ -35,7 +35,18 @@ export default function NavLinks({
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          setActiveSection(entry.target.id);
+          const id = entry.target.id;
+          setActiveSection(id);
+          // Sync browser URL hash with active section without cluttering back history
+          const newHash = id === "home" ? "" : `#${id}`;
+          const currentHash = window.location.hash;
+          if (currentHash !== newHash) {
+            window.history.replaceState(
+              null,
+              "",
+              newHash ? `${window.location.pathname}${newHash}` : window.location.pathname
+            );
+          }
         }
       });
     };
@@ -47,6 +58,10 @@ export default function NavLinks({
     const handleScroll = () => {
       if (window.scrollY < 80) {
         setActiveSection("home");
+        const currentHash = window.location.hash;
+        if (currentHash !== "" && currentHash !== "#home") {
+          window.history.replaceState(null, "", window.location.pathname);
+        }
       }
     };
     window.addEventListener("scroll", handleScroll);
@@ -107,9 +122,8 @@ export default function NavLinks({
             <a
               href={link.href}
               onClick={(e) => handleClick(e, link.href)}
-              className={`${linkClassName} ${
-                isActive ? "text-[#f5f0e8] !opacity-100 after:!w-full" : ""
-              }`}
+              className={`${linkClassName} ${isActive ? "text-[#f5f0e8] !opacity-100 after:!w-full" : ""
+                }`}
             >
               {link.label}
             </a>

@@ -114,12 +114,12 @@ export default function DetailCardModal({
 
  return (
    <DetailCardProduct
+       key={product.id}
        isAuthenticated={isAuthenticated}
        product={product}
        onClose={handleClose}
    />
  );
 }
-
 
 

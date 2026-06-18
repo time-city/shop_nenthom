@@ -9,7 +9,7 @@ import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { createDiscountAction } from "../../lib/action/discount.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
@@ -36,13 +36,17 @@ export default function ModalDiscount({
   const [formValues, setFormValues] = useState<AdminDiscountFormValues>(
     initialDiscountFormValues,
   );
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!open) return;
 
-    setFormValues(initialDiscountFormValues);
-    setIsSubmitting(false);
+    startTransition(() => {
+      setFormValues(initialDiscountFormValues);
+      setErrors({});
+      setIsSubmitting(false);
+    });
   }, [open]);
 
   const updateField = (
@@ -53,6 +57,12 @@ export default function ModalDiscount({
       ...currentValues,
       [field]: value,
     }));
+    if (errors[field]) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        [field]: "",
+      }));
+    }
   };
 
   const handleSave = async () => {
@@ -62,26 +72,28 @@ export default function ModalDiscount({
     const discountAmount = Number(formValues.discount_amount_cents);
     const maxUses = Number(formValues.max_uses);
 
+    const validationErrors: Record<string, string> = {};
+
     if (!code) {
-      toast.error("Vui lòng nhập mã giảm giá");
+      validationErrors.code = "Vui lòng nhập mã giảm giá";
+    }
+
+    if (!formValues.discount_amount_cents || !Number.isFinite(discountAmount) || discountAmount <= 0) {
+      validationErrors.discount_amount_cents = "Giá trị giảm không hợp lệ";
+    } else if (formValues.type === "PERCENTAGE" && discountAmount > 100) {
+      validationErrors.discount_amount_cents = "Phần trăm giảm giá không được vượt quá 100";
+    }
+
+    if (!formValues.max_uses || !Number.isInteger(maxUses) || maxUses <= 0) {
+      validationErrors.max_uses = "Số lượt tối đa không hợp lệ";
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
-    if (!Number.isFinite(discountAmount) || discountAmount <= 0) {
-      toast.error("Giá trị giảm không hợp lệ");
-      return;
-    }
-
-    if (formValues.type === "PERCENTAGE" && discountAmount > 100) {
-      toast.error("Phần trăm giảm giá không được vượt quá 100");
-      return;
-    }
-
-    if (!Number.isInteger(maxUses) || maxUses <= 0) {
-      toast.error("Số lượt tối đa không hợp lệ");
-      return;
-    }
-
+    setErrors({});
     setIsSubmitting(true);
 
     try {
@@ -153,6 +165,8 @@ export default function ModalDiscount({
             placeholder="Nhập mã giảm giá"
             value={formValues.code}
             onChange={(event) => updateField("code", event.target.value)}
+            error={Boolean(errors.code)}
+            helperText={errors.code}
             fullWidth
             className={`${styles.field} ${styles.uppercaseField}`}
           />
@@ -195,6 +209,8 @@ export default function ModalDiscount({
               onChange={(event) =>
                 updateField("discount_amount_cents", event.target.value)
               }
+              error={Boolean(errors.discount_amount_cents)}
+              helperText={errors.discount_amount_cents}
               fullWidth
               className={styles.field}
             />
@@ -204,6 +220,8 @@ export default function ModalDiscount({
               type="number"
               value={formValues.max_uses}
               onChange={(event) => updateField("max_uses", event.target.value)}
+              error={Boolean(errors.max_uses)}
+              helperText={errors.max_uses}
               fullWidth
               className={styles.field}
             />

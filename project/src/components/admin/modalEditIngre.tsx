@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
@@ -48,12 +48,14 @@ export default function ModalEditIngre({
   useEffect(() => {
     if (!item) return;
 
-    setName(item.name);
-    setPrice(toNumberValue(item.price));
-    setHex(item.hex ?? "#F5E6D3");
-    setInStock(item.in_stock ?? true);
-    setIsSaving(false);
-    setWeightGram(String(item.weight_gram ?? ""));
+    startTransition(() => {
+      setName(item.name);
+      setPrice(toNumberValue(item.price));
+      setHex(item.hex ?? "#F5E6D3");
+      setInStock(item.in_stock ?? true);
+      setIsSaving(false);
+      setWeightGram(String(item.weight_gram ?? ""));
+    });
   }, [item]);
 
   const handleSave = async () => {

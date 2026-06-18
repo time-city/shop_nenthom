@@ -30,9 +30,11 @@ type CollectionProductsClientProps = {
 };
 
 
-const getFirstImage = (images: unknown) => {
- if (Array.isArray(images) && typeof images[0] === "string") {
-   return images[0];
+const getAvatarImage = (images: unknown) => {
+ if (Array.isArray(images)) {
+   return images.find(
+     (image): image is string => typeof image === "string" && image.length > 0,
+   ) ?? "";
  }
  if (typeof images === "string") {
    return images;
@@ -41,22 +43,7 @@ const getFirstImage = (images: unknown) => {
 };
 
 
-const buildCollectionHref = (
- params: CollectionSearchParams,
- overrides: Partial<CollectionSearchParams>,
- ) => {
- const nextParams = new URLSearchParams();
- const merged = { ...params, ...overrides };
 
-
- Object.entries(merged).forEach(([key, value]) => {
-   if (value) nextParams.set(key, value);
- });
-
-
- const query = nextParams.toString();
- return query ? `?${query}` : ".";
-};
 
 
 const parsePriceRange = (priceRange: string) => {
@@ -80,7 +67,6 @@ export default function CollectionProducts({
  initialError = "",
  initialFilters,
  initialMeta,
- initialParams,
  initialProducts,
  pageSize,
 }: CollectionProductsClientProps) {
@@ -94,16 +80,15 @@ export default function CollectionProducts({
  const [localPageProducts, setLocalPageProducts] = useState(initialProducts);
  const [localPriceRange, setLocalPriceRange] = useState(initialFilters.priceRange);
  const [search, setSearch] = useState(initialFilters.search);
- const [urlParams, setUrlParams] = useState<CollectionSearchParams>(initialParams);
 
  const scentId = context ? context.selectedFilter.scentId : localScentId;
  const setScentId = context
-   ? (val: string) => context.setSelectedFilter((prev: any) => ({ ...prev, scentId: val }))
+   ? (val: string) => context.setSelectedFilter((prev: { scentId: string; priceRange: string; search: string; page: number }) => ({ ...prev, scentId: val }))
    : setLocalScentId;
 
  const priceRange = context ? context.selectedFilter.priceRange : localPriceRange;
  const setPriceRange = context
-   ? (val: string) => context.setSelectedFilter((prev: any) => ({ ...prev, priceRange: val }))
+   ? (val: string) => context.setSelectedFilter((prev: { scentId: string; priceRange: string; search: string; page: number }) => ({ ...prev, priceRange: val }))
    : setLocalPriceRange;
 
  const pageProducts = context ? context.products : localPageProducts;
@@ -118,9 +103,11 @@ export default function CollectionProducts({
 
  useEffect(() => {
    if (context) {
-     setSearch(context.selectedFilter.search);
+     setTimeout(() => {
+       setSearch(context.selectedFilter.search);
+     }, 0);
    }
- }, [context?.selectedFilter.search]);
+ }, [context?.selectedFilter.search, context]);
 
 
  const totalPages = Math.max(meta.totalPages ?? 1, 1);
@@ -143,7 +130,6 @@ export default function CollectionProducts({
 
 
    window.history.pushState(null, "", nextUrl);
-   setUrlParams(nextParams);
  };
 
 
@@ -363,21 +349,27 @@ export default function CollectionProducts({
          id="collection-grid"
        >
          {pageProducts.map((product, index) => (
-           <CardProduct
+           <div
              key={product.id}
-             href={buildCollectionHref(urlParams, { productId: product.id })}
-             id={product.id}
-             imageUrl={getFirstImage(product.images)}
-             index={index}
-             name={product.name}
-             price={product.base_price_cents}
-             scentNote={
-               product.description ??
-               product.category?.description ??
-               product.category?.name ??
-               "Nến thơm thủ công tinh giản."
-             }
-           />
+             data-aos="fade-up"
+             data-aos-delay={index * 100}
+             suppressHydrationWarning
+           >
+             <CardProduct
+               href={`/collection/${product.id}`}
+               id={product.id}
+               imageUrl={getAvatarImage(product.images)}
+               index={index}
+               name={product.name}
+               price={product.base_price_cents}
+               scentNote={
+                 product.description ??
+                 product.category?.description ??
+                 product.category?.name ??
+                 "Nến thơm thủ công tinh giản."
+               }
+             />
+           </div>
          ))}
        </div>
      </div>

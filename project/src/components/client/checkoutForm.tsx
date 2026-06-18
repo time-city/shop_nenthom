@@ -7,7 +7,6 @@ import { useUserStore } from "@/src/store/useUserStore";
 import type {
   CartPaymentMethod,
   CheckoutFormProps,
-  CheckoutFormValues,
 } from "../../lib/types/client";
 
 interface FullFormValues {
@@ -72,7 +71,7 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [storedUser?.address, storedUser?.city, storedUser?.zip]);
 
   const validateField = (field: keyof FullFormValues, value: string): string => {
     const trimmed = value.trim();
@@ -352,4 +351,3 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
     </form>
   );
 }
-

@@ -113,7 +113,7 @@ export default function SupportClient() {
     return () => {
       cancelled = true;
     };
-  }, [activeFilter, toast]);
+  }, [activeFilter, setUnreadCount, toast]);
 
   const filteredContacts = useMemo(() => {
     if (activeFilter === "all") return contacts;

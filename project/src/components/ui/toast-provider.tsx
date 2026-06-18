@@ -115,7 +115,7 @@ export function useToast() {
 export default function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const idRef = useRef(0);
-  const timerRef = useRef<Map<number, any>>(new Map());
+  const timerRef = useRef<Map<number, number>>(new Map());
 
   const removeToast = useCallback((id: number) => {
     const timer = timerRef.current.get(id);

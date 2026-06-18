@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
@@ -37,12 +37,14 @@ export default function ModalIngredient({
   useEffect(() => {
     if (!open) return;
 
-    setName("");
-    setPrice("");
-    setHex("#F5E6D3");
-    setInStock(true);
-    setIsSaving(false);
-    setWeightGram("");
+    startTransition(() => {
+      setName("");
+      setPrice("");
+      setHex("#F5E6D3");
+      setInStock(true);
+      setIsSaving(false);
+      setWeightGram("");
+    });
   }, [open, ingredientType]);
 
   const handleSave = async () => {

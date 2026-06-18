@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { logoutUser } from "@/src/lib/action/auth.action";
 import { getCurrentUser, updateProfileAction } from "@/src/lib/action/user.action";
@@ -14,8 +14,23 @@ import type {
   ClientProfileUserData,
   ProfilePageContentProps,
   ProfileFieldProps,
-  ProfileHeaderProps,
 } from "@/src/lib/types/client";
+
+const CITY_ZIP_MAP: Record<string, string> = {
+  "Hà Nội": "100000",
+  "TP. Hồ Chí Minh": "700000",
+  "Đà Nẵng": "500000",
+  "Hải Phòng": "180000",
+  "Cần Thơ": "900000",
+  "Bình Dương": "820000",
+  "Đồng Nai": "810000",
+  "Bà Rịa - Vũng Tàu": "790000",
+  "Khánh Hòa": "650000",
+  "Lâm Đồng": "670000",
+  "Thừa Thiên Huế": "530000",
+  "Quảng Nam": "560000",
+  "Long An": "850000",
+};
 
 const defaultUser: Required<ClientProfileUserData> = {
   address: "",
@@ -27,83 +42,6 @@ const defaultUser: Required<ClientProfileUserData> = {
   zip: "",
 };
 
-const getInitials = (name: string) => {
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-
-  return initials || "CC";
-};
-
-function ProfileHeader({
-  activeTab,
-  user,
-}: ProfileHeaderProps) {
-  const initials = useMemo(() => getInitials(user.fullname), [user.fullname]);
-
-  return (
-    <div className="flex flex-col gap-5 bg-[#6B1218] px-5 py-7 text-[#F5F0E8] sm:px-8 md:flex-row md:items-center md:justify-between md:gap-8 md:px-12 lg:px-16">
-      <div className="flex min-w-0 items-center gap-4 sm:gap-5">
-        <div
-          className="flex size-16 shrink-0 items-center justify-center rounded-full border-[3px] border-[#F5F0E8] bg-[#F2E8D9] font-serif text-xl font-bold text-[#6B1218] shadow-[0_8px_18px_rgba(44,24,16,0.25)] sm:size-[72px]"
-          aria-hidden="true"
-        >
-          {initials}
-        </div>
-
-        <div className="min-w-0">
-          <div className="truncate font-serif text-[1.35rem] font-bold leading-tight text-[#F5F0E8] sm:text-2xl">
-            {user.fullname || "Tài khoản"}
-          </div>
-          {user.email ? (
-            <div className="mt-1 truncate text-[0.82rem] font-light text-[#f5f0e8]/70 sm:text-[0.85rem]">
-              {user.email}
-            </div>
-          ) : null}
-          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#F2E8D9] px-3 py-1.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-[#6B1218]">
-            <span className="text-sm">✦</span>
-            {user.role === "ADMIN" ? "Quản trị" : "Thành viên"}
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="flex w-full gap-2 overflow-x-auto md:w-auto md:justify-end"
-        role="tablist"
-        aria-label="Navigation"
-      >
-        <Link
-          href="/profile"
-          role="tab"
-          aria-selected={activeTab === "profile"}
-          className={`shrink-0 rounded-t-xl border-b-2 px-4 py-3 text-center text-[0.78rem] font-normal tracking-[0.08em] transition-colors sm:text-[0.85rem] ${
-            activeTab === "profile"
-              ? "border-[#F5F0E8] bg-[#f5f0e8]/15 text-[#F5F0E8]"
-              : "border-transparent text-[#f5f0e8]/60 hover:text-[#f5f0e8]/95"
-          }`}
-        >
-          Thông Tin Cá Nhân
-        </Link>
-        <Link
-          href="/orders"
-          role="tab"
-          aria-selected={activeTab === "orders"}
-          className={`shrink-0 rounded-t-xl border-b-2 px-4 py-3 text-center text-[0.78rem] font-normal tracking-[0.08em] transition-colors sm:text-[0.85rem] ${
-            activeTab === "orders"
-              ? "border-[#F5F0E8] bg-[#f5f0e8]/15 text-[#F5F0E8]"
-              : "border-transparent text-[#f5f0e8]/60 hover:text-[#f5f0e8]/95"
-          }`}
-        >
-          Lịch Sử Đơn Hàng
-        </Link>
-      </div>
-    </div>
-  );
-}
 
 function Field({
   className = "",
@@ -113,7 +51,8 @@ function Field({
   type = "text",
   value,
   error,
-}: ProfileFieldProps) {
+  disabled = false,
+}: ProfileFieldProps & { disabled?: boolean }) {
   const hasError = Boolean(error);
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
@@ -128,11 +67,11 @@ function Field({
         type={type === "email" || type === "tel" ? "text" : type}
         value={value}
         onChange={(event) => onChange(id, event.target.value)}
-        className={`w-full rounded-[10px] border-[1.5px] ${
-          hasError
+        disabled={disabled}
+        className={`w-full rounded-[10px] border-[1.5px] ${hasError
             ? "border-[#6B1218] focus:ring-[#6B1218]/10"
             : "border-[#6b4e35]/20 focus:border-[#6B1218] focus:ring-[#6B1218]/10"
-        } bg-white px-4 py-3 text-[0.95rem] text-[#2C1810] outline-none transition focus:ring-4`}
+          } bg-white px-4 py-3 text-[0.95rem] text-[#2C1810] outline-none transition focus:ring-4 disabled:bg-[#F2E8D9]/40 disabled:text-[#6B4C35]/65 disabled:cursor-not-allowed`}
       />
       {error && (
         <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
@@ -148,9 +87,9 @@ export default function ProfilePageContent({
 }: ProfilePageContentProps) {
   const { toast } = useToast();
   const router = useRouter();
-  const { user: storedUser, setUser, updateAddress, clearUser } = useUserStore();
+  const { updateUser, clearUser } = useUserStore();
   const { clearCart } = useCartStore();
-  
+
   const [profile, setProfile] = useState<Required<ClientProfileUserData>>(
     initialUser ?? defaultUser,
   );
@@ -170,18 +109,19 @@ export default function ProfilePageContent({
         if (cancelled) return;
 
         if (data) {
+          const currentStoredUser = useUserStore.getState().user;
           const userProfile = {
             id: data.id,
-            address: data.address || storedUser?.address || initialUser?.address || "",
-            city: data.city || storedUser?.city || initialUser?.city || "",
-            zip: data.postal_code || storedUser?.zip || initialUser?.zip || "",
+            address: data.address || currentStoredUser?.address || initialUser?.address || "",
+            city: data.city || currentStoredUser?.city || initialUser?.city || "",
+            zip: data.postal_code || currentStoredUser?.zip || initialUser?.zip || "",
             email: data.email ?? initialUser?.email ?? "",
             fullname: data.fullname ?? initialUser?.fullname ?? "",
             phone: data.phone ?? initialUser?.phone ?? "",
             role: data.role ?? initialUser?.role ?? "",
           };
           setProfile(userProfile);
-          setUser(userProfile);
+          useUserStore.getState().setUser(userProfile);
         }
       } catch (err) {
         if (!cancelled) {
@@ -242,6 +182,24 @@ export default function ProfilePageContent({
     }
   };
 
+  const handleCityChange = (selectedCity: string) => {
+    setProfile((current) => {
+      const nextZip = CITY_ZIP_MAP[selectedCity] || current.zip;
+      return {
+        ...current,
+        city: selectedCity,
+        zip: nextZip,
+      };
+    });
+
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.city;
+      delete next.zip;
+      return next;
+    });
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -277,15 +235,16 @@ export default function ProfilePageContent({
       if ("error" in res && res.error) {
         toast.error(getFriendlyResponseError(res.error));
       } else {
-        // Lưu địa chỉ vào Zustand store (thay vì localStorage)
-        updateAddress({
+        // Lưu thông tin mới vào Zustand store
+        updateUser({
+          fullname: profile.fullname,
+          phone: profile.phone,
           address: profile.address,
           city: profile.city,
           zip: profile.zip,
         });
 
         toast.success("Cập nhật thông tin thành công");
-        router.refresh();
       }
     }).catch((err) => {
       setIsSaving(false);
@@ -325,7 +284,6 @@ export default function ProfilePageContent({
 
   return (
     <main className="min-h-[calc(100dvh-5rem)] bg-[#F2E8D9] text-[#2C1810]">
-      <ProfileHeader activeTab="profile" user={profile} />
 
       <section className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 md:py-10 lg:py-12">
         <div className="rounded-2xl bg-[#F8F0E4] p-5 shadow-[0_4px_24px_rgba(44,24,16,0.08)] sm:p-7 md:p-9 lg:p-10">
@@ -367,13 +325,38 @@ export default function ProfilePageContent({
                   onChange={updateField}
                   error={errors.phone}
                 />
-                <Field
-                  id="city"
-                  label="Thành Phố"
-                  value={profile.city}
-                  onChange={updateField}
-                  error={errors.city}
-                />
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="city"
+                    className="text-[0.7rem] font-normal uppercase tracking-[0.1em] text-[#6B4C35] sm:text-xs"
+                  >
+                    Thành Phố
+                  </label>
+                  <select
+                    id="city"
+                    value={profile.city}
+                    onChange={(event) => handleCityChange(event.target.value)}
+                    className={`w-full rounded-[10px] border-[1.5px] ${errors.city
+                        ? "border-[#6B1218] focus:ring-[#6B1218]/10"
+                        : "border-[#6b4e35]/20 focus:border-[#6B1218] focus:ring-[#6B1218]/10"
+                      } bg-white px-4 py-3 text-[0.95rem] text-[#2C1810] outline-none transition focus:ring-4`}
+                  >
+                    <option value="">Chọn thành phố...</option>
+                    {Object.keys(CITY_ZIP_MAP).map((cityName) => (
+                      <option key={cityName} value={cityName}>
+                        {cityName}
+                      </option>
+                    ))}
+                    {profile.city && !CITY_ZIP_MAP[profile.city] && (
+                      <option value={profile.city}>{profile.city}</option>
+                    )}
+                  </select>
+                  {errors.city && (
+                    <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
+                      {errors.city}
+                    </span>
+                  )}
+                </div>
                 <Field
                   id="address"
                   label="Địa Chỉ Giao Hàng"
@@ -388,6 +371,7 @@ export default function ProfilePageContent({
                   value={profile.zip}
                   onChange={updateField}
                   error={errors.zip}
+                  disabled={true}
                   className="md:col-span-2"
                 />
               </div>

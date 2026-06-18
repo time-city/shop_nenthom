@@ -7,14 +7,12 @@ import ClientSearchBar from "./clientSearchBar";
 import ClientTable from "./clientTable";
 import ClientPagination from "./clientPagination";
 import ClientOrderModal from "./clientOrderModal";
-import LoadingState from "../ui/loadingState";
 
 import type { AdminUser as User } from "@/src/lib/types/admin";
 
 import {
   getAllUsersAction,
   toggleUserStatusAction,
-  toggleUserRoleAction,
 } from "../../lib/action/user.action";
 
 const itemsPerPage = 10;
@@ -22,8 +20,6 @@ const itemsPerPage = 10;
 export default function ClientManagement() {
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -31,27 +27,16 @@ export default function ClientManagement() {
   useEffect(() => {
     let cancelled = false;
     const loadUsers = async () => {
-      setIsLoading(true);
-      setError(null);
       try {
         const result = await getAllUsersAction();
         if (cancelled) return;
         if ("error" in result && result.error) {
           const friendlyErr = getFriendlyResponseError(result.error);
-          setError(friendlyErr);
           toast.error(friendlyErr);
         } else if ("success" in result && result.success) {
           setUsers(result.data as User[]);
         }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
+      } catch {}
     };
     void loadUsers();
     return () => {
@@ -84,7 +69,6 @@ export default function ClientManagement() {
   const activePage = Math.min(currentPage, totalPages || 1);
 
   const handleToggleStatus = async (userId: string) => {
-    setError(null);
     const result = await toggleUserStatusAction(userId);
     if ("error" in result && result.error) {
       const friendlyErr = getFriendlyResponseError(result.error);
@@ -95,25 +79,6 @@ export default function ClientManagement() {
       setUsers((prev) =>
         prev.map((user) =>
           user.id === userId ? { ...user, isActive: !user.isActive } : user
-        )
-      );
-    }
-  };
-
-  const handleToggleRole = async (userId: string) => {
-    setError(null);
-    const result = await toggleUserRoleAction(userId);
-    if ("error" in result && result.error) {
-      const friendlyErr = getFriendlyResponseError(result.error);
-      toast.error(friendlyErr);
-      throw new Error(friendlyErr);
-    } else {
-      toast.success("Cập nhật vai trò tài khoản thành công");
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.id === userId
-            ? { ...user, role: user.role === "ADMIN" ? "CUSTOMER" : "ADMIN" }
-            : user
         )
       );
     }
@@ -175,7 +140,6 @@ export default function ClientManagement() {
           <ClientTable
             users={currentUsers}
             onToggleStatus={handleToggleStatus}
-            onToggleRole={handleToggleRole}
             onViewOrders={(user) => setSelectedUser(user)}
           />
 

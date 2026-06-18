@@ -6,7 +6,7 @@ import Divider from "@mui/material/Divider";
 import Modal from "@mui/material/Modal";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { updateCategoryAction } from "../../lib/action/category.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
@@ -27,15 +27,19 @@ export default function ModalEditCategory({
     description: "",
     name: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open && category) {
-      setFormValues({
-        description: category.description ?? "",
-        name: category.name,
+      startTransition(() => {
+        setFormValues({
+          description: category.description ?? "",
+          name: category.name,
+        });
+        setErrors({});
+        setIsSubmitting(false);
       });
-      setIsSubmitting(false);
     }
   }, [open, category]);
 
@@ -44,6 +48,12 @@ export default function ModalEditCategory({
       ...current,
       [field]: value,
     }));
+    if (errors[field]) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        [field]: "",
+      }));
+    }
   };
 
   const handleSave = async () => {
@@ -52,10 +62,11 @@ export default function ModalEditCategory({
     const categoryName = formValues.name.trim();
 
     if (!categoryName) {
-      toast.error("Vui lòng nhập tên danh mục");
+      setErrors({ name: "Vui lòng nhập tên danh mục" });
       return;
     }
 
+    setErrors({});
     setIsSubmitting(true);
 
     try {
@@ -86,7 +97,7 @@ export default function ModalEditCategory({
       aria-labelledby="edit-category-modal-title"
       aria-describedby="edit-category-modal-description"
     >
-      <Box className={`${styles.modalPaper} ${styles.productPaper}`}>
+      <Box className={`${styles.modalPaper} ${styles.categoryPaper}`}>
         <Box className={styles.header}>
           <Typography
             id="edit-category-modal-title"
@@ -119,6 +130,8 @@ export default function ModalEditCategory({
             placeholder="Nhập tên danh mục..."
             value={formValues.name}
             onChange={(event) => updateField("name", event.target.value)}
+            error={Boolean(errors.name)}
+            helperText={errors.name}
             fullWidth
             className={styles.field}
           />
