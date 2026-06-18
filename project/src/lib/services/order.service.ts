@@ -1,5 +1,5 @@
 import { DiscountType, OrderStatus, PaymentMethod, PaymentStatus, Prisma } from "@prisma/client";
-import type { AdminOrder } from "../types/admin";
+import type { AdminOrder, AdminOrderStatus } from "../types/admin";
 import { sendOrderBillEmail, sendOrderCancellationEmail } from "../mailer";
 import prisma from "../prisma";
 import { clientOrderStatusMap, orderStatusMap, paymentStatusMap } from "../types/order";
@@ -757,7 +757,7 @@ export const OrderService = {
         date: order.created_at.toISOString(),
         id: order.order_number || order.id,
         payment: paymentStatusMap[order.payment_status],
-        status: orderStatusMap[order.status],
+        status: orderStatusMap[order.status] as AdminOrderStatus,
         total: order.total_cents,
       }));
 
