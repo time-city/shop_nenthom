@@ -1,8 +1,8 @@
-import prisma from '../prisma';
 import bcryptjs from 'bcryptjs';
 import { createOtpToken, generateOtp, verifyOtpToken } from '../otp';
 import { sendResetPasswordEmail } from '../mailer';
 import { ChangePasswordInput, ForgotPasswordInput, RegisterFormState, ResendOtpInput, ResetPasswordInput } from '../validations/auth.schema';
+import prisma from '../prisma';
 
 function normalizeEmail(email: string) {
     return email.trim().toLowerCase();
@@ -10,24 +10,20 @@ function normalizeEmail(email: string) {
 
 export const AuthService = {
     async register(data: RegisterFormState) {
-        const email = normalizeEmail(data.email);
-        const existing = await prisma.user.findFirst({
+        const normalizedEmail = normalizeEmail(data.email);
+        const existing = await prisma.user.findUnique({
             where: {
-                email: {
-                    equals: email,
-                    mode: 'insensitive',
-                },
+                email: normalizedEmail,
             },
         })
         if (existing) throw new Error('Email đã tồn tại');
 
-        const salt = await bcryptjs.genSalt(10);
-        const hashPassword = await bcryptjs.hash(data.password, salt);
+        const hashPassword = await bcryptjs.hash(data.password, 10);
 
         const user = await prisma.user.create({
             data: {
                 fullname: data.fullname,
-                email,
+                email: normalizedEmail,
                 password_hash: hashPassword,
                 phone: data.phone,
                 status: 'ACTIVE',
@@ -40,18 +36,14 @@ export const AuthService = {
                 status: true,
             }
         });
-
         return user;
     },
 
     async validateUser(email: string, password: string) {
         const normalizedEmail = normalizeEmail(email);
-        const user = await prisma.user.findFirst({
+        const user = await prisma.user.findUnique({
             where: {
-                email: {
-                    equals: normalizedEmail,
-                    mode: 'insensitive',
-                },
+                email: normalizedEmail,
             },
             select: {
                 id: true,

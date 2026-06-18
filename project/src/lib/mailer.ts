@@ -1,5 +1,9 @@
 import nodemailer from "nodemailer";
-import type { SendOrderBillEmailParams, SendResetPasswordEmailParams } from "./types/email";
+import type {
+  SendOrderBillEmailParams,
+  SendOrderCancellationEmailParams,
+  SendResetPasswordEmailParams,
+} from "./types/email";
 
 function getMailConfig() {
   const user = process.env.SMTP_USER ?? process.env.GMAIL_USER;
@@ -139,6 +143,33 @@ export async function sendOrderBillEmail(params: SendOrderBillEmailParams) {
       </div>
     `,
     subject: `Hóa đơn đơn hàng #${params.orderNumber}`,
+    to: params.email,
+  });
+}
+
+// Gửi thông báo cho khách khi admin hủy đơn hàng.
+export async function sendOrderCancellationEmail(
+  params: SendOrderCancellationEmailParams,
+) {
+  const { from, transporter } = createMailTransporter();
+
+  await transporter.sendMail({
+    from,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #2C1810; background: #F8F0E4; padding: 24px;">
+        <div style="max-width: 640px; margin: 0 auto; background: #fffaf3; border: 1px solid #eadfd2; padding: 28px;">
+          <h2 style="margin: 0 0 8px; color: #6B1218;">Đơn hàng của bạn đã được hủy</h2>
+          <p>Xin chào ${escapeHtml(params.fullname)},</p>
+          <p>ChamCham xin thông báo đơn hàng <strong>#${escapeHtml(params.orderNumber)}</strong> đã được hủy.</p>
+          <div style="background: #F8F0E4; border-left: 4px solid #6B1218; padding: 16px; margin: 20px 0;">
+            <strong>Lý do hủy:</strong>
+            <div>${escapeHtml(params.reason)}</div>
+          </div>
+          <p>Nếu cần hỗ trợ thêm, vui lòng liên hệ ChamCham để được giải đáp.</p>
+        </div>
+      </div>
+    `,
+    subject: `Thông báo hủy đơn hàng #${params.orderNumber}`,
     to: params.email,
   });
 }

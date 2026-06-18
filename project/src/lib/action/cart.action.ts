@@ -58,9 +58,9 @@ export async function updateCartItemAction(params: unknown) {
   if (!parsed.success) return { error: parsed.error.issues[0].message }
   try {
     const { userId, sessionId } = await getCartIdentity() // Nếu có session thì không cần sessionId
-    const cart = await CartService.getOrCreateCart(userId, sessionId)
+    const cartId = await CartService.getOrCreateCartId(userId, sessionId)
 
-    const item = await CartService.updateCartItem(cart.id, parsed.data.itemId, parsed.data.quantity)
+    const item = await CartService.updateCartItem(cartId, parsed.data.itemId, parsed.data.quantity)
     return { success: true, data: item }
   } catch (err) {
     return { error: (err as Error).message }
@@ -73,9 +73,9 @@ export async function removeCartItemAction(params:unknown) {
 
   try {
     const { userId, sessionId } = await getCartIdentity()
-    const cart = await CartService.getOrCreateCart(userId, sessionId)
+    const cartId = await CartService.getOrCreateCartId(userId, sessionId)
 
-    await CartService.removeCartItem(cart.id, parsed.data.itemId)
+    await CartService.removeCartItem(cartId, parsed.data.itemId)
     return { success: true }
   } catch (err) {
     return { error: (err as Error).message }
@@ -85,9 +85,9 @@ export async function removeCartItemAction(params:unknown) {
 export async function clearCartAction() {
   try {
     const { userId, sessionId } = await getCartIdentity()
-    const cart = await CartService.getOrCreateCart(userId, sessionId)
+    const cartId = await CartService.getOrCreateCartId(userId, sessionId)
 
-    await CartService.clearCart(cart.id)
+    await CartService.clearCart(cartId)
     return { success: true }
   } catch (err) {
     return { error: (err as Error).message }

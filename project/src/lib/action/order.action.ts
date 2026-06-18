@@ -1,6 +1,7 @@
 'use server'
 
 import { cookies } from "next/headers";
+import { requireAdmin } from "../requireAdmin";
 import { OrderService } from "../services/order.service";
 import { getSession } from "../session";
 import {
@@ -28,21 +29,14 @@ async function getCartIdentity() {
   };
 }
 
-async function requireAdmin() {
-  const session = await getSession()
-  if (!session || session.role !== 'ADMIN') return { error: 'Không có quyền truy cập' }
-
-  return session
-}
-
 // Tạo đơn hàng từ giỏ hàng hiện tại, hỗ trợ cả user đăng nhập và guest session.
 export async function createOrderAction(params: CreateOrderInput) {
   const parsed = createOrderSchema.safeParse(params)
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
   try {
-    const { userId, sessionId } = await getCartIdentity()
-    const order = await OrderService.createOrder(parsed.data, userId, sessionId)
+    const { userId, sessionId } = await getCartIdentity();
+    const order = await OrderService.createOrder(parsed.data, userId, sessionId);
     return { success: true, data: order }
   } catch (err) {
     return { error: (err as Error).message }
@@ -129,7 +123,7 @@ export async function updateOrderStatusAction(params: UpdateOrderStatusInput) {
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
   try {
-    const order = await OrderService.updateOrderStatus(parsed.data, admin.sub)
+    const order = await OrderService.updateOrderStatus(parsed.data, admin.adminId)
     return { success: true, data: order }
   } catch (err) {
     return { error: (err as Error).message }
