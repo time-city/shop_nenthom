@@ -321,3 +321,31 @@ export type AdminUser = {
   isActive: boolean;
   createdAt: string;
 };
+
+/** Dữ liệu thống kê tổng quan trên dashboard admin. */
+export type DashboardStatsData = {
+  revenue: number;
+  ordersCount: number;
+  customersCount: number;
+  productsSoldCount: number;
+};
+
+/** Sản phẩm bán chạy trên dashboard admin. */
+export type DashboardTopProduct = {
+  name: string;
+  productId: string;
+  revenueCents: number;
+  soldQuantity: number;
+};
+
+/** Đơn hàng mới nhất trên dashboard admin. */
+export type DashboardLatestOrder = {
+  createdAt: string;
+  customer: string;
+  orderNumber: string;
+  status: string;
+  totalCents: number;
+};
+
+/** Thời gian lọc thống kê trên dashboard admin. */
+export type DashboardActiveChip = "today" | "week" | "month";

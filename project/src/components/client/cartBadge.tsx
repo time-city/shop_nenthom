@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useCartStore } from "@/src/store/useCartStore";
 
 /**
@@ -15,11 +15,15 @@ import { useCartStore } from "@/src/store/useCartStore";
 export default function CartBadge() {
   const cartCount = useCartStore((state) => state.cartCount);
   const hasHydrated = useCartStore((state) => state._hasHydrated);
+  const fetchCartCount = useCartStore((state) => state.fetchCartCount);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    startTransition(() => {
+      setMounted(true);
+    });
+    void fetchCartCount();
+  }, [fetchCartCount]);
 
   // Chưa mount (SSR) hoặc store chưa hydrate → không render để tránh flash
   if (!mounted || !hasHydrated || cartCount <= 0) return null;

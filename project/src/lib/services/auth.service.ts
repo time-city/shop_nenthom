@@ -1,4 +1,5 @@
 import bcryptjs from 'bcryptjs';
+import { after } from 'next/server';
 import { createOtpToken, generateOtp, verifyOtpToken } from '../otp';
 import { sendResetPasswordEmail } from '../mailer';
 import { ChangePasswordInput, ForgotPasswordInput, RegisterFormState, ResendOtpInput, ResetPasswordInput } from '../validations/auth.schema';
@@ -108,10 +109,12 @@ export const AuthService = {
         const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? 'http://localhost:3000';
         const resetUrl = `${appUrl}/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
 
-        await sendResetPasswordEmail({
-            email,
-            otp,
-            resetUrl,
+        after(async () => {
+            await sendResetPasswordEmail({
+                email,
+                otp,
+                resetUrl,
+            });
         });
 
         return { email, token };

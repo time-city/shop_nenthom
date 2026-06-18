@@ -20,13 +20,12 @@ const formatPrice = (price: number) =>
  new Intl.NumberFormat("vi-VN").format(price) + "đ";
 
 
-const getFirstImage = (images: unknown) => {
- if (Array.isArray(images) && typeof images[0] === "string") {
-   return images[0];
- }
+const getProductImages = (images: unknown) => {
+ if (!Array.isArray(images)) return [];
 
-
- return "";
+ return images
+   .filter((image): image is string => typeof image === "string" && image.length > 0)
+   .slice(0, 4);
 };
 
 
@@ -54,12 +53,14 @@ const getProductCandleWaxClass = (color: string) => {
 export default function DetailCardProduct({
  product,
  onClose,
+ isModal = true,
 }: DetailCardProductProps) {
  const { toast } = useToast();
  const router = useRouter();
  const { incrementCartCount } = useCartStore();
  const [open, setOpen] = useState(true);
- const [quantity, setQuantity] = useState(1);
+ const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+ const [quantity, setQuantity] = useState<number | "">(1);
  const [activeTab, setActiveTab] = useState<"description" | "ingredients" | "usage">(
    "description",
  );
@@ -73,20 +74,21 @@ export default function DetailCardProduct({
    product.options?.packagings?.[0] ?? null,
  );
  const [isAddingToCart] = useState(false);
- const [isPending, startTransition] = useTransition();
+ const [, startTransition] = useTransition();
  const [optimisticAdding, setOptimisticAdding] = useOptimistic(
    isAddingToCart,
    (state, update: boolean) => update
  );
 
 
- const image = getFirstImage(product.images);
+ const productImages = getProductImages(product.images);
+ const image = productImages[selectedImageIndex] ?? productImages[0] ?? "";
  const candleColor = selectedColor?.hex_code ?? "#F1DEC5";
  const extraPrice =
    (selectedSize?.price_extra_cents ?? 0) +
    (selectedColor?.price_extra_cents ?? 0) +
    (selectedPackaging?.price_extra_cents ?? 0);
- const totalPrice = (product.base_price_cents + extraPrice) * quantity;
+ const totalPrice = (product.base_price_cents + extraPrice) * (Number(quantity) || 0);
 
 
  const scentNote = useMemo(() => {
@@ -121,7 +123,7 @@ export default function DetailCardProduct({
          color_id: selectedColor?.id,
          pack_id: selectedPackaging?.id,
          product_id: product.id,
-         quantity,
+         quantity: Number(quantity) || 1,
          scent_id: product.options?.scents?.[0]?.id,
          size_id: selectedSize?.id,
        });
@@ -133,28 +135,15 @@ export default function DetailCardProduct({
 
        toast.success("Đã thêm sản phẩm vào giỏ hàng");
        // Cập nhật badge số lượng trên header
-       incrementCartCount(quantity);
-     } catch (err) {
+       incrementCartCount(Number(quantity) || 1);
+     } catch {
        // Rollback is automatic
      }
    });
  };
 
-
-
- return (
-   <Modal
-     open={open}
-     onClose={handleClose}
-     aria-labelledby="product-detail-title"
-     aria-describedby="product-detail-description"
-     className="px-4"
-   >
-     <Box
-       component="section"
-       className={styles.modalShell}
-     >
-       <div className="rounded-2xl bg-[#F8F0E4] p-4 text-[#2C1810] shadow-[0_26px_80px_rgba(30,6,8,0.42)] sm:p-6 lg:p-8">
+  const innerContent = (
+    <div className="rounded-2xl bg-[#F8F0E4] p-4 text-[#2C1810] shadow-[0_26px_80px_rgba(30,6,8,0.42)] sm:p-6 lg:p-8">
          <button
            type="button"
            onClick={handleClose}
@@ -168,6 +157,7 @@ export default function DetailCardProduct({
            <div className="product-visual">
              <div className="flex aspect-[4/5] items-center justify-center rounded-2xl bg-white p-6 border border-[#2C1810]/5 shadow-[0_20px_50px_rgba(44,24,16,0.06)] overflow-hidden">
                {image ? (
+                 /* eslint-disable-next-line @next/next/no-img-element */
                  <img
                    src={image}
                    alt={product.name}
@@ -185,6 +175,47 @@ export default function DetailCardProduct({
                  </div>
                )}
              </div>
+
+             {productImages.length > 1 ? (
+               <div
+                 className="mt-4 grid grid-cols-4 gap-3"
+                 aria-label="Danh sách ảnh sản phẩm"
+               >
+                 {productImages.map((thumbnail, index) => {
+                   const isSelected = index === selectedImageIndex;
+
+                   return (
+                     <button
+                       key={`${thumbnail}-${index}`}
+                       type="button"
+                       onClick={() => setSelectedImageIndex(index)}
+                       aria-label={
+                         index === 0
+                           ? "Xem ảnh đại diện"
+                           : `Xem ảnh phụ ${index}`
+                       }
+                       aria-pressed={isSelected}
+                       className={`relative aspect-square overflow-hidden rounded-xl border-2 bg-white p-1 transition ${
+                         isSelected
+                           ? "border-[#6B1218] shadow-[0_8px_20px_rgba(107,18,24,0.2)]"
+                           : "border-[#2C1810]/10 hover:border-[#6B1218]/55"
+                       }`}
+                     >
+                       {/* eslint-disable-next-line @next/next/no-img-element */}
+                       <img
+                         src={thumbnail}
+                         alt={
+                           index === 0
+                             ? `${product.name} - ảnh đại diện`
+                             : `${product.name} - ảnh phụ ${index}`
+                         }
+                         className="h-full w-full rounded-lg object-cover"
+                       />
+                     </button>
+                   );
+                 })}
+               </div>
+             ) : null}
            </div>
 
 
@@ -244,17 +275,36 @@ export default function DetailCardProduct({
                  <div className="flex items-center gap-4">
                    <button
                      type="button"
-                     onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                     onClick={() => setQuantity((value) => Math.max(1, (Number(value) || 1) - 1))}
                      className="size-10 rounded-lg border border-[#6B4C35]/30 text-xl transition hover:border-[#6B1218] hover:text-[#6B1218]"
                    >
                      −
                    </button>
-                   <div className="min-w-12 text-center font-serif text-2xl font-bold">
-                     {quantity}
-                   </div>
+                    <input
+                      type="number"
+                      min="1"
+                      value={quantity}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "") {
+                          setQuantity("");
+                          return;
+                        }
+                        const intVal = parseInt(val, 10);
+                        if (!isNaN(intVal)) {
+                          setQuantity(Math.max(1, intVal));
+                        }
+                      }}
+                      onBlur={() => {
+                        if (quantity === "" || isNaN(Number(quantity)) || Number(quantity) < 1) {
+                          setQuantity(1);
+                        }
+                      }}
+                      className="w-12 text-center font-serif text-2xl font-bold bg-transparent border-none outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                    <button
                      type="button"
-                     onClick={() => setQuantity((value) => value + 1)}
+                     onClick={() => setQuantity((value) => (Number(value) || 1) + 1)}
                      className="size-10 rounded-lg border border-[#6B4C35]/30 text-xl transition hover:border-[#6B1218] hover:text-[#6B1218]"
                    >
                      +
@@ -343,10 +393,35 @@ export default function DetailCardProduct({
              ) : null}
            </div>
          </div>
-       </div>
-     </Box>
-   </Modal>
- );
+    </div>
+  );
+
+  if (!isModal) {
+    return (
+      <main className="min-h-[calc(100dvh-5rem)] bg-[#F2E8D9] text-[#2C1810]">
+        <section className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 md:py-10 lg:py-12">
+          {innerContent}
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={handleClose}
+      aria-labelledby="product-detail-title"
+      aria-describedby="product-detail-description"
+      className="px-4"
+    >
+      <Box
+        component="section"
+        className={styles.modalShell}
+      >
+        {innerContent}
+      </Box>
+    </Modal>
+  );
 }
 
 

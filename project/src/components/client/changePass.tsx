@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { changePassword } from "@/src/lib/action/auth.action";
@@ -21,10 +21,12 @@ export default function ModalChangePassword({ open, onClose }: ModalChangePasswo
 
   useEffect(() => {
     if (!open) {
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setErrors({});
+      startTransition(() => {
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setErrors({});
+      });
     }
   }, [open]);
 

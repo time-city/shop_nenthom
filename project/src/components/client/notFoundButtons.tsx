@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function NotFoundButtons() {
@@ -14,13 +15,13 @@ export default function NotFoundButtons() {
       >
         ← Quay lại
       </button>
-      <a
+      <Link
         id="btn-go-home"
         href="/"
         className="px-6 py-2.5 text-sm font-sans bg-[#2C1810] text-[#F8F0E4] rounded hover:bg-[#6B1218] transition-all duration-200 text-center"
       >
         Về trang chủ
-      </a>
+      </Link>
     </div>
   );
 }

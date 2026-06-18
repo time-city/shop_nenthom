@@ -4,15 +4,14 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import FormControl from "@mui/material/FormControl";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Modal from "@mui/material/Modal";
 import Select from "@mui/material/Select";
-import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import type { ChangeEvent } from "react";
+import FormHelperText from "@mui/material/FormHelperText";
+import type { ChangeEvent, MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import type {
@@ -21,7 +20,8 @@ import type {
 } from "../../interface/adminInterface";
 import { getCategoriesAction } from "../../lib/action/category.action";
 import { updateProductAction } from "../../lib/action/product.action";
-import { getFriendlyError, getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import { uploadToCloudinary } from "@/src/lib/utils/uploadImage";
 import type {
   AdminModalEditProductProps,
   AdminProductFormValues,
@@ -38,22 +38,14 @@ const initialProductFormValues: AdminProductFormValues = {
   name: "",
 };
 
-const getFirstImageUrl = (images: unknown) => {
-  if (Array.isArray(images) && typeof images[0] === "string") {
-    return images[0];
-  }
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
-  return "";
-};
+const getProductImages = (images: unknown) => {
+  if (!Array.isArray(images)) return [];
 
-const getImageFileName = (imageUrl: string) => {
-  if (!imageUrl) return "";
-
-  if (imageUrl.startsWith("data:image/")) {
-    return "Ảnh hiện tại";
-  }
-
-  return imageUrl.split("/").pop()?.split("?")[0] || "Ảnh hiện tại";
+  return images
+    .filter((image): image is string => typeof image === "string" && image.length > 0)
+    .slice(0, 4);
 };
 
 export default function ModalEditProduct({
@@ -69,33 +61,40 @@ export default function ModalEditProduct({
   );
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // CHANGED: Thêm 2 state để quản lý tải ảnh lên Cloudinary
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [imageUploaded, setImageUploaded] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [subImageUrls, setSubImageUrls] = useState<string[]>([]);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isUploadingSubImages, setIsUploadingSubImages] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!open || !product) {
-      // CHANGED: reset state khi modal đóng
-      setImageUploaded(false);
-      setIsUploadingImage(false);
+      setTimeout(() => {
+        setIsUploadingAvatar(false);
+        setIsUploadingSubImages(false);
+      }, 0);
       return;
     }
 
-    const currentImage = getFirstImageUrl(product.images);
+    const currentImages = getProductImages(product.images);
 
-    setFormValues({
-      base_price_cents: String(product.base_price_cents),
-      category_id: String(product.category_id),
-      description: product.description ?? "",
-      image_data_url: currentImage,
-      image_file_name: getImageFileName(currentImage),
-      is_active: product.is_active,
-      name: product.name,
-    });
-    setIsSubmitting(false);
-    // CHANGED: reset state khi modal mở
-    setImageUploaded(false);
-    setIsUploadingImage(false);
+    setTimeout(() => {
+      setFormValues({
+        base_price_cents: String(product.base_price_cents),
+        category_id: String(product.category_id),
+        description: product.description ?? "",
+        image_data_url: "",
+        image_file_name: "",
+        is_active: product.is_active,
+        name: product.name,
+      });
+      setAvatarUrl(currentImages[0] ?? "");
+      setSubImageUrls(currentImages.slice(1, 4));
+      setIsSubmitting(false);
+      setIsUploadingAvatar(false);
+      setIsUploadingSubImages(false);
+      setErrors({});
+    }, 0);
 
     const loadCategories = async () => {
       setIsLoadingCategories(true);
@@ -119,7 +118,7 @@ export default function ModalEditProduct({
     };
 
     void loadCategories();
-  }, [open, product]);
+  }, [open, product, toast]);
 
   const updateField = (
     field: keyof AdminProductFormValues,
@@ -129,125 +128,145 @@ export default function ModalEditProduct({
       ...currentValues,
       [field]: value,
     }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
   };
 
-  // CHANGED: Sửa handleImageChange — bỏ hoàn toàn FileReader, tải trực tiếp lên Cloudinary
-  const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
+  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (isSubmitting || isUploadingAvatar) return;
 
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  console.log("Cloudinary cloudName:", cloudName);
-  console.log("Cloudinary uploadPreset:", uploadPreset);
-  console.log("Selected file:", {
-    name: file.name,
-    type: file.type,
-    size: file.size,
-  });
+    if (!file.type.startsWith("image/")) {
+      setErrors((prev) => ({ ...prev, avatar: "Vui lòng chọn đúng file ảnh" }));
+      event.target.value = "";
+      return;
+    }
 
-  if (!cloudName || !uploadPreset) {
-    toast.error("Thiếu cấu hình Cloudinary trong .env.local");
-    return;
-  }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      setErrors((prev) => ({ ...prev, avatar: "Ảnh tối đa 5MB" }));
+      event.target.value = "";
+      return;
+    }
 
-  if (!file.type.startsWith("image/")) {
-    toast.error("File được chọn không phải ảnh");
-    return;
-  }
+    setIsUploadingAvatar(true);
+    setErrors((prev) => ({ ...prev, avatar: "" }));
 
-  if (file.size > 5 * 1024 * 1024) {
-    toast.error("Ảnh vượt quá 5MB");
-    return;
-  }
+    try {
+      const url = await uploadToCloudinary(file);
+      setAvatarUrl(url);
+    } catch {
+      toast.error("Tải ảnh đại diện thất bại");
+      setErrors((prev) => ({ ...prev, avatar: "Upload thất bại" }));
+    } finally {
+      setIsUploadingAvatar(false);
+      event.target.value = "";
+    }
+  };
 
-  setIsUploadingImage(true);
-  setImageUploaded(false);
+  const handleSubImagesChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (isSubmitting || isUploadingSubImages) return;
 
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", uploadPreset);
+    const files = event.target.files;
+    if (!files?.length) return;
 
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      {
-        method: "POST",
-        body: formData,
-      }
+    const fileList = Array.from(files);
+
+    if (fileList.length > 3) {
+      setErrors((prev) => ({
+        ...prev,
+        sub_images: "Chỉ được chọn tối đa 3 ảnh phụ",
+      }));
+      event.target.value = "";
+      return;
+    }
+
+    const invalidFile = fileList.find((file) => !file.type.startsWith("image/"));
+    if (invalidFile) {
+      setErrors((prev) => ({
+        ...prev,
+        sub_images: "Vui lòng chọn đúng file ảnh",
+      }));
+      event.target.value = "";
+      return;
+    }
+
+    const oversizedFile = fileList.find(
+      (file) => file.size > MAX_IMAGE_SIZE_BYTES,
     );
-
-    const data = await res.json();
-
-    console.log("Cloudinary status:", res.status);
-    console.log("Cloudinary full response:", data);
-    console.log("Cloudinary error message:", data?.error?.message);
-
-    if (!res.ok) {
-      throw new Error(data?.error?.message || "Upload ảnh thất bại");
+    if (oversizedFile) {
+      setErrors((prev) => ({
+        ...prev,
+        sub_images: "Mỗi ảnh phụ tối đa 5MB",
+      }));
+      event.target.value = "";
+      return;
     }
 
-    if (!data.secure_url) {
-      throw new Error("Cloudinary không trả về secure_url");
+    setIsUploadingSubImages(true);
+    setErrors((prev) => ({ ...prev, sub_images: "" }));
+
+    try {
+      const urls = await Promise.all(fileList.map(uploadToCloudinary));
+      setSubImageUrls(urls);
+    } catch {
+      toast.error("Tải ảnh phụ thất bại");
+      setErrors((prev) => ({ ...prev, sub_images: "Upload thất bại" }));
+    } finally {
+      setIsUploadingSubImages(false);
+      event.target.value = "";
     }
+  };
 
-    setFormValues((prev) => ({
-      ...prev,
-      image_data_url: data.secure_url,
-      image_file_name: file.name,
-    }));
-
-    setImageUploaded(true);
-    toast.success("Tải ảnh lên thành công");
-  } catch (err) {
-    console.error("Cloudinary Upload Error:", err);
-
-    const message =
-      err instanceof Error ? err.message : "Tải ảnh thất bại, vui lòng thử lại";
-
-    toast.error(message);
-  } finally {
-    setIsUploadingImage(false);
-    event.target.value = "";
-  }
-};
-
-  // CHANGED: Hàm xoá ảnh đã chọn và ghi log debug
-  const handleRemoveImage = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleRemoveAvatar = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    console.log("Xoá ảnh hiện tại. URL cũ:", formValues.image_data_url);
-    setFormValues((prev) => ({
-      ...prev,
-      image_data_url: "",
-      image_file_name: "",
-    }));
-    setImageUploaded(false);
+    setAvatarUrl("");
   };
 
-  // CHANGED: Thêm guard chặn lưu khi ảnh đang tải lên Cloudinary
+  const handleRemoveSubImage = (
+    event: MouseEvent<HTMLButtonElement>,
+    imageIndex: number,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setSubImageUrls((currentImages) =>
+      currentImages.filter((_, index) => index !== imageIndex),
+    );
+  };
+
   const handleSave = async () => {
-    if (isUploadingImage) return;
+    if (isUploadingAvatar || isUploadingSubImages) return;
     if (!product || isSubmitting) return;
 
     const productName = formValues.name.trim();
     const productPrice = Number(formValues.base_price_cents);
     const categoryId = Number(formValues.category_id);
-    const imageDataUrl = formValues.image_data_url.trim();
+
+    const newErrors: Record<string, string> = {};
 
     if (!productName) {
-      toast.error("Vui lòng nhập tên sản phẩm");
-      return;
+      newErrors.name = "Vui lòng nhập tên sản phẩm";
     }
 
     if (!Number.isFinite(categoryId) || categoryId <= 0) {
-      toast.error("Vui lòng chọn danh mục");
-      return;
+      newErrors.category_id = "Vui lòng chọn danh mục";
     }
 
-    if (!Number.isFinite(productPrice) || productPrice < 0) {
-      toast.error("Giá sản phẩm không hợp lệ");
+    if (!formValues.base_price_cents.trim()) {
+      newErrors.base_price_cents = "Vui lòng nhập giá sản phẩm";
+    } else if (!Number.isFinite(productPrice) || productPrice < 0) {
+      newErrors.base_price_cents = "Giá sản phẩm không hợp lệ";
+    }
+
+    if (!avatarUrl) {
+      newErrors.avatar = "Vui lòng chọn ảnh đại diện sản phẩm";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -259,7 +278,7 @@ export default function ModalEditProduct({
         base_price_cents: productPrice,
         category_id: categoryId,
         description: formValues.description.trim() || undefined,
-        ...(imageDataUrl ? { images: [imageDataUrl] } : {}),
+        images: [avatarUrl, ...subImageUrls.slice(0, 3)],
         is_active: formValues.is_active,
         name: productName,
       });
@@ -286,7 +305,7 @@ export default function ModalEditProduct({
       aria-labelledby="edit-product-modal-title"
       aria-describedby="edit-product-modal-description"
     >
-      <Box className={`${styles.modalPaper} ${styles.productPaper}`}>
+      <Box className={`${styles.modalPaper} ${styles.editProductPaper}`}>
         <Box className={styles.header}>
           <Typography
             id="edit-product-modal-title"
@@ -322,9 +341,11 @@ export default function ModalEditProduct({
               onChange={(event) => updateField("name", event.target.value)}
               fullWidth
               className={styles.field}
+              error={Boolean(errors.name)}
+              helperText={errors.name}
             />
 
-            <FormControl fullWidth className={styles.field}>
+            <FormControl fullWidth className={styles.field} error={Boolean(errors.category_id)}>
               <InputLabel id="edit-product-category-label">Danh mục</InputLabel>
               <Select
                 labelId="edit-product-category-label"
@@ -344,6 +365,7 @@ export default function ModalEditProduct({
                   </MenuItem>
                 ))}
               </Select>
+              {errors.category_id && <FormHelperText>{errors.category_id}</FormHelperText>}
             </FormControl>
           </Box>
 
@@ -357,6 +379,8 @@ export default function ModalEditProduct({
             }
             fullWidth
             className={styles.field}
+            error={Boolean(errors.base_price_cents)}
+            helperText={errors.base_price_cents}
           />
 
           <TextField
@@ -373,104 +397,143 @@ export default function ModalEditProduct({
           <Box>
             <Typography
               component="label"
-              htmlFor="edit-product-image-upload"
+              htmlFor="edit-product-avatar-upload"
               className={styles.sectionLabel}
             >
-              Ảnh sản phẩm
+              Ảnh đại diện (Avatar)
             </Typography>
             <label
-              htmlFor="edit-product-image-upload"
+              htmlFor="edit-product-avatar-upload"
               className={styles.uploadArea}
+              style={{ borderColor: errors.avatar ? "#6B1218" : undefined }}
             >
-              {formValues.image_data_url ? (
+              {isUploadingAvatar ? (
+                <span className={styles.uploadText}>Đang tải ảnh đại diện...</span>
+              ) : avatarUrl ? (
                 <>
-                  {/* CHANGED: hiển thị ảnh preview kèm badge nếu đã tải lên Cloudinary thành công và nút xoá ảnh */}
-                  <div
-                    style={{ position: "relative", display: "inline-block" }}
-                  >
+                  <Box className={styles.imagePreviewWrapper}>
                     <Box
                       component="img"
-                      src={formValues.image_data_url}
-                      alt={formValues.image_file_name || "Ảnh sản phẩm"}
-                      className="mb-3 h-32 w-32 rounded-xl object-cover shadow-[0_14px_34px_rgba(44,24,16,0.16)]"
+                      src={avatarUrl}
+                      alt="Ảnh đại diện"
+                      className="h-32 w-32 rounded-xl object-cover shadow-[0_14px_34px_rgba(44,24,16,0.16)]"
                     />
-                    {imageUploaded && (
-                      <span style={{
-                        position: "absolute", top: 4, right: 4,
-                        background: "#22c55e", borderRadius: "50%",
-                        color: "white", fontSize: 11, padding: "2px 5px",
-                        fontWeight: "bold"
-                      }}>✓</span>
-                    )}
-                    {/* CHANGED: nút X ở góc trên bên trái để xoá ảnh (chữ đen nền trắng) */}
                     <button
                       type="button"
-                      onClick={handleRemoveImage}
-                      style={{
-                        position: "absolute", top: 4, left: 4,
-                        background: "white", borderRadius: "50%",
-                        color: "black", border: "1px solid rgba(0,0,0,0.15)", width: 20, height: 20,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 12, cursor: "pointer", fontWeight: "bold",
-                        lineHeight: 1,
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-                      }}
-                      title="Xoá ảnh"
+                      className={styles.removeImageButton}
+                      onClick={handleRemoveAvatar}
+                      aria-label="Xóa ảnh đại diện"
+                      title="Xóa ảnh"
                     >
-                      ✕
+                      ×
                     </button>
-                  </div>
+                  </Box>
+                  <span className={styles.uploadHint}>Bấm để chọn ảnh khác</span>
+                </>
+              ) : (
+                <>
+                  <span className={styles.uploadIcon}>📷</span>
                   <span className={styles.uploadText}>
-                    Đã chọn <strong>{formValues.image_file_name}</strong>
+                    Chọn ảnh đại diện cho sản phẩm
+                  </span>
+                  <span className={styles.uploadHint}>PNG, JPG tối đa 5MB</span>
+                </>
+              )}
+              <input
+                id="edit-product-avatar-upload"
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleAvatarChange}
+                disabled={isUploadingAvatar || isSubmitting}
+              />
+            </label>
+            {errors.avatar && (
+              <p style={{ color: "#6B1218", fontSize: 12, marginTop: 4 }}>
+                {errors.avatar}
+              </p>
+            )}
+          </Box>
+
+          <Box>
+            <Typography
+              component="label"
+              htmlFor="edit-product-sub-images-upload"
+              className={styles.sectionLabel}
+            >
+              Ảnh phụ (Chọn tối đa 3 ảnh)
+            </Typography>
+            <label
+              htmlFor="edit-product-sub-images-upload"
+              className={styles.uploadArea}
+              style={{
+                borderColor: errors.sub_images ? "#6B1218" : undefined,
+              }}
+            >
+              {isUploadingSubImages ? (
+                <span className={styles.uploadText}>Đang tải ảnh phụ...</span>
+              ) : subImageUrls.length > 0 ? (
+                <>
+                  <Box className={styles.subImagesPreview}>
+                    {subImageUrls.map((url, index) => (
+                      <Box
+                        key={`${url}-${index}`}
+                        className={styles.imagePreviewWrapper}
+                      >
+                        <Box
+                          component="img"
+                          src={url}
+                          alt={`Ảnh phụ ${index + 1}`}
+                          className="h-20 w-20 rounded-xl object-cover shadow-[0_8px_20px_rgba(44,24,16,0.12)]"
+                        />
+                        <button
+                          type="button"
+                          className={styles.removeImageButton}
+                          onClick={(event) =>
+                            handleRemoveSubImage(event, index)
+                          }
+                          aria-label={`Xóa ảnh phụ ${index + 1}`}
+                          title="Xóa ảnh"
+                        >
+                          ×
+                        </button>
+                      </Box>
+                    ))}
+                  </Box>
+                  <span className={styles.uploadText}>
+                    Đang có <strong>{subImageUrls.length} ảnh phụ</strong>
                   </span>
                   <span className={styles.uploadHint}>
-                    {isUploadingImage
-                      ? "Đang tải ảnh lên..."
-                      : imageUploaded
-                      ? "✅ Đã tải lên thành công"
-                      : "Bấm để chọn ảnh khác"}
+                    Bấm để chọn lại các ảnh phụ khác
                   </span>
                 </>
               ) : (
                 <>
                   <span className={styles.uploadIcon}>📷</span>
                   <span className={styles.uploadText}>
-                    Kéo thả ảnh hoặc <strong>chọn file từ máy</strong>
+                    Chọn các ảnh phụ cho sản phẩm
                   </span>
                   <span className={styles.uploadHint}>
-                    {isUploadingImage
-                      ? "Đang tải ảnh lên..."
-                      : imageUploaded
-                      ? "✅ Đã tải lên thành công"
-                      : "PNG, JPG tối đa 5MB"}
+                    Tối đa 3 ảnh, mỗi ảnh không quá 5MB
                   </span>
                 </>
               )}
-              {/* CHANGED: disabled input khi đang upload ảnh hoặc đang submit */}
               <input
-                id="edit-product-image-upload"
+                id="edit-product-sub-images-upload"
                 type="file"
                 accept="image/*"
+                multiple
                 hidden
-                onChange={handleImageChange}
-                disabled={isUploadingImage || isSubmitting}
+                onChange={handleSubImagesChange}
+                disabled={isUploadingSubImages || isSubmitting}
               />
             </label>
+            {errors.sub_images && (
+              <p style={{ color: "#6B1218", fontSize: 12, marginTop: 4 }}>
+                {errors.sub_images}
+              </p>
+            )}
           </Box>
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formValues.is_active}
-                onChange={(event) =>
-                  updateField("is_active", event.target.checked)
-                }
-                className={styles.greenSwitch}
-              />
-            }
-            label="Hiển thị sản phẩm trên website"
-            className={styles.formControlLabel}
-          />
         </Box>
 
         <Divider className={styles.divider} />
@@ -488,7 +551,9 @@ export default function ModalEditProduct({
             type="button"
             variant="contained"
             onClick={handleSave}
-            disabled={isSubmitting || isUploadingImage}
+            disabled={
+              isSubmitting || isUploadingAvatar || isUploadingSubImages
+            }
             className={styles.primaryButton}
           >
             {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}

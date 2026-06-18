@@ -44,17 +44,20 @@ export async function createOrderAction(params: CreateOrderInput) {
 }
 
 // Lấy lịch sử đơn hàng của khách hàng đang đăng nhập.
-export async function getMyOrdersAction() {
+export async function getMyOrdersAction(params: { page?: number; limit?: number } = {}) {
   const session = await getSession()
 
-  if (!session) return { error: 'Vui lòng đăng nhập để xem lịch sử đơn hàng' }
-  if (session.role === 'ADMIN') return { error: 'Tài khoản quản trị không có lịch sử mua hàng' }
+  if (!session) return { success: false as const, error: 'Vui lòng đăng nhập để xem lịch sử đơn hàng' }
+  if (session.role === 'ADMIN') return { success: false as const, error: 'Tài khoản quản trị không có lịch sử mua hàng' }
+
+  const page = Math.max(Math.trunc(params.page ?? 1), 1)
+  const limit = Math.min(Math.max(Math.trunc(params.limit ?? 10), 1), 50)
 
   try {
-    const orders = await OrderService.getMyOrders(session.sub)
-    return { success: true, data: orders }
+    const orders = await OrderService.getMyOrders(session.sub, page, limit)
+    return { success: true as const, ...orders }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { success: false as const, error: (err as Error).message }
   }
 }
 

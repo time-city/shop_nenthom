@@ -9,7 +9,7 @@ import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { updateDiscountAction } from "../../lib/action/discount.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
@@ -33,6 +33,7 @@ export default function ModalEditDiscount({
     max_uses: "",
     type: "PERCENTAGE",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -41,14 +42,17 @@ export default function ModalEditDiscount({
         ? new Date(discount.expires_at).toISOString().split("T")[0]
         : "";
 
-      setFormValues({
-        code: discount.code,
-        discount_amount_cents: String(discount.discount_amount_cents),
-        expires_at: expiresAt,
-        max_uses: String(discount.max_uses),
-        type: discount.type,
+      startTransition(() => {
+        setFormValues({
+          code: discount.code,
+          discount_amount_cents: String(discount.discount_amount_cents),
+          expires_at: expiresAt,
+          max_uses: String(discount.max_uses),
+          type: discount.type,
+        });
+        setErrors({});
+        setIsSubmitting(false);
       });
-      setIsSubmitting(false);
     }
   }, [open, discount]);
 
@@ -57,6 +61,12 @@ export default function ModalEditDiscount({
       ...currentValues,
       [field]: value,
     }));
+    if (errors[field]) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        [field]: "",
+      }));
+    }
   };
 
   const handleSave = async () => {
@@ -66,26 +76,28 @@ export default function ModalEditDiscount({
     const discountAmount = Number(formValues.discount_amount_cents);
     const maxUses = Number(formValues.max_uses);
 
+    const validationErrors: Record<string, string> = {};
+
     if (!code) {
-      toast.error("Vui lòng nhập mã giảm giá");
+      validationErrors.code = "Vui lòng nhập mã giảm giá";
+    }
+
+    if (!formValues.discount_amount_cents || !Number.isFinite(discountAmount) || discountAmount <= 0) {
+      validationErrors.discount_amount_cents = "Giá trị giảm không hợp lệ";
+    } else if (formValues.type === "PERCENTAGE" && discountAmount > 100) {
+      validationErrors.discount_amount_cents = "Phần trăm giảm giá không được vượt quá 100";
+    }
+
+    if (!formValues.max_uses || !Number.isInteger(maxUses) || maxUses <= 0) {
+      validationErrors.max_uses = "Số lượt tối đa không hợp lệ";
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
-    if (!Number.isFinite(discountAmount) || discountAmount <= 0) {
-      toast.error("Giá trị giảm không hợp lệ");
-      return;
-    }
-
-    if (formValues.type === "PERCENTAGE" && discountAmount > 100) {
-      toast.error("Phần trăm giảm giá không được vượt quá 100");
-      return;
-    }
-
-    if (!Number.isInteger(maxUses) || maxUses <= 0) {
-      toast.error("Số lượt tối đa không hợp lệ");
-      return;
-    }
-
+    setErrors({});
     setIsSubmitting(true);
 
     try {
@@ -155,6 +167,8 @@ export default function ModalEditDiscount({
             placeholder="Nhập mã giảm giá"
             value={formValues.code}
             onChange={(event) => updateField("code", event.target.value)}
+            error={Boolean(errors.code)}
+            helperText={errors.code}
             fullWidth
             className={`${styles.field} ${styles.uppercaseField}`}
           />
@@ -197,6 +211,8 @@ export default function ModalEditDiscount({
               onChange={(event) =>
                 updateField("discount_amount_cents", event.target.value)
               }
+              error={Boolean(errors.discount_amount_cents)}
+              helperText={errors.discount_amount_cents}
               fullWidth
               className={styles.field}
             />
@@ -206,6 +222,8 @@ export default function ModalEditDiscount({
               type="number"
               value={formValues.max_uses}
               onChange={(event) => updateField("max_uses", event.target.value)}
+              error={Boolean(errors.max_uses)}
+              helperText={errors.max_uses}
               fullWidth
               className={styles.field}
             />

@@ -34,6 +34,7 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
   const [newStatus, setNewStatus] = useState<string>("");
   const [statusNote, setStatusNote] = useState<string>("");
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Formats
   const formatCurrency = (value: number) => {
@@ -58,13 +59,18 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
   const isOrderCancelled = currentDBStatus === "CANCELLED";
 
   const handleUpdateStatus = async () => {
+    const newErrors: Record<string, string> = {};
+
     if (!newStatus) {
-      toast.error("Vui lòng chọn trạng thái mới");
-      return;
+      newErrors.newStatus = "Vui lòng chọn trạng thái mới";
     }
 
     if (newStatus === "CANCELLED" && !statusNote.trim()) {
-      toast.error("Vui lòng nhập lý do hủy đơn hàng");
+      newErrors.statusNote = "Vui lòng nhập lý do hủy đơn hàng";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -79,6 +85,7 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
       } else {
         result = await updateOrderStatusAction({
           order_number: order.id,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           status: newStatus as any,
           note: statusNote.trim() || undefined,
         });
@@ -86,11 +93,11 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
 
       if ("error" in result && result.error) {
         toast.error(getFriendlyResponseError(result.error));
-      } else if ("success" in result && result.success && result.data) {
+      } else if ("success" in result && result.success) {
         toast.success("Cập nhật trạng thái đơn hàng thành công");
-        setOrder(result.data as unknown as OrderDetail);
         setNewStatus("");
         setStatusNote("");
+        setErrors({});
         router.refresh();
       }
     } catch (err) {
@@ -187,7 +194,7 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
                 <span className="font-bold block not-italic text-[#6B4C35]/80 mb-1">
                   Ghi chú khách hàng:
                 </span>
-                "{order.shippingNote}"
+                &ldquo;{order.shippingNote}&rdquo;
               </div>
             )}
           </div>
@@ -243,7 +250,7 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
               <span
                 style={{
                   color: "var(--admin-primary)",
-                  fontFamily: "var(--admin-font-display)",
+                  fontFamily: "var(--admin-font-body)",
                   fontSize: "1.2rem",
                   fontWeight: 700,
                 }}
@@ -357,7 +364,7 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
                     </td>
                     <td
                       style={{
-                        fontFamily: "var(--admin-font-display)",
+                        fontFamily: "var(--admin-font-body)",
                         fontWeight: 700,
                         fontSize: "1.2rem",
                         color: "var(--admin-primary)",
@@ -447,9 +454,18 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
                     </label>
                     <select
                       className="orders-form-select"
-                      style={{ width: "100%", height: "46px", background: "white", padding: "0 12px" }}
+                      style={{
+                        width: "100%",
+                        height: "46px",
+                        background: "white",
+                        padding: "0 12px",
+                        borderColor: errors.newStatus ? "#6B1218" : undefined
+                      }}
                       value={newStatus}
-                      onChange={(e) => setNewStatus(e.target.value)}
+                      onChange={(e) => {
+                        setNewStatus(e.target.value);
+                        if (errors.newStatus) setErrors((prev) => ({ ...prev, newStatus: "" }));
+                      }}
                       disabled={isUpdating}
                     >
                       <option value="">Chọn trạng thái...</option>
@@ -467,6 +483,11 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
                       </option>
                       <option value="CANCELLED">Đã hủy</option>
                     </select>
+                    {errors.newStatus && (
+                      <p style={{ color: "#6B1218", fontSize: 12, marginTop: 4 }}>
+                        {errors.newStatus}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-2">
@@ -481,6 +502,7 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
                         background: "white",
                         padding: "10px 12px",
                         resize: "vertical",
+                        borderColor: errors.statusNote ? "#6B1218" : undefined
                       }}
                       placeholder={
                         newStatus === "CANCELLED"
@@ -488,9 +510,17 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
                           : "Nhập ghi chú cho lần cập nhật này (tùy chọn)..."
                       }
                       value={statusNote}
-                      onChange={(e) => setStatusNote(e.target.value)}
+                      onChange={(e) => {
+                        setStatusNote(e.target.value);
+                        if (errors.statusNote) setErrors((prev) => ({ ...prev, statusNote: "" }));
+                      }}
                       disabled={isUpdating}
                     />
+                    {errors.statusNote && (
+                      <p style={{ color: "#6B1218", fontSize: 12, marginTop: 4 }}>
+                        {errors.statusNote}
+                      </p>
+                    )}
                   </div>
 
                   <button

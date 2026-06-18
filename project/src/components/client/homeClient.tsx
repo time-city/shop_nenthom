@@ -55,10 +55,17 @@ export default function HomeClient() {
     void loadCategories();
   }, []);
 
+  // Autoplay category slider: transition every 4 seconds
   useEffect(() => {
-    if (activeSlide >= categorySlides.length) {
-      setActiveSlide(0);
-    }
+    if (categorySlides.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setActiveSlide((current) =>
+        current === categorySlides.length - 1 ? 0 : current + 1
+      );
+    }, 4000);
+
+    return () => clearInterval(interval);
   }, [activeSlide, categorySlides.length]);
 
   const previousSlide = () => {
@@ -75,17 +82,21 @@ export default function HomeClient() {
       current === categorySlides.length - 1 ? 0 : current + 1,
     );
   };
-  const scrollToCollection = (event: MouseEvent<HTMLAnchorElement>) => {
+  const scrollToSection = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
     event.preventDefault();
 
-    const collectionSection = document.getElementById("collection");
-    if (!collectionSection) {
-      window.location.href = "/#collection";
+    const section = document.getElementById(id);
+    if (!section) {
+      window.location.href = `/#${id}`;
       return;
     }
 
-    collectionSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.history.pushState(null, "", "/#collection");
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.history.pushState(null, "", `/#${id}`);
+  };
+
+  const scrollToCollection = (event: MouseEvent<HTMLAnchorElement>) => {
+    scrollToSection(event, "collection");
   };
 
   return (
@@ -142,12 +153,14 @@ export default function HomeClient() {
             <div className="btn-group flex w-full flex-col items-center justify-center gap-2.5 md:w-auto md:flex-row md:flex-wrap md:justify-start lg:gap-4">
               <Link
                 href="/#custom"
+                onClick={(e) => scrollToSection(e, "custom")}
                 className="btn-primary w-full max-w-[260px] rounded-full border-[1.5px] border-transparent bg-[#F5F0E8] px-6 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] shadow-[0_10px_28px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#F2E8D9] hover:text-[#2C1810] hover:shadow-[0_14px_36px_rgba(0,0,0,0.22)] lg:w-auto lg:px-9 lg:py-3.5"
               >
                 Tùy chỉnh ngay
               </Link>
               <Link
                 href="/#collection"
+                onClick={(e) => scrollToSection(e, "collection")}
                 className="btn-secondary w-full max-w-[260px] rounded-full border-[1.5px] border-[#f5f0e8]/45 bg-transparent px-6 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f5f0e8]/10 hover:text-[#F5F0E8] lg:w-auto lg:px-[34px]"
               >
                 Xem bộ sưu tập

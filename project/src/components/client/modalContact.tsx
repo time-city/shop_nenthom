@@ -51,6 +51,9 @@ export default function ModalContact() {
     const trimmed = value.trim();
 
     if (!trimmed) {
+      if (field === "message") {
+        return "Vui lòng nhập nội dung tin nhắn";
+      }
       return "Vui lòng không để trống";
     }
 

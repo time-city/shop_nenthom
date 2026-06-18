@@ -3,7 +3,7 @@ import { getCurrentUser } from "../lib/action/user.action";
 import { redirect } from "next/navigation";
 import type { CollectionPageProps } from "../lib/types/client";
 
-export default async function Home({ searchParams }: CollectionPageProps = {}) {
+export default async function Home({ searchParams }: CollectionPageProps) {
   // action-(check role trang vào web)
   const currentUser = await getCurrentUser();
 
@@ -13,4 +13,3 @@ export default async function Home({ searchParams }: CollectionPageProps = {}) {
 
   return <LandingLayout searchParams={searchParams} />;
 }
-

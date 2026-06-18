@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import type { MouseEvent } from "react";
+import Link from "next/link";
 import type { CardProductProps } from "../../lib/types/client";
 import styles from "../../styles/cardProduct.module.css";
 
@@ -30,31 +29,21 @@ export default function CardProduct({
   candleColor,
   href,
   imageUrl,
-  index = 0,
   name,
   price,
   scentNote,
 }: CardProductProps) {
-  const router = useRouter();
-  const detailHref = href;
-  const openDetail = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    router.push(detailHref, { scroll: false });
-  };
-
   return (
     <article
-      data-aos="fade-up"
-      data-aos-delay={index * 100}
       className="product-card group overflow-hidden rounded-[14px] bg-[#F5F0E8] text-[#2C1810] shadow-[0_14px_30px_rgba(44,8,12,0.22)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(44,8,12,0.28)]"
     >
-      <a
-        href={detailHref}
-        onClick={openDetail}
+      <Link
+        href={href}
         aria-label={`Xem chi tiết ${name}`}
         className="product-image relative block w-full aspect-[4/5] overflow-hidden bg-[#FAF6F0] p-0 transition duration-300"
       >
         {imageUrl ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={imageUrl}
             alt={name}
@@ -71,14 +60,14 @@ export default function CardProduct({
             </div>
           </div>
         )}
-      </a>
+      </Link>
 
       <div className="product-info border-t border-[#2C1810]/5 px-4 py-5 sm:px-5">
-        <a href={detailHref} onClick={openDetail} className="block">
+        <Link href={href} className="block">
           <h3 className="line-clamp-1 font-serif text-[1.25rem] font-light leading-tight text-[#2C1810] transition group-hover:text-[#7A1218] sm:text-[1.42rem]">
             {name}
           </h3>
-        </a>
+        </Link>
 
         <p className="scent-note mt-2 line-clamp-1 text-[0.82rem] leading-5 text-[#2C1810]/72">
           {scentNote || "Nến thơm thủ công tinh giản."}
@@ -88,13 +77,12 @@ export default function CardProduct({
           {formatPrice(price)}
         </p>
 
-        <a
-          href={detailHref}
-          onClick={openDetail}
+        <Link
+          href={href}
           className="btn-add-cart mt-5 flex min-h-10 w-full items-center justify-center rounded-full bg-[#7A1218] px-4 text-center text-[0.68rem] font-medium uppercase tracking-[0.1em] text-[#F5F0E8] shadow-[0_10px_18px_rgba(122,18,24,0.2)] transition hover:bg-[#5F0D12] hover:shadow-[0_14px_26px_rgba(122,18,24,0.32)]"
         >
           Xem chi tiết
-        </a>
+        </Link>
       </div>
     </article>
   );

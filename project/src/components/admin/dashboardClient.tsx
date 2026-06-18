@@ -6,14 +6,12 @@ import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import LoadingState from "@/src/components/ui/loadingState";
 
 import { getDashboardOverviewAction } from "@/src/lib/action/dashboard.action";
-import type { AdminOrderStatus } from "@/src/lib/types/admin";
-
-interface StatsData {
-  revenue: number;
-  ordersCount: number;
-  customersCount: number;
-  productsSoldCount: number;
-}
+import type {
+  DashboardStatsData,
+  DashboardTopProduct,
+  DashboardLatestOrder,
+  DashboardActiveChip,
+} from "@/src/lib/types/admin";
 
 const statusLabels: Record<string, string> = {
   cancelled: "Đã hủy",
@@ -24,12 +22,12 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function DashboardClient() {
-  const [activeChip, setActiveChip] = useState<"today" | "week" | "month">(
+  const [activeChip, setActiveChip] = useState<DashboardActiveChip>(
     "today",
   );
-  const [statsData, setStatsData] = useState<StatsData | null>(null);
-  const [topProducts, setTopProducts] = useState<any[]>([]);
-  const [latestOrders, setLatestOrders] = useState<any[]>([]);
+  const [statsData, setStatsData] = useState<DashboardStatsData | null>(null);
+  const [topProducts, setTopProducts] = useState<DashboardTopProduct[]>([]);
+  const [latestOrders, setLatestOrders] = useState<DashboardLatestOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

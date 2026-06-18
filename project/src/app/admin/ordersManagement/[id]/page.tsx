@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getOrderDetailForAdminAction } from "../../../../lib/action/order.action";
 import DetailOrderAdmin from "../../../../components/admin/detailOrderAdmin";
+import type { OrderDetail } from "../../../../lib/types/client";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -15,5 +16,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
   }
 
   // Cast initialOrder because the service fields now exactly match client.d.ts OrderDetail.
-  return <DetailOrderAdmin initialOrder={result.data as any} />;
+  return (
+    <DetailOrderAdmin initialOrder={result.data as unknown as OrderDetail} />
+  );
 }

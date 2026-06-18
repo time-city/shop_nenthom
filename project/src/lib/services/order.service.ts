@@ -55,6 +55,19 @@ const orderItemSelect = {
   }
 } as const;
 
+const orderHistoryItemSelect = {
+  select: {
+    unit_price_cents: true,
+    quantity: true,
+    toppings_json: true,
+    product: { select: { name: true } },
+    color: { select: { name: true } },
+    scent: { select: { name: true } },
+    size: { select: { name: true, weight_gram: true } },
+    packaging: { select: { name: true } },
+  },
+} as const;
+
 
 export const OrderService = {
   // Tạo đơn hàng từ cart item đã chọn, tự tính giá từ DB, áp dụng mã giảm giá cho user đăng nhập và gửi bill qua email.
@@ -212,6 +225,22 @@ export const OrderService = {
       const paymentMethod = data.payment_method as PaymentMethod;
 
       const order = await prisma.$transaction(async (tx) => {
+        if (discount && userId) {
+          const claimedDiscount = await tx.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+            UPDATE "public"."discount_codes"
+            SET "used_count" = "used_count" + 1
+            WHERE "id" = ${discount.id}::uuid
+              AND "is_active" = TRUE
+              AND ("expires_at" IS NULL OR "expires_at" > NOW())
+              AND "used_count" < "max_uses"
+            RETURNING "id"
+          `);
+
+          if (claimedDiscount.length === 0) {
+            throw new Error("Mã giảm giá đã hết lượt sử dụng hoặc không còn hiệu lực.");
+          }
+        }
+
         const createdOrder = await tx.order.create({
           data: {
             discount_cents: discountCents,
@@ -267,14 +296,6 @@ export const OrderService = {
               user_id: userId,
             },
           });
-          await tx.discountCode.update({
-            where: { id: discount.id },
-            data: {
-              used_count: {
-                increment: 1,
-              },
-            },
-          });
         }
 
         return createdOrder;
@@ -318,18 +339,25 @@ export const OrderService = {
 
 
   // Lấy lịch sử đơn hàng của khách hàng đang đăng nhập để hiển thị phía client.
-  async getMyOrders(userId: string) {
-    const orders = await prisma.order.findMany({
-      where: { user_id: userId },
-      orderBy: { created_at: "desc" },
-      select: {
-        created_at: true,
-        order_number: true,
-        status: true,
-        total_cents: true,
-        items: orderItemSelect
-      }
-    });
+  async getMyOrders(userId: string, page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+    const where = { user_id: userId };
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { created_at: "desc" },
+        select: {
+          created_at: true,
+          order_number: true,
+          status: true,
+          total_cents: true,
+          items: orderHistoryItemSelect,
+        },
+      }),
+      prisma.order.count({ where }),
+    ]);
 
 
     const toppingIds = [
@@ -346,33 +374,40 @@ export const OrderService = {
     const toppingById = new Map(toppings.map((topping) => [topping.id, topping.name]));
 
 
-    return orders.map((order) => ({
-      date: order.created_at.toLocaleDateString("vi-VN"),
-      id: order.order_number,
-      items: order.items.map((item) => {
-        const optionText = [
-          item.scent?.name,
-          item.size?.weight_gram
-            ? `${item.size.name} (${item.size.weight_gram}g)`
-            : item.size?.name,
-          item.color?.name,
-          item.packaging?.name,
-          ...getToppingIds(item.toppings_json)
-            .map((id) => toppingById.get(id))
-            .filter((name): name is string => Boolean(name)),
-        ].filter(Boolean).join(", ");
+    return {
+      data: orders.map((order) => ({
+        date: order.created_at.toLocaleDateString("vi-VN"),
+        id: order.order_number,
+        items: order.items.map((item) => {
+          const optionText = [
+            item.scent?.name,
+            item.size?.weight_gram
+              ? `${item.size.name} (${item.size.weight_gram}g)`
+              : item.size?.name,
+            item.color?.name,
+            item.packaging?.name,
+            ...getToppingIds(item.toppings_json)
+              .map((id) => toppingById.get(id))
+              .filter((name): name is string => Boolean(name)),
+          ].filter(Boolean).join(", ");
 
-
-        return {
-          detail: optionText || undefined,
-          name: item.product.name,
-          price: item.unit_price_cents,
-          quantity: item.quantity,
-        };
-      }),
-      status: clientOrderStatusMap[order.status],
-      total: order.total_cents,
-    }));
+          return {
+            detail: optionText || undefined,
+            name: item.product.name,
+            price: item.unit_price_cents,
+            quantity: item.quantity,
+          };
+        }),
+        status: clientOrderStatusMap[order.status],
+        total: order.total_cents,
+      })),
+      meta: {
+        limit,
+        page,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   },
 
 

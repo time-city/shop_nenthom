@@ -1,6 +1,13 @@
 "use client";
 
-import { type MouseEvent, useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import {
+ startTransition,
+ type MouseEvent,
+ useCallback,
+ useEffect,
+ useState,
+} from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import ModalDeleteConfirm from "@/src/components/admin/modalDeleteConfirm";
 import ModalEditProduct from "@/src/components/admin/modalEditProduct";
@@ -74,7 +81,9 @@ export default function ProductManagementClient() {
 
  useEffect(() => {
    const cancelled = { current: false };
-   void loadProducts(cancelled);
+   startTransition(() => {
+     void loadProducts(cancelled);
+   });
 
    return () => {
      cancelled.current = true;
@@ -194,9 +203,12 @@ export default function ProductManagementClient() {
                           {/* CHANGED: Hiển thị ảnh thực tế của sản phẩm thay vì luôn hiển thị span rỗng */}
                           <div className="product-table-thumb" aria-hidden="true">
                             {Array.isArray(product.images) && typeof product.images[0] === "string" && product.images[0] ? (
-                              <img
+                              <Image
                                 src={product.images[0]}
                                 alt={product.name}
+                                width={48}
+                                height={48}
+                                unoptimized
                                 className="h-full w-full object-cover rounded-[7px]"
                               />
                             ) : (
