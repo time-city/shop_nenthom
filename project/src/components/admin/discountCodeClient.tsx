@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import ModalDeleteProduct from "@/src/components/admin/modalDeleteProduct";
 import ModalDiscount from "@/src/components/admin/modalDiscount";
@@ -65,7 +65,9 @@ export default function DiscountCodeClient() {
 
   useEffect(() => {
     const cancelled = { current: false };
-    void loadDiscounts(cancelled);
+    startTransition(() => {
+      void loadDiscounts(cancelled);
+    });
     return () => {
       cancelled.current = true;
     };

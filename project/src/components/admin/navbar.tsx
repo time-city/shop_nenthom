@@ -116,7 +116,9 @@ export default function Navbar() {
   const [pendingOrdersCount, setPendingOrdersCount] = useState<number>(0);
 
   useEffect(() => {
-    setMounted(true);
+    startTransition(() => {
+      setMounted(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -128,7 +130,7 @@ export default function Navbar() {
         if (result && "success" in result && result.success && result.meta) {
           setPendingOrdersCount(result.meta.total);
         }
-      } catch (err) {
+      } catch {
         // Ignore error
       }
     };

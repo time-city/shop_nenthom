@@ -1,8 +1,7 @@
 "use client";
 
-import { Suspense, createContext, useCallback, useEffect, useState } from "react";
+import { Suspense, createContext, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import CollectionProducts from "@/src/components/client/collectionProducts";
-import DetailCardModal from "@/src/components/client/detailCardModal";
 import type {
   ClientProductOptionItemInterface,
   ClientProductItemInterface,
@@ -39,9 +38,9 @@ export const CollectionContext = createContext<{
   error: string;
   setError: (err: string) => void;
   selectedFilter: { scentId: string; priceRange: string; search: string; page: number };
-  setSelectedFilter: (filters: any) => void;
+  setSelectedFilter: Dispatch<SetStateAction<{ scentId: string; priceRange: string; search: string; page: number }>>;
   meta: ClientProductsMetaInterface;
-  setMeta: (meta: any) => void;
+  setMeta: Dispatch<SetStateAction<ClientProductsMetaInterface>>;
 } | null>(null);
 
 const parsePriceRange = (priceRange: string) => {
@@ -91,7 +90,7 @@ function CollectionClientInner({
   initialParams,
   initialProducts,
   pageSize,
-  isAuthenticated,
+  // isAuthenticated parameter is ignored as modal detail is removed
 }: CollectionClientProps) {
   const searchParams = useSearchParams();
   const scentId = searchParams.get("scentId") || "";
@@ -111,7 +110,9 @@ function CollectionClientInner({
   });
 
   useEffect(() => {
-    setSelectedFilter({ scentId, priceRange, search, page });
+    setTimeout(() => {
+      setSelectedFilter({ scentId, priceRange, search, page });
+    }, 0);
   }, [scentId, priceRange, search, page]);
 
   useEffect(() => {
@@ -180,7 +181,10 @@ function CollectionClientInner({
         className="page-section collection-section fade-section bg-[#6B1218] px-4 py-16 text-[#F5F0E8] sm:px-6 lg:px-12"
       >
         <div className="mx-auto w-full max-w-[1880px]">
-          <div className="collection-header mx-auto max-w-2xl text-center">
+          <div
+            className="collection-header mx-auto max-w-2xl text-center"
+            suppressHydrationWarning
+          >
             <h2 className="font-serif text-[2.4rem] font-light leading-tight text-[#F5F0E8] sm:text-[3rem]">
               Bộ Sưu Tập
             </h2>
@@ -199,12 +203,9 @@ function CollectionClientInner({
             pageSize={pageSize}
           />
 
-          <Suspense fallback={null}>
-            <DetailCardModal isAuthenticated={isAuthenticated} />
-          </Suspense>
+
         </div>
       </section>
     </CollectionContext.Provider>
   );
 }
-

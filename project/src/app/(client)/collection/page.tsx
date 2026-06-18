@@ -8,7 +8,7 @@ const pageSize = 4;
 
 export default async function CollectionPage({
   searchParams,
-}: CollectionPageProps = {}) {
+}: CollectionPageProps) {
   const params = (await searchParams) ?? {};
   const activePage = Math.max(Number(params.page ?? 1), 1);
   const activeScentId = Number(params.scentId);
@@ -73,7 +73,6 @@ export default async function CollectionPage({
     />
   );
 }
-
 
 
 

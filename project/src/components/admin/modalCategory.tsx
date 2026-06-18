@@ -6,7 +6,7 @@ import Divider from "@mui/material/Divider";
 import Modal from "@mui/material/Modal";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { createCategoryAction } from "../../lib/action/category.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
@@ -29,12 +29,16 @@ export default function ModalCategory({
   const { toast } = useToast();
   const [formValues, setFormValues] =
     useState<AdminCategoryFormValues>(initialFormValues);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setFormValues(initialFormValues);
-      setIsSubmitting(false);
+      startTransition(() => {
+        setFormValues(initialFormValues);
+        setErrors({});
+        setIsSubmitting(false);
+      });
     }
   }, [open]);
 
@@ -43,6 +47,12 @@ export default function ModalCategory({
       ...current,
       [field]: value,
     }));
+    if (errors[field]) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        [field]: "",
+      }));
+    }
   };
 
   const handleSave = async () => {
@@ -51,10 +61,11 @@ export default function ModalCategory({
     const categoryName = formValues.name.trim();
 
     if (!categoryName) {
-      toast.error("Vui lòng nhập tên danh mục");
+      setErrors({ name: "Vui lòng nhập tên danh mục" });
       return;
     }
 
+    setErrors({});
     setIsSubmitting(true);
 
     try {
@@ -86,7 +97,7 @@ export default function ModalCategory({
       aria-labelledby="category-modal-title"
       aria-describedby="category-modal-description"
     >
-      <Box className={`${styles.modalPaper} ${styles.productPaper}`}>
+      <Box className={`${styles.modalPaper} ${styles.categoryPaper}`}>
         <Box className={styles.header}>
           <Typography
             id="category-modal-title"
@@ -119,6 +130,8 @@ export default function ModalCategory({
             placeholder="Nhập tên danh mục..."
             value={formValues.name}
             onChange={(event) => updateField("name", event.target.value)}
+            error={Boolean(errors.name)}
+            helperText={errors.name}
             fullWidth
             className={styles.field}
           />

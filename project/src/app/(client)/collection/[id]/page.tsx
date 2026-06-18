@@ -1,79 +1,46 @@
-import CollectionClient from "@/src/components/client/collectionClient";
-import type { ClientProductsSuccessResponseInterface } from "@/src/interface/clientInterface";
+import { notFound } from "next/navigation";
+import { getProductDetailsAction } from "@/src/lib/action/product.action";
 import { getCurrentUser } from "@/src/lib/action/user.action";
-import { getProductsAction, getScentsAction } from "@/src/lib/action/product.action";
-import type { CollectionPageProps } from "@/src/lib/types/client";
+import DetailCardProduct from "@/src/components/client/detailCardProduct";
+import type { ClientProductDetailDataInterface } from "@/src/interface/clientInterface";
+import type { ProductDetailPageProps } from "@/src/lib/types/client";
 
-const pageSize = 4;
+export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
+  const { id } = await params;
 
-export default async function CollectionPage({
-  searchParams,
-}: CollectionPageProps = {}) {
-  const params = (await searchParams) ?? {};
-  const activePage = Math.max(Number(params.page ?? 1), 1);
-  const activeScentId = Number(params.scentId);
-  const activeSearch = params.q?.trim() ?? "";
-  const priceRange = params.priceRange?.trim() ?? "";
-
-  let minPrice: number | undefined;
-  let maxPrice: number | undefined;
-  if (priceRange) {
-    const [min, max] = priceRange.split("-");
-    if (min) minPrice = Number(min);
-    if (max) maxPrice = Number(max);
-  }
-
-  const [result, currentUser, scentResult] = await Promise.all([
-    getProductsAction({
-      limit: pageSize,
-      page: activePage,
-      scentId: Number.isFinite(activeScentId)
-        ? activeScentId
-        : undefined,
-      search: activeSearch || undefined,
-      minPrice,
-      maxPrice,
-    }),
+  const [result, currentUser] = await Promise.all([
+    getProductDetailsAction(id),
     getCurrentUser(),
-    getScentsAction(),
   ]);
 
-  const scents =
-    scentResult && "success" in scentResult && scentResult.success
-      ? scentResult.data
-      : [];
+  if (!result || !("success" in result) || !result.success || !result.data) {
+    notFound();
+  }
 
-  const errorMessage = ("error" in result ? result.error : "") || "";
-  const productResult =
-    "success" in result && result.success
-      ? (result as ClientProductsSuccessResponseInterface)
-      : null;
-  const pageProducts = (productResult?.data ?? []).filter((product) => product.is_custom !== true);
-  const meta = productResult?.meta ?? {
-    limit: pageSize,
-    page: activePage,
-    total: 0,
-    totalPages: 1,
+  const detailData = result.data as ClientProductDetailDataInterface;
+  const { options, product: rawProduct } = detailData;
+
+  const product = {
+    base_price_cents: rawProduct.base_price_cents,
+    category: rawProduct.category ?? null,
+    description: rawProduct.description,
+    id: rawProduct.id,
+    images: rawProduct.images,
+    name: rawProduct.name,
+    options: {
+      packagings: options.packagings ?? [],
+      scents: options.scents ?? [],
+      sizes: options.sizes ?? [],
+      toppings: options.toppings ?? [],
+      waxColors: options.waxColors ?? options.colors ?? [],
+    },
   };
 
   return (
-    <CollectionClient
-      scents={scents}
-      initialError={errorMessage}
-      initialFilters={{
-        scentId: Number.isFinite(activeScentId) ? String(activeScentId) : "",
-        priceRange,
-        search: activeSearch,
-      }}
-      initialMeta={meta}
-      initialParams={params}
-      initialProducts={pageProducts}
-      pageSize={pageSize}
+    <DetailCardProduct
       isAuthenticated={Boolean(currentUser)}
+      product={product}
+      isModal={false}
     />
   );
 }
-
-
-
-

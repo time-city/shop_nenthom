@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { getMyOrderDetailAction, getOrderDetailForAdminAction } from "@/src/lib/action/order.action";
 import LoadingState from "@/src/components/ui/loadingState";
 
 import type {
   DetailOrderProps,
   OrderDetail,
-  OrderDetailItem,
-  OrderHistoryLog,
 } from "../../lib/types/client";
 
 const statusLabel: Record<OrderDetail["status"], string> = {
@@ -39,8 +37,10 @@ export default function DetailOrder({ orderNumber, onClose, isAdmin = false }: D
 
   useEffect(() => {
     let isMounted = true;
-    setIsLoading(true);
-    setError(null);
+    startTransition(() => {
+      setIsLoading(true);
+      setError(null);
+    });
 
     const fetchDetail = async () => {
       try {
@@ -156,7 +156,7 @@ export default function DetailOrder({ orderNumber, onClose, isAdmin = false }: D
                   {order.shippingNote && (
                     <div className="mt-2 rounded-lg bg-[#F8F0E4] p-3 text-xs text-[#6B4C35] italic border border-[#6B4C35]/5">
                       <span className="font-semibold block not-italic text-[#6B4C35]/80 mb-1">Ghi chú giao hàng:</span>
-                      "{order.shippingNote}"
+                      &quot;{order.shippingNote}&quot;
                     </div>
                   )}
                 </div>

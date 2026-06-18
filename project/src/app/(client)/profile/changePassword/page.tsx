@@ -8,12 +8,13 @@ import ModalChangePassword from "@/src/components/client/changePass";
 import LoadingState from "@/src/components/ui/loadingState";
 export default function ChangePasswordPage() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] =
+    useState<Awaited<ReturnType<typeof getCurrentUser>>>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
-    getCurrentUser().then((user: any) => {
+    getCurrentUser().then((user) => {
       if (!isMounted) return;
       if (!user) {
         router.replace("/login?redirect=/profile/changePassword");

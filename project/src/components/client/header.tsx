@@ -1,13 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, User } from "lucide-react";
+import { ShoppingCart, User, ClipboardList } from "lucide-react";
 import { getCurrentUser } from "../../lib/action/user.action";
 import NavLinks from "./nav-links";
 import MobileMenu from "./mobileMenu";
 import CartBadge from "./cartBadge";
+import OrderBadge from "./orderBadge";
 
 const navLinks = [
-  { href: "/#home", label: "Trang chủ" },
+  { href: "/", label: "Trang chủ" },
   { href: "/#collection", label: "Bộ sưu tập" },
   { href: "/#custom", label: "Tùy chỉnh" },
   { href: "/#story", label: "Câu chuyện" },
@@ -85,6 +86,17 @@ export default async function Header() {
             <ShoppingCart className="size-5" aria-hidden="true" />
             <CartBadge />
           </Link>
+
+          {currentUser && (
+            <Link
+              href="/orderHistory"
+              className="history-link relative flex size-10 items-center justify-center rounded-full border border-[#f5f0e8]/20 text-[#f5f0e8] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f5f0e8]/40 hover:text-[#F8F0E4] hover:opacity-90"
+              aria-label="Lịch sử đơn hàng"
+            >
+              <ClipboardList className="size-5" aria-hidden="true" />
+              <OrderBadge />
+            </Link>
+          )}
 
           <MobileMenu links={navLinks} currentUser={currentUser} />
         </div>

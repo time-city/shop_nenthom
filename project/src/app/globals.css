@@ -821,7 +821,7 @@ body.intro-ready footer {
 
 .dashboard-stat-value {
   color: #2C1810;
-  font-family: var(--admin-font-display);
+  font-family: var(--admin-font-body);
   font-size: 2.05rem;
   font-weight: 700;
   line-height: 1.1;
@@ -881,7 +881,7 @@ body.intro-ready footer {
 
 .dashboard-admin-table {
   border-collapse: collapse;
-  min-width: 560px;
+  min-width: 100%;
   width: 100%;
 }
 
@@ -892,7 +892,7 @@ body.intro-ready footer {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  padding: 1.05rem 1.75rem;
+  padding: 0.85rem 1.15rem;
   text-align: left;
   text-transform: uppercase;
 }
@@ -901,8 +901,8 @@ body.intro-ready footer {
 .dashboard-admin-table td {
   border-top: 1px solid rgba(107, 78, 53, 0.1);
   color: #2C1810;
-  font-size: 0.94rem;
-  padding: 1.05rem 1.75rem;
+  font-size: 0.9rem;
+  padding: 0.85rem 1.15rem;
   vertical-align: middle;
 }
 
@@ -1127,7 +1127,7 @@ body.intro-ready footer {
 
 .orders-table-amount {
   color: #6B1218;
-  font-family: var(--admin-font-display);
+  font-family: var(--admin-font-body);
   font-weight: 700;
 }
 
@@ -1685,6 +1685,12 @@ body.intro-ready footer {
 
   .dashboard-stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-admin-table th,
+  .dashboard-admin-table td {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.82rem;
   }
 
 

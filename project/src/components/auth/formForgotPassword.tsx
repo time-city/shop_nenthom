@@ -63,8 +63,6 @@ export default function FormForgotPassword() {
 
     // action-(gửi OTP quên mật khẩu)
     const result = await forgotPasswordAction({ email });
-    console.log("[forgot-password:client] result", result);
-
     if (!result.success) {
       const message = result.error ? getFriendlyResponseError(result.error) : "Không thể gửi mã OTP";
       setErrorMessage(message);
@@ -92,18 +90,17 @@ export default function FormForgotPassword() {
 
   return (
     <main className="h-dvh overflow-hidden bg-[#7A1218]">
+      <button
+        type="button"
+        onClick={() => router.push("/login")}
+        className="fixed left-6 top-6 flex size-10 items-center justify-center rounded-full border border-[#F5F0E8]/30 bg-[#F5F0E8]/15 text-lg text-[#F5F0E8] backdrop-blur-sm transition hover:bg-[#F5F0E8] hover:text-[#6B1218] z-50"
+        aria-label="Quay lại đăng nhập"
+      >
+        ←
+      </button>
       <div className="flex h-full flex-col">
         <section className="flex min-h-0 flex-1 items-center justify-center px-4 py-4 sm:px-6 lg:px-8">
           <div className="relative w-full max-w-[430px] rounded-[22px] border border-[#f5f0e8]/20 bg-[#F5F0E8] px-5 py-6 text-[#2C1810] shadow-[0_24px_70px_rgba(30,6,8,0.28)] sm:px-8 sm:py-8">
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
-              className="absolute left-4 top-4 flex size-9 items-center justify-center rounded-full border border-[#7A1218]/15 bg-[#F8F0E4] text-lg text-[#7A1218] transition hover:bg-[#7A1218] hover:text-[#F5F0E8]"
-              aria-label="Quay lại đăng nhập"
-            >
-              ←
-            </button>
-
             <p className="mb-2 text-center text-[0.7rem] uppercase tracking-[0.22em] text-[#7A1218]/75">
               ChamCham Studio
             </p>

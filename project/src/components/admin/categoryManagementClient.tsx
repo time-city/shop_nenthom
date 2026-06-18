@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import ModalCategory from "@/src/components/admin/modalCategory";
 import ModalDeleteConfirm from "@/src/components/admin/modalDeleteConfirm";
@@ -56,7 +56,9 @@ export default function CategoryManagementClient() {
 
   useEffect(() => {
     const cancelled = { current: false };
-    void loadCategories(cancelled);
+    startTransition(() => {
+      void loadCategories(cancelled);
+    });
     return () => {
       cancelled.current = true;
     };
