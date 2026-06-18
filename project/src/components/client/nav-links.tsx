@@ -55,20 +55,29 @@ export default function NavLinks({
     sectionElements.forEach((el) => observer.observe(el));
 
     // Fallback khi cuộn lên đầu trang
+    let throttleTimer: number | null = null;
     const handleScroll = () => {
-      if (window.scrollY < 80) {
-        setActiveSection("home");
-        const currentHash = window.location.hash;
-        if (currentHash !== "" && currentHash !== "#home") {
-          window.history.replaceState(null, "", window.location.pathname);
+      if (throttleTimer !== null) return;
+
+      throttleTimer = window.setTimeout(() => {
+        throttleTimer = null;
+        if (window.scrollY < 80) {
+          setActiveSection("home");
+          const currentHash = window.location.hash;
+          if (currentHash !== "" && currentHash !== "#home") {
+            window.history.replaceState(null, "", window.location.pathname);
+          }
         }
-      }
+      }, 100);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       observer.disconnect();
       window.removeEventListener("scroll", handleScroll);
+      if (throttleTimer !== null) {
+        window.clearTimeout(throttleTimer);
+      }
     };
   }, [pathname]);
 

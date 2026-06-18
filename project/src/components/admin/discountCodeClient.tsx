@@ -3,9 +3,10 @@
 import { Plus } from "lucide-react";
 import { startTransition, useCallback, useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
+import dynamic from "next/dynamic";
 import ModalDeleteProduct from "@/src/components/admin/modalDeleteProduct";
-import ModalDiscount from "@/src/components/admin/modalDiscount";
-import ModalEditDiscount from "@/src/components/admin/modalEditDiscount";
+const ModalDiscount = dynamic(() => import("@/src/components/admin/modalDiscount"), { ssr: false });
+const ModalEditDiscount = dynamic(() => import("@/src/components/admin/modalEditDiscount"), { ssr: false });
 import LoadingState from "@/src/components/ui/loadingState";
 import { AdminEditButton } from "@/src/components/ui/actionButtons";
 import { disableDiscountAction, getDiscountsAction } from "@/src/lib/action/discount.action";

@@ -37,7 +37,7 @@ export default function FormCustom({
    options,
 }: FormCustomProps) {
    const { toast } = useToast();
-   const { incrementCartCount } = useCartStore();
+   const incrementCartCount = useCartStore((state) => state.incrementCartCount);
    const scentOptions = options?.scents ?? emptyOptions;
    const colorOptions = options?.colors ?? emptyOptions;
    const sizeOptions = options?.sizes ?? emptyOptions;

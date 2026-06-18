@@ -10,9 +10,10 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
+import dynamic from "next/dynamic";
 import ModalDeleteConfirm from "@/src/components/admin/modalDeleteConfirm";
-import ModalEditIngre from "@/src/components/admin/modalEditIngre";
-import ModalIngredient from "@/src/components/admin/modalIngredient";
+const ModalIngredient = dynamic(() => import("@/src/components/admin/modalIngredient"), { ssr: false });
+const ModalEditIngre = dynamic(() => import("@/src/components/admin/modalEditIngre"), { ssr: false });
 import LoadingState from "@/src/components/ui/loadingState";
 import {
   AdminDeleteButton,
@@ -553,7 +554,7 @@ export default function IngredientStoreClient() {
       <div className="dashboard-page-content">
         <section className="rounded-2xl border border-[#6B4E35]/15 bg-[#F8F0E4] p-5 shadow-[0_6px_18px_rgba(44,24,16,0.08)]">
           <div
-            className="mb-6 flex gap-0 overflow-x-auto border-b-2 border-[#6B4E35]/15"
+            className="mb-6 flex gap-0 overflow-x-auto overflow-y-hidden border-b-2 border-[#6B4E35]/15"
             role="tablist"
             aria-label="Kho nguyên liệu"
           >

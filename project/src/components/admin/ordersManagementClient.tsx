@@ -9,8 +9,10 @@ import type {
   AdminPaymentStatus,
 } from "@/src/lib/types/admin";
 import LoadingState from "@/src/components/ui/loadingState";
-import { getOrdersAction } from "@/src/lib/action/order.action";
+import { getOrdersAction, updateOrderStatusAction, cancelOrderAction } from "@/src/lib/action/order.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import { useToast } from "@/src/components/ui/toast-provider";
+import ModalOrderAction from "./modalOrderAction";
 
 const statusLabels: Record<AdminOrderStatus, string> = {
   cancelled: "Đã hủy",
@@ -57,8 +59,102 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<AdminOrderStatus | "confirmed" | "">("");
+  const { toast } = useToast();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<"confirm" | "cancel" | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [selectedOrderStatus, setSelectedOrderStatus] = useState<AdminOrderStatus | null>(null);
+  const [isActionSubmitting, setIsActionSubmitting] = useState(false);
+
+  const handleOpenConfirm = (orderId: string, currentStatus: AdminOrderStatus) => {
+    setSelectedOrderId(orderId);
+    setSelectedOrderStatus(currentStatus);
+    setModalType("confirm");
+    setModalOpen(true);
+  };
+
+  const handleOpenCancel = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setModalType("cancel");
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    if (isActionSubmitting) return;
+    setModalOpen(false);
+    setModalType(null);
+    setSelectedOrderId(null);
+    setSelectedOrderStatus(null);
+  };
+
+  const executeOrderAction = async (reason?: string) => {
+    if (!selectedOrderId || !modalType) return;
+
+    setIsActionSubmitting(true);
+    try {
+      if (modalType === "confirm") {
+        let nextStatus: "PROCESSING" | "SHIPPED" | "DELIVERED" | null = null;
+        let nextClientStatus: AdminOrderStatus | null = null;
+
+        if (selectedOrderStatus === "pending") {
+          nextStatus = "PROCESSING";
+          nextClientStatus = "processing";
+        } else if (selectedOrderStatus === "processing") {
+          nextStatus = "SHIPPED";
+          nextClientStatus = "shipping";
+        } else if (selectedOrderStatus === "shipping") {
+          nextStatus = "DELIVERED";
+          nextClientStatus = "completed";
+        }
+
+        if (!nextStatus || !nextClientStatus) return;
+
+        const result = await updateOrderStatusAction({
+          order_number: selectedOrderId,
+          status: nextStatus,
+          note: "Xác nhận nhanh từ danh sách quản lý đơn hàng",
+        });
+
+        if ("error" in result && result.error) {
+          toast.error(getFriendlyResponseError(result.error));
+        } else if ("success" in result && result.success) {
+          toast.success("Cập nhật trạng thái đơn hàng thành công");
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === selectedOrderId ? { ...o, status: nextClientStatus! } : o
+            )
+          );
+          setModalOpen(false);
+        }
+      } else if (modalType === "cancel") {
+        const result = await cancelOrderAction({
+          order_id: selectedOrderId,
+          reason: reason || "Hủy đơn hàng nhanh từ admin",
+        });
+
+        if ("error" in result && result.error) {
+          toast.error(getFriendlyResponseError(result.error));
+        } else if ("success" in result && result.success) {
+          toast.success("Hủy đơn hàng thành công");
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === selectedOrderId ? { ...o, status: "cancelled" } : o
+            )
+          );
+          setModalOpen(false);
+        }
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Đã xảy ra lỗi");
+    } finally {
+      setIsActionSubmitting(false);
+    }
+  };
 
   useEffect(() => {
+    if (initialOrders && initialOrders.length > 0) {
+      return;
+    }
     let cancelled = false;
     const loadOrders = async () => {
       setIsLoading(true);
@@ -238,28 +334,64 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
                           {paymentLabels[order.payment]}
                         </span>
                       </td>
-                      <td>
-                        <Link
-                          href={`/admin/ordersManagement/${order.id}`}
-                          className="orders-icon-btn"
-                          title="Chỉnh sửa"
-                          aria-label={`Chỉnh sửa đơn ${order.id}`}
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                          >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </Link>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        {order.status !== "completed" && order.status !== "cancelled" ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              className="orders-action-btn-confirm"
+                              title={
+                                order.status === "pending"
+                                  ? "Xác nhận đơn hàng"
+                                  : order.status === "processing"
+                                  ? "Giao hàng"
+                                  : "Hoàn thành đơn"
+                              }
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenConfirm(order.id, order.status);
+                              }}
+                            >
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <polyline points="20,6 9,17 4,12" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              className="orders-action-btn-cancel"
+                              title="Hủy đơn hàng"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenCancel(order.id);
+                              }}
+                            >
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                              </svg>
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs italic" style={{ paddingLeft: "12px" }}>-</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -290,6 +422,16 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
           </div>
         </section>
       </div>
+
+      <ModalOrderAction
+        open={modalOpen}
+        onClose={handleCloseModal}
+        onConfirm={executeOrderAction}
+        type={modalType}
+        orderId={selectedOrderId}
+        currentStatus={selectedOrderStatus}
+        isSubmitting={isActionSubmitting}
+      />
     </>
   );
 }

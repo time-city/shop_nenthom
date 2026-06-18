@@ -66,7 +66,7 @@ export default function HomeClient() {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [activeSlide, categorySlides.length]);
+  }, [categorySlides.length]);
 
   const previousSlide = () => {
     if (categorySlides.length === 0) return;

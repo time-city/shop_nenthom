@@ -3,9 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
-import { updateOrderStatusAction, cancelOrderAction } from "@/src/lib/action/order.action";
-import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import type { OrderDetail } from "@/src/lib/types/client";
 
 interface Props {
@@ -23,18 +20,13 @@ const statusMap: Record<string, { label: string; className: string }> = {
 const clientStatusMap: Record<OrderDetail["status"], string> = {
   canceled: "CANCELLED",
   done: "DELIVERED",
-  processing: "PROCESSING", // Fallback, could be PENDING
+  processing: "PROCESSING",
   shipping: "SHIPPED",
 };
 
 export default function DetailOrderAdmin({ initialOrder }: Props) {
   const router = useRouter();
-  const { toast } = useToast();
-  const [order, setOrder] = useState<OrderDetail>(initialOrder);
-  const [newStatus, setNewStatus] = useState<string>("");
-  const [statusNote, setStatusNote] = useState<string>("");
-  const [isUpdating, setIsUpdating] = useState<boolean>(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [order] = useState<OrderDetail>(initialOrder);
 
   // Formats
   const formatCurrency = (value: number) => {
@@ -56,56 +48,6 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
     ? order.historyLogs[order.historyLogs.length - 1]
     : null;
   const currentDBStatus = latestLog?.currentStatus || clientStatusMap[order.status] || "PENDING";
-  const isOrderCancelled = currentDBStatus === "CANCELLED";
-
-  const handleUpdateStatus = async () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!newStatus) {
-      newErrors.newStatus = "Vui lòng chọn trạng thái mới";
-    }
-
-    if (newStatus === "CANCELLED" && !statusNote.trim()) {
-      newErrors.statusNote = "Vui lòng nhập lý do hủy đơn hàng";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setIsUpdating(true);
-    try {
-      let result;
-      if (newStatus === "CANCELLED") {
-        result = await cancelOrderAction({
-          order_id: order.id,
-          reason: statusNote.trim() || "Admin hủy đơn hàng",
-        });
-      } else {
-        result = await updateOrderStatusAction({
-          order_number: order.id,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          status: newStatus as any,
-          note: statusNote.trim() || undefined,
-        });
-      }
-
-      if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-      } else if ("success" in result && result.success) {
-        toast.success("Cập nhật trạng thái đơn hàng thành công");
-        setNewStatus("");
-        setStatusNote("");
-        setErrors({});
-        router.refresh();
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Đã xảy ra lỗi khi cập nhật");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
 
   const statusInfo = statusMap[currentDBStatus] || { label: "Chờ xác nhận", className: "pending" };
 
@@ -381,184 +323,46 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
           </div>
         </div>
 
-        {/* Timeline + Status Update */}
-        <div className="dashboard-grid-2">
-          {/* Timeline */}
-          <div className="dashboard-card">
-            <div className="dashboard-card-header">
-              <h2 className="dashboard-card-title">Lịch sử trạng thái</h2>
-            </div>
-            <div className="dashboard-card-body">
-              <div className="dashboard-timeline">
-                {order.historyLogs && order.historyLogs.length > 0 ? (
-                  order.historyLogs.map((log, index) => {
-                    const isLatest = index === order.historyLogs.length - 1;
-                    const logStatusInfo = statusMap[log.currentStatus] || { label: log.currentStatus, className: "pending" };
-
-                    return (
-                      <div className="dashboard-timeline-item" key={log.id}>
-                        <div
-                          className={`dashboard-timeline-dot ${isLatest ? "active" : "completed"}`}
-                          style={{
-                            backgroundColor: isLatest
-                              ? "var(--admin-primary)"
-                              : "var(--admin-success, #2E5A44)",
-                          }}
-                        />
-                        <div className="dashboard-timeline-time">
-                          {formatDateTime(log.createdAt)}
-                        </div>
-                        <div className="dashboard-timeline-title">
-                          {logStatusInfo.label}
-                        </div>
-                        {log.note && (
-                          <div className="dashboard-timeline-desc">{log.note}</div>
-                        )}
-                        {log.admin && (
-                          <div className="dashboard-timeline-user">Bởi: {log.admin}</div>
-                        )}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center text-sm text-[#6B4C35] py-4">
-                    Chưa có lịch sử trạng thái
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Timeline */}
+        <div className="dashboard-card" style={{ marginTop: "1.5rem" }}>
+          <div className="dashboard-card-header">
+            <h2 className="dashboard-card-title">Lịch sử trạng thái</h2>
           </div>
+          <div className="dashboard-card-body">
+            <div className="dashboard-timeline">
+              {order.historyLogs && order.historyLogs.length > 0 ? (
+                order.historyLogs.map((log, index) => {
+                  const isLatest = index === order.historyLogs.length - 1;
+                  const logStatusInfo = statusMap[log.currentStatus] || { label: log.currentStatus, className: "pending" };
 
-          {/* Update Status */}
-          <div className="dashboard-card">
-            <div className="dashboard-card-header">
-              <h2 className="dashboard-card-title">Cập nhật trạng thái</h2>
-            </div>
-            <div className="dashboard-card-body">
-              {isOrderCancelled ? (
-                <div
-                  className="p-4 text-center rounded-xl font-medium"
-                  style={{
-                    backgroundColor: "rgba(138, 17, 25, 0.08)",
-                    color: "var(--admin-primary)",
-                    border: "1px solid rgba(138, 17, 25, 0.15)",
-                  }}
-                >
-                  Đơn hàng đã bị hủy. Không thể thay đổi trạng thái của đơn hàng đã hủy.
-                </div>
+                  return (
+                    <div className="dashboard-timeline-item" key={log.id}>
+                      <div
+                        className={`dashboard-timeline-dot ${isLatest ? "active" : "completed"}`}
+                        style={{
+                          backgroundColor: isLatest
+                            ? "var(--admin-primary)"
+                            : "var(--admin-success, #2E5A44)",
+                        }}
+                      />
+                      <div className="dashboard-timeline-time">
+                        {formatDateTime(log.createdAt)}
+                      </div>
+                      <div className="dashboard-timeline-title">
+                        {logStatusInfo.label}
+                      </div>
+                      {log.note && (
+                        <div className="dashboard-timeline-desc">{log.note}</div>
+                      )}
+                      {log.admin && (
+                        <div className="dashboard-timeline-user">Bởi: {log.admin}</div>
+                      )}
+                    </div>
+                  );
+                })
               ) : (
-                <div className="space-y-4">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs uppercase tracking-wider font-bold text-[#6B4C35]">
-                      Trạng thái mới
-                    </label>
-                    <select
-                      className="orders-form-select"
-                      style={{
-                        width: "100%",
-                        height: "46px",
-                        background: "white",
-                        padding: "0 12px",
-                        borderColor: errors.newStatus ? "#6B1218" : undefined
-                      }}
-                      value={newStatus}
-                      onChange={(e) => {
-                        setNewStatus(e.target.value);
-                        if (errors.newStatus) setErrors((prev) => ({ ...prev, newStatus: "" }));
-                      }}
-                      disabled={isUpdating}
-                    >
-                      <option value="">Chọn trạng thái...</option>
-                      <option value="PENDING" disabled={currentDBStatus === "PENDING"}>
-                        Chờ xác nhận
-                      </option>
-                      <option value="PROCESSING" disabled={currentDBStatus === "PROCESSING"}>
-                        Đang xử lý
-                      </option>
-                      <option value="SHIPPED" disabled={currentDBStatus === "SHIPPED"}>
-                        Đang giao hàng
-                      </option>
-                      <option value="DELIVERED" disabled={currentDBStatus === "DELIVERED"}>
-                        Hoàn thành
-                      </option>
-                      <option value="CANCELLED">Đã hủy</option>
-                    </select>
-                    {errors.newStatus && (
-                      <p style={{ color: "#6B1218", fontSize: 12, marginTop: 4 }}>
-                        {errors.newStatus}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs uppercase tracking-wider font-bold text-[#6B4C35]">
-                      Ghi chú / Lý do {newStatus === "CANCELLED" && <span className="text-red-600">*</span>}
-                    </label>
-                    <textarea
-                      className="orders-form-input"
-                      style={{
-                        width: "100%",
-                        height: "90px",
-                        background: "white",
-                        padding: "10px 12px",
-                        resize: "vertical",
-                        borderColor: errors.statusNote ? "#6B1218" : undefined
-                      }}
-                      placeholder={
-                        newStatus === "CANCELLED"
-                          ? "Vui lòng nhập lý do hủy đơn hàng (bắt buộc)..."
-                          : "Nhập ghi chú cho lần cập nhật này (tùy chọn)..."
-                      }
-                      value={statusNote}
-                      onChange={(e) => {
-                        setStatusNote(e.target.value);
-                        if (errors.statusNote) setErrors((prev) => ({ ...prev, statusNote: "" }));
-                      }}
-                      disabled={isUpdating}
-                    />
-                    {errors.statusNote && (
-                      <p style={{ color: "#6B1218", fontSize: 12, marginTop: 4 }}>
-                        {errors.statusNote}
-                      </p>
-                    )}
-                  </div>
-
-                  <button
-                    className="dashboard-btn"
-                    style={{
-                      backgroundColor: "var(--admin-primary)",
-                      color: "#F5F0E8",
-                      border: "none",
-                      width: "100%",
-                      height: "46px",
-                      borderRadius: "10px",
-                      cursor: isUpdating ? "not-allowed" : "pointer",
-                      fontWeight: "bold",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "8px",
-                    }}
-                    onClick={handleUpdateStatus}
-                    disabled={isUpdating}
-                  >
-                    {isUpdating ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Đang cập nhật...
-                      </>
-                    ) : (
-                      <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="20,6 9,17 4,12" />
-                        </svg>
-                        Cập nhật trạng thái
-                      </>
-                    )}
-                  </button>
+                <div className="text-center text-sm text-[#6B4C35] py-4">
+                  Chưa có lịch sử trạng thái
                 </div>
               )}
             </div>

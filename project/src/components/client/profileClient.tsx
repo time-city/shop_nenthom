@@ -87,8 +87,9 @@ export default function ProfilePageContent({
 }: ProfilePageContentProps) {
   const { toast } = useToast();
   const router = useRouter();
-  const { updateUser, clearUser } = useUserStore();
-  const { clearCart } = useCartStore();
+  const updateUser = useUserStore((state) => state.updateUser);
+  const clearUser = useUserStore((state) => state.clearUser);
+  const clearCart = useCartStore((state) => state.clearCart);
 
   const [profile, setProfile] = useState<Required<ClientProfileUserData>>(
     initialUser ?? defaultUser,
@@ -138,6 +139,113 @@ export default function ProfilePageContent({
       cancelled = true;
     };
   }, [initialUser]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const hasSeenGuide = localStorage.getItem("hasSeenProfileGuide");
+    if (!hasSeenGuide) {
+      const startTour = async () => {
+        try {
+          const { driver } = await import("driver.js");
+          await import("driver.js/dist/driver.css");
+
+          const driverObj = driver({
+            showProgress: true,
+            nextBtnText: "Tiếp tục",
+            prevBtnText: "Quay lại",
+            doneBtnText: "Hoàn tất",
+            steps: [
+              {
+                element: "#fullname",
+                popover: {
+                  title: "Họ và Tên",
+                  description: "Nhập họ và tên đầy đủ của bạn để hiển thị trên hóa đơn và thông tin giao nhận.",
+                  side: "bottom",
+                  align: "start"
+                }
+              },
+              {
+                element: "#email",
+                popover: {
+                  title: "Địa chỉ Email",
+                  description: "Địa chỉ email dùng để đăng nhập và nhận thông báo về đơn hàng của bạn.",
+                  side: "bottom",
+                  align: "start"
+                }
+              },
+              {
+                element: "#phone",
+                popover: {
+                  title: "Số Điện Thoại",
+                  description: "Nhập số điện thoại liên hệ chính xác để giao nhận hàng.",
+                  side: "bottom",
+                  align: "start"
+                }
+              },
+              {
+                element: "#city",
+                popover: {
+                  title: "Tỉnh / Thành Phố",
+                  description: "Chọn Tỉnh / Thành phố nơi bạn sinh sống để tính toán phí vận chuyển phù hợp.",
+                  side: "bottom",
+                  align: "start"
+                }
+              },
+              {
+                element: "#address",
+                popover: {
+                  title: "Địa Chỉ Giao Hàng",
+                  description: "Ghi cụ thể địa chỉ nhận hàng của bạn (số nhà, đường, quận/huyện,...).",
+                  side: "top",
+                  align: "start"
+                }
+              },
+              {
+                element: "#zip",
+                popover: {
+                  title: "Mã Bưu Chính",
+                  description: "Mã bưu chính (ZIP code) được tự động điền dựa trên Tỉnh / Thành phố đã chọn.",
+                  side: "top",
+                  align: "start"
+                }
+              },
+              {
+                element: "#profile-submit-btn",
+                popover: {
+                  title: "Lưu Thay Đổi",
+                  description: "Nhấn nút này để hoàn tất và lưu các thông tin cập nhật.",
+                  side: "top",
+                  align: "start"
+                }
+              }
+            ],
+            onDestroyed: () => {
+              localStorage.setItem("hasSeenProfileGuide", "true");
+            },
+            onPopoverRender: (popover, { driver }) => {
+              if (!popover.footerButtons.querySelector(".driver-popover-skip-btn")) {
+                const skipBtn = document.createElement("button");
+                skipBtn.className = "driver-popover-btn driver-popover-skip-btn";
+                skipBtn.innerText = "Bỏ qua";
+                skipBtn.addEventListener("click", () => {
+                  driver.destroy();
+                });
+                popover.footerButtons.insertBefore(skipBtn, popover.footerButtons.firstChild);
+              }
+            }
+          });
+
+          window.setTimeout(() => {
+            driverObj.drive();
+          }, 600);
+        } catch (error) {
+          console.error("Failed to load driver.js:", error);
+        }
+      };
+      void startTour();
+    }
+  }, [isLoading]);
 
   const validateField = (field: keyof Required<ClientProfileUserData>, value: string): string => {
     const trimmed = value.trim();
@@ -378,6 +486,7 @@ export default function ProfilePageContent({
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <button
+                  id="profile-submit-btn"
                   type="submit"
                   disabled={isSaving}
                   className="rounded-full border-0 bg-[#6B1218] px-8 py-3.5 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_6px_24px_rgba(107,18,24,0.28)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-50 sm:px-10 sm:text-[0.8rem]"

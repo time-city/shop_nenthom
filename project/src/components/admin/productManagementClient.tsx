@@ -9,10 +9,12 @@ import {
  useState,
 } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
-import ModalDeleteConfirm from "@/src/components/admin/modalDeleteConfirm";
-import ModalEditProduct from "@/src/components/admin/modalEditProduct";
-import ModalProduct from "@/src/components/admin/modalProduct";
+import dynamic from "next/dynamic";
 import LoadingState from "@/src/components/ui/loadingState";
+import ModalDeleteConfirm from "@/src/components/admin/modalDeleteConfirm";
+
+const ModalProduct = dynamic(() => import("@/src/components/admin/modalProduct"), { ssr: false });
+const ModalEditProduct = dynamic(() => import("@/src/components/admin/modalEditProduct"), { ssr: false });
 import {
  AdminDeleteButton,
  AdminEditButton,
@@ -20,11 +22,13 @@ import {
 import type {
  AdminProductListItemInterface,
  AdminProductsSuccessResponseInterface,
+ AdminProductCategoryInterface,
 } from "@/src/interface/adminInterface";
 import {
  deleteProductAction,
  getProductsAction,
 } from "@/src/lib/action/product.action";
+import { getCategoriesAction } from "@/src/lib/action/category.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import type { AdminProductRow } from "@/src/lib/types/admin";
 
@@ -53,6 +57,7 @@ export default function ProductManagementClient() {
  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
  const [error, setError] = useState("");
  const [products, setProducts] = useState<AdminProductListItemInterface[]>([]);
+ const [categories, setCategories] = useState<AdminProductCategoryInterface[]>([]);
 
  const loadProducts = useCallback(async (cancelledRef?: { current: boolean }) => {
    setIsLoadingProducts(true);
@@ -89,6 +94,16 @@ export default function ProductManagementClient() {
      cancelled.current = true;
    };
  }, [loadProducts]);
+
+ useEffect(() => {
+   const loadCategories = async () => {
+     const result = await getCategoriesAction();
+     if ("success" in result && result.success) {
+       setCategories(result.categories);
+     }
+   };
+   void loadCategories();
+ }, [toast]);
 
  const stopRowClick = (event: MouseEvent<HTMLButtonElement>) => {
    event.stopPropagation();
@@ -200,7 +215,6 @@ export default function ProductManagementClient() {
                        className="transition hover:bg-[#6B1218]/[0.03]"
                      >
                         <td>
-                          {/* CHANGED: Hiển thị ảnh thực tế của sản phẩm thay vì luôn hiển thị span rỗng */}
                           <div className="product-table-thumb" aria-hidden="true">
                             {Array.isArray(product.images) && typeof product.images[0] === "string" && product.images[0] ? (
                               <Image
@@ -272,17 +286,19 @@ export default function ProductManagementClient() {
        </section>
      </div>
 
-     <ModalProduct
-       open={isModalOpen}
-       onClose={() => setIsModalOpen(false)}
-       onSave={loadProducts}
-     />
-     <ModalEditProduct
-       open={Boolean(editProduct)}
-       product={editProduct}
-       onClose={() => setEditProduct(null)}
-       onSave={loadProducts}
-     />
+      <ModalProduct
+        open={isModalOpen}
+        categories={categories}
+        onClose={() => setIsModalOpen(false)}
+        onSave={loadProducts}
+      />
+      <ModalEditProduct
+        open={Boolean(editProduct)}
+        product={editProduct}
+        categories={categories}
+        onClose={() => setEditProduct(null)}
+        onSave={loadProducts}
+      />
      <ModalDeleteConfirm
        open={Boolean(deleteProduct)}
        productName={deleteProduct?.name}

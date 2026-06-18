@@ -1152,6 +1152,52 @@ body.intro-ready footer {
   color: #6B1218;
 }
 
+.orders-action-btn-confirm {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(46, 90, 68, 0.35);
+  border-radius: 10px;
+  color: #2E5A44;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 34px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(46, 90, 68, 0.06);
+}
+
+.orders-action-btn-confirm:hover {
+  background: #2E5A44;
+  border-color: #2E5A44;
+  color: #F5F0E8;
+  transform: translateY(-1.5px) scale(1.06);
+  box-shadow: 0 6px 12px rgba(46, 90, 68, 0.25);
+}
+
+.orders-action-btn-cancel {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(138, 17, 25, 0.35);
+  border-radius: 10px;
+  color: #8A1119;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 34px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(138, 17, 25, 0.06);
+}
+
+.orders-action-btn-cancel:hover {
+  background: #8A1119;
+  border-color: #8A1119;
+  color: #F5F0E8;
+  transform: translateY(-1.5px) scale(1.06);
+  box-shadow: 0 6px 12px rgba(138, 17, 25, 0.25);
+}
+
 
 .orders-empty-state {
   color: #6B4C35;
@@ -1961,4 +2007,108 @@ body.intro-ready footer {
   text-align: right;
   font-weight: 500;
 }
+
+/* ============================================
+  Driver.js Custom Theme (Profile Tour)
+  ============================================ */
+.driver-popover {
+  background-color: #F8F0E4 !important;
+  color: #2C1810 !important;
+  border-radius: 16px !important;
+  border: 1.5px solid rgba(107, 78, 53, 0.2) !important;
+  box-shadow: 0 10px 30px rgba(44, 24, 16, 0.12) !important;
+  font-family: var(--font-sans), "DM Sans", sans-serif !important;
+  padding: 18px 20px !important;
+  max-width: 340px !important;
+}
+
+.driver-popover-title {
+  font-family: var(--font-serif), "Cormorant Garamond", serif !important;
+  color: #6B1218 !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 8px !important;
+  line-height: 1.2 !important;
+}
+
+.driver-popover-description {
+  color: #6B4C35 !important;
+  font-size: 0.92rem !important;
+  line-height: 1.6 !important;
+}
+
+.driver-popover-footer {
+  margin-top: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.driver-popover-progress-text {
+  color: #6B4C35/80 !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+}
+
+.driver-popover-btn {
+  border-radius: 999px !important;
+  padding: 8px 16px !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  transition: all 0.2s ease !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.driver-popover-next-btn {
+  background-color: #6B1218 !important;
+  color: #F5F0E8 !important;
+  border: none !important;
+}
+
+.driver-popover-next-btn:hover {
+  background-color: #4A0C10 !important;
+}
+
+.driver-popover-prev-btn {
+  background-color: transparent !important;
+  color: #6B4C35 !important;
+  border: 1.5px solid rgba(107, 78, 53, 0.25) !important;
+}
+
+.driver-popover-prev-btn:hover {
+  background-color: rgba(107, 78, 53, 0.06) !important;
+  color: #2C1810 !important;
+}
+
+.driver-popover-arrow {
+  border-color: #F8F0E4 !important;
+}
+
+.driver-popover-close-btn {
+  color: #2C1810/50 !important;
+  transition: color 0.2s ease !important;
+}
+
+.driver-popover-close-btn:hover {
+  color: #6B1218 !important;
+}
+
+.driver-popover-skip-btn {
+  background-color: transparent !important;
+  color: #6B4C35 !important;
+  border: none !important;
+  padding: 8px 12px !important;
+  margin-right: auto !important;
+}
+
+.driver-popover-skip-btn:hover {
+  color: #6B1218 !important;
+  background-color: rgba(107, 78, 53, 0.05) !important;
+}
+
+
 

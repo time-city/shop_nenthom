@@ -2,9 +2,17 @@
 
 
 import { useMemo, useState, useOptimistic, useTransition } from "react";
-import Box from "@mui/material/Box";
-import Modal from "@mui/material/Modal";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const DetailCardProductModal = dynamic(() => import("./detailCardProductModal"), { ssr: false });
+
+const getCloudinaryThumbnailUrl = (url: string) => {
+  if (url && url.includes("cloudinary.com") && url.includes("/upload/")) {
+    return url.replace("/upload/", "/upload/w_80,c_scale,q_auto,f_auto/");
+  }
+  return url;
+};
 import { useToast } from "@/src/components/ui/toast-provider";
 import { addToCartAction } from "../../lib/action/cart.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
@@ -203,7 +211,7 @@ export default function DetailCardProduct({
                      >
                        {/* eslint-disable-next-line @next/next/no-img-element */}
                        <img
-                         src={thumbnail}
+                         src={getCloudinaryThumbnailUrl(thumbnail)}
                          alt={
                            index === 0
                              ? `${product.name} - ảnh đại diện`
@@ -407,20 +415,9 @@ export default function DetailCardProduct({
   }
 
   return (
-    <Modal
-      open={open}
-      onClose={handleClose}
-      aria-labelledby="product-detail-title"
-      aria-describedby="product-detail-description"
-      className="px-4"
-    >
-      <Box
-        component="section"
-        className={styles.modalShell}
-      >
-        {innerContent}
-      </Box>
-    </Modal>
+    <DetailCardProductModal open={open} onClose={handleClose}>
+      {innerContent}
+    </DetailCardProductModal>
   );
 }
 
