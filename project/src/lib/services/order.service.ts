@@ -527,7 +527,7 @@ export const OrderService = {
 
     if (!order) throw new Error("Không tìm thấy đơn hàng phù hợp.");
     if (order.status === OrderStatus.CANCELLED) throw new Error("Đơn hàng đã bị hủy nên không thể cập nhật trạng thái.");
-    if (order.status === data.status) return OrderService.getOrderDetailForAdmin(data.order_number);
+    if (order.status !== OrderStatus.PENDING) return OrderService.getOrderDetailForAdmin(data.order_number);
 
 
     await prisma.$transaction([

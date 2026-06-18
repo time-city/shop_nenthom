@@ -162,13 +162,11 @@ export const UserService = {
             });
 
             return orders.map((order) => {
-                const statusText = order.status === "DELIVERED"
-                    ? "Hoàn thành"
-                    : order.status === "SHIPPED"
-                        ? "Đang giao"
-                        : order.status === "CANCELLED"
-                            ? "Đã hủy"
-                            : "Đang xử lý";
+                const statusText = order.status === "CANCELLED"
+                    ? "Đã huỷ"
+                    : order.status === "PENDING"
+                        ? "Đang xác nhận"
+                        : "Đã xác nhận";
 
 
                 return {
