@@ -53,6 +53,9 @@ export async function loginUser(data: LoginFormState) {
             id: user.id,
             role: user.role,
         });
+        const isNewUser = user.is_newUser
+            ? await AuthService.consumeNewUserFlag(user.id)
+            : false;
 
         return {
             success: true,
@@ -61,6 +64,7 @@ export async function loginUser(data: LoginFormState) {
                 fullname: user.fullname,
                 email: user.email,
                 role: user.role,
+                is_newUser: isNewUser,
             }
         };
     } catch (err) {
