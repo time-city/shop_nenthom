@@ -258,8 +258,6 @@ model Cart {
   user       User?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   items      CartItem[]
 
-  @@index([user_id])
-  @@index([session_id])
   @@map("carts")
   @@schema("public")
 }
@@ -331,6 +329,7 @@ model Order {
   history_logs      OrderHistoryLog[]
   discount_usages   DiscountUsage[]
 
+  @@index([user_id, created_at(sort: Desc)])
   @@index([status, created_at(sort: Desc)])
   @@index([shipping_phone])
   @@map("orders")
@@ -377,6 +376,7 @@ model OrderHistoryLog {
   order           Order  @relation(fields: [order_id], references: [id], onDelete: Cascade)
   admin           User?  @relation("AdminLogs", fields: [updated_by], references: [id])
 
+  @@index([order_id])
   @@map("order_history_logs")
   @@schema("public")
 }

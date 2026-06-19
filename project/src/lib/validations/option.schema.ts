@@ -1,7 +1,7 @@
 import z from "zod";
 
 export const scentSchema = z.object({
-    name: z.string().min(1, 'Tên mùi hương không được để trống'),
+    name: z.string().trim().min(1, 'Tên mùi hương không được để trống').toLowerCase(),
     price_extra_cents: z.coerce.number().min(0).default(0),
     is_active: z.boolean().default(true),
 });

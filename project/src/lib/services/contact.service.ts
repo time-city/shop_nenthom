@@ -24,7 +24,7 @@ export const ContactService = {
       }),
     }
 
-    const [contacts, total] = await prisma.$transaction([
+    const [contacts, total] = await Promise.all([
       prisma.contact.findMany({
         where,
         skip,

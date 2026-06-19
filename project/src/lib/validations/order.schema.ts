@@ -43,7 +43,7 @@ export const orderNumberSchema = z.object({
 
 export const updateOrderStatusSchema = orderNumberSchema.extend({
   note: z.string().trim().optional(),
-  status: z.enum(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED']),
+  status: z.literal('PROCESSING'),
 })
 
 export const cancelOrderSchema = z.object({
