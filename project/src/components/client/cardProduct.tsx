@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { CardProductProps } from "../../lib/types/client";
 import styles from "../../styles/cardProduct.module.css";
 
@@ -43,10 +44,12 @@ export default function CardProduct({
         className="product-image relative block w-full aspect-[4/5] overflow-hidden bg-[#FAF6F0] p-0 transition duration-300"
       >
         {imageUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
+          <Image
             src={imageUrl}
             alt={name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            loading="lazy"
             className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
           />
         ) : (

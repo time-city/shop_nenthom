@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, createContext, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { Suspense, createContext, useEffect, useState, useRef, useMemo, type Dispatch, type SetStateAction } from "react";
 import CollectionProducts from "@/src/components/client/collectionProducts";
 import type {
   ClientProductOptionItemInterface,
@@ -109,6 +109,8 @@ function CollectionClientInner({
     page,
   });
 
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
     setTimeout(() => {
       setSelectedFilter({ scentId, priceRange, search, page });
@@ -116,6 +118,10 @@ function CollectionClientInner({
   }, [scentId, priceRange, search, page]);
 
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     let cancelled = false;
 
     const timer = setTimeout(async () => {
@@ -163,19 +169,19 @@ function CollectionClientInner({
     };
   }, [selectedFilter, pageSize]);
 
+  const contextValue = useMemo(() => ({
+    products,
+    isLoading,
+    error,
+    setError,
+    selectedFilter,
+    setSelectedFilter,
+    meta,
+    setMeta,
+  }), [products, isLoading, error, selectedFilter, meta]);
+
   return (
-    <CollectionContext.Provider
-      value={{
-        products,
-        isLoading,
-        error,
-        setError,
-        selectedFilter,
-        setSelectedFilter,
-        meta,
-        setMeta,
-      }}
-    >
+    <CollectionContext.Provider value={contextValue}>
       <section
         id="collection"
         className="page-section collection-section fade-section bg-[#6B1218] px-4 py-16 text-[#F5F0E8] sm:px-6 lg:px-12"

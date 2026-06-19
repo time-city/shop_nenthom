@@ -101,13 +101,15 @@ export default function CollectionProducts({
  const setIsLoading = setLocalIsLoading;
  const setMeta = setLocalMeta;
 
+ const contextSearch = context?.selectedFilter.search;
+
  useEffect(() => {
-   if (context) {
+   if (contextSearch !== undefined) {
      setTimeout(() => {
-       setSearch(context.selectedFilter.search);
+       setSearch(contextSearch);
      }, 0);
    }
- }, [context?.selectedFilter.search, context]);
+ }, [contextSearch]);
 
 
  const totalPages = Math.max(meta.totalPages ?? 1, 1);

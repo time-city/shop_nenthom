@@ -9,6 +9,7 @@ export async function uploadToCloudinary(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", uploadPreset);
+  formData.append("transformation", "q_auto,f_auto");
 
   const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
     method: "POST",
@@ -20,5 +21,9 @@ export async function uploadToCloudinary(file: File): Promise<string> {
   }
 
   const data = await res.json();
-  return data.secure_url;
+  const secureUrl = data.secure_url;
+  if (secureUrl && secureUrl.includes("/upload/")) {
+    return secureUrl.replace("/upload/", "/upload/q_auto,f_auto/");
+  }
+  return secureUrl;
 }

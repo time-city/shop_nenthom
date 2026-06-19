@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans, Geist_Mono } from "next/font/google";
 import ToastProvider from "../components/ui/toast-provider";
-import AosProvider from "../components/ui/aos-provider";
 import StoreProvider from "../components/ui/storeProvider";
 import { getCurrentUser } from "../lib/action/user.action";
 import "./globals.css";
@@ -58,7 +57,6 @@ export default async function RootLayout({
        <StoreProvider>
         <ToastProvider>
           {children}
-          <AosProvider />
         </ToastProvider>
       </StoreProvider>
      </body>

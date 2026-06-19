@@ -6,7 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import CartItem from "@/src/components/client/cartItem";
-import ModalDeleteConfirm from "@/src/components/admin/modalDeleteConfirm";
+import dynamic from "next/dynamic";
+const ModalDeleteConfirmClient = dynamic(() => import("./modalDeleteConfirmClient"), { ssr: false });
 import CartSummary from "@/src/components/client/cartSummary";
 import CheckoutForm from "@/src/components/client/checkoutForm";
 import CheckoutSummary from "@/src/components/client/checkoutSummary";
@@ -61,7 +62,9 @@ const mapCartItem = (item: ClientCartActionItemInterface): ClientCartItem => ({
 export default function CartClient() {
   const router = useRouter();
   const { toast } = useToast();
-  const { setCartCount, setLastOrder, incrementOrderCount } = useCartStore();
+  const setCartCount = useCartStore((state) => state.setCartCount);
+  const setLastOrder = useCartStore((state) => state.setLastOrder);
+  const incrementOrderCount = useCartStore((state) => state.incrementOrderCount);
   const [cart, setCart] = useState<ClientCartItem[]>([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
@@ -74,7 +77,8 @@ export default function CartClient() {
   const [error, setError] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const pendingUpdatesRef = useRef<Record<string, NodeJS.Timeout>>({});
-  const { appliedDiscount, setAppliedDiscount } = useCartStore();
+  const appliedDiscount = useCartStore((state) => state.appliedDiscount);
+  const setAppliedDiscount = useCartStore((state) => state.setAppliedDiscount);
 
   const selectedCart = useMemo(
     () =>
@@ -536,7 +540,7 @@ export default function CartClient() {
         </div>
       </main>
 
-      <ModalDeleteConfirm
+      <ModalDeleteConfirmClient
         open={deleteIndex !== null}
         itemName={deleteIndex !== null ? (cart[deleteIndex]?.name ?? cart[deleteIndex]?.scent ?? "sản phẩm") : ""}
         isDeleting={isMutatingCart}
@@ -546,7 +550,7 @@ export default function CartClient() {
         onConfirm={handleConfirmDelete}
       />
 
-      <ModalDeleteConfirm
+      <ModalDeleteConfirmClient
         open={deleteSelectedOpen}
         itemName={
           selectedCart.length === 1
@@ -560,7 +564,7 @@ export default function CartClient() {
         onConfirm={handleConfirmDeleteSelected}
       />
 
-      <ModalDeleteConfirm
+      <ModalDeleteConfirmClient
         open={deleteAllOpen}
         description="Bạn có chắc muốn xóa tất cả sản phẩm khỏi giỏ hàng? Thao tác này không thể hoàn tác."
         isDeleting={isMutatingCart}

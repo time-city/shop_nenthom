@@ -53,7 +53,8 @@ export default function ModalEditProduct({
   onSave,
   open,
   product,
-}: AdminModalEditProductProps) {
+  categories: propCategories,
+}: AdminModalEditProductProps & { categories?: AdminProductCategoryInterface[] }) {
   const { toast } = useToast();
   const [categories, setCategories] = useState<AdminProductCategoryInterface[]>([]);
   const [formValues, setFormValues] = useState<AdminProductFormValues>(
@@ -96,6 +97,11 @@ export default function ModalEditProduct({
       setErrors({});
     }, 0);
 
+    if (propCategories && propCategories.length > 0) {
+      setCategories(propCategories);
+      return;
+    }
+
     const loadCategories = async () => {
       setIsLoadingCategories(true);
 
@@ -118,7 +124,7 @@ export default function ModalEditProduct({
     };
 
     void loadCategories();
-  }, [open, product, toast]);
+  }, [open, product, toast, propCategories]);
 
   const updateField = (
     field: keyof AdminProductFormValues,

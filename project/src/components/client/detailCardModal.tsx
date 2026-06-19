@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getProductDetailsAction } from "../../lib/action/product.action";
 import DetailCardProduct from "./detailCardProduct";
@@ -23,8 +23,9 @@ export default function DetailCardModal({
  const productId = searchParams.get("productId");
  const pathname = usePathname();
  const router = useRouter();
-  const [product, setProduct] = useState<ClientProductDetailInterface | null>(null);
+ const [product, setProduct] = useState<ClientProductDetailInterface | null>(null);
  const [loading, setLoading] = useState(false);
+ const cacheRef = useRef<Map<string, ClientProductDetailInterface>>(new Map());
 
 
  useEffect(() => {
@@ -34,6 +35,12 @@ export default function DetailCardModal({
    const timerId = window.setTimeout(() => {
      if (!productId) {
        setProduct(null);
+       setLoading(false);
+       return;
+     }
+
+     if (cacheRef.current.has(productId)) {
+       setProduct(cacheRef.current.get(productId)!);
        setLoading(false);
        return;
      }
@@ -63,6 +70,7 @@ export default function DetailCardModal({
                waxColors: options.waxColors ?? options.colors ?? [],
              },
            };
+           cacheRef.current.set(productId, p);
            setProduct(p);
        } else {
            setProduct(null);
