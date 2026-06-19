@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const createCategorySchema = z.object({
-    name: z.string().min(1, 'Tên danh mục không được để trống'),
+    name: z.string().trim().min(1, 'Tên danh mục không được để trống').toLowerCase(),
     description: z.string().optional(),
     is_active: z.boolean().default(true),
 });

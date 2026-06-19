@@ -1,4 +1,5 @@
 'use server'
+import { cache } from "react";
 import { requireAdmin } from "../requireAdmin";
 import { getSession } from "../session";
 import { UpdateProfileFormState, updateProfileSchema } from "../validations/user.schema";
@@ -35,16 +36,20 @@ export async function updateProfileAction(data: UpdateProfileFormState) {
 }
 
 
-export async function getAllUsersAction() {
+export async function getAllUsersAction(
+    params: { page?: number; limit?: number } = {},
+) {
     const admin = await requireAdmin();
     if ("error" in admin) return admin;
 
+    const page = Math.max(Math.trunc(params.page ?? 1), 1);
+    const limit = Math.min(Math.max(Math.trunc(params.limit ?? 100), 1), 100);
 
     try {
-        const users = await UserService.getAllUsers();
+        const users = await UserService.getAllUsers(page, limit);
         return {
             success: true,
-            data: users.map(user => ({
+            data: users.data.map(user => ({
                 id: user.id,
                 name: user.fullname || "Chưa đặt tên",
                 email: user.email,
@@ -52,7 +57,8 @@ export async function getAllUsersAction() {
                 role: user.role,
                 isActive: user.status === "ACTIVE",
                 createdAt: user.created_at.toLocaleDateString("vi-VN"),
-            }))
+            })),
+            meta: users.meta,
         };
     } catch (err) {
         return { error: (err as Error).message };
@@ -89,27 +95,31 @@ export async function toggleUserRoleAction(userId: string) {
 
 
 
-export async function getUserOrdersAction(userId: string) {
+export async function getUserOrdersAction(
+    userId: string,
+    params: { page?: number; limit?: number } = {},
+) {
     const admin = await requireAdmin();
     if ("error" in admin) return admin;
 
+    const page = Math.max(Math.trunc(params.page ?? 1), 1);
+    const limit = Math.min(Math.max(Math.trunc(params.limit ?? 10), 1), 50);
 
     try {
-        const orders = await UserService.getUserOrders(userId);
-        return { success: true, data: orders };
+        const orders = await UserService.getUserOrders(userId, page, limit);
+        return { success: true, ...orders };
     } catch (err) {
         return { error: (err as Error).message };
     }
 }
 
 
-export async function getCurrentUser() {
+const getCurrentUserForRequest = cache(async () => {
     const session = await getSession();
 
     if (!session?.sub) {
         return null;
     }
-
     const user = await prisma.user.findUnique({
         where: { id: session.sub },
         select: {
@@ -149,4 +159,8 @@ export async function getCurrentUser() {
         city: defaultAddress?.city ?? "",
         postal_code: defaultAddress?.postal_code ?? "",
     };
+});
+
+export async function getCurrentUser() {
+    return getCurrentUserForRequest();
 }
