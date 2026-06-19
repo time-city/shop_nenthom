@@ -54,7 +54,7 @@ export type AdminModalIngredientProps = {
   onClose: () => void;
   onSave?: (
     values: AdminIngredientFormValues,
-  ) => boolean | Promise<boolean | void> | void;
+  ) => boolean | string | Promise<boolean | string | void> | void;
   open: boolean;
 };
 
@@ -66,7 +66,7 @@ export type AdminModalEditIngredientProps = {
   onSave?: (
     item: AdminIngredientItem,
     values: AdminIngredientFormValues,
-  ) => boolean | Promise<boolean | void> | void;
+  ) => boolean | string | Promise<boolean | string | void> | void;
   open: boolean;
 };
 

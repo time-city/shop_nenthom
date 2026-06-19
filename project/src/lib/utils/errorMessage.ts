@@ -17,13 +17,72 @@ export function getFriendlyErrorByStatus(status: number | string): string {
   return "Đã có lỗi xảy ra, vui lòng thử lại sau";
 }
 
+export function isUserInputError(message?: string): boolean {
+  if (!message) return false;
+
+  const normalized = message.toLowerCase();
+  const systemSignals = [
+    "máy chủ",
+    "server",
+    "kết nối",
+    "network",
+    "fetch",
+    "econnrefused",
+    "sự cố",
+    "upload thất bại",
+    "tải ảnh thất bại",
+  ];
+
+  if (systemSignals.some((signal) => normalized.includes(signal))) {
+    return false;
+  }
+
+  return [
+    "vui lòng",
+    "không hợp lệ",
+    "không còn khả dụng",
+    "không chính xác",
+    "không đúng",
+    "chưa đúng",
+    "không khớp",
+    "đã tồn tại",
+    "đã được sử dụng",
+    "đã hết hạn",
+    "hết lượt",
+    "đã sử dụng",
+    "tối đa",
+    "tối thiểu",
+    "vượt quá",
+    "không được để trống",
+    "cần ít nhất",
+    "email này chưa được đăng ký",
+  ].some((signal) => normalized.includes(signal));
+}
+
 function mapMessage(msg: string): string {
+  const m = msg.toLowerCase();
+
+  if (
+    (m.includes("unique constraint") || m.includes("p2002")) &&
+    (m.includes("(`phone`)") || m.includes("fields: (`phone`)"))
+  ) {
+    return "Số điện thoại đã tồn tại";
+  }
+  if (
+    (m.includes("unique constraint") || m.includes("p2002")) &&
+    (m.includes("(`email`)") || m.includes("fields: (`email`)"))
+  ) {
+    return "Email đã tồn tại";
+  }
+  if (m.includes("email đã tồn tại")) return "Email đã tồn tại";
+  if (m.includes("số điện thoại đã tồn tại")) {
+    return "Số điện thoại đã tồn tại";
+  }
+
   // Nếu là câu thông báo tiếng Việt có dấu tự định nghĩa từ BE, ta giữ nguyên để hiển thị cho thân thiện
   if (/[àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/i.test(msg)) {
     return msg;
   }
-
-  const m = msg.toLowerCase();
 
   // Auth
   if (m.includes("password") || m.includes("credentials") || m.includes("unauthorized"))

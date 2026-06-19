@@ -9,7 +9,10 @@ import Typography from "@mui/material/Typography";
 import { startTransition, useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { createCategoryAction } from "../../lib/action/category.action";
-import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import {
+  getFriendlyResponseError,
+  isUserInputError,
+} from "@/src/lib/utils/errorMessage";
 import type {
   AdminCategoryFormValues,
   AdminModalCategoryProps,
@@ -75,7 +78,12 @@ export default function ModalCategory({
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
+        const message = getFriendlyResponseError(result.error);
+        if (isUserInputError(message)) {
+          setErrors({ name: message });
+        } else {
+          toast.error(message);
+        }
         return;
       }
 

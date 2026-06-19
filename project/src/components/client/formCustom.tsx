@@ -201,6 +201,7 @@ export default function FormCustom({
 
 
    const [isAddingToCart, setIsAddingToCart] = useState(false);
+   const [cartError, setCartError] = useState("");
 
 
 
@@ -211,6 +212,7 @@ export default function FormCustom({
 
    const handleAddToCart = async () => {
        if (isAddingToCart) return;
+       setCartError("");
 
 
 
@@ -247,7 +249,7 @@ export default function FormCustom({
 
 
            if ("error" in result && result.error) {
-               toast.error(getFriendlyResponseError(result.error));
+               setCartError(getFriendlyResponseError(result.error));
                return;
            }
 
@@ -648,6 +650,11 @@ export default function FormCustom({
                            >
                                {isAddingToCart ? "Đang thêm..." : "Thêm vào giỏ"}
                            </button>
+                           {cartError && (
+                               <p className="mt-3 text-sm font-medium text-[#6B1218]">
+                                   {cartError}
+                               </p>
+                           )}
                        </div>
                    </div>
                </div>
@@ -655,7 +662,6 @@ export default function FormCustom({
        </section>
    );
 }
-
 
 
 

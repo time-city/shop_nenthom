@@ -32,13 +32,16 @@ export default function CartSummary({
 
   const total = Math.max(optimisticSubtotal - discountAmount, 0);
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!promoInput.trim()) {
       setPromoError("Vui lòng nhập mã khuyến mãi.");
       return;
     }
     setPromoError("");
-    onApplyPromo(promoInput);
+    const result = await onApplyPromo(promoInput);
+    if (result && !result.success && result.error) {
+      setPromoError(result.error);
+    }
   };
 
   return (

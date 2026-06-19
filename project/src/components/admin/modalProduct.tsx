@@ -20,7 +20,10 @@ import type {
 } from "../../interface/adminInterface";
 import { getCategoriesAction } from "../../lib/action/category.action";
 import { createProductAction } from "../../lib/action/product.action";
-import { getFriendlyError, getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import {
+  getFriendlyResponseError,
+  isUserInputError,
+} from "@/src/lib/utils/errorMessage";
 import { uploadToCloudinary } from "@/src/lib/utils/uploadImage"; // CHANGED: Import uploadToCloudinary
 import type {
   AdminModalProductProps,
@@ -67,15 +70,19 @@ export default function ModalProduct({
   useEffect(() => {
     if (!open) return;
 
-    setFormValues(initialProductFormValues);
-    setAvatarUrl("");
-    setSubImageUrls([]);
-    setIsSubmitting(false);
-    setErrors({});
+    const resetTimer = window.setTimeout(() => {
+      setFormValues(initialProductFormValues);
+      setAvatarUrl("");
+      setSubImageUrls([]);
+      setIsSubmitting(false);
+      setErrors({});
+      if (propCategories && propCategories.length > 0) {
+        setCategories(propCategories);
+      }
+    }, 0);
 
     if (propCategories && propCategories.length > 0) {
-      setCategories(propCategories);
-      return;
+      return () => window.clearTimeout(resetTimer);
     }
 
     const loadCategories = async () => {
@@ -100,6 +107,7 @@ export default function ModalProduct({
     };
 
     void loadCategories();
+    return () => window.clearTimeout(resetTimer);
   }, [open, toast, propCategories]);
 
   const updateField = (
@@ -141,7 +149,7 @@ export default function ModalProduct({
     try {
       const url = await uploadToCloudinary(file);
       setAvatarUrl(url);
-    } catch (error) {
+    } catch {
       toast.error("Tải ảnh đại diện thất bại");
       setErrors((prev) => ({ ...prev, avatar: "Upload thất bại" }));
     } finally {
@@ -160,7 +168,10 @@ export default function ModalProduct({
     const fileList = Array.from(files);
 
     if (fileList.length > 3) {
-      toast.error("Chỉ được chọn tối đa 3 ảnh phụ");
+      setErrors((prev) => ({
+        ...prev,
+        sub_images: "Chỉ được chọn tối đa 3 ảnh phụ",
+      }));
       event.target.value = "";
       return;
     }
@@ -185,7 +196,7 @@ export default function ModalProduct({
       const uploadPromises = fileList.map((file) => uploadToCloudinary(file));
       const urls = await Promise.all(uploadPromises);
       setSubImageUrls(urls);
-    } catch (error) {
+    } catch {
       toast.error("Tải ảnh phụ thất bại");
       setErrors((prev) => ({ ...prev, sub_images: "Upload thất bại" }));
     } finally {
@@ -262,7 +273,20 @@ export default function ModalProduct({
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
+        const message = getFriendlyResponseError(result.error);
+        if (isUserInputError(message)) {
+          const field = message.toLowerCase().includes("danh mục")
+            ? "category_id"
+            : message.toLowerCase().includes("tên sản phẩm")
+              ? "name"
+              : "form";
+          setErrors((currentErrors) => ({
+            ...currentErrors,
+            [field]: message,
+          }));
+        } else {
+          toast.error(message);
+        }
         return;
       }
 
@@ -511,6 +535,9 @@ export default function ModalProduct({
               </p>
             )}
           </Box>
+          {errors.form && (
+            <FormHelperText error>{errors.form}</FormHelperText>
+          )}
         </Box>
 
         <Divider className={styles.divider} />

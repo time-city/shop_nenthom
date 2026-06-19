@@ -66,7 +66,6 @@ export default function FormForgotPassword() {
     if (!result.success) {
       const message = result.error ? getFriendlyResponseError(result.error) : "Không thể gửi mã OTP";
       setErrorMessage(message);
-      toast.error(message);
       actions.setSubmitting(false);
       return;
     }

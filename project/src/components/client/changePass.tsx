@@ -65,7 +65,12 @@ export default function ModalChangePassword({ open, onClose }: ModalChangePasswo
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
+        const message = getFriendlyResponseError(result.error);
+        if (message.toLowerCase().includes("mật khẩu hiện tại")) {
+          setErrors({ currentPassword: message });
+        } else {
+          setErrors({ form: message });
+        }
       } else {
         toast.success("Mật khẩu đã được cập nhật thành công!");
         onClose();
@@ -134,6 +139,10 @@ export default function ModalChangePassword({ open, onClose }: ModalChangePasswo
               <span className="text-xs text-[#6B1218] font-medium">{errors.confirmPassword}</span>
             )}
           </div>
+
+          {errors.form && (
+            <p className="text-xs font-medium text-[#6B1218]">{errors.form}</p>
+          )}
 
           <div className="mt-4 flex items-center justify-end gap-3">
             <button

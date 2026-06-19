@@ -12,7 +12,10 @@ import Typography from "@mui/material/Typography";
 import { startTransition, useEffect, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { createDiscountAction } from "../../lib/action/discount.action";
-import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import {
+  getFriendlyResponseError,
+  isUserInputError,
+} from "@/src/lib/utils/errorMessage";
 import type {
   AdminDiscountFormValues,
   AdminModalDiscountProps,
@@ -110,7 +113,12 @@ export default function ModalDiscount({
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
+        const message = getFriendlyResponseError(result.error);
+        if (isUserInputError(message)) {
+          setErrors({ code: message });
+        } else {
+          toast.error(message);
+        }
         return;
       }
 

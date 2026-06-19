@@ -13,7 +13,10 @@ import { useToast } from "@/src/components/ui/toast-provider";
 import { z } from "zod";
 import { registerUser } from "../../lib/action/auth.action";
 import type { SignUpValues } from "../../lib/types/client";
-import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import {
+  getFriendlyResponseError,
+  isUserInputError,
+} from "@/src/lib/utils/errorMessage";
 
 const initialValues: SignUpValues = {
   fullname: "",
@@ -122,6 +125,32 @@ export default function FormSignUp() {
 
     if (!result.success) {
       const message = result.error ? getFriendlyResponseError(result.error) : "Đăng ký thất bại";
+      const normalizedMessage = message.toLowerCase();
+      const isDuplicateEmail =
+        normalizedMessage.includes("email") &&
+        normalizedMessage.includes("tồn tại");
+
+      if (isDuplicateEmail) {
+        actions.setFieldError("email", "Email đã tồn tại");
+        actions.setFieldTouched("email", true, false);
+        actions.setSubmitting(false);
+        return;
+      }
+
+      if (isUserInputError(message)) {
+        const field = normalizedMessage.includes("số điện thoại")
+          ? "phone"
+          : normalizedMessage.includes("họ")
+            ? "fullname"
+            : normalizedMessage.includes("mật khẩu")
+              ? "password"
+              : "email";
+        actions.setFieldError(field, message);
+        actions.setFieldTouched(field, true, false);
+        actions.setSubmitting(false);
+        return;
+      }
+
       toast.error(message);
       actions.setSubmitting(false);
       return;

@@ -99,6 +99,7 @@ export default function ProfilePageContent({
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -275,6 +276,7 @@ export default function ProfilePageContent({
 
   const updateField = (field: keyof Required<ClientProfileUserData>, value: string) => {
     setProfile((current) => ({ ...current, [field]: value }));
+    setSaveError("");
 
     if (errors[field]) {
       const errorMsg = validateField(field, value);
@@ -310,6 +312,7 @@ export default function ProfilePageContent({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setSaveError("");
 
     const newErrors: Partial<Record<keyof Required<ClientProfileUserData>, string>> = {};
     const fieldsToValidate: Array<keyof Required<ClientProfileUserData>> = ["fullname", "email", "phone"];
@@ -341,7 +344,15 @@ export default function ProfilePageContent({
     }).then((res) => {
       setIsSaving(false);
       if ("error" in res && res.error) {
-        toast.error(getFriendlyResponseError(res.error));
+        const message = getFriendlyResponseError(res.error);
+        if (message.toLowerCase().includes("số điện thoại")) {
+          setErrors((currentErrors) => ({
+            ...currentErrors,
+            phone: message,
+          }));
+        } else {
+          setSaveError(message);
+        }
       } else {
         // Lưu thông tin mới vào Zustand store
         updateUser({
@@ -483,6 +494,12 @@ export default function ProfilePageContent({
                   className="md:col-span-2"
                 />
               </div>
+
+              {saveError && (
+                <p className="mt-5 text-sm font-medium text-[#6B1218]">
+                  {saveError}
+                </p>
+              )}
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <button

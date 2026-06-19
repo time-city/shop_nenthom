@@ -181,7 +181,7 @@ export type CartItemProps = {
 /** Props khối tổng tóm tắt đơn ở trang giỏ hàng. */
 export type CartSummaryProps = {
   disabled?: boolean;
-  onApplyPromo: (code: string) => void;
+  onApplyPromo: (code: string) => Promise<{ success: boolean; error?: string }>;
   onCheckout: () => void;
   subtotal: number;
   appliedDiscountCode?: string;
