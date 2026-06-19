@@ -186,7 +186,7 @@ function CollectionClientInner({
         id="collection"
         className="page-section collection-section fade-section bg-[#6B1218] px-4 py-16 text-[#F5F0E8] sm:px-6 lg:px-12"
       >
-        <div className="mx-auto w-full max-w-[1880px]">
+        <div className="mx-auto w-full max-w-[1880px]" suppressHydrationWarning>
           <div
             className="collection-header mx-auto max-w-2xl text-center"
             suppressHydrationWarning

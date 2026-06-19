@@ -128,6 +128,10 @@ export default function FormSignIn() {
     toast.success(message);
     void useCartStore.getState().fetchCartCount();
 
+    if (result.user?.is_newUser) {
+      localStorage.removeItem("hasSeenProfileGuide");
+    }
+
     const redirect = new URLSearchParams(window.location.search).get("redirect");
     const targetPath =
       result.user?.role === "ADMIN"

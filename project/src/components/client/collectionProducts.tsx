@@ -31,15 +31,18 @@ type CollectionProductsClientProps = {
 
 
 const getAvatarImage = (images: unknown) => {
- if (Array.isArray(images)) {
-   return images.find(
-     (image): image is string => typeof image === "string" && image.length > 0,
-   ) ?? "";
- }
- if (typeof images === "string") {
-   return images;
- }
- return "";
+  let rawUrl = "";
+  if (Array.isArray(images)) {
+    rawUrl = images.find(
+      (image): image is string => typeof image === "string" && image.length > 0,
+    ) ?? "";
+  } else if (typeof images === "string") {
+    rawUrl = images;
+  }
+  if (rawUrl && rawUrl.includes("cloudinary.com") && rawUrl.includes("/upload/")) {
+    return rawUrl.replace("/upload/", "/upload/w_400,c_scale,q_auto,f_auto/");
+  }
+  return rawUrl;
 };
 
 
@@ -226,10 +229,11 @@ export default function CollectionProducts({
  return (
    <>
      <form
+       suppressHydrationWarning
        onSubmit={handleSubmitSearch}
        className="collection-filters mt-16 grid gap-4 rounded-lg border border-[#F5F0E8]/8 bg-[#8B363A]/80 p-4 shadow-[0_18px_48px_rgba(44,8,12,0.22)] sm:p-5 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end"
      >
-       <div className="filter-group">
+       <div className="filter-group" suppressHydrationWarning>
          <label
            htmlFor="scent-filter"
            className="mb-3 block text-[0.7rem] uppercase tracking-[0.14em] text-[#F5F0E8]"
@@ -257,7 +261,7 @@ export default function CollectionProducts({
        </div>
 
 
-       <div className="filter-group">
+       <div className="filter-group" suppressHydrationWarning>
          <label
            htmlFor="price-filter"
            className="mb-3 block text-[0.7rem] uppercase tracking-[0.14em] text-[#F5F0E8]"
@@ -284,7 +288,7 @@ export default function CollectionProducts({
        </div>
 
 
-       <div className="filter-group">
+       <div className="filter-group" suppressHydrationWarning>
          <label
            htmlFor="search-filter"
            className="mb-3 block text-[0.7rem] uppercase tracking-[0.14em] text-[#F5F0E8]"
@@ -303,7 +307,7 @@ export default function CollectionProducts({
        </div>
 
 
-       <div className="flex gap-2">
+       <div className="flex gap-2" suppressHydrationWarning>
          <button
            type="submit"
            className="h-12 rounded-md border border-[#F5F0E8]/30 bg-transparent px-5 text-[0.72rem] font-medium uppercase tracking-[0.12em] text-[#F5F0E8] transition hover:bg-[#F5F0E8] hover:text-[#7A1218]"
