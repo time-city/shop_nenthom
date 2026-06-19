@@ -129,6 +129,7 @@ const getCurrentUserForRequest = cache(async () => {
             phone: true,
             role: true,
             status: true,
+            is_newUser: true,
         },
     });
 
@@ -155,6 +156,7 @@ const getCurrentUserForRequest = cache(async () => {
         phone: user.phone,
         role: user.role,
         status: user.status,
+        is_newUser: user.is_newUser,
         address: defaultAddress?.address ?? "",
         city: defaultAddress?.city ?? "",
         postal_code: defaultAddress?.postal_code ?? "",

@@ -71,6 +71,7 @@ model User {
   status           UserStatus @default(ACTIVE)
   fullname         String?
   phone            String?  @unique
+  is_newUser       Boolean  @default(false)
   reset_otp_version Int     @default(0)
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt

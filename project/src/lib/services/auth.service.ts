@@ -28,6 +28,7 @@ export const AuthService = {
                 password_hash: hashPassword,
                 phone: data.phone,
                 status: 'ACTIVE',
+                is_newUser: true,
             },
             select: {
                 id: true,
@@ -35,6 +36,7 @@ export const AuthService = {
                 email: true,
                 phone: true,
                 status: true,
+                is_newUser: true,
             }
         });
         return user;
@@ -53,6 +55,7 @@ export const AuthService = {
                 phone: true,
                 role: true,
                 status: true,
+                is_newUser: true,
                 password_hash: true,
             },
         });
@@ -71,7 +74,22 @@ export const AuthService = {
             phone: user.phone,
             role: user.role,
             status: user.status,
+            is_newUser: user.is_newUser,
         };
+    },
+
+    async consumeNewUserFlag(userId: string) {
+        const updated = await prisma.user.updateMany({
+            where: {
+                id: userId,
+                is_newUser: true,
+            },
+            data: {
+                is_newUser: false,
+            },
+        });
+
+        return updated.count === 1;
     },
 
     async requestPasswordReset(data: ForgotPasswordInput) {
