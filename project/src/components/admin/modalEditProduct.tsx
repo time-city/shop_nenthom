@@ -20,7 +20,10 @@ import type {
 } from "../../interface/adminInterface";
 import { getCategoriesAction } from "../../lib/action/category.action";
 import { updateProductAction } from "../../lib/action/product.action";
-import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import {
+  getFriendlyResponseError,
+  isUserInputError,
+} from "@/src/lib/utils/errorMessage";
 import { uploadToCloudinary } from "@/src/lib/utils/uploadImage";
 import type {
   AdminModalEditProductProps,
@@ -98,7 +101,7 @@ export default function ModalEditProduct({
     }, 0);
 
     if (propCategories && propCategories.length > 0) {
-      setCategories(propCategories);
+      setTimeout(() => setCategories(propCategories), 0);
       return;
     }
 
@@ -290,7 +293,20 @@ export default function ModalEditProduct({
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
+        const message = getFriendlyResponseError(result.error);
+        if (isUserInputError(message)) {
+          const field = message.toLowerCase().includes("danh mục")
+            ? "category_id"
+            : message.toLowerCase().includes("tên sản phẩm")
+              ? "name"
+              : "form";
+          setErrors((currentErrors) => ({
+            ...currentErrors,
+            [field]: message,
+          }));
+        } else {
+          toast.error(message);
+        }
         return;
       }
 
@@ -540,6 +556,9 @@ export default function ModalEditProduct({
               </p>
             )}
           </Box>
+          {errors.form && (
+            <FormHelperText error>{errors.form}</FormHelperText>
+          )}
         </Box>
 
         <Divider className={styles.divider} />

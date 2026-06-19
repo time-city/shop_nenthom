@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
-import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import {
+  getFriendlyResponseError,
+  isUserInputError,
+} from "@/src/lib/utils/errorMessage";
 import CartItem from "@/src/components/client/cartItem";
 import dynamic from "next/dynamic";
 const ModalDeleteConfirmClient = dynamic(() => import("./modalDeleteConfirmClient"), { ssr: false });
@@ -306,9 +309,9 @@ export default function CartClient() {
     }
   };
 
-  const applyPromo = async (code: string) => {
+  const applyPromo = async (code: string): Promise<{ success: boolean; error?: string }> => {
     if (!code.trim()) {
-      return;
+      return { success: false, error: "Vui lòng nhập mã khuyến mãi." };
     }
 
     try {
@@ -327,19 +330,23 @@ export default function CartClient() {
           setTimeout(() => {
             router.push("/login?redirect=/cart");
           }, 1500);
-          return;
+          return { success: false };
         }
-        toast.error(getFriendlyResponseError(response.error));
         setAppliedDiscount(null);
-        return;
+        return { success: false, error: getFriendlyResponseError(response.error) };
       }
 
       if (response.success && response.data) {
-        toast.success("Áp dụng mã khuyến mãi thành công!");
         setAppliedDiscount(response.data);
+        return { success: true };
       }
+      return { success: false, error: "Mã khuyến mãi không hợp lệ." };
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Đã xảy ra lỗi khi áp dụng mã khuyến mãi");
+      setAppliedDiscount(null);
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Đã xảy ra lỗi khi áp dụng mã khuyến mãi",
+      };
     }
   };
 
@@ -377,7 +384,13 @@ export default function CartClient() {
       });
 
       if ("error" in response && response.error) {
-        toast.error(getFriendlyResponseError(response.error));
+        const message = getFriendlyResponseError(response.error);
+        if (isUserInputError(message)) {
+          setError(message);
+          setStep("cart");
+        } else {
+          toast.error(message);
+        }
         return;
       }
 

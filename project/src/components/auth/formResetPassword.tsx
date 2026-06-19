@@ -90,7 +90,7 @@ export default function FormResetPassword() {
 
   const handleResendOtp = async () => {
     if (!email) {
-      toast.error("Không tìm thấy email đăng ký");
+      setErrorMessage("Không tìm thấy email đăng ký");
       return;
     }
     setIsResending(true);
@@ -104,7 +104,11 @@ export default function FormResetPassword() {
           sessionStorage.setItem(resetTokenKey, result.data.token);
         }
       } else {
-        toast.error(result.error ? getFriendlyResponseError(result.error) : "Gửi lại OTP thất bại");
+        setErrorMessage(
+          result.error
+            ? getFriendlyResponseError(result.error)
+            : "Gửi lại OTP thất bại",
+        );
       }
     } catch {
       toast.error("Có lỗi xảy ra khi gửi lại OTP");
@@ -193,7 +197,6 @@ export default function FormResetPassword() {
     if (!email || !token) {
       const message = "Phiên đặt lại mật khẩu không hợp lệ";
       setErrorMessage(message);
-      toast.error(message);
       actions.setSubmitting(false);
       return;
     }
@@ -209,7 +212,6 @@ export default function FormResetPassword() {
     if (!result.success) {
       const message = result.error ? getFriendlyResponseError(result.error) : "OTP sai hoặc đã hết hạn";
       setErrorMessage(message);
-      toast.error(message);
       actions.setSubmitting(false);
       return;
     }

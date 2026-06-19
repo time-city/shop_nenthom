@@ -55,7 +55,7 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
     if (!user) return null;
 
     return (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div className="bg-[#F8F0E4] rounded-2xl w-full max-w-2xl overflow-hidden border border-[#6B4E35]/20 shadow-2xl animate-dropdown-slide-down">
                 {/* Modal Header */}
                 <div className="bg-[#6B1218] px-6 py-4 flex items-center justify-between">

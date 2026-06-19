@@ -21,7 +21,9 @@ export default function ModalContact() {
   const { incrementUnread } = useSupportStore();
   const [formValues, setFormValues] =
     useState<ClientContactFormValues>(initialValues);
-  const [errors, setErrors] = useState<Partial<Record<keyof ClientContactFormValues, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof ClientContactFormValues | "form", string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -135,7 +137,10 @@ export default function ModalContact() {
       const result = await submitContactAction(values);
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
+        setErrors((currentErrors) => ({
+          ...currentErrors,
+          form: getFriendlyResponseError(result.error),
+        }));
         return;
       }
 
@@ -252,6 +257,9 @@ export default function ModalContact() {
       >
         {isSubmitting ? "Đang gửi..." : "Gửi Tin Nhắn"}
       </button>
+      {errors.form && (
+        <p className="text-xs font-medium text-[#6B1218]">{errors.form}</p>
+      )}
     </form>
   );
 }

@@ -35,6 +35,7 @@ export default function ModalEditIngre({
   const [inStock, setInStock] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [weightGram, setWeightGram] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const nameLabel = useMemo(() => {
     if (ingredientType === "color") return "Tên màu";
@@ -55,12 +56,30 @@ export default function ModalEditIngre({
       setInStock(item.in_stock ?? true);
       setIsSaving(false);
       setWeightGram(String(item.weight_gram ?? ""));
+      setErrors({});
     });
   }, [item]);
 
   const handleSave = async () => {
     if (!item || isSaving) return;
 
+    const nextErrors: Record<string, string> = {};
+    if (!name.trim()) nextErrors.name = "Vui lòng nhập tên nguyên liệu";
+    if (price && (!Number.isFinite(Number(price)) || Number(price) < 0)) {
+      nextErrors.price = "Giá cộng thêm không hợp lệ";
+    }
+    if (
+      ingredientType === "size" &&
+      (!weightGram || !Number.isFinite(Number(weightGram)) || Number(weightGram) <= 0)
+    ) {
+      nextErrors.weightGram = "Khối lượng không hợp lệ";
+    }
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors({});
     const values = {
       hex,
       in_stock: inStock,
@@ -85,6 +104,10 @@ export default function ModalEditIngre({
     try {
       const shouldClose = await onSave?.(updatedItem, values);
 
+      if (typeof shouldClose === "string") {
+        setErrors({ form: shouldClose });
+        return;
+      }
       if (shouldClose === false) return;
 
       onClose();
@@ -135,6 +158,8 @@ export default function ModalEditIngre({
             placeholder="Nhập tên..."
             fullWidth
             className={styles.field}
+            error={Boolean(errors.name)}
+            helperText={errors.name}
           />
 
           <TextField
@@ -145,6 +170,8 @@ export default function ModalEditIngre({
             type="number"
             fullWidth
             className={styles.field}
+            error={Boolean(errors.price)}
+            helperText={errors.price}
           />
 
           {ingredientType === "size" ? (
@@ -156,8 +183,13 @@ export default function ModalEditIngre({
               type="number"
               fullWidth
               className={styles.field}
+              error={Boolean(errors.weightGram)}
+              helperText={errors.weightGram}
             />
           ) : null}
+          {errors.form && (
+            <Typography className={styles.formError}>{errors.form}</Typography>
+          )}
 
           {ingredientType === "color" ? (
             <Box>

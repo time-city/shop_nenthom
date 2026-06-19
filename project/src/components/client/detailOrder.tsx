@@ -81,7 +81,7 @@ export default function DetailOrder({ orderNumber, onClose, isAdmin = false }: D
   return (
     <div
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#2C1810]/60 p-4 backdrop-blur-sm transition-opacity"
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-[#2C1810]/60 p-4 backdrop-blur-sm transition-opacity"
       role="dialog"
       aria-modal="true"
     >

@@ -42,7 +42,10 @@ import {
   updateWaxColorAction,
 } from "@/src/lib/action/option.action";
 import { getCustomizationOptionsAction } from "@/src/lib/action/product.action";
-import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import {
+  getFriendlyResponseError,
+  isUserInputError,
+} from "@/src/lib/utils/errorMessage";
 import type {
   AdminDeleteOptionType,
   AdminIngredientActionButtonsProps,
@@ -145,6 +148,14 @@ export default function IngredientStoreClient() {
   const [sizes, setSizes] = useState<AdminIngredientItem[]>([]);
   const [toppings, setToppings] = useState<AdminIngredientItem[]>([]);
   const [packagings, setPackagings] = useState<AdminIngredientItem[]>([]);
+
+  const handleIngredientFormError = (error: string) => {
+    const message = getFriendlyResponseError(error);
+    if (isUserInputError(message)) return message;
+
+    toast.error(message);
+    return false;
+  };
 
   const activeConfig = useMemo(
     () => tabs.find((tab) => tab.id === activeTab) ?? tabs[0],
@@ -249,8 +260,7 @@ export default function IngredientStoreClient() {
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-        return false;
+        return handleIngredientFormError(result.error);
       }
 
       if ("success" in result && result.success) {
@@ -275,8 +285,7 @@ export default function IngredientStoreClient() {
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-        return false;
+        return handleIngredientFormError(result.error);
       }
 
       if ("success" in result && result.success) {
@@ -301,8 +310,7 @@ export default function IngredientStoreClient() {
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-        return false;
+        return handleIngredientFormError(result.error);
       }
 
       if ("success" in result && result.success) {
@@ -327,8 +335,7 @@ export default function IngredientStoreClient() {
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-        return false;
+        return handleIngredientFormError(result.error);
       }
 
       if ("success" in result && result.success) {
@@ -352,8 +359,7 @@ export default function IngredientStoreClient() {
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-        return false;
+        return handleIngredientFormError(result.error);
       }
 
       if ("success" in result && result.success) {
@@ -384,8 +390,7 @@ export default function IngredientStoreClient() {
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-        return false;
+        return handleIngredientFormError(result.error);
       }
 
       if ("success" in result && result.success) {
@@ -412,8 +417,7 @@ export default function IngredientStoreClient() {
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-        return false;
+        return handleIngredientFormError(result.error);
       }
 
       if ("success" in result && result.success) {
@@ -440,8 +444,7 @@ export default function IngredientStoreClient() {
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-        return false;
+        return handleIngredientFormError(result.error);
       }
 
       if ("success" in result && result.success) {
@@ -468,8 +471,7 @@ export default function IngredientStoreClient() {
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-        return false;
+        return handleIngredientFormError(result.error);
       }
 
       if ("success" in result && result.success) {
@@ -495,8 +497,7 @@ export default function IngredientStoreClient() {
       });
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-        return false;
+        return handleIngredientFormError(result.error);
       }
 
       if ("success" in result && result.success) {

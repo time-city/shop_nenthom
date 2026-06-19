@@ -84,7 +84,6 @@ export default function FormSignIn() {
 
   const showError = (message: string) => {
     setErrorMessage(message);
-    toast.error(message);
     window.setTimeout(() => setErrorMessage(""), 4000);
   };
 
