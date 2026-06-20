@@ -125,7 +125,7 @@ export type ClientOrderUserData = {
 
 
 /** Trạng thái đơn hàng phía client. */
-export type ClientOrderStatus = "processing" | "shipping" | "done" | "canceled";
+export type ClientOrderStatus = "pending" | "confirmed" | "canceled";
 
 
 /** Item trong một đơn hàng phía client. */
@@ -235,6 +235,14 @@ export type OrdersHeaderProps = {
 /** Props nội dung trang lịch sử đơn hàng. */
 export type OrdersContentProps = {
   initialUser: Required<ClientOrderUserData>;
+};
+
+/** Metadata phân trang lịch sử đơn hàng khách hàng. */
+export type ClientOrdersMeta = {
+  limit: number;
+  page: number;
+  total: number;
+  totalPages: number;
 };
 
 

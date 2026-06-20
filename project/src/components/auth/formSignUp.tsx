@@ -158,6 +158,7 @@ export default function FormSignUp() {
 
     const message = "Đăng ký thành công! Đang chuyển hướng...";
     localStorage.setItem("newsletter", String(values.newsletter));
+    localStorage.removeItem("hasSeenProfileGuide"); // Reset guide status for the newly created user
     toast.success(message);
     actions.setSubmitting(false);
 

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { OrderDetail } from "@/src/lib/types/client";
 
@@ -10,22 +9,20 @@ interface Props {
 }
 
 const statusMap: Record<string, { label: string; className: string }> = {
-  PENDING: { label: "Chờ xác nhận", className: "pending" },
-  PROCESSING: { label: "Đang xử lý", className: "processing" },
-  SHIPPED: { label: "Đang giao hàng", className: "shipping" },
-  DELIVERED: { label: "Hoàn thành", className: "completed" },
-  CANCELLED: { label: "Đã hủy", className: "cancelled" },
+  PENDING: { label: "Đang xác nhận", className: "pending" },
+  PROCESSING: { label: "Đã xác nhận", className: "confirmed" },
+  SHIPPED: { label: "Đã xác nhận", className: "confirmed" },
+  DELIVERED: { label: "Đã xác nhận", className: "confirmed" },
+  CANCELLED: { label: "Đã huỷ", className: "cancelled" },
 };
 
 const clientStatusMap: Record<OrderDetail["status"], string> = {
   canceled: "CANCELLED",
-  done: "DELIVERED",
-  processing: "PROCESSING",
-  shipping: "SHIPPED",
+  confirmed: "PROCESSING",
+  pending: "PENDING",
 };
 
 export default function DetailOrderAdmin({ initialOrder }: Props) {
-  const router = useRouter();
   const [order] = useState<OrderDetail>(initialOrder);
 
   // Formats
@@ -49,7 +46,7 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
     : null;
   const currentDBStatus = latestLog?.currentStatus || clientStatusMap[order.status] || "PENDING";
 
-  const statusInfo = statusMap[currentDBStatus] || { label: "Chờ xác nhận", className: "pending" };
+  const statusInfo = statusMap[currentDBStatus] || { label: "Đang xác nhận", className: "pending" };
 
   return (
     <>

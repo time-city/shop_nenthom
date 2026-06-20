@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
@@ -22,9 +22,7 @@ interface Props {
 }
 
 const nextStatusLabels: Record<string, string> = {
-  pending: "Đang xử lý (Confirm)",
-  processing: "Đang giao hàng (Ship)",
-  shipping: "Hoàn thành đơn hàng (Complete)",
+  pending: "Đã xác nhận",
 };
 
 export default function ModalOrderAction({
@@ -38,13 +36,6 @@ export default function ModalOrderAction({
 }: Props) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (open) {
-      setReason("");
-      setError("");
-    }
-  }, [open]);
 
   const handleSubmit = async () => {
     if (type === "cancel") {
@@ -60,7 +51,7 @@ export default function ModalOrderAction({
   if (!type) return null;
 
   const isCancel = type === "cancel";
-  const title = isCancel ? "Xác nhận hủy đơn hàng" : "Xác nhận cập nhật đơn hàng";
+  const title = isCancel ? "Xác nhận huỷ đơn hàng" : "Xác nhận đơn hàng";
   
   let nextStatusLabel = "";
   if (currentStatus) {
@@ -169,7 +160,7 @@ export default function ModalOrderAction({
             className={isCancel ? styles.dangerButton : styles.primaryButton}
             style={!isCancel ? { background: "#2E5A44 !important", boxShadow: "0 8px 18px rgba(46, 90, 68, 0.18) !important" } : undefined}
           >
-            {isSubmitting ? "Đang xử lý..." : isCancel ? "Hủy đơn hàng" : "Xác nhận chuyển"}
+            {isSubmitting ? "Đang xử lý..." : isCancel ? "Huỷ đơn hàng" : "Xác nhận"}
           </Button>
         </Box>
       </Box>

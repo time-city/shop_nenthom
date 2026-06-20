@@ -3,25 +3,33 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type {
+  ClientOrdersMeta,
   ClientOrderRecord,
   OrdersContentProps,
 } from "@/src/lib/types/client";
 import { getMyOrdersAction } from "@/src/lib/action/order.action";
 import DetailOrder from "@/src/components/client/detailOrder";
+import ClientPagination from "@/src/components/admin/clientPagination";
 import { useCartStore } from "@/src/store/useCartStore";
 
 const statusLabel: Record<ClientOrderRecord["status"], string> = {
-  canceled: "Đã hủy",
-  done: "Hoàn thành",
-  processing: "Đang xử lý",
-  shipping: "Đang giao",
+  canceled: "Đã huỷ",
+  confirmed: "Đã xác nhận",
+  pending: "Đang xác nhận",
 };
 
 const statusClass: Record<ClientOrderRecord["status"], string> = {
   canceled: "bg-[#2c1810]/10 text-[#6B4C35]",
-  done: "bg-[#6B1218]/10 text-[#6B1218]",
-  processing: "bg-[#F4E2B7] text-[#8B5E3C]",
-  shipping: "bg-[#45A05C]/15 text-[#1F6B3A]",
+  confirmed: "bg-[#45A05C]/15 text-[#1F6B3A]",
+  pending: "bg-[#F4E2B7] text-[#8B5E3C]",
+};
+
+const pageSize = 10;
+const initialMeta: ClientOrdersMeta = {
+  limit: pageSize,
+  page: 1,
+  total: 0,
+  totalPages: 1,
 };
 
 const formatPrice = (value: number) =>
@@ -38,13 +46,18 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrderNumber, setSelectedOrderNumber] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [meta, setMeta] = useState<ClientOrdersMeta>(initialMeta);
 
   useEffect(() => {
     let cancelled = false;
 
     const fetchOrders = async () => {
       try {
-        const response = await getMyOrdersAction();
+        const response = await getMyOrdersAction({
+          limit: pageSize,
+          page: currentPage,
+        });
         if (cancelled) return;
 
         if ("error" in response && response.error) {
@@ -52,7 +65,8 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
         } else if (response.success && response.data) {
           const fetchedOrders = response.data as ClientOrderRecord[];
           setOrders(fetchedOrders);
-          setOrderCount(fetchedOrders.length);
+          setMeta(response.meta);
+          setOrderCount(response.meta.total);
         }
       } catch (err) {
         if (!cancelled) {
@@ -70,7 +84,7 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
     return () => {
       cancelled = true;
     };
-  }, [setOrderCount]);
+  }, [currentPage, setOrderCount]);
 
   return (
     <main className="min-h-[calc(100dvh-5rem)] bg-[#F2E8D9] text-[#2C1810]">
@@ -148,6 +162,11 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
                 </div>
               </article>
             ))}
+            <ClientPagination
+              currentPage={meta.page}
+              totalPages={meta.totalPages}
+              onChange={setCurrentPage}
+            />
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4 rounded-2xl bg-[#F8F0E4] px-4 py-12 text-center shadow-[0_4px_20px_rgba(44,24,16,0.07)]">
@@ -169,6 +188,16 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
         <DetailOrder
           orderNumber={selectedOrderNumber}
           onClose={() => setSelectedOrderNumber(null)}
+          onCancelSuccess={() => {
+            setOrders((currentOrders) =>
+              currentOrders.map((order) =>
+                order.id === selectedOrderNumber
+                  ? { ...order, status: "canceled" }
+                  : order,
+              ),
+            );
+            setSelectedOrderNumber(null);
+          }}
         />
       )}
     </main>

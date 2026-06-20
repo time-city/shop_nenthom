@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { getCurrentUser } from "../../lib/action/user.action";
 import { useUserStore } from "@/src/store/useUserStore";
+import { PROVINCE_POSTAL_CODE_MAP } from "@/src/lib/utils/provincePostalCodes";
 import type {
   CartPaymentMethod,
   CheckoutFormProps,
@@ -120,6 +121,20 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
         return next;
       });
     }
+  };
+
+  const handleCityChange = (city: string) => {
+    setFormValues((currentValues) => ({
+      ...currentValues,
+      city,
+      zip: city ? PROVINCE_POSTAL_CODE_MAP[city] || currentValues.zip : "",
+    }));
+
+    setErrors((currentErrors) => {
+      const nextErrors = { ...currentErrors };
+      delete nextErrors.city;
+      return nextErrors;
+    });
   };
 
   const getInputClass = (fieldName: keyof FullFormValues) => {
@@ -257,14 +272,23 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
               )}
             </label>
             <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35]">
-              Thành Phố
-              <input
-                type="text"
+              Tỉnh / Thành Phố
+              <select
                 name="city"
                 value={formValues.city}
-                onChange={(event) => handleChange("city", event.target.value)}
+                onChange={(event) => handleCityChange(event.target.value)}
                 className={getInputClass("city")}
-              />
+              >
+                <option value="">Chọn tỉnh/thành...</option>
+                {Object.keys(PROVINCE_POSTAL_CODE_MAP).map((provinceName) => (
+                  <option key={provinceName} value={provinceName}>
+                    {provinceName}
+                  </option>
+                ))}
+                {formValues.city && !PROVINCE_POSTAL_CODE_MAP[formValues.city] && (
+                  <option value={formValues.city}>{formValues.city}</option>
+                )}
+              </select>
               {errors.city && (
                 <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
                   {errors.city}
@@ -277,8 +301,8 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
                 type="text"
                 name="zip"
                 value={formValues.zip}
-                onChange={(event) => handleChange("zip", event.target.value)}
-                className={getInputClass("zip")}
+                readOnly
+                className={`${getInputClass("zip")} cursor-not-allowed bg-[#F2E8D9]/40 text-[#6B4C35]/65`}
               />
             </label>
             <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35] md:col-span-2">

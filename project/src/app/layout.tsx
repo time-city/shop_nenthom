@@ -7,22 +7,25 @@ import "./globals.css";
 
 
 const dmSans = DM_Sans({
- variable: "--font-dm-sans",
- subsets: ["latin", "latin-ext"],
- weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-dm-sans",
+  subsets: ["latin", "latin-ext"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
 
 const cormorantGaramond = Cormorant_Garamond({
- variable: "--font-cormorant-garamond",
- subsets: ["latin", "latin-ext"],
- weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-cormorant-garamond",
+  subsets: ["latin", "latin-ext"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
 
 const geistMono = Geist_Mono({
- variable: "--font-geist-mono",
- subsets: ["latin"],
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 

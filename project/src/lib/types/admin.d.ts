@@ -239,12 +239,7 @@ export type AdminTableCellProps = {
 };
 
 /** Trạng thái xử lý đơn hàng trong admin. */
-export type AdminOrderStatus =
-  | "pending"
-  | "processing"
-  | "shipping"
-  | "completed"
-  | "cancelled";
+export type AdminOrderStatus = "pending" | "confirmed" | "cancelled";
 
 /** Trạng thái thanh toán của đơn hàng trong admin. */
 export type AdminPaymentStatus = "paid" | "unpaid" | "refunded";
@@ -320,6 +315,14 @@ export type AdminUser = {
   role: string;
   isActive: boolean;
   createdAt: string;
+};
+
+/** Metadata phân trang danh sách admin. */
+export type AdminPaginationMeta = {
+  limit: number;
+  page: number;
+  total: number;
+  totalPages: number;
 };
 
 /** Dữ liệu thống kê tổng quan trên dashboard admin. */
