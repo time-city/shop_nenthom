@@ -15,11 +15,9 @@ import { useToast } from "@/src/components/ui/toast-provider";
 import ModalOrderAction from "./modalOrderAction";
 
 const statusLabels: Record<AdminOrderStatus, string> = {
-  cancelled: "Đã hủy",
-  completed: "Hoàn thành",
-  pending: "Chờ xác nhận",
-  processing: "Đang xử lý",
-  shipping: "Đang giao",
+  cancelled: "Đã huỷ",
+  confirmed: "Đã xác nhận",
+  pending: "Đang xác nhận",
 };
 
 const paymentLabels: Record<AdminPaymentStatus, string> = {
@@ -58,7 +56,7 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<AdminOrderStatus | "confirmed" | "">("");
+  const [status, setStatus] = useState<AdminOrderStatus | "">("");
   const { toast } = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"confirm" | "cancel" | null>(null);
@@ -93,26 +91,12 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
     setIsActionSubmitting(true);
     try {
       if (modalType === "confirm") {
-        let nextStatus: "PROCESSING" | "SHIPPED" | "DELIVERED" | null = null;
-        let nextClientStatus: AdminOrderStatus | null = null;
-
-        if (selectedOrderStatus === "pending") {
-          nextStatus = "PROCESSING";
-          nextClientStatus = "processing";
-        } else if (selectedOrderStatus === "processing") {
-          nextStatus = "SHIPPED";
-          nextClientStatus = "shipping";
-        } else if (selectedOrderStatus === "shipping") {
-          nextStatus = "DELIVERED";
-          nextClientStatus = "completed";
-        }
-
-        if (!nextStatus || !nextClientStatus) return;
+        if (selectedOrderStatus !== "pending") return;
 
         const result = await updateOrderStatusAction({
           order_number: selectedOrderId,
-          status: nextStatus,
-          note: "Xác nhận nhanh từ danh sách quản lý đơn hàng",
+          status: "PROCESSING",
+          note: "Admin đã xác nhận đơn hàng",
         });
 
         if ("error" in result && result.error) {
@@ -121,7 +105,7 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
           toast.success("Cập nhật trạng thái đơn hàng thành công");
           setOrders((prev) =>
             prev.map((o) =>
-              o.id === selectedOrderId ? { ...o, status: nextClientStatus! } : o
+              o.id === selectedOrderId ? { ...o, status: "confirmed" } : o
             )
           );
           setModalOpen(false);
@@ -183,7 +167,7 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialOrders]);
 
   const filteredOrders = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -194,10 +178,7 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
         order.id.toLowerCase().includes(normalizedSearch) ||
         order.customer.toLowerCase().includes(normalizedSearch);
       const matchesStatus =
-        !status ||
-        (status === "confirmed"
-          ? order.status !== "pending" && order.status !== "cancelled"
-          : order.status === status);
+        !status || order.status === status;
 
       return matchesSearch && matchesStatus;
     });
@@ -277,9 +258,9 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
                 }
               >
                 <option value="">Tất cả trạng thái</option>
-                <option value="pending">Chờ xác nhận</option>
+                <option value="pending">Đang xác nhận</option>
                 <option value="confirmed">Đã xác nhận</option>
-                <option value="cancelled">Đã hủy</option>
+                <option value="cancelled">Đã huỷ</option>
               </select>
             </div>
           </div>
@@ -335,36 +316,32 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
                         </span>
                       </td>
                       <td onClick={(e) => e.stopPropagation()}>
-                        {order.status !== "completed" && order.status !== "cancelled" ? (
+                        {order.status !== "cancelled" ? (
                           <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              className="orders-action-btn-confirm"
-                              title={
-                                order.status === "pending"
-                                  ? "Xác nhận đơn hàng"
-                                  : order.status === "processing"
-                                  ? "Giao hàng"
-                                  : "Hoàn thành đơn"
-                              }
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenConfirm(order.id, order.status);
-                              }}
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+                            {order.status === "pending" ? (
+                              <button
+                                type="button"
+                                className="orders-action-btn-confirm"
+                                title="Xác nhận đơn hàng"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenConfirm(order.id, order.status);
+                                }}
                               >
-                                <polyline points="20,6 9,17 4,12" />
-                              </svg>
-                            </button>
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <polyline points="20,6 9,17 4,12" />
+                                </svg>
+                              </button>
+                            ) : null}
                             <button
                               type="button"
                               className="orders-action-btn-cancel"
@@ -424,6 +401,7 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
       </div>
 
       <ModalOrderAction
+        key={`${modalType ?? "none"}-${selectedOrderId ?? "none"}-${modalOpen}`}
         open={modalOpen}
         onClose={handleCloseModal}
         onConfirm={executeOrderAction}

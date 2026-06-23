@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import type { AdminUser as User } from "@/src/lib/types/admin";
 import { getUserOrdersAction } from "../../lib/action/user.action";
+import ClientPagination from "./clientPagination";
+import type { AdminPaginationMeta } from "@/src/lib/types/admin";
 
 interface ClientOrderModalProps {
     user: User | null;
@@ -17,10 +19,20 @@ interface UserOrder {
     items: string;
 }
 
+const pageSize = 10;
+const initialMeta: AdminPaginationMeta = {
+    limit: pageSize,
+    page: 1,
+    total: 0,
+    totalPages: 1,
+};
+
 export default function ClientOrderModal({ user, onClose }: ClientOrderModalProps) {
     const [orders, setOrders] = useState<UserOrder[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [meta, setMeta] = useState<AdminPaginationMeta>(initialMeta);
 
     useEffect(() => {
         if (!user) return;
@@ -29,12 +41,16 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
             setIsLoading(true);
             setError(null);
             try {
-                const res = await getUserOrdersAction(user.id);
+                const res = await getUserOrdersAction(user.id, {
+                    limit: pageSize,
+                    page: currentPage,
+                });
                 if (cancelled) return;
                 if ("error" in res && res.error) {
                     setError(res.error);
                 } else if ("success" in res && res.success && res.data) {
                     setOrders(res.data);
+                    setMeta(res.meta);
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -50,7 +66,7 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
         return () => {
             cancelled = true;
         };
-    }, [user]);
+    }, [currentPage, user]);
 
     if (!user) return null;
 
@@ -134,10 +150,13 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                                                 {order.total}
                                             </td>
                                             <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${order.status === "Hoàn thành"
+                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                                    order.status === "Đã xác nhận"
                                                         ? "bg-[#E8F5E9] text-[#2E7D32]"
-                                                        : "bg-[#FFF9C4] text-[#F57F17]"
-                                                    }`}>
+                                                        : order.status === "Đã huỷ"
+                                                          ? "bg-[#2C1810]/10 text-[#6B4C35]"
+                                                          : "bg-[#FFF9C4] text-[#F57F17]"
+                                                }`}>
                                                     {order.status}
                                                 </span>
                                             </td>
@@ -153,6 +172,11 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                             </tbody>
                         </table>
                     </div>
+                    <ClientPagination
+                        currentPage={meta.page}
+                        totalPages={meta.totalPages}
+                        onChange={setCurrentPage}
+                    />
                 </div>
 
                 {/* Modal Footer */}

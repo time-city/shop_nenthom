@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "driver.js/dist/driver.css";
 
 
 :root {
@@ -24,7 +25,6 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
 }
-
 
 h1,
 h2,
@@ -955,6 +955,11 @@ body.intro-ready footer {
 
 
 .dashboard-status.completed {
+  background: rgba(31, 107, 58, 0.12);
+  color: #1F6B3A;
+}
+
+.dashboard-status.confirmed {
   background: rgba(31, 107, 58, 0.12);
   color: #1F6B3A;
 }
@@ -2046,7 +2051,7 @@ body.intro-ready footer {
 }
 
 .driver-popover-progress-text {
-  color: #6B4C35/80 !important;
+  color: rgba(107, 78, 53, 0.8) !important;
   font-size: 0.78rem !important;
   font-weight: 500 !important;
 }
@@ -2089,7 +2094,7 @@ body.intro-ready footer {
 }
 
 .driver-popover-close-btn {
-  color: #2C1810/50 !important;
+  color: rgba(44, 24, 16, 0.5) !important;
   transition: color 0.2s ease !important;
 }
 
@@ -2097,18 +2102,23 @@ body.intro-ready footer {
   color: #6B1218 !important;
 }
 
-.driver-popover-skip-btn {
+.profile-tour-skip-btn {
   background-color: transparent !important;
   color: #6B4C35 !important;
   border: none !important;
   padding: 8px 12px !important;
   margin-right: auto !important;
+  border-radius: 999px !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
 }
 
-.driver-popover-skip-btn:hover {
+.profile-tour-skip-btn:hover {
   color: #6B1218 !important;
   background-color: rgba(107, 78, 53, 0.05) !important;
 }
-
-
 

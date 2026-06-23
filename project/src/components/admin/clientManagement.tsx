@@ -8,7 +8,10 @@ import ClientTable from "./clientTable";
 import ClientPagination from "./clientPagination";
 import ClientOrderModal from "./clientOrderModal";
 
-import type { AdminUser as User } from "@/src/lib/types/admin";
+import type {
+  AdminPaginationMeta,
+  AdminUser as User,
+} from "@/src/lib/types/admin";
 
 import {
   getAllUsersAction,
@@ -16,6 +19,12 @@ import {
 } from "../../lib/action/user.action";
 
 const itemsPerPage = 10;
+const initialMeta: AdminPaginationMeta = {
+  limit: itemsPerPage,
+  page: 1,
+  total: 0,
+  totalPages: 1,
+};
 
 export default function ClientManagement() {
   const { toast } = useToast();
@@ -23,18 +32,23 @@ export default function ClientManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [meta, setMeta] = useState<AdminPaginationMeta>(initialMeta);
 
   useEffect(() => {
     let cancelled = false;
     const loadUsers = async () => {
       try {
-        const result = await getAllUsersAction();
+        const result = await getAllUsersAction({
+          limit: itemsPerPage,
+          page: currentPage,
+        });
         if (cancelled) return;
         if ("error" in result && result.error) {
           const friendlyErr = getFriendlyResponseError(result.error);
           toast.error(friendlyErr);
         } else if ("success" in result && result.success) {
           setUsers(result.data as User[]);
+          setMeta(result.meta);
         }
       } catch {}
     };
@@ -42,7 +56,7 @@ export default function ClientManagement() {
     return () => {
       cancelled = true;
     };
-  }, [toast]);
+  }, [currentPage, toast]);
 
   // Filter users based on query
   const filteredUsers = useMemo(() => {
@@ -56,17 +70,6 @@ export default function ClientManagement() {
         user.phone.includes(query)
     );
   }, [users, searchQuery]);
-
-  // Pagination calculation
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const currentUsers = useMemo(() => {
-    const page = Math.min(currentPage, totalPages || 1);
-    const start = (page - 1) * itemsPerPage;
-    return filteredUsers.slice(start, start + itemsPerPage);
-  }, [filteredUsers, currentPage, totalPages]);
-
-  // Adjust page if current is out of range
-  const activePage = Math.min(currentPage, totalPages || 1);
 
   const handleToggleStatus = async (userId: string) => {
     const result = await toggleUserStatusAction(userId);
@@ -130,7 +133,9 @@ export default function ClientManagement() {
                 }}
               />
               <span className="text-sm font-medium text-[#6B4C35]">
-                Tổng số: {filteredUsers.length} khách hàng
+                {searchQuery
+                  ? `Kết quả trang này: ${filteredUsers.length} / ${meta.total}`
+                  : `Tổng số: ${meta.total} khách hàng`}
               </span>
             </div>
           </div>
@@ -138,20 +143,21 @@ export default function ClientManagement() {
 
         <section className="mb-6">
           <ClientTable
-            users={currentUsers}
+            users={filteredUsers}
             onToggleStatus={handleToggleStatus}
             onViewOrders={(user) => setSelectedUser(user)}
           />
 
           <ClientPagination
-            currentPage={activePage}
-            totalPages={totalPages}
+            currentPage={meta.page}
+            totalPages={meta.totalPages}
             onChange={(page) => setCurrentPage(page)}
           />
         </section>
       </div>
 
       <ClientOrderModal
+        key={selectedUser?.id ?? "closed"}
         user={selectedUser}
         onClose={() => setSelectedUser(null)}
       />

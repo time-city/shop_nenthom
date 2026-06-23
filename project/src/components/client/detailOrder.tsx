@@ -1,7 +1,11 @@
 "use client";
 
 import { startTransition, useEffect, useState } from "react";
-import { getMyOrderDetailAction, getOrderDetailForAdminAction } from "@/src/lib/action/order.action";
+import {
+  cancelMyOrderAction,
+  getMyOrderDetailAction,
+  getOrderDetailForAdminAction,
+} from "@/src/lib/action/order.action";
 import LoadingState from "@/src/components/ui/loadingState";
 
 import type {
@@ -10,17 +14,15 @@ import type {
 } from "../../lib/types/client";
 
 const statusLabel: Record<OrderDetail["status"], string> = {
-  canceled: "Đã hủy",
-  done: "Hoàn thành",
-  processing: "Đang xử lý",
-  shipping: "Đang giao",
+  canceled: "Đã huỷ",
+  confirmed: "Đã xác nhận",
+  pending: "Đang xác nhận",
 };
 
 const statusClass: Record<OrderDetail["status"], string> = {
   canceled: "bg-[#2c1810]/10 text-[#6B4C35]",
-  done: "bg-[#6B1218]/10 text-[#6B1218]",
-  processing: "bg-[#F4E2B7] text-[#8B5E3C]",
-  shipping: "bg-[#45A05C]/15 text-[#1F6B3A]",
+  confirmed: "bg-[#45A05C]/15 text-[#1F6B3A]",
+  pending: "bg-[#F4E2B7] text-[#8B5E3C]",
 };
 
 const formatPrice = (value: number) =>
@@ -30,10 +32,19 @@ const formatPrice = (value: number) =>
     style: "currency",
   }).format(value);
 
-export default function DetailOrder({ orderNumber, onClose, isAdmin = false }: DetailOrderProps) {
+export default function DetailOrder({
+  orderNumber,
+  onClose,
+  isAdmin = false,
+  onCancelSuccess,
+}: DetailOrderProps) {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCancelForm, setShowCancelForm] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelError, setCancelError] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -75,6 +86,38 @@ export default function DetailOrder({ orderNumber, onClose, isAdmin = false }: D
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!order || isCancelling) return;
+    if (!cancelReason.trim()) {
+      setCancelError("Vui lòng nhập lý do huỷ đơn");
+      return;
+    }
+
+    setIsCancelling(true);
+    setCancelError("");
+
+    try {
+      const result = await cancelMyOrderAction({
+        order_id: order.id,
+        reason: cancelReason.trim(),
+      });
+
+      if ("error" in result && result.error) {
+        setCancelError(result.error);
+        return;
+      }
+
+      setOrder((currentOrder) =>
+        currentOrder ? { ...currentOrder, status: "canceled" } : currentOrder,
+      );
+      setShowCancelForm(false);
+      setCancelReason("");
+      onCancelSuccess?.();
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -233,6 +276,66 @@ export default function DetailOrder({ orderNumber, onClose, isAdmin = false }: D
                   </div>
                 </div>
               )}
+
+              {!isAdmin && order.status === "pending" ? (
+                <div className="rounded-xl border border-[#6B1218]/15 bg-white p-5">
+                  {showCancelForm ? (
+                    <div className="space-y-3">
+                      <label
+                        htmlFor="customer-cancel-reason"
+                        className="block text-xs font-semibold uppercase tracking-wider text-[#6B4C35]"
+                      >
+                        Lý do huỷ đơn
+                      </label>
+                      <textarea
+                        id="customer-cancel-reason"
+                        value={cancelReason}
+                        onChange={(event) => {
+                          setCancelReason(event.target.value);
+                          if (cancelError) setCancelError("");
+                        }}
+                        rows={3}
+                        className="w-full rounded-lg border border-[#6B4C35]/25 bg-[#F8F0E4] px-3 py-2 text-sm outline-none focus:border-[#6B1218]"
+                        placeholder="Nhập lý do bạn muốn huỷ đơn..."
+                      />
+                      {cancelError ? (
+                        <p className="text-xs font-medium text-[#6B1218]">
+                          {cancelError}
+                        </p>
+                      ) : null}
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCancelForm(false);
+                            setCancelError("");
+                          }}
+                          disabled={isCancelling}
+                          className="rounded-full border border-[#6B4C35]/25 px-4 py-2 text-xs font-semibold text-[#6B4C35]"
+                        >
+                          Quay lại
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelOrder}
+                          disabled={isCancelling}
+                          className="rounded-full bg-[#6B1218] px-4 py-2 text-xs font-semibold text-[#F5F0E8] disabled:opacity-60"
+                        >
+                          {isCancelling ? "Đang huỷ..." : "Xác nhận huỷ"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowCancelForm(true)}
+                      className="rounded-full border border-[#6B1218] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8]"
+                    >
+                      Huỷ đơn hàng
+                    </button>
+                  )}
+                </div>
+              ) : null}
             </>
           ) : null}
         </div>

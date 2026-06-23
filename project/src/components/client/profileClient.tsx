@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
+import type { Driver } from "driver.js";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { logoutUser } from "@/src/lib/action/auth.action";
 import { getCurrentUser, updateProfileAction } from "@/src/lib/action/user.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import { PROVINCE_POSTAL_CODE_MAP } from "@/src/lib/utils/provincePostalCodes";
 import { useUserStore } from "@/src/store/useUserStore";
 import { useCartStore } from "@/src/store/useCartStore";
 import { useSupportStore } from "@/src/store/useSupportStore";
@@ -15,22 +17,6 @@ import type {
   ProfilePageContentProps,
   ProfileFieldProps,
 } from "@/src/lib/types/client";
-
-const CITY_ZIP_MAP: Record<string, string> = {
-  "Hà Nội": "100000",
-  "TP. Hồ Chí Minh": "700000",
-  "Đà Nẵng": "500000",
-  "Hải Phòng": "180000",
-  "Cần Thơ": "900000",
-  "Bình Dương": "820000",
-  "Đồng Nai": "810000",
-  "Bà Rịa - Vũng Tàu": "790000",
-  "Khánh Hòa": "650000",
-  "Lâm Đồng": "670000",
-  "Thừa Thiên Huế": "530000",
-  "Quảng Nam": "560000",
-  "Long An": "850000",
-};
 
 const defaultUser: Required<ClientProfileUserData> = {
   address: "",
@@ -69,8 +55,8 @@ function Field({
         onChange={(event) => onChange(id, event.target.value)}
         disabled={disabled}
         className={`w-full rounded-[10px] border-[1.5px] ${hasError
-            ? "border-[#6B1218] focus:ring-[#6B1218]/10"
-            : "border-[#6b4e35]/20 focus:border-[#6B1218] focus:ring-[#6B1218]/10"
+          ? "border-[#6B1218] focus:ring-[#6B1218]/10"
+          : "border-[#6b4e35]/20 focus:border-[#6B1218] focus:ring-[#6B1218]/10"
           } bg-white px-4 py-3 text-[0.95rem] text-[#2C1810] outline-none transition focus:ring-4 disabled:bg-[#F2E8D9]/40 disabled:text-[#6B4C35]/65 disabled:cursor-not-allowed`}
       />
       {error && (
@@ -144,18 +130,30 @@ export default function ProfilePageContent({
   useEffect(() => {
     if (isLoading) return;
 
+    let activeDriver: Driver | null = null;
+
     const hasSeenGuide = localStorage.getItem("hasSeenProfileGuide");
     if (!hasSeenGuide) {
       const startTour = async () => {
         try {
           const { driver } = await import("driver.js");
-          await import("driver.js/dist/driver.css");
 
           const driverObj = driver({
             showProgress: true,
             nextBtnText: "Tiếp tục",
             prevBtnText: "Quay lại",
             doneBtnText: "Hoàn tất",
+            onNextClick: (_element, _step, { driver: currentDriver }) => {
+              if (currentDriver.isLastStep()) {
+                currentDriver.destroy();
+                return;
+              }
+
+              currentDriver.moveNext();
+            },
+            onCloseClick: (_element, _step, { driver: currentDriver }) => {
+              currentDriver.destroy();
+            },
             steps: [
               {
                 element: "#fullname",
@@ -222,30 +220,42 @@ export default function ProfilePageContent({
               }
             ],
             onDestroyed: () => {
+              // Lưu vào localStorage khi tour đóng (Hoàn tất, Bỏ qua hoặc đóng X) để không hiện lại
               localStorage.setItem("hasSeenProfileGuide", "true");
             },
-            onPopoverRender: (popover, { driver }) => {
-              if (!popover.footerButtons.querySelector(".driver-popover-skip-btn")) {
+            onPopoverRender: (popover) => {
+              if (!popover.footerButtons.querySelector(".profile-tour-skip-btn")) {
                 const skipBtn = document.createElement("button");
-                skipBtn.className = "driver-popover-btn driver-popover-skip-btn";
+                skipBtn.setAttribute("type", "button");
+                skipBtn.className = "profile-tour-skip-btn";
                 skipBtn.innerText = "Bỏ qua";
                 skipBtn.addEventListener("click", () => {
-                  driver.destroy();
+                  driverObj.destroy();
                 });
                 popover.footerButtons.insertBefore(skipBtn, popover.footerButtons.firstChild);
               }
             }
           });
 
+          activeDriver = driverObj;
+
           window.setTimeout(() => {
-            driverObj.drive();
+            if (activeDriver === driverObj) {
+              driverObj.drive();
+            }
           }, 600);
-        } catch (error) {
-          console.error("Failed to load driver.js:", error);
+        } catch (err) {
+          console.error("Failed to load driver.js:", err);
         }
       };
       void startTour();
     }
+
+    return () => {
+      if (activeDriver) {
+        activeDriver.destroy();
+      }
+    };
   }, [isLoading]);
 
   const validateField = (field: keyof Required<ClientProfileUserData>, value: string): string => {
@@ -294,7 +304,9 @@ export default function ProfilePageContent({
 
   const handleCityChange = (selectedCity: string) => {
     setProfile((current) => {
-      const nextZip = CITY_ZIP_MAP[selectedCity] || current.zip;
+      const nextZip = selectedCity
+        ? PROVINCE_POSTAL_CODE_MAP[selectedCity] || current.zip
+        : "";
       return {
         ...current,
         city: selectedCity,
@@ -449,24 +461,24 @@ export default function ProfilePageContent({
                     htmlFor="city"
                     className="text-[0.7rem] font-normal uppercase tracking-[0.1em] text-[#6B4C35] sm:text-xs"
                   >
-                    Thành Phố
+                    Tỉnh / Thành Phố
                   </label>
                   <select
                     id="city"
                     value={profile.city}
                     onChange={(event) => handleCityChange(event.target.value)}
                     className={`w-full rounded-[10px] border-[1.5px] ${errors.city
-                        ? "border-[#6B1218] focus:ring-[#6B1218]/10"
-                        : "border-[#6b4e35]/20 focus:border-[#6B1218] focus:ring-[#6B1218]/10"
+                      ? "border-[#6B1218] focus:ring-[#6B1218]/10"
+                      : "border-[#6b4e35]/20 focus:border-[#6B1218] focus:ring-[#6B1218]/10"
                       } bg-white px-4 py-3 text-[0.95rem] text-[#2C1810] outline-none transition focus:ring-4`}
                   >
-                    <option value="">Chọn thành phố...</option>
-                    {Object.keys(CITY_ZIP_MAP).map((cityName) => (
+                    <option value="">Chọn tỉnh/thành...</option>
+                    {Object.keys(PROVINCE_POSTAL_CODE_MAP).map((cityName) => (
                       <option key={cityName} value={cityName}>
                         {cityName}
                       </option>
                     ))}
-                    {profile.city && !CITY_ZIP_MAP[profile.city] && (
+                    {profile.city && !PROVINCE_POSTAL_CODE_MAP[profile.city] && (
                       <option value={profile.city}>{profile.city}</option>
                     )}
                   </select>

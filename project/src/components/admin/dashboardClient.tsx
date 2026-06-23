@@ -14,11 +14,9 @@ import type {
 } from "@/src/lib/types/admin";
 
 const statusLabels: Record<string, string> = {
-  cancelled: "Đã hủy",
-  completed: "Hoàn thành",
-  pending: "Chờ xác nhận",
-  processing: "Đang xử lý",
-  shipping: "Đang giao",
+  cancelled: "Đã huỷ",
+  confirmed: "Đã xác nhận",
+  pending: "Đang xác nhận",
 };
 
 export default function DashboardClient() {
