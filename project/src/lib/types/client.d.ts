@@ -237,6 +237,14 @@ export type OrdersContentProps = {
   initialUser: Required<ClientOrderUserData>;
 };
 
+/** Metadata phân trang lịch sử đơn hàng khách hàng. */
+export type ClientOrdersMeta = {
+  limit: number;
+  page: number;
+  total: number;
+  totalPages: number;
+};
+
 
 /** Thông tin user dùng trong trang profile. */
 export type ClientProfileUserData = {
