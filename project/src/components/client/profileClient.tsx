@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 import type { Driver } from "driver.js";
 import { useToast } from "@/src/components/ui/toast-provider";
+import Spinner from "@/src/components/ui/Spinner";
 import { logoutUser } from "@/src/lib/action/auth.action";
 import { getCurrentUser, updateProfileAction } from "@/src/lib/action/user.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
@@ -423,7 +424,8 @@ export default function ProfilePageContent({
           </h2>
 
           {isLoading ? (
-            <div className="flex h-40 items-center justify-center">
+            <div className="flex h-40 flex-col items-center justify-center gap-3">
+              <Spinner size="lg" />
               <div className="text-lg text-[#6B4C35]">Đang tải thông tin cá nhân...</div>
             </div>
           ) : error ? (

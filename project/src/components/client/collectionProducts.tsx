@@ -13,6 +13,7 @@ import { getProductsAction } from "@/src/lib/action/product.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import type { CollectionSearchParams } from "@/src/lib/types/client";
 import { CollectionContext } from "./collectionClient";
+import Spinner from "@/src/components/ui/Spinner";
 
 
 type CollectionProductsClientProps = {
@@ -86,12 +87,12 @@ export default function CollectionProducts({
 
  const scentId = context ? context.selectedFilter.scentId : localScentId;
  const setScentId = context
-   ? (val: string) => context.setSelectedFilter((prev: { scentId: string; priceRange: string; search: string; page: number }) => ({ ...prev, scentId: val }))
+   ? (val: string) => context.setSelectedFilter((prev: { scentId: string; priceRange: string; search: string; page: number }) => ({ ...prev, scentId: val, page: 1 }))
    : setLocalScentId;
 
  const priceRange = context ? context.selectedFilter.priceRange : localPriceRange;
  const setPriceRange = context
-   ? (val: string) => context.setSelectedFilter((prev: { scentId: string; priceRange: string; search: string; page: number }) => ({ ...prev, priceRange: val }))
+   ? (val: string) => context.setSelectedFilter((prev: { scentId: string; priceRange: string; search: string; page: number }) => ({ ...prev, priceRange: val, page: 1 }))
    : setLocalPriceRange;
 
  const pageProducts = context ? context.products : localPageProducts;
@@ -138,6 +139,31 @@ export default function CollectionProducts({
  };
 
 
+ // Debounce search update
+ useEffect(() => {
+   if (!context) return;
+   if (search === context.selectedFilter.search) return;
+
+   const timer = setTimeout(() => {
+     context.setSelectedFilter((prev) => ({
+       ...prev,
+       search: search,
+       page: 1,
+     }));
+
+     const nextParams: CollectionSearchParams = {
+       scentId: scentId || undefined,
+       page: undefined,
+       priceRange: priceRange || undefined,
+       q: search.trim() || undefined,
+     };
+     updateUrl(nextParams);
+   }, 300);
+
+   return () => clearTimeout(timer);
+ }, [search, context, scentId, priceRange]);
+
+
  const loadProducts = async ({
    nextScentId = scentId,
    nextPage = currentPage,
@@ -152,6 +178,13 @@ export default function CollectionProducts({
    isPaginationClick?: boolean;
  }) => {
    if (context) {
+     context.setSelectedFilter({
+       scentId: nextScentId,
+       priceRange: nextPriceRange,
+       search: nextSearch,
+       page: nextPage,
+     });
+
      const nextParams: CollectionSearchParams = {
        scentId: nextScentId || undefined,
        page: nextPage > 1 ? String(nextPage) : undefined,
@@ -216,7 +249,22 @@ export default function CollectionProducts({
 
  const handleSubmitSearch = (event: React.FormEvent<HTMLFormElement>) => {
    event.preventDefault();
-   void loadProducts({ nextPage: 1 });
+   if (context) {
+     context.setSelectedFilter((prev) => ({
+       ...prev,
+       search: search,
+       page: 1,
+     }));
+     const nextParams: CollectionSearchParams = {
+       scentId: scentId || undefined,
+       page: undefined,
+       priceRange: priceRange || undefined,
+       q: search.trim() || undefined,
+     };
+     updateUrl(nextParams);
+   } else {
+     void loadProducts({ nextPage: 1 });
+   }
  };
 
 
@@ -249,7 +297,10 @@ export default function CollectionProducts({
              setScentId(nextScentId);
              void loadProducts({ nextScentId, nextPage: 1 });
            }}
-           className="filter-input h-12 w-full rounded-md border border-[#F5F0E8]/25 bg-[#8B363A] px-4 text-sm text-[#F5F0E8] outline-none transition focus:border-[#F5F0E8]/70 focus:ring-4 focus:ring-[#F5F0E8]/10"
+           className="filter-input appearance-none h-12 w-full rounded-md border border-[#F5F0E8]/25 bg-[#8B363A] pl-5 pr-10 py-3 text-sm text-[#F5F0E8] outline-none transition focus:border-[#F5F0E8]/70 focus:ring-4 focus:ring-[#F5F0E8]/10 cursor-pointer bg-[position:right_14px_center] bg-[size:16px_16px] bg-no-repeat"
+           style={{
+             backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23F5F0E8'%3E%3Cpath d='M7 9l3 3 3-3H7z'/%3E%3C/svg%3E")`,
+           }}
          >
            <option value="">Tất cả</option>
            {scents.map((scent) => (
@@ -277,7 +328,10 @@ export default function CollectionProducts({
              setPriceRange(nextPriceRange);
              void loadProducts({ nextPage: 1, nextPriceRange });
            }}
-           className="filter-input h-12 w-full rounded-md border border-[#F5F0E8]/25 bg-[#8B363A] px-4 text-sm text-[#F5F0E8] outline-none transition focus:border-[#F5F0E8]/70 focus:ring-4 focus:ring-[#F5F0E8]/10"
+           className="filter-input appearance-none h-12 w-full rounded-md border border-[#F5F0E8]/25 bg-[#8B363A] pl-5 pr-10 py-3 text-sm text-[#F5F0E8] outline-none transition focus:border-[#F5F0E8]/70 focus:ring-4 focus:ring-[#F5F0E8]/10 cursor-pointer bg-[position:right_14px_center] bg-[size:16px_16px] bg-no-repeat"
+           style={{
+             backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23F5F0E8'%3E%3Cpath d='M7 9l3 3 3-3H7z'/%3E%3C/svg%3E")`,
+           }}
          >
            <option value="">Tất cả mức giá</option>
            <option value="0-100000">Dưới 100.000đ</option>
@@ -301,7 +355,7 @@ export default function CollectionProducts({
            name="q"
            value={search}
            onChange={(event) => setSearch(event.target.value)}
-           className="filter-input h-12 w-full rounded-md border border-[#F5F0E8]/25 bg-[#8B363A] px-4 text-sm text-[#F5F0E8] outline-none transition placeholder:text-[#F5F0E8]/45 focus:border-[#F5F0E8]/70 focus:ring-4 focus:ring-[#F5F0E8]/10"
+           className="filter-input h-12 w-full rounded-md border border-[#F5F0E8]/25 bg-[#8B363A] px-5 py-3 text-sm text-[#F5F0E8] outline-none transition placeholder:text-[#F5F0E8]/45 focus:border-[#F5F0E8]/70 focus:ring-4 focus:ring-[#F5F0E8]/10"
            placeholder="Nhập tên sản phẩm..."
          />
        </div>
@@ -320,12 +374,22 @@ export default function CollectionProducts({
              setScentId("");
              setPriceRange("");
              setSearch("");
-             void loadProducts({
-               nextScentId: "",
-               nextPage: 1,
-               nextPriceRange: "",
-               nextSearch: "",
-             });
+             if (context) {
+               context.setSelectedFilter({
+                 scentId: "",
+                 priceRange: "",
+                 search: "",
+                 page: 1,
+               });
+               updateUrl({});
+             } else {
+               void loadProducts({
+                 nextScentId: "",
+                 nextPage: 1,
+                 nextPriceRange: "",
+                 nextSearch: "",
+               });
+             }
            }}
            className="btn-reset-filters flex h-12 items-center justify-center rounded-md border border-[#F5F0E8]/30 px-5 text-[0.72rem] font-medium uppercase tracking-[0.12em] text-[#F5F0E8] transition hover:bg-[#F5F0E8] hover:text-[#7A1218]"
          >
@@ -344,8 +408,9 @@ export default function CollectionProducts({
 
      <div className="relative">
        {isLoading ? (
-         <div className="absolute inset-x-0 top-4 z-10 mx-auto w-fit rounded-full bg-[#F5F0E8] px-4 py-2 text-sm text-[#7A1218] shadow-[0_10px_24px_rgba(44,8,12,0.22)]">
-           Đang tải sản phẩm...
+         <div className="absolute inset-x-0 top-4 z-10 mx-auto w-fit flex items-center gap-2 rounded-full bg-[#F5F0E8] px-4 py-2 text-sm text-[#7A1218] shadow-[0_10px_24px_rgba(44,8,12,0.22)]">
+           <Spinner size="sm" />
+           <span>Đang tải sản phẩm...</span>
          </div>
        ) : null}
 

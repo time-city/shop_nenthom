@@ -227,8 +227,8 @@ export default function DetailOrder({
                         )}
                       </div>
                       <div className="text-right text-sm">
-                        <span className="font-light text-xs text-[#6B4C35]/60 mr-2">x{item.quantity}</span>
-                        <span className="font-serif font-bold text-[#6B1218]">{formatPrice(item.price)}</span>
+                        <span className="font-sans font-bold text-sm text-[#6B1218] mr-2">x{item.quantity}</span>
+                        <span className="font-sans font-semibold text-[#6B1218] text-[0.95rem]">{formatPrice(item.price)}</span>
                       </div>
                     </div>
                   ))}
@@ -251,9 +251,9 @@ export default function DetailOrder({
                   <span className="text-[#6B4C35]/70 font-light">Phí giao hàng:</span>
                   <span className="font-medium">{formatPrice(order.shipping)}</span>
                 </div>
-                <div className="flex justify-between border-t border-[#6B4C35]/10 pt-3 text-base font-bold text-[#6B1218]">
-                  <span className="font-serif">Tổng cộng:</span>
-                  <span className="font-serif">{formatPrice(order.total)}</span>
+                <div className="flex justify-between border-t border-[#6B4C35]/10 pt-3 text-[1.05rem] font-bold text-[#6B1218]">
+                  <span className="font-sans">Tổng cộng:</span>
+                  <span className="font-sans text-[1.15rem]">{formatPrice(order.total)}</span>
                 </div>
               </div>
 

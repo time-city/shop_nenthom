@@ -1,4 +1,5 @@
 import type { LoadingStateProps } from "../../lib/types/ui";
+import Spinner from "./Spinner";
 
 export default function LoadingState({
   className = "",
@@ -10,10 +11,7 @@ export default function LoadingState({
       role="status"
       aria-live="polite"
     >
-      <span
-        className="size-8 animate-spin rounded-full border-2 border-[#6B1218]/20 border-t-[#6B1218]"
-        aria-hidden="true"
-      />
+      <Spinner size="md" />
       <span>{label}</span>
     </div>
   );

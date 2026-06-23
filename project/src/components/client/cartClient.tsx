@@ -419,10 +419,43 @@ export default function CartClient() {
   if (step === "checkout" && selectedCart.length > 0) {
     return (
       <main className="min-h-screen bg-[#F2E8D9] px-4 py-14 text-[#2C1810] sm:px-8 lg:px-12 xl:px-16">
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={() => setStep("cart")}
+            className="group flex items-center gap-2 text-sm font-light text-[#8B7355] transition hover:text-[#6B1218]"
+          >
+            <span className="inline-block transition-transform duration-200 group-hover:-translate-x-1">←</span> Quay lại giỏ hàng
+          </button>
+        </div>
+
         <section className="mb-8 flex min-h-[90px] flex-col justify-center gap-3 bg-[#6B1218] px-5 py-5 text-[#F5F0E8] sm:px-8 lg:flex-row lg:items-center lg:justify-between">
-          <h1 className="font-serif text-[2.4rem] sm:text-[3.2rem] font-light leading-tight">
-            Thanh Toán
-          </h1>
+          <div className="flex items-center gap-3.5">
+            {/* <button
+              type="button"
+              onClick={() => setStep("cart")}
+              className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#F5F0E8]/20 bg-[#F5F0E8]/5 text-[#F5F0E8] transition hover:bg-[#F5F0E8] hover:text-[#6B1218]"
+              title="Quay lại giỏ hàng"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="transition-transform duration-200 group-hover:-translate-x-0.5"
+              >
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+            </button> */}
+            <h1 className="font-serif text-[2.4rem] sm:text-[3.2rem] font-light leading-tight">
+              Thanh Toán
+            </h1>
+          </div>
           <div
             className="flex flex-wrap items-center gap-2 text-[0.78rem] text-[#F5F0E8]/60"
             aria-label="Breadcrumb"
@@ -441,6 +474,10 @@ export default function CartClient() {
             isSubmitting={isCheckingOut}
             items={selectedCart}
             onBackToCart={() => setStep("cart")}
+            onApplyPromo={applyPromo}
+            appliedDiscountCode={appliedDiscount?.code}
+            discountAmount={appliedDiscount?.discount_cents}
+            discountType={appliedDiscount?.type}
           />
         </section>
       </main>
@@ -542,11 +579,7 @@ export default function CartClient() {
               <CartSummary
                 disabled={isMutatingCart || selectedCart.length === 0 || pendingCount > 0}
                 subtotal={subtotal}
-                onApplyPromo={applyPromo}
                 onCheckout={() => setStep("checkout")}
-                appliedDiscountCode={appliedDiscount?.code}
-                discountAmount={appliedDiscount?.discount_cents}
-                discountType={appliedDiscount?.type}
               />
             </section>
           )}

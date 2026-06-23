@@ -98,18 +98,16 @@ function CollectionClientInner({
   const search = searchParams.get("q") || "";
   const page = Number(searchParams.get("page") || "1");
 
-  const [products, setProducts] = useState<ClientProductItemInterface[]>(initialProducts);
+  const [allProducts, setAllProducts] = useState<ClientProductItemInterface[]>(initialProducts);
+  const [productScentMap, setProductScentMap] = useState<Record<number, string[]>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(initialError);
-  const [meta, setMeta] = useState<ClientProductsMetaInterface>(initialMeta);
   const [selectedFilter, setSelectedFilter] = useState({
     scentId,
     priceRange,
     search,
     page,
   });
-
-  const isFirstRender = useRef(true);
 
   useEffect(() => {
     setTimeout(() => {
@@ -118,67 +116,110 @@ function CollectionClientInner({
   }, [scentId, priceRange, search, page]);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    let cancelled = false;
+    let active = true;
 
-    const timer = setTimeout(async () => {
+    const loadAllData = async () => {
       setIsLoading(true);
       setError("");
 
       try {
-        const { maxPrice, minPrice } = parsePriceRange(selectedFilter.priceRange);
-        const result = await getProductsAction({
-          scentId: selectedFilter.scentId ? Number(selectedFilter.scentId) : undefined,
-          limit: pageSize,
-          maxPrice,
-          minPrice,
-          page: selectedFilter.page,
-          search: selectedFilter.search.trim() || undefined,
-        });
-
-        if (cancelled) return;
+        const result = await getProductsAction({ limit: 100 });
+        if (!active) return;
 
         if ("error" in result && result.error) {
           setError(getFriendlyResponseError(result.error));
-          setProducts([]);
         } else if ("success" in result && result.success) {
           const productResult = result as ClientProductsSuccessResponseInterface;
-          const nextProducts = productResult.data.filter(
+          const allProd = productResult.data.filter(
             (product) => product.is_custom !== true,
           );
-          setProducts(nextProducts);
-          setMeta(productResult.meta);
+          setAllProducts(allProd);
         }
+
+        const mappings: Record<number, string[]> = {};
+        await Promise.all(
+          scents.map(async (scent) => {
+            const res = await getProductsAction({ limit: 100, scentId: scent.id });
+            if (res && "success" in res && res.success) {
+              mappings[scent.id] = res.data.map((p) => p.id);
+            }
+          })
+        );
+        if (!active) return;
+        setProductScentMap(mappings);
       } catch (err) {
-        if (!cancelled) {
+        if (active) {
           setError(err instanceof Error ? err.message : String(err));
         }
       } finally {
-        if (!cancelled) {
+        if (active) {
           setIsLoading(false);
         }
       }
-    }, 300);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
     };
-  }, [selectedFilter, pageSize]);
+
+    void loadAllData();
+    return () => {
+      active = false;
+    };
+  }, [scents]);
+
+  const filteredProducts = useMemo(() => {
+    return allProducts.filter((product) => {
+      if (selectedFilter.scentId) {
+        const targetScentId = Number(selectedFilter.scentId);
+        const mappedProductIds = productScentMap[targetScentId] || [];
+        if (!mappedProductIds.includes(product.id)) {
+          return false;
+        }
+      }
+
+      if (selectedFilter.priceRange) {
+        const { minPrice, maxPrice } = parsePriceRange(selectedFilter.priceRange);
+        if (minPrice !== undefined && product.base_price_cents < minPrice) {
+          return false;
+        }
+        if (maxPrice !== undefined && product.base_price_cents > maxPrice) {
+          return false;
+        }
+      }
+
+      if (selectedFilter.search) {
+        const query = selectedFilter.search.toLowerCase().trim();
+        if (!product.name.toLowerCase().includes(query)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [allProducts, selectedFilter.scentId, selectedFilter.priceRange, selectedFilter.search, productScentMap]);
+
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (selectedFilter.page - 1) * pageSize;
+    return filteredProducts.slice(startIndex, startIndex + pageSize);
+  }, [filteredProducts, selectedFilter.page, pageSize]);
+
+  const meta = useMemo(() => {
+    const total = filteredProducts.length;
+    return {
+      limit: pageSize,
+      page: selectedFilter.page,
+      total,
+      totalPages: Math.max(Math.ceil(total / pageSize), 1),
+    };
+  }, [filteredProducts.length, selectedFilter.page, pageSize]);
 
   const contextValue = useMemo(() => ({
-    products,
+    products: paginatedProducts,
     isLoading,
     error,
     setError,
     selectedFilter,
     setSelectedFilter,
     meta,
-    setMeta,
-  }), [products, isLoading, error, selectedFilter, meta]);
+    setMeta: (() => {}) as unknown as Dispatch<SetStateAction<ClientProductsMetaInterface>>,
+  }), [paginatedProducts, isLoading, error, selectedFilter, meta]);
 
   return (
     <CollectionContext.Provider value={contextValue}>
