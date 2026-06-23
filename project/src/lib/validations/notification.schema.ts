@@ -7,7 +7,7 @@ export const getAdminNotificationsSchema = z.object({
 });
 
 export const notificationIdSchema = z.string().uuid(
-  "ID thông báo không hợp lệ",
+  "Không thể xác định thông báo. Vui lòng tải lại trang.",
 );
 
 export type GetAdminNotificationsParams = z.infer<
