@@ -5,6 +5,29 @@ import type {
   SendResetPasswordEmailParams,
 } from "./types/email";
 
+const CHAMCHAM_LOGO_URL =
+  "https://res.cloudinary.com/dxrfpoy6l/image/upload/v1781782321/logo_mqpoen.svg";
+
+function getEmailHeader() {
+  return `
+    <div style="margin-bottom: 24px; text-align: center;">
+      <img
+        src="${CHAMCHAM_LOGO_URL}"
+        alt="ChamCham Studio"
+        width="88"
+        height="82"
+        style="display: block; width: 88px; height: 82px; margin: 0 auto 10px; object-fit: contain;"
+      />
+      <div style="font-family: Georgia, serif; font-size: 22px; font-weight: 700; color: #6B1218;">
+        ChamCham Studio
+      </div>
+      <div style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #8B6F5E;">
+        Nến thơm thủ công
+      </div>
+    </div>
+  `;
+}
+
 function getMailConfig() {
   const user = process.env.SMTP_USER ?? process.env.GMAIL_USER;
   const pass = process.env.SMTP_PASSWORD ?? process.env.GMAIL_APP_PASSWORD;
@@ -58,15 +81,18 @@ export async function sendResetPasswordEmail({ email, otp, resetUrl }: SendReset
   await transporter.sendMail({
     from,
     html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #2C1810;">
-        <h2>Đặt lại mật khẩu</h2>
-        <p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản ChamCham.</p>
-        <p>Mã xác nhận của bạn là:</p>
-        <p style="font-size: 24px; font-weight: 700; letter-spacing: 4px;">${otp}</p>
-        <p>Bạn cũng có thể mở liên kết sau để tiếp tục:</p>
-        <p><a href="${resetUrl}">${resetUrl}</a></p>
-        <p>Mã xác nhận có hiệu lực trong 5 phút.</p>
-        <p>Nếu bạn không yêu cầu thao tác này, hãy bỏ qua email này.</p>
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #2C1810; background: #F8F0E4; padding: 24px;">
+        <div style="max-width: 640px; margin: 0 auto; background: #fffaf3; border: 1px solid #eadfd2; padding: 28px;">
+          ${getEmailHeader()}
+          <h2 style="color: #6B1218;">Đặt lại mật khẩu</h2>
+          <p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản ChamCham.</p>
+          <p>Mã xác nhận của bạn là:</p>
+          <p style="font-size: 24px; font-weight: 700; letter-spacing: 4px;">${otp}</p>
+          <p>Bạn cũng có thể mở liên kết sau để tiếp tục:</p>
+          <p><a href="${resetUrl}">${resetUrl}</a></p>
+          <p>Mã xác nhận có hiệu lực trong 5 phút.</p>
+          <p>Nếu bạn không yêu cầu thao tác này, hãy bỏ qua email này.</p>
+        </div>
       </div>
     `,
     subject: "Đặt lại mật khẩu ChamCham",
@@ -108,6 +134,7 @@ export async function sendOrderBillEmail(params: SendOrderBillEmailParams) {
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #2C1810; background: #F8F0E4; padding: 24px;">
         <div style="max-width: 640px; margin: 0 auto; background: #fffaf3; border: 1px solid #eadfd2; padding: 28px;">
+          ${getEmailHeader()}
           <h2 style="margin: 0 0 8px; color: #6B1218;">ChamCham đã nhận đơn hàng của bạn</h2>
           <p style="margin: 0 0 20px;">Cảm ơn ${escapeHtml(params.fullname)} đã đặt hàng. Dưới đây là thông tin đơn hàng của bạn.</p>
 
@@ -158,6 +185,7 @@ export async function sendOrderCancellationEmail(
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #2C1810; background: #F8F0E4; padding: 24px;">
         <div style="max-width: 640px; margin: 0 auto; background: #fffaf3; border: 1px solid #eadfd2; padding: 28px;">
+          ${getEmailHeader()}
           <h2 style="margin: 0 0 8px; color: #6B1218;">Đơn hàng của bạn đã được hủy</h2>
           <p>Xin chào ${escapeHtml(params.fullname)},</p>
           <p>ChamCham xin thông báo đơn hàng <strong>#${escapeHtml(params.orderNumber)}</strong> đã được hủy.</p>

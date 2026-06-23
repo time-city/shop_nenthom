@@ -1,5 +1,6 @@
-import { Prisma } from "@prisma/client";
+import { NotificationType, OrderStatus, Prisma } from "@prisma/client";
 import prisma from "../prisma";
+import { emitCartProductsRemovedToUser } from "../events/userCartEvents";
 import { GetProductsParams, CreateProductInput, UpdateProductInput } from "../validations/product.schema";
 
 let optionsCache: any = null;
@@ -65,6 +66,8 @@ export const ProductService = {
                         name: true,
                         base_price_cents: true,
                         description: true,
+                        ingredients: true,
+                        usage_instructions: true,
                         images: true,
                         is_active: true,
                         created_at: true,
@@ -240,6 +243,8 @@ export const ProductService = {
                         name: true,
                         base_price_cents: true,
                         description: true,
+                        ingredients: true,
+                        usage_instructions: true,
                         images: true,
                         created_at: true,
                         category: {
@@ -287,6 +292,8 @@ export const ProductService = {
                     name: data.name,
                     base_price_cents: data.base_price_cents,
                     description: data.description,
+                    ingredients: data.ingredients,
+                    usage_instructions: data.usage_instructions,
                     images: data.images,
                     is_active: data.is_active,
                     scents: {
@@ -301,6 +308,8 @@ export const ProductService = {
                     name: true,
                     base_price_cents: true,
                     description: true,
+                    ingredients: true,
+                    usage_instructions: true,
                     images: true,
                     is_active: true,
                     created_at: true,
@@ -349,6 +358,8 @@ export const ProductService = {
                     name: data.name,
                     base_price_cents: data.base_price_cents,
                     description: data.description,
+                    ingredients: data.ingredients,
+                    usage_instructions: data.usage_instructions,
                     images: data.images,
                     is_active: data.is_active,
                     ...(data.scentIds !== undefined && {
@@ -366,6 +377,8 @@ export const ProductService = {
                     name: true,
                     base_price_cents: true,
                     description: true,
+                    ingredients: true,
+                    usage_instructions: true,
                     images: true,
                     is_active: true,
                     created_at: true,
@@ -384,17 +397,147 @@ export const ProductService = {
     async deleteProduct(id: string) {
         try {
             const product = await prisma.product.findUnique({
-                where: { id, is_active: true }
+                where: { id, is_active: true },
+                select: { id: true, name: true },
             });
             if (!product) throw new Error('Sản phẩm này hiện không còn khả dụng.');
-            return await prisma.product.update({
-                where: { id },
-                data: { is_active: false },
+
+            const affectedCarts = await prisma.cartItem.findMany({
+                where: { product_id: id },
                 select: {
-                    id: true,
-                    is_active: true,
-                }
+                    cart: {
+                        select: { user_id: true },
+                    },
+                },
             });
+
+            const affectedUserIds = [
+                ...new Set(
+                    affectedCarts
+                        .map((item) => item.cart.user_id)
+                        .filter((userId): userId is string => Boolean(userId)),
+                ),
+            ];
+
+            const [updated, removedCartItems] = await Promise.all([
+                prisma.product.update({
+                    where: { id },
+                    data: { is_active: false },
+                    select: {
+                        id: true,
+                        is_active: true,
+                    },
+                }),
+                prisma.cartItem.deleteMany({
+                    where: { product_id: id },
+                }),
+                affectedUserIds.length > 0
+                    ? prisma.notification.createMany({
+                        data: affectedUserIds.map((userId) => ({
+                            data: {
+                                productId: product.id,
+                                productName: product.name,
+                            },
+                            message: `${product.name} đã ngừng bán và được tự động xóa khỏi giỏ hàng của bạn.`,
+                            title: "Sản phẩm đã ngừng bán",
+                            type: NotificationType.PRODUCT_UNAVAILABLE,
+                            user_id: userId,
+                        })),
+                    })
+                    : Promise.resolve({ count: 0 }),
+            ]);
+
+            const eventResults = await Promise.allSettled(
+                affectedUserIds.map((userId) =>
+                    emitCartProductsRemovedToUser(userId, [product.name]),
+                ),
+            );
+            for (const result of eventResults) {
+                if (result.status === "rejected") {
+                    console.error(
+                        "[emitCartProductsRemovedToUser] Không thể phát sự kiện:",
+                        result.reason,
+                    );
+                }
+            }
+
+            return {
+                ...updated,
+                notifiedUserCount: affectedUserIds.length,
+                removedCartItemCount: removedCartItems.count,
+            };
         } finally {}
+    },
+
+    async getDeleteImpact(id: string) {
+        const product = await prisma.product.findUnique({
+            where: { id, is_active: true },
+            select: { id: true, name: true },
+        });
+        if (!product) throw new Error("Sản phẩm này hiện không còn khả dụng.");
+
+        const [cartSummary, carts, activeOrderItems] = await Promise.all([
+            prisma.cartItem.aggregate({
+                where: { product_id: id },
+                _count: { id: true },
+                _sum: { quantity: true },
+            }),
+            prisma.cartItem.findMany({
+                where: { product_id: id },
+                distinct: ["cart_id"],
+                select: { cart_id: true },
+            }),
+            prisma.orderItem.findMany({
+                where: {
+                    product_id: id,
+                    order: {
+                        status: { in: [OrderStatus.PENDING, OrderStatus.PROCESSING] },
+                    },
+                },
+                select: {
+                    quantity: true,
+                    order: {
+                        select: {
+                            order_number: true,
+                            shipping_fullname: true,
+                            status: true,
+                        },
+                    },
+                },
+                orderBy: { order: { created_at: "desc" } },
+            }),
+        ]);
+
+        const ordersByNumber = new Map<string, {
+            customerName: string;
+            orderNumber: string;
+            quantity: number;
+            status: OrderStatus;
+        }>();
+
+        for (const item of activeOrderItems) {
+            const existing = ordersByNumber.get(item.order.order_number);
+            if (existing) {
+                existing.quantity += item.quantity;
+                continue;
+            }
+
+            ordersByNumber.set(item.order.order_number, {
+                customerName: item.order.shipping_fullname,
+                orderNumber: item.order.order_number,
+                quantity: item.quantity,
+                status: item.order.status,
+            });
+        }
+
+        return {
+            activeOrderCount: ordersByNumber.size,
+            cartCount: carts.length,
+            cartItemCount: cartSummary._count.id,
+            cartQuantity: cartSummary._sum.quantity ?? 0,
+            orders: [...ordersByNumber.values()],
+            productId: product.id,
+            productName: product.name,
+        };
     }
 }

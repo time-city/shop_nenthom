@@ -3,6 +3,7 @@ import nextEnv from "@next/env";
 import next from "next";
 import {
   ADMIN_ORDER_WEBSOCKET_PATH,
+  USER_NOTIFICATION_WEBSOCKET_PATH,
   setupAdminOrderSocket,
 } from "./src/socket/adminOrderSocket.mjs";
 
@@ -46,6 +47,9 @@ async function start() {
     console.log(`> Server chạy tại http://${hostname}:${port}`);
     console.log(
       `> WebSocket endpoint: ws://${hostname}:${port}${ADMIN_ORDER_WEBSOCKET_PATH}`,
+    );
+    console.log(
+      `> User notification endpoint: ws://${hostname}:${port}${USER_NOTIFICATION_WEBSOCKET_PATH}`,
     );
   });
 

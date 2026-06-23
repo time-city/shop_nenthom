@@ -13,7 +13,7 @@ export const updateCategorySchema = createCategorySchema.partial();
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
 
 export const deleteCategorySchema = z.object({
-    id: z.coerce.number().int().positive('ID không hợp lệ'),
+    id: z.coerce.number().int().positive('Không thể xác định danh mục. Vui lòng tải lại trang.'),
 });
 
 export type DeleteCategoryInput = z.infer<typeof deleteCategorySchema>;

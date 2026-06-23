@@ -36,7 +36,9 @@ export const createProductSchema = z.object({
    name: z.string().min(1, 'Tên sản phẩm không được để trống'),
    base_price_cents: z.coerce.number().min(0, 'Giá không hợp lệ'),
    description: z.string().optional(),
-   images: z.array(z.string().url('URL ảnh không hợp lệ')).min(1, 'Cần ít nhất 1 ảnh'),
+   ingredients: z.string().optional(),
+   usage_instructions: z.string().optional(),
+   images: z.array(z.string().url('Ảnh không hợp lệ. Vui lòng chọn lại ảnh.')).min(1, 'Vui lòng chọn ít nhất một ảnh'),
    is_active: z.boolean().default(true),
    scentIds: z.array(z.coerce.number().int().positive()).optional(),
 });

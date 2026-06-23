@@ -5,6 +5,7 @@ import { WebSocket, WebSocketServer } from "ws";
 const { Client, Pool } = pg;
 
 export const ADMIN_ORDER_WEBSOCKET_PATH = "/ws/admin/orders";
+export const USER_NOTIFICATION_WEBSOCKET_PATH = "/ws/users/notifications";
 
 const SESSION_COOKIE_NAME = "session";
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -35,7 +36,7 @@ function getCookie(request, name) {
   return null;
 }
 
-function verifyAdminSession(token, dev) {
+function verifySession(token, dev) {
   const [encodedHeader, encodedBody, signature] = token.split(".");
   if (!encodedHeader || !encodedBody || !signature) return null;
 
@@ -60,7 +61,7 @@ function verifyAdminSession(token, dev) {
 
     if (
       !payload.sub ||
-      payload.role !== "ADMIN" ||
+      !payload.role ||
       !payload.exp ||
       payload.exp < Math.floor(Date.now() / 1000)
     ) {
@@ -94,22 +95,24 @@ export async function setupAdminOrderSocket({
   const authPool = new Pool({ connectionString });
   const websocketServer = new WebSocketServer({ noServer: true });
 
-  const getActiveAdminId = async (request) => {
+  const getActiveUser = async (request) => {
     const token = getCookie(request, SESSION_COOKIE_NAME);
     if (!token) return null;
 
-    const session = verifyAdminSession(token, dev);
+    const session = verifySession(token, dev);
     if (!session) return null;
 
     const result = await authPool.query(
       `SELECT "role", "status" FROM "public"."users" WHERE "id" = $1 LIMIT 1`,
       [session.sub],
     );
-    const admin = result.rows[0];
+    const user = result.rows[0];
 
-    return admin?.role === "ADMIN" && admin.status === "ACTIVE"
-      ? session.sub
-      : null;
+    if (!user || user.status !== "ACTIVE" || user.role !== session.role) {
+      return null;
+    }
+
+    return { role: user.role, userId: session.sub };
   };
 
   const handleUpgrade = (request, socket, head) => {
@@ -119,19 +122,26 @@ export async function setupAdminOrderSocket({
     );
     const pathname = url.pathname;
 
-    if (pathname !== ADMIN_ORDER_WEBSOCKET_PATH) return;
+    if (
+      pathname !== ADMIN_ORDER_WEBSOCKET_PATH &&
+      pathname !== USER_NOTIFICATION_WEBSOCKET_PATH
+    ) {
+      return;
+    }
 
-    void getActiveAdminId(request)
-      .then((adminId) => {
-        if (!adminId) {
+    void getActiveUser(request)
+      .then((user) => {
+        const expectedRole =
+          pathname === ADMIN_ORDER_WEBSOCKET_PATH ? "ADMIN" : "CUSTOMER";
+        if (!user || user.role !== expectedRole) {
           rejectUpgrade(socket, 401, "Không có quyền truy cập.");
           return;
         }
 
         websocketServer.handleUpgrade(request, socket, head, (websocket) => {
           websocketServer.emit("connection", websocket, request, {
-            adminId,
-            kind: "admin",
+            kind: expectedRole === "ADMIN" ? "admin" : "user",
+            userId: user.userId,
           });
         });
       })
@@ -155,8 +165,9 @@ export async function setupAdminOrderSocket({
     websocket.on("error", (error) => {
       console.error("[admin-order-socket] Lỗi kết nối admin:", error);
     });
-    void authPool
-      .query(
+    if (connection.kind === "admin") {
+      void authPool
+        .query(
         `SELECT
            (
              SELECT COUNT(*)::int
@@ -168,7 +179,7 @@ export async function setupAdminOrderSocket({
              FROM "public"."contacts"
              WHERE "status" = 'PENDING'
            ) AS "pendingContactCount"`,
-          [connection.adminId],
+          [connection.userId],
         )
         .then((result) => {
           websocket.send(
@@ -188,6 +199,14 @@ export async function setupAdminOrderSocket({
             error,
           );
         });
+    } else {
+      websocket.send(
+        JSON.stringify({
+          data: { userId: connection.userId },
+          event: "CONNECTED",
+        }),
+      );
+    }
 
     const heartbeat = setInterval(() => {
       if (!alive) {
@@ -213,6 +232,16 @@ export async function setupAdminOrderSocket({
 
         const connection = connectionBySocket.get(client);
         if (!connection) return;
+
+        if (event.event === "CART_PRODUCTS_REMOVED") {
+          if (
+            connection.kind === "user" &&
+            connection.userId === event.data.userId
+          ) {
+            client.send(JSON.stringify(event));
+          }
+          return;
+        }
 
         if (connection.kind !== "admin") return;
 
@@ -243,7 +272,7 @@ export async function setupAdminOrderSocket({
              AND notification."order_id" = $2::uuid
              AND notification."type" = 'NEW_ORDER'
            LIMIT 1`,
-          [connection.adminId, event.data.orderId],
+          [connection.userId, event.data.orderId],
         );
         const notification = result.rows[0];
 
