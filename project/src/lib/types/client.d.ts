@@ -58,6 +58,7 @@ export type DetailOptionGroupProps = {
   options: import("../../interface/clientInterface").ClientProductOptionItemInterface[];
   renderLabel?: (item: import("../../interface/clientInterface").ClientProductOptionItemInterface) => string;
   selectedId?: number;
+  noBorder?: boolean;
 };
 
 
@@ -181,12 +182,8 @@ export type CartItemProps = {
 /** Props khối tổng tóm tắt đơn ở trang giỏ hàng. */
 export type CartSummaryProps = {
   disabled?: boolean;
-  onApplyPromo: (code: string) => Promise<{ success: boolean; error?: string }>;
   onCheckout: () => void;
   subtotal: number;
-  appliedDiscountCode?: string;
-  discountAmount?: number;
-  discountType?: string;
 };
 
 
@@ -223,6 +220,10 @@ export type CheckoutSummaryProps = {
   isSubmitting?: boolean;
   items: ClientCartItem[];
   onBackToCart: () => void;
+  onApplyPromo: (code: string) => Promise<{ success: boolean; error?: string }>;
+  appliedDiscountCode?: string;
+  discountAmount?: number;
+  discountType?: string;
 };
 
 

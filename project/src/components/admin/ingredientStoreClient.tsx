@@ -722,7 +722,7 @@ function ScentTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
             <span className="font-bold">{item.name}</span>
           </TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#6B1218]">{item.price}</span>
+            <span className="font-serif font-bold text-[#6B1218] text-xl">{item.price}</span>
           </TableCell>
           <TableCell>
             <ActionButtons
@@ -753,7 +753,7 @@ function ColorTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
           </TableCell>
           <TableCell>{item.hex}</TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#6B1218]">{item.price}</span>
+            <span className="font-serif font-bold text-[#6B1218] text-xl">{item.price}</span>
           </TableCell>
           <TableCell>
             <ActionButtons
@@ -777,7 +777,7 @@ function SizeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
             <span className="font-bold">{item.name}</span>
           </TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#6B1218]">{item.price}</span>
+            <span className="font-serif font-bold text-[#6B1218] text-xl">{item.price}</span>
           </TableCell>
           <TableCell>
             <ActionButtons
@@ -801,7 +801,7 @@ function ToppingTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
             <span className="font-bold">{item.name}</span>
           </TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#6B1218]">{item.price}</span>
+            <span className="font-serif font-bold text-[#6B1218] text-xl">{item.price}</span>
           </TableCell>
           <TableCell>
             <span
@@ -836,7 +836,7 @@ function TypeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
             <span className="font-bold">{item.name}</span>
           </TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#6B1218]">{item.price}</span>
+            <span className="font-serif font-bold text-[#6B1218] text-xl">{item.price}</span>
           </TableCell>
           <TableCell>
             <ActionButtons

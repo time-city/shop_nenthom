@@ -56,7 +56,8 @@ export default function MobileMenu({ links, currentUser }: MobileMenuProps) {
       const el = document.getElementById(hash);
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.history.pushState(null, "", `/#${hash}`);
+        const searchParams = window.location.search;
+        window.history.pushState(null, "", `${window.location.pathname}${searchParams}#${hash}`);
       }
     }
   };

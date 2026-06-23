@@ -4,21 +4,14 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { getCurrentUser } from "../../lib/action/user.action";
 import { useUserStore } from "@/src/store/useUserStore";
+import type { FullFormValues } from "@/src/interface/clientInterface";
 import { PROVINCE_POSTAL_CODE_MAP } from "@/src/lib/utils/provincePostalCodes";
 import type {
   CartPaymentMethod,
   CheckoutFormProps,
 } from "../../lib/types/client";
 
-interface FullFormValues {
-  fullname: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  zip: string;
-  note: string;
-}
+
 
 const initialCheckoutFormValues: FullFormValues = {
   fullname: "",

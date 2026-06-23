@@ -5,6 +5,7 @@ import type { AdminUser as User } from "@/src/lib/types/admin";
 import { getUserOrdersAction } from "../../lib/action/user.action";
 import ClientPagination from "./clientPagination";
 import type { AdminPaginationMeta } from "@/src/lib/types/admin";
+import Spinner from "@/src/components/ui/Spinner";
 
 interface ClientOrderModalProps {
     user: User | null;
@@ -122,7 +123,10 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                                 {isLoading ? (
                                     <tr>
                                         <td colSpan={5} className="px-4 py-8 text-center text-[#6B4C35] text-sm">
-                                            Đang tải danh sách đơn hàng...
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Spinner size="sm" />
+                                                <span>Đang tải danh sách đơn hàng...</span>
+                                            </div>
                                         </td>
                                     </tr>
                                 ) : error ? (

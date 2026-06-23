@@ -6,15 +6,11 @@ name: string;
 }
 
 
-
-
 /** Response thành công của action lấy danh sách category. */
 export interface ClientCategoriesSuccessResponseInterface {
 categories: ClientProductCategoryInterface[];
 success: true;
 }
-
-
 
 
 /** Product item trong response danh sách sản phẩm. */
@@ -29,8 +25,6 @@ name: string;
 }
 
 
-
-
 /** Meta pagination hiện action product trả về từ service. */
 export interface ClientProductsMetaInterface {
 limit: number;
@@ -38,8 +32,6 @@ page: number;
 total: number;
 totalPages: number;
 }
-
-
 
 
 /** Pagination dùng sau khi FE normalize danh sách sản phẩm. */
@@ -92,7 +84,6 @@ weight_gram?: number;
 
 
 
-
 /** Nhóm options trong response chi tiết sản phẩm. */
 export interface ClientProductOptionsInterface {
 colors?: ClientProductOptionItemInterface[];
@@ -102,8 +93,6 @@ sizes?: ClientProductOptionItemInterface[];
 toppings?: ClientProductOptionItemInterface[];
 waxColors?: ClientProductOptionItemInterface[];
 }
-
-
 
 
 /** Options tùy chỉnh trả về từ action getCustomizationOptionsAction. */
@@ -236,15 +225,11 @@ toppings_json?: unknown;
 }
 
 
-
-
 /** Cart trả về từ action lấy/tạo giỏ hàng. */
 export interface ClientCartActionCartInterface {
 id: string;
 items: ClientCartActionItemInterface[];
 }
-
-
 
 
 /** Response thành công của action lấy/tạo giỏ hàng. */
@@ -253,5 +238,21 @@ cart: ClientCartActionCartInterface;
 success: true;
 }
 
+/** Interface chứa các trường thông tin cần thiết cho form checkout. */
+export interface FullFormValues {
+fullname: string;
+email: string;
+phone: string;
+address: string;
+city: string;
+zip: string;
+  note: string;
+}
 
 
+/** Props cho component DetailCardProductModal */
+export interface DetailCardProductModalProps {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}

@@ -41,10 +41,11 @@ export default function NavLinks({
           const newHash = id === "home" ? "" : `#${id}`;
           const currentHash = window.location.hash;
           if (currentHash !== newHash) {
+            const searchParams = window.location.search;
             window.history.replaceState(
               null,
               "",
-              newHash ? `${window.location.pathname}${newHash}` : window.location.pathname
+              newHash ? `${window.location.pathname}${searchParams}${newHash}` : `${window.location.pathname}${searchParams}`
             );
           }
         }
@@ -65,7 +66,8 @@ export default function NavLinks({
           setActiveSection("home");
           const currentHash = window.location.hash;
           if (currentHash !== "" && currentHash !== "#home") {
-            window.history.replaceState(null, "", window.location.pathname);
+            const searchParams = window.location.search;
+            window.history.replaceState(null, "", `${window.location.pathname}${searchParams}`);
           }
         }
       }, 100);
@@ -113,7 +115,8 @@ export default function NavLinks({
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
         // Cập nhật URL mà không reload
-        window.history.pushState(null, "", `/#${hash}`);
+        const searchParams = window.location.search;
+        window.history.pushState(null, "", `${window.location.pathname}${searchParams}#${hash}`);
         setActiveSection(hash);
       }
     }

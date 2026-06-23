@@ -4,12 +4,7 @@ import React from "react";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import styles from "../../styles/detailCardProduct.module.css";
-
-interface DetailCardProductModalProps {
-  open: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}
+import { DetailCardProductModalProps } from "../../interface/clientInterface";
 
 export default function DetailCardProductModal({
   open,

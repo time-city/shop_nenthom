@@ -152,20 +152,88 @@ export default function DetailCardProduct({
     });
   };
 
+  const tabsBlock = (className?: string) => (
+    <div className={`mt-6 border-t border-[#6B4C35]/15 p-4 sm:p-5 ${
+      isModal 
+        ? "rounded-2xl bg-[#F2E8D9] shadow-[0_10px_24px_rgba(44,24,16,0.06)]" 
+        : "bg-transparent shadow-none"
+    } ${className || ""}`}>
+      <div className="mb-4 flex flex-wrap gap-4 border-b border-[#6B4C35]/15 pb-3">
+        {[
+          { id: "description", label: "Mô tả" },
+          { id: "ingredients", label: "Thành phần" },
+          { id: "usage", label: "Cách sử dụng" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() =>
+              setActiveTab(tab.id as "description" | "ingredients" | "usage")
+            }
+            className={`relative py-1 text-xs transition ${activeTab === tab.id
+                ? "font-medium text-[#6B1218] after:absolute after:-bottom-[13px] after:left-0 after:h-0.5 after:w-full after:bg-[#6B1218] after:content-['']"
+                : "text-[#6B4C35] hover:text-[#6B1218]"
+              }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="h-20 overflow-y-auto text-xs font-light leading-6 text-[#2C1810] pr-1">
+        {activeTab === "description" ? (
+          <>
+            <p>
+              Nến thơm ChamCham được làm từ sáp đậu nành tự nhiên, tạo
+              hương thơm mềm mại và tinh tế cho không gian sống.
+            </p>
+            <p className="mt-2">
+              Mỗi sản phẩm được hoàn thiện thủ công với sự tỉ mỉ trong
+              từng chi tiết.
+            </p>
+          </>
+        ) : null}
+
+        {activeTab === "ingredients" ? (
+          <p>
+            <strong>Thành phần chính:</strong> Sáp đậu nành, tinh dầu
+            thiên nhiên, bấc cotton và hương thơm thực vật.
+          </p>
+        ) : null}
+
+        {activeTab === "usage" ? (
+          <ul className="list-disc space-y-1 pl-4">
+            <li>Đốt nến trong không gian thoáng và tránh gió mạnh.</li>
+            <li>Thời gian đốt lý tưởng mỗi lần là 3-4 giờ.</li>
+            <li>Cắt bấc còn khoảng 5mm trước mỗi lần sử dụng.</li>
+            <li>Không để nến cháy khi bạn rời khỏi phòng.</li>
+          </ul>
+        ) : null}
+      </div>
+    </div>
+  );
+
   const innerContent = (
-    <div className="rounded-2xl bg-[#F8F0E4] p-4 text-[#2C1810] shadow-[0_26px_80px_rgba(30,6,8,0.42)] sm:p-6 lg:p-8">
+    <div className={`text-[#2C1810] ${
+      isModal 
+        ? "rounded-2xl bg-[#F8F0E4] p-4 shadow-[0_26px_80px_rgba(30,6,8,0.42)] sm:p-5 lg:p-6" 
+        : "p-0 bg-transparent shadow-none"
+    }`}>
       <button
         type="button"
         onClick={handleClose}
-        className="mb-5 text-sm text-[#6B4C35] transition hover:text-[#6B1218]"
+        className="mb-4 text-sm text-[#6B4C35] transition hover:text-[#6B1218]"
       >
         ← Quay lại
       </button>
 
-
-      <div className="grid gap-8 rounded-2xl bg-[#F8F0E4] lg:grid-cols-2 lg:gap-12">
+      <div className={`grid gap-6 ${
+        isModal 
+          ? "lg:grid-cols-2 lg:gap-10 rounded-2xl bg-[#F8F0E4]" 
+          : "lg:grid-cols-[1.1fr_0.9fr] lg:gap-16"
+      }`}>
         <div className="product-visual">
-          <div className="flex aspect-[4/5] items-center justify-center rounded-2xl bg-white p-6 border border-[#2C1810]/5 shadow-[0_20px_50px_rgba(44,24,16,0.06)] overflow-hidden">
+          <div className="flex aspect-[4/5] lg:aspect-square lg:h-[340px] items-center justify-center rounded-2xl  p-4 border border-[#2C1810]/5 shadow-[0_20px_50px_rgba(44,24,16,0.06)] overflow-hidden mx-auto w-full">
             {image ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
@@ -175,7 +243,7 @@ export default function DetailCardProduct({
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-[#FAF6F0]">
-                <div className="relative h-[220px] w-[165px] rounded-[8px_8px_6px_6px] shadow-[0_28px_54px_rgba(44,24,16,0.14),inset_-16px_0_28px_rgba(126,93,56,0.1),inset_12px_0_22px_rgba(255,255,255,0.28)] sm:h-[250px] sm:w-[185px]">
+                <div className="relative h-[200px] w-[150px] rounded-[8px_8px_6px_6px] shadow-[0_28px_54px_rgba(44,24,16,0.14),inset_-16px_0_28px_rgba(126,93,56,0.1),inset_12px_0_22px_rgba(255,255,255,0.28)]">
                   <div
                     className={`${styles.productCandleWax} ${getProductCandleWaxClass(candleColor)}`}
                   />
@@ -188,7 +256,7 @@ export default function DetailCardProduct({
 
           {productImages.length > 1 ? (
             <div
-              className="mt-4 grid grid-cols-4 gap-3"
+              className="mt-3 grid grid-cols-4 gap-2"
               aria-label="Danh sách ảnh sản phẩm"
             >
               {productImages.map((thumbnail, index) => {
@@ -225,194 +293,143 @@ export default function DetailCardProduct({
               })}
             </div>
           ) : null}
+
+          {tabsBlock("hidden lg:block")}
         </div>
 
+        <div className="product-info flex flex-col justify-between">
+          <div>
+            <h1
+              id="product-detail-title"
+              className="font-serif text-[1.8rem] font-bold leading-tight text-[#2C1810] sm:text-[2.2rem]"
+            >
+              {product.name}
+            </h1>
+            <p className="mt-1 text-[0.7rem] uppercase tracking-[0.16em] text-[#6B4C35]">
+              {product.category?.name ?? "ChamCham"}
+            </p>
+            <p className="mt-4 font-sans text-[1rem] font-bold text-[#6B1218] sm:text-[1.5rem]">
+              {formatPrice(totalPrice)}
+            </p>
+            <p
+              id="product-detail-description"
+              className="mt-3 text-xs font-light italic leading-6 text-[#6B4C35]"
+            >
+              {scentNote}
+            </p>
 
-        <div className="product-info">
-          <h1
-            id="product-detail-title"
-            className="font-serif text-[2.2rem] font-bold leading-tight text-[#2C1810] sm:text-[2.6rem]"
-          >
-            {product.name}
-          </h1>
-          <p className="mt-2 text-[0.78rem] uppercase tracking-[0.16em] text-[#6B4C35]">
-            {product.category?.name ?? "ChamCham"}
-          </p>
-          <p className="mt-6 font-serif text-[2rem] font-bold text-[#6B1218] sm:text-[2.35rem]">
-            {formatPrice(totalPrice)}
-          </p>
-          <p
-            id="product-detail-description"
-            className="mt-4 text-sm font-light italic leading-7 text-[#6B4C35]"
-          >
-            {scentNote}
-          </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-t border-[#6B4C35]/15 mt-8 pt-6">
+              <DetailOptionGroup
+                label="Kích thước"
+                options={product.options?.sizes ?? []}
+                selectedId={selectedSize?.id}
+                renderLabel={(item) =>
+                  item.weight_gram ? `${item.name} (${item.weight_gram}g)` : item.name
+                }
+                onSelect={setSelectedSize}
+                noBorder
+              />
 
+              <DetailOptionGroup
+                label="Màu sáp"
+                options={product.options?.waxColors ?? []}
+                selectedId={selectedColor?.id}
+                onSelect={setSelectedColor}
+                noBorder
+              />
 
-          <div className="mt-8 space-y-6">
-            <DetailOptionGroup
-              label="Kích thước"
-              options={product.options?.sizes ?? []}
-              selectedId={selectedSize?.id}
-              renderLabel={(item) =>
-                item.weight_gram ? `${item.name} — ${item.weight_gram}g` : item.name
-              }
-              onSelect={setSelectedSize}
-            />
+              <DetailOptionGroup
+                label="Bao bì"
+                options={product.options?.packagings ?? []}
+                selectedId={selectedPackaging?.id}
+                onSelect={setSelectedPackaging}
+                noBorder
+              />
+            </div>
+          </div>
 
-
-            <DetailOptionGroup
-              label="Màu sáp"
-              options={product.options?.waxColors ?? []}
-              selectedId={selectedColor?.id}
-              onSelect={setSelectedColor}
-            />
-
-
-            <DetailOptionGroup
-              label="Bao bì"
-              options={product.options?.packagings ?? []}
-              selectedId={selectedPackaging?.id}
-              onSelect={setSelectedPackaging}
-            />
-
-
-            <div className="border-t border-[#6B4C35]/15 pt-5">
-              <div className="mb-3 text-[0.75rem] uppercase tracking-[0.16em] text-[#6B4C35]">
-                Số lượng
+          <div className="mt-10 space-y-6">
+            <div className="border-t border-[#6B4C35]/15 pt-6 flex flex-col xl:flex-row xl:items-center gap-5">
+              <div className="flex items-center gap-3">
+                <span className="text-[0.7rem] uppercase tracking-[0.16em] text-[#6B4C35] whitespace-nowrap">
+                  Số lượng:
+                </span>
+                <div className="flex items-center gap-2 bg-[#F2E8D9]/50 rounded-lg px-2 py-1 border border-[#6B4C35]/20">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((value) => Math.max(1, (Number(value) || 1) - 1))}
+                    className="w-7 h-7 rounded text-md transition hover:bg-[#6B1218] hover:text-[#F5F0E8] flex items-center justify-center"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    value={quantity}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "") {
+                        setQuantity("");
+                        return;
+                      }
+                      const intVal = parseInt(val, 10);
+                      if (!isNaN(intVal)) {
+                        setQuantity(Math.max(1, intVal));
+                      }
+                    }}
+                    onBlur={() => {
+                      if (quantity === "" || isNaN(Number(quantity)) || Number(quantity) < 1) {
+                        setQuantity(1);
+                      }
+                    }}
+                    className="w-8 text-center font-serif text-lg font-bold bg-transparent border-none outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((value) => (Number(value) || 1) + 1)}
+                    className="w-7 h-7 rounded text-md transition hover:bg-[#6B1218] hover:text-[#F5F0E8] flex items-center justify-center"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
+
+              <div className="flex-1 flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
-                  onClick={() => setQuantity((value) => Math.max(1, (Number(value) || 1) - 1))}
-                  className="size-10 rounded-lg border border-[#6B4C35]/30 text-xl transition hover:border-[#6B1218] hover:text-[#6B1218]"
+                  onClick={handleAddToCart}
+                  disabled={optimisticAdding}
+                  className="flex-1 rounded-full bg-[#6B1218] px-4 py-3 text-[0.8rem] font-medium uppercase tracking-[0.08em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.3)] transition hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-65 whitespace-nowrap"
                 >
-                  −
+                  {optimisticAdding ? "Đang thêm..." : "Thêm vào giỏ"}
                 </button>
-                <input
-                  type="number"
-                  min="1"
-                  value={quantity}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === "") {
-                      setQuantity("");
-                      return;
-                    }
-                    const intVal = parseInt(val, 10);
-                    if (!isNaN(intVal)) {
-                      setQuantity(Math.max(1, intVal));
-                    }
-                  }}
-                  onBlur={() => {
-                    if (quantity === "" || isNaN(Number(quantity)) || Number(quantity) < 1) {
-                      setQuantity(1);
-                    }
-                  }}
-                  className="w-12 text-center font-serif text-2xl font-bold bg-transparent border-none outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
                 <button
                   type="button"
-                  onClick={() => setQuantity((value) => (Number(value) || 1) + 1)}
-                  className="size-10 rounded-lg border border-[#6B4C35]/30 text-xl transition hover:border-[#6B1218] hover:text-[#6B1218]"
+                  onClick={handleClose}
+                  className="flex-1 rounded-full border border-[#6B1218] px-4 py-3 text-[0.8rem] font-medium uppercase tracking-[0.08em] text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8] whitespace-nowrap"
                 >
-                  +
+                  Tiếp tục mua sắm
                 </button>
               </div>
             </div>
 
-
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={optimisticAdding}
-                className="w-full rounded-full bg-[#6B1218] px-6 py-4 text-[0.85rem] font-medium uppercase tracking-[0.08em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.3)] transition hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-65"
-                 >
-                   {optimisticAdding ? "Đang thêm..." : "Thêm vào giỏ"}
-                 </button>
-                 {cartError && (
-                   <p className="text-sm font-medium text-[#6B1218]">
-                     {cartError}
-                   </p>
-                 )}
-              <button
-                type="button"
-                onClick={handleClose}
-                className="w-full rounded-full border border-[#6B1218] px-6 py-4 text-[0.85rem] font-medium uppercase tracking-[0.08em] text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8]"
-              >
-                Tiếp tục mua sắm
-              </button>
-            </div>
+            {cartError && (
+              <p className="text-sm font-medium text-[#6B1218]">
+                {cartError}
+              </p>
+            )}
           </div>
         </div>
       </div>
 
-
-      <div className="mt-8 rounded-2xl border-t border-[#6B4C35]/15 bg-[#F2E8D9] p-5 shadow-[0_10px_24px_rgba(44,24,16,0.06)] sm:p-6">
-        <div className="mb-5 flex flex-wrap gap-5 border-b border-[#6B4C35]/15 pb-4">
-          {[
-            { id: "description", label: "Mô tả" },
-            { id: "ingredients", label: "Thành phần" },
-            { id: "usage", label: "Cách sử dụng" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() =>
-                setActiveTab(tab.id as "description" | "ingredients" | "usage")
-              }
-              className={`relative py-1 text-sm transition ${activeTab === tab.id
-                  ? "font-medium text-[#6B1218] after:absolute after:-bottom-[17px] after:left-0 after:h-0.5 after:w-full after:bg-[#6B1218] after:content-['']"
-                  : "text-[#6B4C35] hover:text-[#6B1218]"
-                }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-
-        <div className="text-sm font-light leading-8 text-[#2C1810]">
-          {activeTab === "description" ? (
-            <>
-              <p>
-                Nến thơm ChamCham được làm từ sáp đậu nành tự nhiên, tạo
-                hương thơm mềm mại và tinh tế cho không gian sống.
-              </p>
-              <p className="mt-3">
-                Mỗi sản phẩm được hoàn thiện thủ công với sự tỉ mỉ trong
-                từng chi tiết.
-              </p>
-            </>
-          ) : null}
-
-
-          {activeTab === "ingredients" ? (
-            <p>
-              <strong>Thành phần chính:</strong> Sáp đậu nành, tinh dầu
-              thiên nhiên, bấc cotton và hương thơm thực vật.
-            </p>
-          ) : null}
-
-
-          {activeTab === "usage" ? (
-            <ul className="list-disc space-y-2 pl-5">
-              <li>Đốt nến trong không gian thoáng và tránh gió mạnh.</li>
-              <li>Thời gian đốt lý tưởng mỗi lần là 3-4 giờ.</li>
-              <li>Cắt bấc còn khoảng 5mm trước mỗi lần sử dụng.</li>
-              <li>Không để nến cháy khi bạn rời khỏi phòng.</li>
-            </ul>
-          ) : null}
-        </div>
-      </div>
+      {tabsBlock("block lg:hidden")}
     </div>
   );
 
   if (!isModal) {
     return (
       <main className="min-h-[calc(100dvh-5rem)] bg-[#F2E8D9] text-[#2C1810]">
-        <section className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 md:py-10 lg:py-12">
+        <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
           {innerContent}
         </section>
       </main>
@@ -433,16 +450,17 @@ function DetailOptionGroup({
   options,
   renderLabel,
   selectedId,
+  noBorder,
 }: DetailOptionGroupProps) {
   if (options.length === 0) return null;
 
 
   return (
-    <div className="border-t border-[#6B4C35]/15 pt-5">
-      <div className="mb-3 text-[0.75rem] uppercase tracking-[0.16em] text-[#6B4C35]">
+    <div className={noBorder ? "" : "border-t border-[#6B4C35]/15 pt-5"}>
+      <div className="mb-2 text-[0.7rem] uppercase tracking-[0.16em] text-[#6B4C35]">
         {label}
       </div>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         {options.map((option) => {
           const active = selectedId === option.id;
 
@@ -452,7 +470,7 @@ function DetailOptionGroup({
               key={option.id}
               type="button"
               onClick={() => onSelect(option)}
-              className={`rounded-lg border px-4 py-3 text-sm transition ${active
+              className={`rounded-lg border px-3 py-2.5 text-xs transition ${active
                   ? "border-[#6B1218] bg-[#6B1218] text-[#F5F0E8]"
                   : "border-[#6B4C35]/30 bg-[#F8F0E4] text-[#2C1810] hover:border-[#6B1218] hover:text-[#6B1218]"
                 }`}
