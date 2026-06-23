@@ -325,10 +325,10 @@ export const OrderService = {
         orderNumber: order.order_number,
         paymentMethod: clientPaymentMethod,
         phone: data.shipping_phone,
-        postalCode: data.shipping_postal_code,
         shipping: shippingFeeCents,
         subtotal,
         total,
+        zip: data.shipping_postal_code,
       };
 
       sendOrderBillEmail(orderBill).catch(() => undefined);

@@ -1,6 +1,7 @@
 'use server'
 
 import { requireAdmin } from '../requireAdmin'
+import { emitNewContactToAdmin } from '../events/adminContactEvents'
 import { GetContactsParams, SubmitContactInput, UpdateContactStatusInput, getContactsSchema, submitContactSchema, updateContactStatusSchema, } from '../validations/contact.schema'
 import { ContactService } from '../services/contact.service'
 
@@ -11,6 +12,19 @@ export async function submitContactAction(params: SubmitContactInput) {
 
   try {
     const contact = await ContactService.submitContact(parsed.data)
+
+    try {
+      await emitNewContactToAdmin({
+        contactId: contact.id,
+        createdAt: contact.created_at.toISOString(),
+        email: contact.email,
+        name: contact.name,
+        subject: contact.subject,
+      })
+    } catch (eventError) {
+      console.error("[emitNewContactToAdmin] Không thể phát NEW_CONTACT:", eventError)
+    }
+
     return { success: true, data: contact }
   } catch (err) {
     return { error: (err as Error).message }

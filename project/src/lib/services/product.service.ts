@@ -5,6 +5,10 @@ import { GetProductsParams, CreateProductInput, UpdateProductInput } from "../va
 let optionsCache: any = null;
 let cacheExpiry: number = 0;
 
+const CUSTOM_CANDLE_CATEGORY_NAME = "Nến tùy chỉnh";
+const CUSTOM_CANDLE_PRODUCT_NAME = "Nến tùy chỉnh";
+const CUSTOM_CANDLE_BASE_PRICE = 189000;
+
 
 async function getCachedCustomizationOptions() {
     const now = Date.now();
@@ -134,11 +138,29 @@ export const ProductService = {
 
 
     async getCustomCandleProduct() {
-        try {
-            const product = await prisma.product.findFirst({
+        return prisma.$transaction(async (tx) => {
+            let category = await tx.category.findFirst({
                 where: {
-                    is_active: true,
+                    name: CUSTOM_CANDLE_CATEGORY_NAME,
+                },
+                select: { id: true },
+            });
+
+            if (!category) {
+                category = await tx.category.create({
+                    data: {
+                    description: "Danh mục hệ thống dành cho nến tùy chỉnh.",
+                    is_active: false,
+                        name: CUSTOM_CANDLE_CATEGORY_NAME,
+                    },
+                    select: { id: true },
+                });
+            }
+
+            const existingProduct = await tx.product.findFirst({
+                where: {
                     is_custom: true,
+                    name: CUSTOM_CANDLE_PRODUCT_NAME,
                 },
                 select: {
                     id: true,
@@ -155,12 +177,55 @@ export const ProductService = {
                 },
             });
 
-            if (!product) {
-                throw new Error('Nến tùy chỉnh hiện chưa sẵn sàng. Vui lòng thử lại sau.');
+            if (existingProduct) {
+                return tx.product.update({
+                    where: { id: existingProduct.id },
+                    data: {
+                        category_id: category.id,
+                        is_active: true,
+                        is_custom: true,
+                    },
+                    select: {
+                        id: true,
+                        name: true,
+                        base_price_cents: true,
+                        is_custom: true,
+                        category: {
+                            select: {
+                                id: true,
+                                name: true,
+                                description: true,
+                            },
+                        },
+                    },
+                });
             }
 
-            return product;
-        } finally {}
+            return tx.product.create({
+                data: {
+                    base_price_cents: CUSTOM_CANDLE_BASE_PRICE,
+                    category_id: category.id,
+                    description: "Sản phẩm hệ thống dùng để lưu cấu hình nến tùy chỉnh.",
+                    images: [],
+                    is_active: true,
+                    is_custom: true,
+                    name: CUSTOM_CANDLE_PRODUCT_NAME,
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    base_price_cents: true,
+                    is_custom: true,
+                    category: {
+                        select: {
+                            id: true,
+                            name: true,
+                            description: true,
+                        },
+                    },
+                },
+            });
+        });
     },
 
 

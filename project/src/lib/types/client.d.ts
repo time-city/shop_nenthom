@@ -125,7 +125,7 @@ export type ClientOrderUserData = {
 
 
 /** Trạng thái đơn hàng phía client. */
-export type ClientOrderStatus = "processing" | "shipping" | "done" | "canceled";
+export type ClientOrderStatus = "pending" | "confirmed" | "canceled";
 
 
 /** Item trong một đơn hàng phía client. */

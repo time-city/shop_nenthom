@@ -59,6 +59,7 @@ export const DiscountService = {
                 discount_cents,
                 subtotal_cents: data.subtotal_cents,
                 total_cents: Math.max(data.subtotal_cents - discount_cents, 0),
+                type: discount.type,
             };
         } finally {}
     },
