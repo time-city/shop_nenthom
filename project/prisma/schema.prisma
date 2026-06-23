@@ -16,18 +16,21 @@ datasource db {
 enum Role {
   CUSTOMER
   ADMIN
+
   @@schema("public")
 }
 
 enum UserStatus {
   ACTIVE
   LOCKED
+
   @@schema("public")
 }
 
 enum ContactStatus {
   PENDING
   REPLIED
+
   @@schema("public")
 }
 
@@ -37,12 +40,14 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+
   @@schema("public")
 }
 
 enum PaymentMethod {
   COD
   BANK_TRANSFER
+
   @@schema("public")
 }
 
@@ -50,12 +55,20 @@ enum PaymentStatus {
   UNPAID
   PAID
   FAILED
+
   @@schema("public")
 }
 
 enum DiscountType {
   PERCENTAGE
   FIXED
+
+  @@schema("public")
+}
+
+enum NotificationType {
+  NEW_ORDER
+
   @@schema("public")
 }
 
@@ -64,17 +77,17 @@ enum DiscountType {
 // ==========================================
 
 model User {
-  id               String   @id @default(uuid()) @db.Uuid
-  email            String   @unique
-  password_hash    String
-  role             Role     @default(CUSTOMER)
-  status           UserStatus @default(ACTIVE)
-  fullname         String?
-  phone            String?  @unique
-  is_newUser       Boolean  @default(false)
-  reset_otp_version Int     @default(0)
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
+  id                String     @id @default(uuid()) @db.Uuid
+  email             String     @unique
+  password_hash     String
+  role              Role       @default(CUSTOMER)
+  status            UserStatus @default(ACTIVE)
+  fullname          String?
+  phone             String?    @unique
+  is_newUser        Boolean    @default(false)
+  reset_otp_version Int        @default(0)
+  created_at        DateTime   @default(now())
+  updated_at        DateTime   @updatedAt
 
   // Relations
   shipping_addresses ShippingAddress[]
@@ -82,6 +95,7 @@ model User {
   orders             Order[]
   discount_usages    DiscountUsage[]
   history_logs       OrderHistoryLog[] @relation("AdminLogs")
+  notifications      Notification[]
 
   @@index([role, created_at])
   @@map("users")
@@ -89,17 +103,17 @@ model User {
 }
 
 model ShippingAddress {
-  id         String  @id @default(uuid()) @db.Uuid
-  user_id    String  @db.Uuid
-  fullname   String
-  phone      String
-  address    String
-  city       String
+  id          String  @id @default(uuid()) @db.Uuid
+  user_id     String  @db.Uuid
+  fullname    String
+  phone       String
+  address     String
+  city        String
   postal_code String?
-  is_default Boolean @default(false)
+  is_default  Boolean @default(false)
 
   // Relations
-  user       User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, is_default])
   @@map("shipping_addresses")
@@ -124,13 +138,13 @@ model Contact {
 // ==========================================
 
 model Category {
-  id          Int       @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   name        String
-  description String?   @db.Text
-  is_active   Boolean   @default(true)
+  description String? @db.Text
+  is_active   Boolean @default(true)
 
   // Relations
-  products    Product[]
+  products Product[]
 
   @@map("categories")
   @@schema("public")
@@ -142,16 +156,16 @@ model Product {
   name             String
   base_price_cents Int
   description      String?  @db.Text
-  images           Json     // Lưu mảng chuỗi URL hình ảnh
+  images           Json // Lưu mảng chuỗi URL hình ảnh
   is_active        Boolean  @default(true)
   is_custom        Boolean  @default(false)
   created_at       DateTime @default(now())
 
   // Relations
-  category         Category @relation(fields: [category_id], references: [id])
-  cart_items       CartItem[]
-  order_items      OrderItem[]
-  scents           ProductScent[]
+  category    Category       @relation(fields: [category_id], references: [id])
+  cart_items  CartItem[]
+  order_items OrderItem[]
+  scents      ProductScent[]
 
   @@index([category_id, is_active, base_price_cents])
   @@index([created_at(sort: Desc)])
@@ -165,8 +179,8 @@ model ProductScent {
   scent_id   Int
 
   // Relations
-  product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  scent      Scent   @relation(fields: [scent_id], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  scent   Scent   @relation(fields: [scent_id], references: [id], onDelete: Cascade)
 
   @@id([product_id, scent_id])
   @@index([scent_id])
@@ -175,70 +189,70 @@ model ProductScent {
 }
 
 model Scent {
-  id                Int       @id @default(autoincrement())
+  id                Int     @id @default(autoincrement())
   name              String
-  price_extra_cents Int       @default(0)
-  is_active         Boolean   @default(true)
+  price_extra_cents Int     @default(0)
+  is_active         Boolean @default(true)
 
   // Relations
-  cart_items        CartItem[]
-  order_items       OrderItem[]
-  products          ProductScent[]
+  cart_items  CartItem[]
+  order_items OrderItem[]
+  products    ProductScent[]
 
   @@map("scents")
   @@schema("public")
 }
 
 model WaxColor {
-  id                Int       @id @default(autoincrement())
+  id                Int     @id @default(autoincrement())
   name              String
   hex_code          String
-  price_extra_cents Int       @default(0)
-  is_active         Boolean   @default(true)
+  price_extra_cents Int     @default(0)
+  is_active         Boolean @default(true)
 
   // Relations
-  cart_items        CartItem[]
-  order_items       OrderItem[]
+  cart_items  CartItem[]
+  order_items OrderItem[]
 
   @@map("wax_colors")
   @@schema("public")
 }
 
 model CandleSize {
-  id                Int       @id @default(autoincrement())
+  id                Int     @id @default(autoincrement())
   name              String
   weight_gram       Int
-  price_extra_cents Int       @default(0)
-  is_active         Boolean   @default(true)
+  price_extra_cents Int     @default(0)
+  is_active         Boolean @default(true)
 
   // Relations
-  cart_items        CartItem[]
-  order_items       OrderItem[]
+  cart_items  CartItem[]
+  order_items OrderItem[]
 
   @@map("candle_sizes")
   @@schema("public")
 }
 
 model Packaging {
-  id                Int       @id @default(autoincrement())
+  id                Int     @id @default(autoincrement())
   name              String
-  price_extra_cents Int       @default(0)
-  is_active         Boolean   @default(true)
+  price_extra_cents Int     @default(0)
+  is_active         Boolean @default(true)
 
   // Relations
-  cart_items        CartItem[]
-  order_items       OrderItem[]
+  cart_items  CartItem[]
+  order_items OrderItem[]
 
   @@map("packagings")
   @@schema("public")
 }
 
 model Topping {
-  id                Int       @id @default(autoincrement())
+  id                Int     @id @default(autoincrement())
   name              String
-  price_extra_cents Int       @default(0)
-  in_stock          Boolean   @default(true)
-  is_active         Boolean   @default(true)
+  price_extra_cents Int     @default(0)
+  in_stock          Boolean @default(true)
+  is_active         Boolean @default(true)
 
   // Note: Không có quan hệ trực tiếp vì Topping lưu dạng mảng JSON
   @@map("toppings")
@@ -256,31 +270,31 @@ model Cart {
   updated_at DateTime @updatedAt
 
   // Relations
-  user       User?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  items      CartItem[]
+  user  User?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  items CartItem[]
 
   @@map("carts")
   @@schema("public")
 }
 
 model CartItem {
-  id            String  @id @default(uuid()) @db.Uuid
-  cart_id       String  @db.Uuid
-  product_id    String  @db.Uuid
-  quantity      Int     @default(1)
+  id            String @id @default(uuid()) @db.Uuid
+  cart_id       String @db.Uuid
+  product_id    String @db.Uuid
+  quantity      Int    @default(1)
   scent_id      Int?
   color_id      Int?
   size_id       Int?
   pack_id       Int?
-  toppings_json Json?   // Mảng các ID topping: [1, 3, 5]
+  toppings_json Json? // Mảng các ID topping: [1, 3, 5]
 
   // Relations
-  cart          Cart        @relation(fields: [cart_id], references: [id], onDelete: Cascade)
-  product       Product     @relation(fields: [product_id], references: [id])
-  scent         Scent?      @relation(fields: [scent_id], references: [id])
-  color         WaxColor?   @relation(fields: [color_id], references: [id])
-  size          CandleSize? @relation(fields: [size_id], references: [id])
-  packaging     Packaging?  @relation(fields: [pack_id], references: [id])
+  cart      Cart        @relation(fields: [cart_id], references: [id], onDelete: Cascade)
+  product   Product     @relation(fields: [product_id], references: [id])
+  scent     Scent?      @relation(fields: [scent_id], references: [id])
+  color     WaxColor?   @relation(fields: [color_id], references: [id])
+  size      CandleSize? @relation(fields: [size_id], references: [id])
+  packaging Packaging?  @relation(fields: [pack_id], references: [id])
 
   @@index([cart_id, product_id, scent_id, color_id, size_id, pack_id])
   @@map("cart_items")
@@ -292,43 +306,45 @@ model CartItem {
 // ==========================================
 
 model Order {
-  id                String        @id @default(uuid()) @db.Uuid
-  order_number      String        @unique
-  user_id           String?       @db.Uuid
-  
+  id           String  @id @default(uuid()) @db.Uuid
+  order_number String  @unique
+  user_id      String? @db.Uuid
+
   // Thông tin Guest
-  guest_email       String?
-  guest_phone       String?
+  guest_email String?
+  guest_phone String?
 
   // Snapshot địa chỉ giao hàng
-  shipping_fullname String
-  shipping_phone    String
-  shipping_address  String
-  shipping_city     String
+  shipping_fullname    String
+  shipping_phone       String
+  shipping_address     String
+  shipping_city        String
   shipping_postal_code String?
-  shipping_note     String?       @db.Text
+  shipping_note        String? @db.Text
 
   // Trạng thái đơn & Thanh toán
-  status            OrderStatus   @default(PENDING)
-  payment_method    PaymentMethod
-  payment_status    PaymentStatus @default(UNPAID)
-  transaction_id    String?       // Mã đối soát SePay
-  paid_at           DateTime?
+  status         OrderStatus   @default(PENDING)
+  payment_method PaymentMethod
+  payment_status PaymentStatus @default(UNPAID)
+  is_paid        Boolean       @default(false)
+  transaction_id String? // Mã đối soát SePay
+  paid_at        DateTime?
 
   // Tổng tiền
-  subtotal_cents    Int
-  discount_cents    Int           @default(0)
+  subtotal_cents     Int
+  discount_cents     Int     @default(0)
   discount_code_text String?
-  shipping_cents    Int           @default(0)
-  total_cents       Int
+  shipping_cents     Int     @default(0)
+  total_cents        Int
 
-  created_at        DateTime      @default(now())
+  created_at DateTime @default(now())
 
   // Relations
-  user              User?             @relation(fields: [user_id], references: [id])
-  items             OrderItem[]
-  history_logs      OrderHistoryLog[]
-  discount_usages   DiscountUsage[]
+  user            User?             @relation(fields: [user_id], references: [id])
+  items           OrderItem[]
+  history_logs    OrderHistoryLog[]
+  discount_usages DiscountUsage[]
+  notifications   Notification[]
 
   @@index([user_id, created_at(sort: Desc)])
   @@index([status, created_at(sort: Desc)])
@@ -337,27 +353,48 @@ model Order {
   @@schema("public")
 }
 
+model Notification {
+  id         String           @id @default(uuid()) @db.Uuid
+  user_id    String           @db.Uuid
+  order_id   String?          @db.Uuid
+  type       NotificationType
+  title      String
+  message    String           @db.Text
+  data       Json?
+  is_read    Boolean          @default(false)
+  read_at    DateTime?
+  created_at DateTime         @default(now())
+
+  user  User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, type, order_id])
+  @@index([user_id, is_read, created_at(sort: Desc)])
+  @@map("notifications")
+  @@schema("public")
+}
+
 model OrderItem {
-  id               String  @id @default(uuid()) @db.Uuid
-  order_id         String  @db.Uuid
-  product_id       String  @db.Uuid
+  id               String @id @default(uuid()) @db.Uuid
+  order_id         String @db.Uuid
+  product_id       String @db.Uuid
   quantity         Int
-  unit_price_cents Int     // Snapshot giá trị món hàng ngay lúc mua
+  unit_price_cents Int // Snapshot giá trị món hàng ngay lúc mua
 
   // Option snapshots
-  scent_id         Int?
-  color_id         Int?
-  size_id          Int?
-  pack_id          Int?
-  toppings_json    Json?
+  scent_id      Int?
+  color_id      Int?
+  size_id       Int?
+  pack_id       Int?
+  toppings_json Json?
 
   // Relations
-  order            Order       @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  product          Product     @relation(fields: [product_id], references: [id])
-  scent            Scent?      @relation(fields: [scent_id], references: [id])
-  color            WaxColor?   @relation(fields: [color_id], references: [id])
-  size             CandleSize? @relation(fields: [size_id], references: [id])
-  packaging        Packaging?  @relation(fields: [pack_id], references: [id])
+  order     Order       @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product   Product     @relation(fields: [product_id], references: [id])
+  scent     Scent?      @relation(fields: [scent_id], references: [id])
+  color     WaxColor?   @relation(fields: [color_id], references: [id])
+  size      CandleSize? @relation(fields: [size_id], references: [id])
+  packaging Packaging?  @relation(fields: [pack_id], references: [id])
 
   @@index([order_id, product_id])
   @@map("order_items")
@@ -374,8 +411,8 @@ model OrderHistoryLog {
   created_at      DateTime     @default(now())
 
   // Relations
-  order           Order  @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  admin           User?  @relation("AdminLogs", fields: [updated_by], references: [id])
+  order Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  admin User? @relation("AdminLogs", fields: [updated_by], references: [id])
 
   @@index([order_id])
   @@map("order_history_logs")
@@ -393,7 +430,7 @@ model DiscountCode {
   expires_at            DateTime?
 
   // Relations
-  usages                DiscountUsage[]
+  usages DiscountUsage[]
 
   @@map("discount_codes")
   @@schema("public")
@@ -407,9 +444,9 @@ model DiscountUsage {
   used_at          DateTime @default(now())
 
   // Relations
-  discount_code    DiscountCode @relation(fields: [discount_code_id], references: [id], onDelete: Cascade)
-  user             User?        @relation(fields: [user_id], references: [id])
-  order            Order        @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  discount_code DiscountCode @relation(fields: [discount_code_id], references: [id], onDelete: Cascade)
+  user          User?        @relation(fields: [user_id], references: [id])
+  order         Order        @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   @@map("discount_usages")
   @@schema("public")
