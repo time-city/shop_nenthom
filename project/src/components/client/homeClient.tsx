@@ -92,7 +92,8 @@ export default function HomeClient() {
     }
 
     section.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.history.pushState(null, "", `/#${id}`);
+    const searchParams = window.location.search;
+    window.history.pushState(null, "", `${window.location.pathname}${searchParams}#${id}`);
   };
 
   const scrollToCollection = (event: MouseEvent<HTMLAnchorElement>) => {
@@ -132,10 +133,16 @@ export default function HomeClient() {
         </div>
       </div>
 
-      <div className="bg-[#6B1218] text-[#F5F0E8]">
-        <section
-          className="hero fade-section visible observed grid h-[calc(100vh-5rem)] min-h-[560px] grid-cols-1 items-center gap-4 overflow-hidden bg-[#6B1218] px-6 py-6 md:grid-cols-2 md:gap-8 md:px-8 lg:gap-16 lg:px-16"
-        >
+      <div className="relative overflow-hidden bg-[url('/bgHome.jpg')] bg-cover bg-center bg-fixed text-[#F5F0E8]">
+        <div
+          className="pointer-events-none absolute inset-0 z-0 bg-[rgba(58,10,13,0.68)] backdrop-blur-[1px]"
+          aria-hidden="true"
+        />
+
+        <div className="relative z-10">
+          <section
+            className="hero fade-section visible observed grid h-[calc(100vh-5rem)] min-h-[560px] grid-cols-1 items-center gap-4 overflow-hidden px-6 py-6 md:grid-cols-2 md:gap-8 md:px-8 lg:gap-16 lg:px-16"
+          >
           <div className="hero-text flex w-full max-w-[480px] flex-col items-center text-center opacity-100 md:block md:max-w-none md:text-left">
             <h1 data-aos="fade-right" className="mb-4 break-keep text-center font-serif text-[clamp(1.9rem,7vw,2.35rem)] font-light leading-[1.14] text-[#F5F0E8] md:text-left md:text-[clamp(3rem,5vw,4.5rem)] md:leading-[1.08]">
               Nến thơm
@@ -197,10 +204,10 @@ export default function HomeClient() {
               ))}
             </div>
           </div>
-        </section>
+          </section>
           
-        {/* category */}
-        <div className="banner-slider relative mt-16 w-full max-w-full overflow-hidden rounded-[2px] bg-[#4A0B0E]">
+          {/* category */}
+          <div className="banner-slider relative mt-16 w-full max-w-full overflow-hidden rounded-[2px] bg-[#4A0B0E]">
           <div className="slider-container relative flex h-[200px] w-full bg-[#4A0B0E] md:h-[240px] lg:h-[320px]">
             {isLoadingCategories ? (
               <div className="flex size-full items-center justify-center px-6">
@@ -279,6 +286,7 @@ export default function HomeClient() {
               </div>
             </>
           ) : null}
+          </div>
         </div>
       </div>
     </>

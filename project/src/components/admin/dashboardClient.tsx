@@ -226,101 +226,101 @@ export default function DashboardClient() {
               ))}
             </section>
 
-        <section className="dashboard-grid-2">
-          <div className="dashboard-card">
-            <div className="dashboard-card-header">
-              <h2 className="dashboard-card-title">Top sản phẩm bán chạy</h2>
-            </div>
-            <div className="dashboard-card-body no-padding">
-              <div className="dashboard-table-wrapper">
-                <table className="dashboard-admin-table">
-                  <thead>
-                    <tr>
-                      <th></th>
-                      <th>Sản phẩm</th>
-                      <th>Đã bán</th>
-                      <th>Doanh thu</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topProducts.length > 0 ? (
-                      topProducts.map((product, idx) => (
-                        <tr key={product.productId}>
-                          <td className="w-12 text-center text-xs font-semibold text-[#6B4C35]">#{idx + 1}</td>
-                          <td className="font-medium">{product.name}</td>
-                          <td className="text-center">{product.soldQuantity}</td>
-                          <td className="text-right font-semibold text-[#7A1218]">
-                            {product.revenueCents.toLocaleString("vi-VN")}đ
-                          </td>
+            <section className="dashboard-grid-2">
+              <div className="dashboard-card">
+                <div className="dashboard-card-header">
+                  <h2 className="dashboard-card-title">Top sản phẩm bán chạy</h2>
+                </div>
+                <div className="dashboard-card-body no-padding">
+                  <div className="dashboard-table-wrapper">
+                    <table className="dashboard-admin-table">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th>Sản phẩm</th>
+                          <th>Đã bán</th>
+                          <th>Doanh thu</th>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={4} className="text-center text-[#6B4C35]">
-                          Chưa có dữ liệu bán chạy
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      </thead>
+                      <tbody>
+                        {topProducts.length > 0 ? (
+                          topProducts.map((product, idx) => (
+                            <tr key={product.productId}>
+                              <td className="w-12 text-center text-xs font-semibold text-[#6B4C35]">#{idx + 1}</td>
+                              <td className="font-medium">{product.name}</td>
+                              <td className="text-center">{product.soldQuantity}</td>
+                              <td className="text-right font-semibold text-[#7A1218]">
+                                {product.revenueCents.toLocaleString("vi-VN")}đ
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={4} className="text-center text-[#6B4C35]">
+                              Chưa có dữ liệu bán chạy
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="dashboard-card">
-            <div className="dashboard-card-header">
-              <h2 className="dashboard-card-title">Đơn hàng mới nhất</h2>
-              <Link
-                href="/admin/ordersManagement"
-                className="dashboard-btn dashboard-btn-ghost dashboard-btn-sm"
-              >
-                Xem tất cả →
-              </Link>
-            </div>
-            <div className="dashboard-card-body no-padding">
-              <div className="dashboard-table-wrapper">
-                <table className="dashboard-admin-table">
-                  <thead>
-                    <tr>
-                      <th>Mã đơn</th>
-                      <th>Khách hàng</th>
-                      <th>Tổng tiền</th>
-                      <th>Trạng thái</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {latestOrders.length > 0 ? (
-                      latestOrders.map((order) => (
-                        <tr key={order.orderNumber}>
-                          <td className="font-semibold text-[#7A1218]">
-                            <Link href={`/admin/ordersManagement/${order.orderNumber}`} className="hover:underline">
-                              {order.orderNumber}
-                            </Link>
-                          </td>
-                          <td>{order.customer}</td>
-                          <td className="font-semibold">
-                            {order.totalCents.toLocaleString("vi-VN")}đ
-                          </td>
-                          <td>
-                            <span className={`dashboard-status ${order.status}`}>
-                              {statusLabels[order.status] ?? order.status}
-                            </span>
-                          </td>
+              <div className="dashboard-card">
+                <div className="dashboard-card-header">
+                  <h2 className="dashboard-card-title">Đơn hàng mới nhất</h2>
+                  <Link
+                    href="/admin/ordersManagement"
+                    className="dashboard-btn dashboard-btn-ghost dashboard-btn-sm"
+                  >
+                    Xem tất cả →
+                  </Link>
+                </div>
+                <div className="dashboard-card-body no-padding">
+                  <div className="dashboard-table-wrapper">
+                    <table className="dashboard-admin-table">
+                      <thead>
+                        <tr>
+                          <th>Mã đơn</th>
+                          <th>Khách hàng</th>
+                          <th>Tổng tiền</th>
+                          <th>Trạng thái</th>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={4} className="text-center text-[#6B4C35]">
-                          Chưa có dữ liệu đơn hàng
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      </thead>
+                      <tbody>
+                        {latestOrders.length > 0 ? (
+                          latestOrders.map((order) => (
+                            <tr key={order.orderNumber}>
+                              <td className="font-semibold text-[#7A1218]">
+                                <Link href={`/admin/ordersManagement/${order.orderNumber}`} className="hover:underline">
+                                  {order.orderNumber}
+                                </Link>
+                              </td>
+                              <td>{order.customer}</td>
+                              <td className="font-semibold">
+                                {order.totalCents.toLocaleString("vi-VN")}đ
+                              </td>
+                              <td>
+                                <span className={`dashboard-status ${order.status}`}>
+                                  {statusLabels[order.status] ?? order.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={4} className="text-center text-[#6B4C35]">
+                              Chưa có dữ liệu đơn hàng
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
           </>
         )}
       </div>

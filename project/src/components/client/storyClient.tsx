@@ -99,7 +99,7 @@ export default function StoryClient() {
         </div>
       </section>
 
-      <section  className="about-content mx-auto grid max-w-6xl gap-8 px-4 pb-14 sm:px-6 md:grid-cols-2 md:items-center lg:px-0 lg:pb-20">
+      <section className="about-content mx-auto grid max-w-6xl gap-8 px-4 pb-14 sm:px-6 md:grid-cols-2 md:items-center lg:px-0 lg:pb-20">
         <div data-aos="zoom-in" className="about-image order-2 overflow-hidden rounded-2xl shadow-[0_18px_48px_rgba(44,24,16,0.16)] md:order-1">
           <Image
             src="/story2.jpeg"
@@ -128,17 +128,17 @@ export default function StoryClient() {
         </div>
       </section>
 
-      <section className="process-section bg-[#2C1810] px-5 py-12 text-[#F5F0E8] sm:px-8 lg:px-10">
-        <div className="bg-[#6B1218] px-4 py-20 sm:px-6 lg:px-16">
+      <section className="process-section bg-[#2C1810] px-4 py-6 text-[#F5F0E8] sm:px-6 lg:px-8">
+        <div className="bg-[#6B1218] px-4 py-10 sm:px-6 lg:px-12 rounded-2xl">
           <div className="mx-auto max-w-[1200px]">
-            <div className="section-title font-serif text-[2rem] font-light leading-[1.15] text-[#F5F0E8] sm:text-[2.45rem]">
+            <div className="section-title font-serif text-[2rem] font-light leading-[1.15] text-[#F5F0E8] sm:text-[2.3rem]">
               Quy Trình Tạo Nến
             </div>
-            <div className="section-sub mt-4 text-[0.72rem] uppercase tracking-[0.28em] text-[#F5F0E8]/55">
+            <div className="section-sub mt-2 text-[0.72rem] uppercase tracking-[0.28em] text-[#F5F0E8]/55">
               Từ ý tưởng đến thực tế
             </div>
 
-            <div className="process-grid mt-20 grid gap-x-16 gap-y-16 text-center sm:grid-cols-2 lg:grid-cols-3">
+            <div className="process-grid mt-10 grid gap-x-8 gap-y-8 text-center sm:grid-cols-2 lg:grid-cols-3">
               {processSteps.map((step, index) => (
                 <div
                   key={step.number}
@@ -146,13 +146,13 @@ export default function StoryClient() {
                   data-aos-delay={index * 150}
                   className="process-card px-2"
                 >
-                  <div className="process-number font-serif text-[3rem] font-bold leading-none text-[#F5F0E8] sm:text-[3.35rem]">
+                  <div className="process-number font-serif text-[2.5rem] font-bold leading-none text-[#F5F0E8] sm:text-[2.8rem]">
                     {step.number}
                   </div>
-                  <h3 className="mt-9 font-serif text-[1.25rem] font-light leading-tight text-[#F5F0E8]">
+                  <h3 className="mt-4 font-serif text-[1.25rem] font-light leading-tight text-[#F5F0E8]">
                     {step.title}
                   </h3>
-                  <p className="mx-auto mt-4 max-w-[320px] text-[0.86rem] font-light leading-7 text-[#F5F0E8]/72">
+                  <p className="mx-auto mt-2 max-w-[320px] text-[0.88rem] font-light leading-6 text-[#F5F0E8]/72">
                     {step.text}
                   </p>
                 </div>
@@ -162,39 +162,39 @@ export default function StoryClient() {
         </div>
       </section>
 
-       <section className="features-section bg-[#2C1810] px-5 py-12 text-[#F5F0E8] sm:px-8 lg:px-10">
-         <div className="bg-[#6B1218] px-4 py-20 sm:px-6 lg:px-16">
-           <div className="mx-auto max-w-[1200px]">
-             <div className="section-title font-serif text-[2rem] font-light leading-[1.15] text-[#F5F0E8] sm:text-[2.45rem]">
-               Tại Sao Chọn ChamCham?
-             </div>
-             <div className="section-sub mt-4 text-[0.72rem] uppercase tracking-[0.28em] text-[#F5F0E8]/55">
-               Cam kết chất lượng
-             </div>
+      <section className="features-section bg-[#2C1810] px-4 py-6 text-[#F5F0E8] sm:px-6 lg:px-8">
+        <div className="bg-[#6B1218] px-4 py-10 sm:px-6 lg:px-12 rounded-2xl">
+          <div className="mx-auto max-w-[1200px]">
+            <div className="section-title font-serif text-[2rem] font-light leading-[1.15] text-[#F5F0E8] sm:text-[2.3rem]">
+              Tại Sao Chọn ChamCham?
+            </div>
+            <div className="section-sub mt-2 text-[0.72rem] uppercase tracking-[0.28em] text-[#F5F0E8]/55">
+              Cam kết chất lượng
+            </div>
 
-             <div className="feat-grid mt-12 grid gap-6 md:grid-cols-3 lg:gap-10">
-               {features.map((feature, index) => (
-                 <div
-                   key={feature.title}
-                   data-aos="flip-up"
-                   data-aos-delay={index * 150}
-                   className="feat-card rounded-xl bg-[#F8F0E4]/95 p-[2.2rem] text-center shadow-[0_16px_40px_rgba(0,0,0,0.25)]"
-                 >
-                   <div className="feat-icon text-[2.2rem] leading-none text-[#7A1218]">
-                     {feature.icon}
-                   </div>
-                   <h4 className="mt-4 font-serif text-[1.3rem] font-semibold text-[#2C1810]">
-                     {feature.title}
-                   </h4>
-                   <p className="mx-auto mt-3 max-w-[280px] text-[0.9rem] font-light leading-8 text-[#6B4C35]">
-                     {feature.text}
-                   </p>
-                 </div>
-               ))}
-             </div>
-           </div>
-         </div>
-       </section>
+            <div className="feat-grid mt-8 grid gap-5 md:grid-cols-3 lg:gap-8">
+              {features.map((feature, index) => (
+                <div
+                  key={feature.title}
+                  data-aos="flip-up"
+                  data-aos-delay={index * 150}
+                  className="feat-card rounded-xl bg-[#F8F0E4]/95 p-6 text-center shadow-[0_12px_32px_rgba(0,0,0,0.2)]"
+                >
+                  <div className="feat-icon text-[2rem] leading-none text-[#7A1218]">
+                    {feature.icon}
+                  </div>
+                  <h4 className="mt-3 font-serif text-[1.3rem] font-semibold text-[#2C1810]">
+                    {feature.title}
+                  </h4>
+                  <p className="mx-auto mt-2 max-w-[280px] text-[0.92rem] font-light leading-7 text-[#6B4C35]">
+                    {feature.text}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
     </section>
   );
 }

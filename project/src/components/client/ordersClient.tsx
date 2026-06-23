@@ -11,6 +11,7 @@ import { getMyOrdersAction } from "@/src/lib/action/order.action";
 import DetailOrder from "@/src/components/client/detailOrder";
 import ClientPagination from "@/src/components/admin/clientPagination";
 import { useCartStore } from "@/src/store/useCartStore";
+import Spinner from "@/src/components/ui/Spinner";
 
 const statusLabel: Record<ClientOrderRecord["status"], string> = {
   canceled: "Đã huỷ",
@@ -94,7 +95,8 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
         </h2>
 
         {isLoading ? (
-          <div className="flex flex-col items-center gap-4 rounded-2xl bg-[#F8F0E4] px-4 py-12 text-center shadow-[0_4px_20px_rgba(44,24,16,0.07)]">
+          <div className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-[#F8F0E4] px-4 py-12 text-center shadow-[0_4px_20px_rgba(44,24,16,0.07)]">
+            <Spinner size="lg" />
             <div className="text-xl text-[#6B4C35]">Đang tải lịch sử đơn hàng...</div>
           </div>
         ) : error ? (
@@ -138,8 +140,8 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
                           </div>
                         ) : null}
                       </div>
-                      <div className="font-serif text-base font-bold text-[#6B1218] sm:text-right">
-                        x{item.quantity} · {formatPrice(item.price)}
+                      <div className="font-sans text-[1rem] sm:text-[1.05rem] font-semibold text-[#6B1218] sm:text-right">
+                        <span className="font-bold">x{item.quantity}</span> · {formatPrice(item.price)}
                       </div>
                     </div>
                   ))}
@@ -155,7 +157,7 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
                   </button>
                   <div className="flex items-baseline justify-between gap-2 sm:justify-end">
                     <span className="font-light text-[#6B4C35]">Tổng</span>
-                    <span className="font-serif text-lg font-bold text-[#6B1218]">
+                    <span className="font-sans text-[1.15rem] font-bold text-[#6B1218]">
                       {formatPrice(order.total)}
                     </span>
                   </div>

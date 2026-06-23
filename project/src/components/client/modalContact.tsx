@@ -95,7 +95,7 @@ export default function ModalContact() {
       hasError
         ? "border-[#6B1218] focus:ring-[#6B1218]/10"
         : "border-[#2c1810]/15 focus:border-[#7A1218] focus:ring-[#6B1218]/10"
-    } bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:ring-4`;
+    } bg-[#F8F0E4] px-4 py-2.5 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:ring-4`;
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -161,11 +161,11 @@ export default function ModalContact() {
   };
 
   return (
-    <form id="contactForm" className="mt-8 space-y-5" onSubmit={handleSubmit}>
+    <form id="contactForm" className="mt-4 space-y-3.5" onSubmit={handleSubmit}>
       <div className="form-group">
         <label
           htmlFor="contact-name"
-          className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
+          className="mb-1 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
         >
           Tên của bạn
         </label>
@@ -187,7 +187,7 @@ export default function ModalContact() {
       <div className="form-group">
         <label
           htmlFor="contact-email"
-          className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
+          className="mb-1 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
         >
           Email
         </label>
@@ -209,7 +209,7 @@ export default function ModalContact() {
       <div className="form-group">
         <label
           htmlFor="contact-subject"
-          className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
+          className="mb-1 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
         >
           Chủ đề
         </label>
@@ -231,7 +231,7 @@ export default function ModalContact() {
       <div className="form-group">
         <label
           htmlFor="contact-message"
-          className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
+          className="mb-1 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
         >
           Tin nhắn
         </label>
@@ -240,7 +240,7 @@ export default function ModalContact() {
           placeholder="Nội dung tin nhắn..."
           value={formValues.message}
           onChange={(event) => handleChange("message", event.target.value)}
-          rows={6}
+          rows={4}
           className={`${getInputClass("message")} min-h-36 w-full resize-y rounded-md border outline-none transition placeholder:text-[#2c1810]/38 focus:ring-4`}
         />
         {errors.message && (
