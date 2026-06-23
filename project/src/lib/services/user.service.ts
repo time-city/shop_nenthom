@@ -1,4 +1,3 @@
-import { tr } from "zod/v4/locales";
 import prisma from "../prisma"
 import { UpdateProfileFormState } from "../validations/user.schema"
 
@@ -27,8 +26,6 @@ export const UserService = {
                 select: { id: true }
             });
 
-            const operations = [];
-
             const userUpdate = prisma.user.update({
                 where: { id },
                 data: {
@@ -42,45 +39,40 @@ export const UserService = {
                     phone: true,
                     role: true
                 }
+            });
 
-            })
+            const addressData = {
+                city: data.city,
+                fullname: data.fullname,
+                phone: data.phone,
+                address: data.address,
+                postal_code: data.postal_code || null,
+            };
 
-            operations.push(userUpdate);
+            const addressUpdate = defaultAddress
+                ? prisma.shippingAddress.update({
+                    where: { id: defaultAddress.id },
+                    data: addressData,
+                })
+                : prisma.shippingAddress.create({
+                    data: {
+                        ...addressData,
+                        is_default: true,
+                        user_id: id,
+                    },
+                });
 
-            //Xử lý địa chỉ
-            if (data.address && data.city) {
-                const receiverName = data.fullname ?? "Người nhận";
-                const receiverPhone = data.phone ?? "";
+            const [user, address] = await prisma.$transaction([
+                userUpdate,
+                addressUpdate,
+            ]);
 
-                if (defaultAddress) {
-                    operations.push(
-                        prisma.shippingAddress.update({
-                            where: { id: defaultAddress.id },
-                            data: {
-                                city: data.city,
-                                fullname: receiverName,
-                                phone: receiverPhone,
-                                address: data.address,
-                                postal_code: data.postal_code || null,
-                            }
-                        })
-                    )
-                } else {
-                    operations.push(
-                        prisma.shippingAddress.create({
-                            data: {
-                                city: data.city,
-                                fullname: receiverName,
-                                phone: receiverPhone,
-                                address: data.address,
-                                is_default: true,
-                                postal_code: data.postal_code || null,
-                                user_id: id,
-                            }
-                        })
-                    )
-                }
-            }
+            return {
+                ...user,
+                address: address.address,
+                city: address.city,
+                postal_code: address.postal_code,
+            };
         } finally {}
     },
 

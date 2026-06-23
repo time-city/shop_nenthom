@@ -1,7 +1,9 @@
 'use server'
 
 import { cookies } from "next/headers";
+import { updateTag } from "next/cache";
 import { requireAdmin } from "../requireAdmin";
+import { emitNewOrderToAdmin } from "../events/adminOrderEvents";
 import { OrderService } from "../services/order.service";
 import { getSession } from "../session";
 import {
@@ -37,6 +39,20 @@ export async function createOrderAction(params: CreateOrderInput) {
   try {
     const { userId, sessionId } = await getCartIdentity();
     const order = await OrderService.createOrder(parsed.data, userId, sessionId);
+
+    try {
+      updateTag("dashboard-overview");
+      await emitNewOrderToAdmin({
+        createdAt: order.createdAt,
+        customerName: order.fullname,
+        orderId: order.orderId,
+        orderNumber: order.orderNumber,
+        totalCents: order.total,
+      });
+    } catch (eventError) {
+      console.error("[emitNewOrderToAdmin] Không thể phát NEW_ORDER:", eventError);
+    }
+
     return { success: true, data: order }
   } catch (err) {
     return { error: (err as Error).message }
