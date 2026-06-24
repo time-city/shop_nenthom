@@ -1,4 +1,4 @@
-import { DiscountType, OrderStatus, PaymentMethod, PaymentStatus, Prisma } from "@prisma/client";
+import { DiscountType, NotificationType, OrderStatus, PaymentMethod, PaymentStatus, Prisma } from "@prisma/client";
 import type { AdminOrder, AdminOrderStatus } from "../types/admin";
 import { sendOrderBillEmail, sendOrderCancellationEmail } from "../mailer";
 import prisma from "../prisma";
@@ -604,7 +604,7 @@ export const OrderService = {
         status: true,
         guest_email: true,
         shipping_fullname: true,
-        user: { select: { email: true } },
+        user: { select: { email: true, id: true } },
         discount_usages: { select: { discount_code_id: true } },
       }
     });
@@ -612,7 +612,14 @@ export const OrderService = {
 
     if (!order) throw new Error("Không tìm thấy đơn hàng phù hợp.");
     if (order.status === OrderStatus.CANCELLED) {
-      return OrderService.getOrderDetailForAdmin(order.order_number);
+      return {
+        emailSent: null,
+        id: order.order_number,
+        message: "Đơn hàng đã được hủy trước đó.",
+        notificationCreated: false,
+        status: clientOrderStatusMap[OrderStatus.CANCELLED],
+        updatedAt: new Date().toISOString(),
+      };
     }
     if (updatedBy === "user" && order.status !== OrderStatus.PENDING) {
       throw new Error("Đơn hàng đã được xử lý nên không thể tự hủy. Vui lòng liên hệ shop để được hỗ trợ.");
@@ -651,24 +658,56 @@ export const OrderService = {
           where: { order_id: order.id },
         });
       }
+
+      if (updatedBy === "admin" && order.user?.id) {
+        await tx.notification.create({
+          data: {
+            data: {
+              orderNumber: order.order_number,
+              reason: cancellationReason,
+            },
+            message: `Đơn hàng ${order.order_number} đã bị hủy. Lý do: ${cancellationReason}`,
+            order_id: order.id,
+            title: "Đơn hàng đã bị hủy",
+            type: NotificationType.ORDER_CANCELLED,
+            user_id: order.user.id,
+          },
+        });
+      }
     });
 
     const customerEmail = order.user?.email ?? order.guest_email;
+    let emailSent = false;
 
     if (updatedBy === "admin" && customerEmail) {
-      sendOrderCancellationEmail({
-        email: customerEmail,
-        fullname: order.shipping_fullname,
-        orderNumber: order.order_number,
-        reason: cancellationReason,
-      }).catch(() => undefined);
+      try {
+        await sendOrderCancellationEmail({
+          email: customerEmail,
+          fullname: order.shipping_fullname,
+          orderNumber: order.order_number,
+          reason: cancellationReason,
+        });
+        emailSent = true;
+      } catch (error) {
+        console.error(
+          `[cancelOrder] Đơn ${order.order_number} đã hủy nhưng gửi email thất bại:`,
+          error,
+        );
+      }
     }
 
     return {
+      emailSent,
       id: order.order_number,
+      notificationCreated: updatedBy === "admin" && Boolean(order.user?.id),
       status: clientOrderStatusMap[OrderStatus.CANCELLED],
       updatedAt: new Date().toISOString(),
-      message: "Hủy đơn hàng thành công"
+      message:
+        updatedBy === "admin" && customerEmail && !emailSent
+          ? "Đơn hàng đã được hủy nhưng chưa gửi được email cho khách. Vui lòng liên hệ khách hàng."
+          : updatedBy === "admin" && !customerEmail
+            ? "Đơn hàng đã được hủy. Khách hàng chưa có email, vui lòng liên hệ qua số điện thoại."
+            : "Đã hủy đơn hàng.",
     };
   },
 

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { updateTag } from "next/cache";
 import { requireAdmin } from "../requireAdmin";
 import { emitNewOrderToAdmin } from "../events/adminOrderEvents";
+import { getPublicErrorMessage } from "../utils/publicError";
 import { OrderService } from "../services/order.service";
 import { getSession } from "../session";
 import {
@@ -161,7 +162,7 @@ export async function cancelOrderAction(params: CancelOrderInput) {
     const order = await OrderService.cancelOrder(parsed.data.order_id, parsed.data.reason, "admin")
     return { success: true, data: order }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Chưa thể hủy đơn hàng. Vui lòng thử lại.") }
   }
 }
 
@@ -182,6 +183,6 @@ export async function cancelMyOrderAction(params: CancelOrderInput) {
     const cancelledOrder = await OrderService.cancelOrder(parsed.data.order_id, parsed.data.reason, "user")
     return { success: true, data: cancelledOrder }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Chưa thể hủy đơn hàng. Vui lòng thử lại.") }
   }
 }
