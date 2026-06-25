@@ -8,7 +8,7 @@ import type {
   GetListOrdersParams,
   UpdateOrderStatusInput,
 } from "../validations/order.schema";
-import { disableDiscountAction } from "../action/discount.action";
+import { emitOrderCancelledToUser } from "../events/userOrderEvents";
 
 
 const shippingFeeCents = 0;
@@ -675,6 +675,19 @@ export const OrderService = {
         });
       }
     });
+
+    if (updatedBy === "admin" && order.user?.id) {
+      try {
+        await emitOrderCancelledToUser({
+          orderId: order.id,
+          orderNumber: order.order_number,
+          reason: cancellationReason,
+          userId: order.user.id,
+        });
+      } catch (eventError) {
+        console.error("[emitOrderCancelledToUser] Không thể phát ORDER_CANCELLED:", eventError);
+      }
+    }
 
     const customerEmail = order.user?.email ?? order.guest_email;
     let emailSent = false;
