@@ -11,6 +11,7 @@ import type {
 import { getProductsAction } from "@/src/lib/action/product.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import { useSearchParams } from "next/navigation";
+import { callAction } from "@/src/lib/utils/callAction";
 
 interface CollectionClientProps {
   scents: ClientProductOptionItemInterface[];
@@ -123,7 +124,7 @@ function CollectionClientInner({
       setError("");
 
       try {
-        const result = await getProductsAction({ limit: 100 });
+        const result = await callAction(() => getProductsAction({ limit: 100 }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
         if (!active) return;
 
         if ("error" in result && result.error) {
@@ -139,7 +140,7 @@ function CollectionClientInner({
         const mappings: Record<number, string[]> = {};
         await Promise.all(
           scents.map(async (scent) => {
-            const res = await getProductsAction({ limit: 100, scentId: scent.id });
+            const res = await callAction(() => getProductsAction({ limit: 100, scentId: scent.id }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
             if (res && "success" in res && res.success) {
               mappings[scent.id] = res.data.map((p) => p.id);
             }

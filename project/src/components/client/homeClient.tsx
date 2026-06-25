@@ -9,6 +9,7 @@ import type {
 } from "@/src/interface/clientInterface";
 import { getCategoriesAction } from "@/src/lib/action/category.action";
 import LoadingState from "@/src/components/ui/loadingState";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const scentTags = ["Vanilla & Cedar", "Linen & Sage", "Oud & Amber"];
 const categoryBgClasses = [
@@ -42,7 +43,7 @@ export default function HomeClient() {
       setIsLoadingCategories(true);
 
       // action-(lấy danh sách category trang chủ)
-      const result = await getCategoriesAction();
+      const result = await callAction(() => getCategoriesAction(), "Không thể tải danh mục. Vui lòng thử lại sau.");
 
       if ("success" in result && result.success) {
         const response = result as ClientCategoriesSuccessResponseInterface;
@@ -135,16 +136,16 @@ export default function HomeClient() {
 
       <div className="relative overflow-hidden bg-[url('/bgHome.jpg')] bg-cover bg-center bg-fixed text-[#F5F0E8]">
         <div
-          className="pointer-events-none absolute inset-0 z-0 bg-[rgba(58,10,13,0.68)] backdrop-blur-[1px]"
+          className="pointer-events-none absolute inset-0 z-0 bg-[rgba(26,5,7,0.78)] md:bg-[rgba(58,10,13,0.68)] backdrop-blur-[3px] md:backdrop-blur-[1px]"
           aria-hidden="true"
         />
 
         <div className="relative z-10">
           <section
-            className="hero fade-section visible observed grid h-[calc(100vh-5rem)] min-h-[560px] grid-cols-1 items-center gap-4 overflow-hidden px-6 py-6 md:grid-cols-2 md:gap-8 md:px-8 lg:gap-16 lg:px-16"
+            className="hero fade-section visible observed grid h-[calc(100vh-5rem)] min-h-[560px] grid-cols-1 items-center justify-center gap-4 overflow-hidden px-4 py-6 md:grid-cols-2 md:gap-8 md:px-8 lg:gap-16 lg:px-16"
           >
           <div className="hero-text flex w-full max-w-[480px] flex-col items-center text-center opacity-100 md:block md:max-w-none md:text-left">
-            <h1 data-aos="fade-right" className="mb-4 break-keep text-center font-serif text-[clamp(1.9rem,7vw,2.35rem)] font-light leading-[1.14] text-[#F5F0E8] md:text-left md:text-[clamp(3rem,5vw,4.5rem)] md:leading-[1.08]">
+            <h1 data-aos="fade-right" className="mb-4 break-keep text-center font-serif text-[36px] leading-[1.2] font-light text-[#F5F0E8] drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] md:text-left md:text-[clamp(3rem,5vw,4.5rem)] md:leading-[1.08] md:drop-shadow-none">
               Nến thơm
               <br />
               <em className="font-serif italic text-[#F5F0E8]">thuần khiết,</em>
@@ -153,29 +154,41 @@ export default function HomeClient() {
               <br />
               cho bạn
             </h1>
-            <p data-aos="fade-right" className="mb-5 max-w-[420px] text-center text-[0.85rem] leading-[1.6] text-[#F5F0E8]/80 md:max-w-[380px] md:text-left md:text-[0.95rem] md:leading-[1.8] lg:mb-8">
+            <p data-aos="fade-right" className="mb-5 max-w-[85%] text-center text-[18px] leading-[1.6] text-[#F5F0E8] drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] md:max-w-[380px] md:text-left md:text-[0.95rem] md:leading-[1.8] md:text-[#F5F0E8]/80 md:drop-shadow-none lg:mb-8">
               Tự tạo nên thơm của riêng mình — chọn hương, màu sáp, kích thước
               và bao bì theo phong cách tối giản độc đáo.
             </p>
-            <div className="btn-group flex w-full flex-col items-center justify-center gap-2.5 md:w-auto md:flex-row md:flex-wrap md:justify-start lg:gap-4">
+            <div className="btn-group flex flex-row items-center justify-center gap-3 w-auto md:flex-row md:flex-wrap md:justify-start lg:gap-4">
               <Link
                 href="/#custom"
                 onClick={(e) => scrollToSection(e, "custom")}
-                className="btn-primary w-full max-w-[260px] rounded-full border-[1.5px] border-transparent bg-[#F5F0E8] px-6 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] shadow-[0_10px_28px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#F2E8D9] hover:text-[#2C1810] hover:shadow-[0_14px_36px_rgba(0,0,0,0.22)] lg:w-auto lg:px-9 lg:py-3.5"
+                className="btn-primary w-auto rounded-full border-[1.5px] border-transparent bg-[#F5F0E8] px-5 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] shadow-[0_10px_28px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#F2E8D9] hover:text-[#2C1810] hover:shadow-[0_14px_36px_rgba(0,0,0,0.22)] md:px-6 md:py-3 lg:w-auto lg:px-9 lg:py-3.5"
               >
                 Tùy chỉnh ngay
               </Link>
               <Link
                 href="/#collection"
                 onClick={(e) => scrollToSection(e, "collection")}
-                className="btn-secondary w-full max-w-[260px] rounded-full border-[1.5px] border-[#f5f0e8]/45 bg-transparent px-6 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f5f0e8]/10 hover:text-[#F5F0E8] lg:w-auto lg:px-[34px]"
+                className="btn-secondary w-auto rounded-full border-[1.5px] border-[#f5f0e8]/45 bg-transparent px-5 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f5f0e8]/10 hover:text-[#F5F0E8] md:px-6 lg:w-auto lg:px-[34px]"
               >
                 Xem bộ sưu tập
               </Link>
             </div>
+
+            {/* Scent tags for mobile ONLY */}
+            <div className="scent-tags mt-6 flex flex-wrap justify-center gap-1.5 md:hidden">
+              {scentTags.map((tag) => (
+                <div
+                  key={tag}
+                  className="tag whitespace-nowrap rounded-[20px] border-[1.5px] border-[#f5f0e8]/30 bg-black/40 px-2.5 py-1 text-[0.85rem] font-normal tracking-widest text-[#F5F0E8] backdrop-blur"
+                >
+                  {tag}
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div  className="candle-scene relative flex w-full flex-col items-center justify-center gap-4 opacity-100 md:flex-row md:gap-0">
+          <div  className="candle-scene relative hidden w-full flex-col items-center justify-center gap-4 opacity-100 md:flex md:flex-row md:gap-0">
             <div data-aos="fade-left" className="candle-3d relative h-[170px] w-[110px] animate-[candle-float_4s_ease-in-out_infinite] transform-3d sm:h-[200px] sm:w-[130px] md:h-[240px] md:w-[150px] lg:h-[280px] lg:w-[180px]">
               <div className="candle-fire-axis absolute left-1/2 top-0 z-10 h-0 w-0">
                 <div className="glow absolute left-[-40px] top-[-80px] h-20 w-20 rounded-full bg-[radial-gradient(circle,rgba(255,180,50,0.3)_0%,transparent_70%)] animate-[candle-glow-centered_1.5s_ease-in-out_infinite]" />

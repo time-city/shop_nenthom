@@ -2,17 +2,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   AdminOrder,
   AdminOrderStatus,
   AdminPaymentStatus,
 } from "@/src/lib/types/admin";
 import LoadingState from "@/src/components/ui/loadingState";
+import TableResponsiveWrapper from "@/src/components/admin/TableResponsiveWrapper";
+import AdminHeader from "./AdminHeader";
 import { getOrdersAction, updateOrderStatusAction, cancelOrderAction } from "@/src/lib/action/order.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import { useToast } from "@/src/components/ui/toast-provider";
 import ModalOrderAction from "./modalOrderAction";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const statusLabels: Record<AdminOrderStatus, string> = {
   cancelled: "Đã huỷ",
@@ -63,6 +66,43 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedOrderStatus, setSelectedOrderStatus] = useState<AdminOrderStatus | null>(null);
   const [isActionSubmitting, setIsActionSubmitting] = useState(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const loadOrders = useCallback(async (options: { silent?: boolean } = {}) => {
+    if (!options.silent) {
+      setIsLoading(true);
+    }
+    setError(null);
+
+    try {
+      const result = await callAction(() => getOrdersAction({ limit: 100 }), "Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.");
+      if (!isMountedRef.current) return;
+
+      if ("error" in result && result.error) {
+        setError(getFriendlyResponseError(result.error));
+        return;
+      }
+
+      if ("success" in result && result.success) {
+        setOrders((result.data || []) as AdminOrder[]);
+      }
+    } catch (err) {
+      if (!isMountedRef.current) return;
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      if (isMountedRef.current && !options.silent) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
 
   const handleOpenConfirm = (orderId: string, currentStatus: AdminOrderStatus) => {
     setSelectedOrderId(orderId);
@@ -93,11 +133,11 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
       if (modalType === "confirm") {
         if (selectedOrderStatus !== "pending") return;
 
-        const result = await updateOrderStatusAction({
+        const result = await callAction(() => updateOrderStatusAction({
           order_number: selectedOrderId,
           status: "PROCESSING",
           note: "Admin đã xác nhận đơn hàng",
-        });
+        }), "Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại sau.");
 
         if ("error" in result && result.error) {
           toast.error(getFriendlyResponseError(result.error));
@@ -111,15 +151,26 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
           setModalOpen(false);
         }
       } else if (modalType === "cancel") {
-        const result = await cancelOrderAction({
+        const result = await callAction(() => cancelOrderAction({
           order_id: selectedOrderId,
           reason: reason || "Hủy đơn hàng nhanh từ admin",
-        });
+        }), "Không thể hủy đơn hàng. Vui lòng thử lại sau.");
 
         if ("error" in result && result.error) {
           toast.error(getFriendlyResponseError(result.error));
         } else if ("success" in result && result.success) {
-          toast.success("Hủy đơn hàng thành công");
+          const cancelResult = result as {
+            success: true;
+            data?: { message?: string; emailSent?: boolean };
+          };
+          const msg = cancelResult.data?.message ?? "Đã hủy đơn hàng thành công";
+          toast.success(msg);
+
+          // Cảnh báo thêm nếu gửi email thất bại
+          if (cancelResult.data?.emailSent === false) {
+            toast.warning("Lưu ý: Không gửi được email thông báo cho khách hàng. Vui lòng liên hệ khách trực tiếp.");
+          }
+
           setOrders((prev) =>
             prev.map((o) =>
               o.id === selectedOrderId ? { ...o, status: "cancelled" } : o
@@ -139,35 +190,25 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
     if (initialOrders && initialOrders.length > 0) {
       return;
     }
-    let cancelled = false;
-    const loadOrders = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const result = await getOrdersAction({ limit: 100 });
-        if (cancelled) return;
-        if ("error" in result && result.error) {
-          setError(getFriendlyResponseError(result.error));
-        } else if ("success" in result && result.success) {
-          // getOrdersAction trả dữ liệu danh sách trong result.data.
-          const data = (result.data || []) as AdminOrder[];
-          setOrders(data);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-    void loadOrders();
+    const timeoutId = window.setTimeout(() => {
+      void loadOrders();
+    }, 0);
+
     return () => {
-      cancelled = true;
+      window.clearTimeout(timeoutId);
     };
-  }, [initialOrders]);
+  }, [initialOrders, loadOrders]);
+
+  useEffect(() => {
+    const handleNewOrder = () => {
+      void loadOrders({ silent: true });
+    };
+
+    window.addEventListener("admin-socket-new-order", handleNewOrder);
+    return () => {
+      window.removeEventListener("admin-socket-new-order", handleNewOrder);
+    };
+  }, [loadOrders]);
 
   const filteredOrders = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -186,36 +227,10 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
 
   return (
     <>
-      <header className="dashboard-top-header">
-        <div className="dashboard-top-header-left">
-          <button
-            className="dashboard-mobile-toggle"
-            type="button"
-            aria-label="Menu"
-            onClick={() => window.dispatchEvent(new Event("toggle-admin-sidebar"))}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="dashboard-page-title">Quản lý Đơn hàng</h1>
-            <p className="dashboard-page-subtitle">
-              Tất cả đơn hàng của cửa hàng
-            </p>
-          </div>
-        </div>
-      </header>
+      <AdminHeader
+        title="Quản lý Đơn hàng"
+        subtitle="Tất cả đơn hàng của cửa hàng"
+      />
 
       <div className="dashboard-page-content">
         <section className="dashboard-card orders-filter-card">
@@ -269,63 +284,87 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
         <section className="dashboard-card orders-table-card">
           <div className="dashboard-card-body no-padding">
             <div className="dashboard-table-wrapper">
-              <table className="dashboard-admin-table orders-admin-table">
-                <thead>
-                  <tr>
-                    <th>Mã đơn</th>
-                    <th>Ngày đặt</th>
-                    <th>Khách hàng</th>
-                    <th>Tổng tiền</th>
-                    <th>Trạng thái</th>
-                    <th>Thanh toán</th>
-                    <th>
-                      <span className="sr-only">Thao tác</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {!isLoading && !error && filteredOrders.map((order) => (
-                    <tr
-                      key={order.id}
-                      className="cursor-pointer transition hover:bg-[#6B1218]/[0.03]"
-                      onClick={() => router.push(`/admin/ordersManagement/${order.id}`)}
-                    >
-                      <td>
-                        <Link
-                          href={`/admin/ordersManagement/${order.id}`}
-                          className="orders-code-link"
-                        >
-                          {order.id}
-                        </Link>
-                      </td>
-                      <td>{formatDateTime(order.date)}</td>
-                      <td>{order.customer}</td>
-                      <td className="orders-table-amount">
-                        {formatCurrency(order.total)}
-                      </td>
-                      <td>
-                        <span className={`dashboard-status ${order.status}`}>
-                          {statusLabels[order.status]}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`dashboard-status ${paymentClassNames[order.payment]}`}
-                        >
-                          {paymentLabels[order.payment]}
-                        </span>
-                      </td>
-                      <td onClick={(e) => e.stopPropagation()}>
-                        {order.status !== "cancelled" ? (
-                          <div className="flex items-center gap-2">
-                            {order.status === "pending" ? (
+              <TableResponsiveWrapper minWidth={950}>
+                <table className="dashboard-admin-table orders-admin-table">
+                  <thead>
+                    <tr>
+                      <th>Mã đơn</th>
+                      <th>Ngày đặt</th>
+                      <th>Khách hàng</th>
+                      <th>Tổng tiền</th>
+                      <th>Trạng thái</th>
+                      <th>Thanh toán</th>
+                      <th>
+                        <span className="sr-only">Thao tác</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {!isLoading && !error && filteredOrders.map((order) => (
+                      <tr
+                        key={order.id}
+                        className="cursor-pointer transition hover:bg-[#6B1218]/[0.03]"
+                        onClick={() => router.push(`/admin/ordersManagement/${order.id}`)}
+                      >
+                        <td>
+                          <Link
+                            href={`/admin/ordersManagement/${order.id}`}
+                            className="orders-code-link"
+                          >
+                            {order.id}
+                          </Link>
+                        </td>
+                        <td>{formatDateTime(order.date)}</td>
+                        <td>{order.customer}</td>
+                        <td className="orders-table-amount">
+                          {formatCurrency(order.total)}
+                        </td>
+                        <td>
+                          <span className={`dashboard-status ${order.status}`}>
+                            {statusLabels[order.status]}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className={`dashboard-status ${paymentClassNames[order.payment]}`}
+                          >
+                            {paymentLabels[order.payment]}
+                          </span>
+                        </td>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          {order.status !== "cancelled" ? (
+                            <div className="flex items-center gap-2 flex-nowrap">
+                              {order.status === "pending" ? (
+                                <button
+                                  type="button"
+                                  className="orders-action-btn-confirm"
+                                  title="Xác nhận đơn hàng"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenConfirm(order.id, order.status);
+                                  }}
+                                >
+                                  <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <polyline points="20,6 9,17 4,12" />
+                                  </svg>
+                                </button>
+                              ) : null}
                               <button
                                 type="button"
-                                className="orders-action-btn-confirm"
-                                title="Xác nhận đơn hàng"
+                                className="orders-action-btn-cancel"
+                                title="Hủy đơn hàng"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleOpenConfirm(order.id, order.status);
+                                  handleOpenCancel(order.id);
                                 }}
                               >
                                 <svg
@@ -338,42 +377,20 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                 >
-                                  <polyline points="20,6 9,17 4,12" />
+                                  <line x1="18" y1="6" x2="6" y2="18" />
+                                  <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
                               </button>
-                            ) : null}
-                            <button
-                              type="button"
-                              className="orders-action-btn-cancel"
-                              title="Hủy đơn hàng"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenCancel(order.id);
-                              }}
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                              </svg>
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 text-xs italic" style={{ paddingLeft: "12px" }}>-</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-xs italic" style={{ paddingLeft: "12px" }}>-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TableResponsiveWrapper>
             </div>
 
             {isLoading ? (

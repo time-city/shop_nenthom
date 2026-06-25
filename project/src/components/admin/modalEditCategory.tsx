@@ -18,6 +18,7 @@ import type {
   AdminModalEditCategoryProps,
 } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
+import { callAction } from "@/src/lib/utils/callAction";
 
 export default function ModalEditCategory({
   category,
@@ -73,10 +74,10 @@ export default function ModalEditCategory({
     setIsSubmitting(true);
 
     try {
-      const result = await updateCategoryAction(category.id, {
+      const result = await callAction(() => updateCategoryAction(category.id, {
         name: categoryName,
         description: formValues.description.trim() || undefined,
-      });
+      }), "Không thể cập nhật danh mục. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         const message = getFriendlyResponseError(result.error);

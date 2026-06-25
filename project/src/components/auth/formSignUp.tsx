@@ -17,6 +17,7 @@ import {
   getFriendlyResponseError,
   isUserInputError,
 } from "@/src/lib/utils/errorMessage";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const initialValues: SignUpValues = {
   fullname: "",
@@ -116,12 +117,12 @@ export default function FormSignUp() {
     const password = values.password;
 
     // action-(đăng ký)
-    const result = await registerUser({
+    const result = await callAction(() => registerUser({
       email,
       fullname,
       password,
       phone,
-    });
+    }), "Không thể đăng ký tài khoản. Vui lòng thử lại sau.");
 
     if (!result.success) {
       const message = result.error ? getFriendlyResponseError(result.error) : "Đăng ký thất bại";

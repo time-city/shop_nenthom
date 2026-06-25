@@ -21,6 +21,7 @@ import type {
   AdminModalEditDiscountProps,
 } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
+import { callAction } from "@/src/lib/utils/callAction";
 
 export default function ModalEditDiscount({
   discount,
@@ -105,7 +106,7 @@ export default function ModalEditDiscount({
 
     try {
       // action-(cập nhật mã giảm giá)
-      const result = await updateDiscountAction(discount.id, {
+      const result = await callAction(() => updateDiscountAction(discount.id, {
         code,
         discount_amount_cents: discountAmount,
         expires_at: formValues.expires_at
@@ -113,7 +114,7 @@ export default function ModalEditDiscount({
           : undefined,
         max_uses: maxUses,
         type: formValues.type,
-      });
+      }), "Không thể cập nhật mã giảm giá. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         const message = getFriendlyResponseError(result.error);

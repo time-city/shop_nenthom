@@ -17,6 +17,7 @@ import {
 } from "../../lib/action/auth.action";
 import type { ResetPasswordValues } from "../../lib/types/client";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const initialValues: ResetPasswordValues = {
   confirmPassword: "",
@@ -95,7 +96,7 @@ export default function FormResetPassword() {
     }
     setIsResending(true);
     try {
-      const result = await resendResetPasswordOtp({ email });
+      const result = await callAction(() => resendResetPasswordOtp({ email }), "Không thể gửi lại mã xác thực. Vui lòng thử lại sau.");
       if (result.success) {
         toast.success(result.message || "Đã gửi lại mã OTP vào email của bạn");
         setCountdown(60);
@@ -202,12 +203,12 @@ export default function FormResetPassword() {
     }
 
     // action-(đặt lại mật khẩu bằng OTP)
-    const result = await resetPasswordAction({
+    const result = await callAction(() => resetPasswordAction({
       email,
       newPassword: values.newPassword,
       otp: values.otp.trim(),
       token,
-    });
+    }), "Không thể đặt lại mật khẩu. Vui lòng thử lại sau.");
 
     if (!result.success) {
       const message = result.error ? getFriendlyResponseError(result.error) : "OTP sai hoặc đã hết hạn";

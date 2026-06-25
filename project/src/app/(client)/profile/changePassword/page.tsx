@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/src/lib/action/user.action";
 import ProfilePageContent from "@/src/components/client/profileClient";
 import ModalChangePassword from "@/src/components/client/changePass";
 import LoadingState from "@/src/components/ui/loadingState";
+import { callAction } from "@/src/lib/utils/callAction";
 export default function ChangePasswordPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] =
@@ -14,7 +15,7 @@ export default function ChangePasswordPage() {
 
   useEffect(() => {
     let isMounted = true;
-    getCurrentUser().then((user) => {
+    callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau.").then((user) => {
       if (!isMounted) return;
       if (!user) {
         router.replace("/login?redirect=/profile/changePassword");

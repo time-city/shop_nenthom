@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import ClientSearchBar from "./clientSearchBar";
+import AdminHeader from "./AdminHeader";
 import ClientTable from "./clientTable";
 import ClientPagination from "./clientPagination";
 import ClientOrderModal from "./clientOrderModal";
@@ -17,6 +18,7 @@ import {
   getAllUsersAction,
   toggleUserStatusAction,
 } from "../../lib/action/user.action";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const itemsPerPage = 10;
 const initialMeta: AdminPaginationMeta = {
@@ -38,10 +40,10 @@ export default function ClientManagement() {
     let cancelled = false;
     const loadUsers = async () => {
       try {
-        const result = await getAllUsersAction({
+        const result = await callAction(() => getAllUsersAction({
           limit: itemsPerPage,
           page: currentPage,
-        });
+        }), "Không thể tải danh sách khách hàng. Vui lòng thử lại sau.");
         if (cancelled) return;
         if ("error" in result && result.error) {
           const friendlyErr = getFriendlyResponseError(result.error);
@@ -72,7 +74,7 @@ export default function ClientManagement() {
   }, [users, searchQuery]);
 
   const handleToggleStatus = async (userId: string) => {
-    const result = await toggleUserStatusAction(userId);
+    const result = await callAction(() => toggleUserStatusAction(userId), "Không thể cập nhật trạng thái tài khoản. Vui lòng thử lại sau.");
     if ("error" in result && result.error) {
       const friendlyErr = getFriendlyResponseError(result.error);
       toast.error(friendlyErr);
@@ -90,36 +92,10 @@ export default function ClientManagement() {
 
   return (
     <>
-      <header className="dashboard-top-header">
-        <div className="dashboard-top-header-left">
-          <button
-            className="dashboard-mobile-toggle"
-            type="button"
-            aria-label="Menu"
-            onClick={() => window.dispatchEvent(new Event("toggle-admin-sidebar"))}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="dashboard-page-title">Quản lý Khách hàng</h1>
-            <p className="dashboard-page-subtitle">
-              Danh sách và thông tin tài khoản thành viên
-            </p>
-          </div>
-        </div>
-      </header>
+      <AdminHeader
+        title="Quản lý Khách hàng"
+        subtitle="Danh sách và thông tin tài khoản thành viên"
+      />
 
       <div className="dashboard-page-content">
         <section className="dashboard-card mb-6 border border-[#6B4E35]/15">

@@ -12,6 +12,8 @@ import { useToast } from "@/src/components/ui/toast-provider";
 import dynamic from "next/dynamic";
 import LoadingState from "@/src/components/ui/loadingState";
 import ModalDeleteConfirm from "@/src/components/admin/modalDeleteConfirm";
+import TableResponsiveWrapper from "@/src/components/admin/TableResponsiveWrapper";
+import AdminHeader from "./AdminHeader";
 
 const ModalProduct = dynamic(() => import("@/src/components/admin/modalProduct"), { ssr: false });
 const ModalEditProduct = dynamic(() => import("@/src/components/admin/modalEditProduct"), { ssr: false });
@@ -26,11 +28,23 @@ import type {
 } from "@/src/interface/adminInterface";
 import {
  deleteProductAction,
+ getProductDeleteImpactAction,
  getProductsAction,
 } from "@/src/lib/action/product.action";
 import { getCategoriesAction } from "@/src/lib/action/category.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import type { AdminProductRow } from "@/src/lib/types/admin";
+import { callAction } from "@/src/lib/utils/callAction";
+
+type ProductImpact = {
+ activeOrderCount: number;
+ cartCount: number;
+ cartItemCount: number;
+ cartQuantity: number;
+ orders: { customerName: string; orderNumber: string; quantity: number; status: string }[];
+ productId: string;
+ productName: string;
+};
 
 const formatCurrency = (value: number) =>
  `${new Intl.NumberFormat("vi-VN").format(value)} đ`;
@@ -55,6 +69,8 @@ export default function ProductManagementClient() {
    useState<AdminProductListItemInterface | null>(null);
  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+ const [isLoadingProductImpact, setIsLoadingProductImpact] = useState(false);
+ const [productImpact, setProductImpact] = useState<ProductImpact | null>(null);
  const [error, setError] = useState("");
  const [products, setProducts] = useState<AdminProductListItemInterface[]>([]);
  const [categories, setCategories] = useState<AdminProductCategoryInterface[]>([]);
@@ -63,7 +79,7 @@ export default function ProductManagementClient() {
    setIsLoadingProducts(true);
 
    // action-(lấy danh sách sản phẩm admin)
-   const result = await getProductsAction({ limit: 100, page: 1 });
+   const result = await callAction(() => getProductsAction({ limit: 100, page: 1 }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
    if (cancelledRef?.current) return;
 
    if ("error" in result && result.error) {
@@ -97,7 +113,7 @@ export default function ProductManagementClient() {
 
  useEffect(() => {
    const loadCategories = async () => {
-     const result = await getCategoriesAction();
+     const result = await callAction(() => getCategoriesAction(), "Không thể tải danh mục. Vui lòng thử lại sau.");
      if ("success" in result && result.success) {
        setCategories(result.categories);
      }
@@ -114,8 +130,8 @@ export default function ProductManagementClient() {
 
    setIsDeletingProduct(true);
 
-   // action-(xóa sản phẩm)
-   const result = await deleteProductAction({ id: deleteProduct.id });
+   // action-(ngừng bán sản phẩm)
+   const result = await callAction(() => deleteProductAction({ id: deleteProduct.id }), "Không thể ngừng bán sản phẩm. Vui lòng thử lại sau.");
 
    if ("error" in result && result.error) {
      toast.error(getFriendlyResponseError(result.error));
@@ -123,148 +139,149 @@ export default function ProductManagementClient() {
      return;
    }
    if ("success" in result && result.success) {
-     toast.success("Đã xóa sản phẩm");
+     const data = result.data as { removedCartItemCount?: number } | undefined;
+     const removedCount = data?.removedCartItemCount ?? 0;
+     const msg = removedCount > 0
+       ? `Đã ngừng bán sản phẩm "${deleteProduct.name}", đã cập nhật ${removedCount} giỏ hàng.`
+       : `Đã ngừng bán sản phẩm "${deleteProduct.name}".`;
+     toast.success(msg);
      setDeleteProduct(null);
+     setProductImpact(null);
      await loadProducts();
    }
 
    setIsDeletingProduct(false);
  };
 
+ const handleOpenDeleteProductModal = async (product: AdminProductListItemInterface) => {
+   setDeleteProduct(product);
+   setProductImpact(null);
+   setIsLoadingProductImpact(true);
+
+   try {
+     const result = await callAction(
+       () => getProductDeleteImpactAction({ id: product.id }),
+       "Không thể kiểm tra sản phẩm. Vui lòng thử lại sau."
+     );
+     if ("success" in result && result.success) {
+       const data = (result as { success: true; data: ProductImpact }).data;
+       setProductImpact(data);
+     }
+   } catch {
+     // Ignore impact load error, still allow delete
+   } finally {
+     setIsLoadingProductImpact(false);
+   }
+ };
+
  return (
    <>
-     <header className="dashboard-top-header">
-       <div className="dashboard-top-header-left">
-         <button
-           className="dashboard-mobile-toggle"
-           type="button"
-           aria-label="Menu"
-           onClick={() => window.dispatchEvent(new Event("toggle-admin-sidebar"))}
-         >
-           <svg
-             width="24"
-             height="24"
-             viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             strokeWidth="2"
-             aria-hidden="true"
-           >
-             <line x1="3" y1="6" x2="21" y2="6" />
-             <line x1="3" y1="12" x2="21" y2="12" />
-             <line x1="3" y1="18" x2="21" y2="18" />
-           </svg>
-         </button>
-         <div>
-           <h1 className="dashboard-page-title">Quản lý Sản phẩm</h1>
-           <p className="dashboard-page-subtitle">
-             Danh sách sản phẩm gốc của cửa hàng
-           </p>
-         </div>
-       </div>
-
-       <div className="dashboard-top-header-right">
-         <button
-           className="product-btn product-btn-primary"
-           type="button"
-           onClick={() => setIsModalOpen(true)}
-         >
-           <svg
-             width="16"
-             height="16"
-             viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             strokeWidth="2"
-             aria-hidden="true"
-           >
-             <line x1="12" y1="5" x2="12" y2="19" />
-             <line x1="5" y1="12" x2="19" y2="12" />
-           </svg>
-           Thêm sản phẩm
-         </button>
-       </div>
-     </header>
+      <AdminHeader
+        title="Quản lý Sản phẩm"
+        subtitle="Danh sách sản phẩm gốc của cửa hàng"
+      >
+        <button
+          className="product-btn product-btn-primary"
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span className="hidden sm:inline">Thêm sản phẩm</span>
+        </button>
+      </AdminHeader>
 
      <div className="dashboard-page-content">
        <section className="dashboard-card product-table-card">
          <div className="dashboard-card-body no-padding">
            <div className="dashboard-table-wrapper">
-             <table className="dashboard-admin-table product-admin-table">
-               <thead>
-                 <tr>
-                   <th className="product-thumb-col">
-                     <span className="sr-only">Ảnh</span>
-                   </th>
-                   <th>Tên sản phẩm</th>
-                   <th>Danh mục</th>
-                   <th>Giá gốc</th>
-                   <th>Trạng thái</th>
-                   <th className="product-action-col">
-                     <span className="sr-only">Thao tác</span>
-                   </th>
-                 </tr>
-               </thead>
-               <tbody>
-                 {products.map((product) => {
-                   const productRow = mapProductToRow(product);
+             <TableResponsiveWrapper minWidth={950}>
+               <table className="dashboard-admin-table product-admin-table">
+                 <thead>
+                   <tr>
+                     <th className="product-thumb-col">
+                       <span className="sr-only">Ảnh</span>
+                     </th>
+                     <th>Tên sản phẩm</th>
+                     <th>Danh mục</th>
+                     <th>Giá gốc</th>
+                     <th>Trạng thái</th>
+                     <th className="product-action-col">
+                       <span className="sr-only">Thao tác</span>
+                     </th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {products.map((product) => {
+                     const productRow = mapProductToRow(product);
 
-                   return (
-                     <tr
-                       key={product.id}
-                       className="transition hover:bg-[#6B1218]/[0.03]"
-                     >
-                        <td>
-                          <div className="product-table-thumb" aria-hidden="true">
-                            {Array.isArray(product.images) && typeof product.images[0] === "string" && product.images[0] ? (
-                              <Image
-                                src={product.images[0]}
-                                alt={product.name}
-                                width={48}
-                                height={48}
-                                unoptimized
-                                className="h-full w-full object-cover rounded-[7px]"
-                              />
-                            ) : (
-                              <span />
-                            )}
-                          </div>
-                        </td>
-                       <td>
-                         <div className="dashboard-product-name">
-                           {productRow.name}
-                         </div>
-                       </td>
-                       <td>{productRow.category}</td>
-                       <td className="orders-table-amount">{productRow.price}</td>
-                       <td>
-                         <span className={`dashboard-status ${productRow.statusType}`}>
-                           {productRow.status}
-                         </span>
-                       </td>
-                       <td>
-                         <div className="product-row-actions">
-                           <AdminEditButton
-                             ariaLabel={`Sửa ${productRow.name}`}
-                             onClick={(event) => {
-                               stopRowClick(event);
-                               setEditProduct(product);
-                             }}
-                           />
-                           <AdminDeleteButton
-                             ariaLabel={`Xóa ${productRow.name}`}
-                             onClick={(event) => {
-                               stopRowClick(event);
-                               setDeleteProduct(product);
-                             }}
-                           />
-                         </div>
-                       </td>
-                     </tr>
-                   );
-                 })}
-               </tbody>
-             </table>
+                     return (
+                       <tr
+                         key={product.id}
+                         className="transition hover:bg-[#6B1218]/[0.03]"
+                       >
+                         <td>
+                           <div className="product-table-thumb" aria-hidden="true">
+                             {Array.isArray(product.images) && typeof product.images[0] === "string" && product.images[0] ? (
+                               <Image
+                                 src={product.images[0]}
+                                 alt={product.name}
+                                 width={48}
+                                 height={48}
+                                 unoptimized
+                                 className="h-full w-full object-cover rounded-[7px]"
+                               />
+                             ) : (
+                               <span />
+                             )}
+                           </div>
+                         </td>
+                         <td className="wrap-content">
+                           <div className="dashboard-product-name">
+                             {productRow.name}
+                           </div>
+                         </td>
+                         <td>{productRow.category}</td>
+                         <td className="orders-table-amount">{productRow.price}</td>
+                         <td>
+                           <span className={`dashboard-status ${productRow.statusType}`}>
+                             {productRow.status}
+                           </span>
+                         </td>
+                         <td>
+                           <div className="product-row-actions">
+                             <AdminEditButton
+                               ariaLabel={`Sửa ${productRow.name}`}
+                               onClick={(event) => {
+                                 stopRowClick(event);
+                                 setEditProduct(product);
+                               }}
+                             />
+                             <AdminDeleteButton
+                               ariaLabel={`Xóa ${productRow.name}`}
+                               onClick={(event) => {
+                                 stopRowClick(event);
+                                 void handleOpenDeleteProductModal(product);
+                               }}
+                             />
+                           </div>
+                         </td>
+                       </tr>
+                     );
+                   })}
+                 </tbody>
+               </table>
+             </TableResponsiveWrapper>
            </div>
            {isLoadingProducts ? (
              <LoadingState
@@ -303,9 +320,28 @@ export default function ProductManagementClient() {
        open={Boolean(deleteProduct)}
        productName={deleteProduct?.name}
        isDeleting={isDeletingProduct}
-       title="Xóa sản phẩm?"
-       confirmLabel="Xóa sản phẩm"
-       onClose={() => setDeleteProduct(null)}
+       title="Ngừng bán sản phẩm?"
+       confirmLabel="Ngừng bán"
+       description={
+         <>
+           Sản phẩm <span style={{ color: "#6b1218", fontWeight: 700 }}>{deleteProduct?.name}</span> sẽ được ẩn khỏi cửa hàng. Lịch sử đơn hàng vẫn được giữ nguyên.
+           {isLoadingProductImpact ? (
+             <span style={{ display: "block", marginTop: 6, color: "#6B4C35", fontStyle: "italic" }}>
+               Đang kiểm tra tác động...
+             </span>
+           ) : productImpact && (productImpact.cartCount > 0 || productImpact.activeOrderCount > 0) ? (
+             <span style={{ display: "block", marginTop: 6, color: "#B91C1C", fontWeight: 600 }}>
+               {productImpact.cartCount > 0 && (
+                 <span style={{ display: "block" }}>⚠️ {productImpact.cartCount} giỏ hàng có chứa sản phẩm này sẽ bị ảnh hưởng.</span>
+               )}
+               {productImpact.activeOrderCount > 0 && (
+                 <span style={{ display: "block" }}>⚠️ {productImpact.activeOrderCount} đơn hàng đang chờ xử lý có chứa sản phẩm này.</span>
+               )}
+             </span>
+           ) : null}
+         </>
+       }
+       onClose={() => { setDeleteProduct(null); setProductImpact(null); }}
        onConfirm={handleDeleteProduct}
      />
    </>

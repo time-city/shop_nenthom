@@ -14,6 +14,7 @@ import type {
 } from "../../interface/clientInterface";
 import type { DetailCardModalProps } from "../../lib/types/client";
 import styles from "../../styles/clientModal.module.css";
+import { callAction } from "@/src/lib/utils/callAction";
 
 
 export default function DetailCardModal({
@@ -47,7 +48,7 @@ export default function DetailCardModal({
 
 
      setLoading(true);
-     getProductDetailsAction(productId).then((result) => {
+     callAction(() => getProductDetailsAction(productId), "Không thể tải chi tiết sản phẩm. Vui lòng thử lại sau.").then((result) => {
        if (ignore) return;
 
 

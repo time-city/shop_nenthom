@@ -21,6 +21,7 @@ import type {
   AdminModalDiscountProps,
 } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const initialDiscountFormValues: AdminDiscountFormValues = {
   code: "",
@@ -101,7 +102,7 @@ export default function ModalDiscount({
 
     try {
       // action-(tạo mã giảm giá)
-      const result = await createDiscountAction({
+      const result = await callAction(() => createDiscountAction({
         code,
         discount_amount_cents: discountAmount,
         expires_at: formValues.expires_at
@@ -110,7 +111,7 @@ export default function ModalDiscount({
         is_active: true,
         max_uses: maxUses,
         type: formValues.type,
-      });
+      }), "Không thể tạo mã giảm giá. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         const message = getFriendlyResponseError(result.error);

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { OrderDetail } from "@/src/lib/types/client";
+import AdminHeader from "./AdminHeader";
+import TableResponsiveWrapper from "./TableResponsiveWrapper";
 
 interface Props {
   initialOrder: OrderDetail;
@@ -50,39 +52,14 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
 
   return (
     <>
-      <header className="dashboard-top-header">
-        <div className="dashboard-top-header-left">
-          <Link
-            href="/admin/ordersManagement"
-            className="dashboard-mobile-toggle flex items-center justify-center"
-            style={{ display: "inline-flex" }}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="19" y1="12" x2="5" y2="12"></line>
-              <polyline points="12,19 5,12 12,5"></polyline>
-            </svg>
-          </Link>
-          <div>
-            <h1 className="dashboard-page-title">
-              Chi tiết Đơn hàng: {order.id}
-            </h1>
-          </div>
-        </div>
-        <div className="dashboard-top-header-right">
-          <span className={`dashboard-status ${statusInfo.className}`}>
-            {statusInfo.label}
-          </span>
-        </div>
-      </header>
+      <AdminHeader
+        title={`Chi tiết Đơn hàng: ${order.id}`}
+        backUrl="/admin/ordersManagement"
+      >
+        <span className={`dashboard-status ${statusInfo.className}`}>
+          {statusInfo.label}
+        </span>
+      </AdminHeader>
 
       <div className="dashboard-page-content">
         {/* Customer Info + Payment */}

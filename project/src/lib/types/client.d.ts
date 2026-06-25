@@ -424,3 +424,51 @@ export type Order = {
   total: number;
   zip?: string;
 };
+
+/** Dữ liệu sản phẩm ngừng bán được gửi từ WebSocket của user */
+export type CartProductsRemovedData = {
+  productNames: string[];
+  userId: string;
+};
+
+export type OrderCancelledData = {
+  orderId: string;
+  orderNumber: string;
+  reason: string;
+  userId: string;
+  notification?: {
+    id: string;
+    type: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    createdAt: string;
+  };
+  unreadNotificationCount?: number;
+};
+
+/** Message WebSocket nhận từ cổng thông báo của user */
+export type UserNotificationWebSocketMessage =
+  | { event: "CONNECTED"; data: { userId: string } }
+  | { event: "CART_PRODUCTS_REMOVED"; data: CartProductsRemovedData }
+  | { event: "ORDER_CANCELLED"; data: OrderCancelledData };
+
+/** Options truyền vào hook useUserNotificationSocket */
+export type UseUserNotificationSocketOptions = {
+  onConnected?: (data: { userId: string }) => void;
+  onCartProductsRemoved?: (data: CartProductsRemovedData) => void;
+  onOrderCancelled?: (data: OrderCancelledData) => void;
+};
+
+/** Thông báo hiển thị phía User */
+export type UserNotification = {
+  id: string;
+  user_id: string;
+  order_id: string | null;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  read_at: Date | string | null;
+  created_at: Date | string;
+};

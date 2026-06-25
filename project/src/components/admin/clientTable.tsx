@@ -2,6 +2,7 @@ import { useOptimistic, useTransition, useState } from "react";
 import { ClipboardList, Lock, Unlock } from "lucide-react";
 import ClientStatusBadge from "./clientStatusBadge";
 import ModalDeleteConfirm from "./modalDeleteConfirm";
+import TableResponsiveWrapper from "./TableResponsiveWrapper";
 
 import type { AdminUser as User } from "@/src/lib/types/admin";
 
@@ -62,9 +63,10 @@ export default function ClientTable({
 
   return (
     <>
-      <div className="overflow-x-auto rounded-[12px] border border-[#6B4E35]/15 bg-[#F8F0E4] shadow-md">
-        <table className="w-full text-left border-collapse">
-          <thead>
+      <div className="rounded-[12px] border border-[#6B4E35]/15 bg-[#F8F0E4] shadow-md overflow-visible">
+        <TableResponsiveWrapper minWidth={850}>
+          <table className="w-full text-left border-collapse">
+            <thead>
             <tr className="bg-[#6B1218] text-[#F5F0E8] text-xs uppercase font-semibold">
               <th className="px-6 py-4">Họ và tên</th>
               <th className="px-6 py-4">Liên hệ</th>
@@ -129,7 +131,8 @@ export default function ClientTable({
             )}
           </tbody>
         </table>
-      </div>
+      </TableResponsiveWrapper>
+    </div>
 
       <ModalDeleteConfirm
         open={lockUserId !== null}

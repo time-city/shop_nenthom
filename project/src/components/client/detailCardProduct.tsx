@@ -22,6 +22,7 @@ import type {
   DetailOptionGroupProps,
 } from "../../lib/types/client";
 import styles from "../../styles/detailCardProduct.module.css";
+import { callAction } from "@/src/lib/utils/callAction";
 
 
 const formatPrice = (price: number) =>
@@ -129,14 +130,14 @@ export default function DetailCardProduct({
       setOptimisticAdding(true);
       try {
         // action-(thêm sản phẩm vào giỏ hàng)
-        const result = await addToCartAction({
+        const result = await callAction(() => addToCartAction({
           color_id: selectedColor?.id,
           pack_id: selectedPackaging?.id,
           product_id: product.id,
           quantity: Number(quantity) || 1,
           scent_id: product.options?.scents?.[0]?.id,
           size_id: selectedSize?.id,
-        });
+        }), "Không thể thêm sản phẩm vào giỏ hàng. Vui lòng thử lại sau.");
 
         if ("error" in result && result.error) {
           setCartError(getFriendlyResponseError(result.error));
@@ -183,31 +184,45 @@ export default function DetailCardProduct({
       <div className="h-20 overflow-y-auto text-xs font-light leading-6 text-[#2C1810] pr-1">
         {activeTab === "description" ? (
           <>
-            <p>
-              Nến thơm ChamCham được làm từ sáp đậu nành tự nhiên, tạo
-              hương thơm mềm mại và tinh tế cho không gian sống.
-            </p>
-            <p className="mt-2">
-              Mỗi sản phẩm được hoàn thiện thủ công với sự tỉ mỉ trong
-              từng chi tiết.
-            </p>
+            {scentNote ? (
+              <p style={{ whiteSpace: "pre-wrap" }}>{scentNote}</p>
+            ) : (
+              <>
+                <p>
+                  Nến thơm ChamCham được làm từ sáp đậu nành tự nhiên, tạo
+                  hương thơm mềm mại và tinh tế cho không gian sống.
+                </p>
+                <p className="mt-2">
+                  Mỗi sản phẩm được hoàn thiện thủ công với sự tỉ mỉ trong
+                  từng chi tiết.
+                </p>
+              </>
+            )}
           </>
         ) : null}
 
         {activeTab === "ingredients" ? (
-          <p>
-            <strong>Thành phần chính:</strong> Sáp đậu nành, tinh dầu
-            thiên nhiên, bấc cotton và hương thơm thực vật.
-          </p>
+          (product as { ingredients?: string | null }).ingredients ? (
+            <p style={{ whiteSpace: "pre-wrap" }}>{(product as { ingredients?: string | null }).ingredients}</p>
+          ) : (
+            <p>
+              <strong>Thành phần chính:</strong> Sáp đậu nành, tinh dầu
+              thiên nhiên, bấc cotton và hương thơm thực vật.
+            </p>
+          )
         ) : null}
 
         {activeTab === "usage" ? (
-          <ul className="list-disc space-y-1 pl-4">
-            <li>Đốt nến trong không gian thoáng và tránh gió mạnh.</li>
-            <li>Thời gian đốt lý tưởng mỗi lần là 3-4 giờ.</li>
-            <li>Cắt bấc còn khoảng 5mm trước mỗi lần sử dụng.</li>
-            <li>Không để nến cháy khi bạn rời khỏi phòng.</li>
-          </ul>
+          (product as { usage_instructions?: string | null }).usage_instructions ? (
+            <p style={{ whiteSpace: "pre-wrap" }}>{(product as { usage_instructions?: string | null }).usage_instructions}</p>
+          ) : (
+            <ul className="list-disc space-y-1 pl-4">
+              <li>Đốt nến trong không gian thoáng và tránh gió mạnh.</li>
+              <li>Thời gian đốt lý tưởng mỗi lần là 3-4 giờ.</li>
+              <li>Cắt bấc còn khoảng 5mm trước mỗi lần sử dụng.</li>
+              <li>Không để nến cháy khi bạn rời khỏi phòng.</li>
+            </ul>
+          )
         ) : null}
       </div>
     </div>

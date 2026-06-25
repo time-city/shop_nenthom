@@ -29,6 +29,7 @@ import {
 import { createOrderAction } from "@/src/lib/action/order.action";
 import { applyDiscountAction } from "@/src/lib/action/discount.action";
 import type { CartPageStep, ClientCartItem, CartPaymentMethod } from "@/src/lib/types/client";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const getFirstImage = (images: unknown) => {
   if (Array.isArray(images) && typeof images[0] === "string") {
@@ -110,7 +111,7 @@ export default function CartClient() {
     setError(null);
 
     // action-(lấy giỏ hàng)
-    const result = await getOrCreateCartAction();
+    const result = await callAction(() => getOrCreateCartAction(), "Không thể tải giỏ hàng. Vui lòng thử lại sau.");
     if (cancelled.value) return;
 
     if ("error" in result && result.error) {
@@ -188,10 +189,10 @@ export default function CartClient() {
 
       try {
         // action-(cập nhật số lượng giỏ hàng)
-        const result = await updateCartItemAction({
+        const result = await callAction(() => updateCartItemAction({
           itemId,
           quantity: nextQuantity,
-        });
+        }), "Không thể cập nhật sản phẩm trong giỏ hàng. Vui lòng thử lại sau.");
 
         if ("error" in result && result.error) {
           const cancelled = { value: false };
@@ -236,7 +237,7 @@ export default function CartClient() {
 
     try {
       // action-(xóa item khỏi giỏ hàng)
-      const result = await removeCartItemAction({ itemId: targetItem.itemId });
+      const result = await callAction(() => removeCartItemAction({ itemId: targetItem.itemId }), "Không thể xóa sản phẩm khỏi giỏ hàng. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         toast.error(getFriendlyResponseError(result.error));
@@ -265,7 +266,7 @@ export default function CartClient() {
       for (const item of selectedCart) {
         if (!item.itemId) continue;
 
-        const result = await removeCartItemAction({ itemId: item.itemId });
+        const result = await callAction(() => removeCartItemAction({ itemId: item.itemId }), "Không thể xóa sản phẩm khỏi giỏ hàng. Vui lòng thử lại sau.");
 
         if ("error" in result && result.error) {
           toast.error(getFriendlyResponseError(result.error));
@@ -292,7 +293,7 @@ export default function CartClient() {
     setIsMutatingCart(true);
 
     try {
-      const result = await clearCartAction();
+      const result = await callAction(() => clearCartAction(), "Không thể xóa giỏ hàng. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         toast.error(getFriendlyResponseError(result.error));
@@ -315,10 +316,10 @@ export default function CartClient() {
     }
 
     try {
-      const response = await applyDiscountAction({
+      const response = await callAction(() => applyDiscountAction({
         code: code.trim(),
         subtotal_cents: subtotal,
-      });
+      }), "Không thể áp dụng mã giảm giá. Vui lòng thử lại sau.");
 
       if ("error" in response && response.error) {
         if (response.error === "Vui lòng đăng nhập để sử dụng mã giảm giá") {
@@ -370,7 +371,7 @@ export default function CartClient() {
     setIsCheckingOut(true);
 
     try {
-      const response = await createOrderAction({
+      const response = await callAction(() => createOrderAction({
         cart_item_ids: selectedCart.map((item) => item.itemId).filter((id): id is string => Boolean(id)),
         discount_code: appliedDiscount?.code || undefined,
         guest_email: shippingData.email,
@@ -381,7 +382,7 @@ export default function CartClient() {
         shipping_fullname: shippingData.fullname,
         shipping_note: shippingData.note || undefined,
         shipping_phone: shippingData.phone,
-      });
+      }), "Không thể đặt hàng. Vui lòng thử lại sau.");
 
       if ("error" in response && response.error) {
         const message = getFriendlyResponseError(response.error);

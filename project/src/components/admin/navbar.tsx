@@ -3,13 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { logoutUser } from "../../lib/action/auth.action";
 import { useSupportStore } from "@/src/store/useSupportStore";
 import { useCartStore } from "@/src/store/useCartStore";
 import { useUserStore } from "@/src/store/useUserStore";
 import { getOrdersAction } from "../../lib/action/order.action";
 import type { AdminNavItem, AdminSidebarSectionProps } from "../../lib/types/admin";
+import NotificationAdmin from "./notificationAdmin";
+import { callAction } from "@/src/lib/utils/callAction";
+import { useAdminOrderSocket } from "@/src/hooks/useAdminOrderSocket";
 
 const overviewLinks: AdminNavItem[] = [
   {
@@ -125,7 +128,7 @@ export default function Navbar() {
     let cancelled = false;
     const fetchPendingOrders = async () => {
       try {
-        const result = await getOrdersAction({ status: "PENDING", limit: 1 });
+        const result = await callAction(() => getOrdersAction({ status: "PENDING", limit: 1 }), "Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.");
         if (cancelled) return;
         if (result && "success" in result && result.success && result.meta) {
           setPendingOrdersCount(result.meta.total);
@@ -139,6 +142,21 @@ export default function Navbar() {
       cancelled = true;
     };
   }, [pathname]);
+
+  // WebSocket realtime: cập nhật badge ngay khi có đơn hàng mới hoặc contact mới
+  useAdminOrderSocket({
+    onConnected: useCallback((data: { pendingContactCount: number; unreadNotificationCount: number }) => {
+      if (data.pendingContactCount > 0) {
+        useSupportStore.getState().setUnreadCount(data.pendingContactCount);
+      }
+    }, []),
+    onNewOrder: useCallback(() => {
+      setPendingOrdersCount((prev) => prev + 1);
+    }, []),
+    onNewContact: useCallback(() => {
+      useSupportStore.getState().incrementUnread();
+    }, []),
+  });
 
   // Badge chỉ hiển thị sau khi mount và store đã hydrate
   const supportBadge = mounted && hasHydrated && unreadCount > 0
@@ -175,7 +193,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     startTransition(async () => {
-      const result = await logoutUser();
+      const result = await callAction(() => logoutUser(), "Không thể đăng xuất. Vui lòng thử lại sau.");
 
       if (!result.success) {
         return;
@@ -236,7 +254,14 @@ export default function Navbar() {
             title="Quản lý"
             links={managementLinksWithBadge}
             setIsOpen={setIsOpen}
-          />
+          >
+            <NotificationAdmin
+              pendingOrdersCount={pendingOrdersCount}
+              pendingSupportCount={
+                mounted && hasHydrated ? unreadCount : 0
+              }
+            />
+          </SidebarSection>
           <SidebarSection
             pathname={pathname}
             title="Khác"
@@ -283,6 +308,7 @@ export default function Navbar() {
 }
 
 interface SidebarSectionProps extends AdminSidebarSectionProps {
+  children?: React.ReactNode;
   setIsOpen: (open: boolean) => void;
 }
 
@@ -291,6 +317,7 @@ function SidebarSection({
   pathname,
   title,
   setIsOpen,
+  children,
 }: SidebarSectionProps) {
   return (
     <div className="admin-sidebar-section">
@@ -325,6 +352,7 @@ function SidebarSection({
           </Link>
         );
       })}
+      {children}
     </div>
   );
 }

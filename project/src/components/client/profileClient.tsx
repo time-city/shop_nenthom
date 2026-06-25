@@ -18,6 +18,7 @@ import type {
   ProfilePageContentProps,
   ProfileFieldProps,
 } from "@/src/lib/types/client";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const defaultUser: Required<ClientProfileUserData> = {
   address: "",
@@ -94,7 +95,7 @@ export default function ProfilePageContent({
       setIsLoading(true);
       setError(null);
       try {
-        const data = await getCurrentUser();
+        const data = await callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau.");
         if (cancelled) return;
 
         if (data) {
@@ -132,12 +133,14 @@ export default function ProfilePageContent({
     if (isLoading) return;
 
     let activeDriver: Driver | null = null;
+    let isCancelled = false;
 
     const hasSeenGuide = localStorage.getItem("hasSeenProfileGuide");
     if (!hasSeenGuide) {
       const startTour = async () => {
         try {
           const { driver } = await import("driver.js");
+          if (isCancelled) return;
 
           const driverObj = driver({
             showProgress: true,
@@ -241,7 +244,7 @@ export default function ProfilePageContent({
           activeDriver = driverObj;
 
           window.setTimeout(() => {
-            if (activeDriver === driverObj) {
+            if (activeDriver === driverObj && !isCancelled) {
               driverObj.drive();
             }
           }, 600);
@@ -253,6 +256,7 @@ export default function ProfilePageContent({
     }
 
     return () => {
+      isCancelled = true;
       if (activeDriver) {
         activeDriver.destroy();
       }
@@ -348,13 +352,13 @@ export default function ProfilePageContent({
     }
 
     setIsSaving(true);
-    updateProfileAction({
+    callAction(() => updateProfileAction({
       fullname: profile.fullname,
       phone: profile.phone,
       address: profile.address,
       city: profile.city,
       postal_code: profile.zip,
-    }).then((res) => {
+    }), "Không thể cập nhật hồ sơ. Vui lòng thử lại sau.").then((res) => {
       setIsSaving(false);
       if ("error" in res && res.error) {
         const message = getFriendlyResponseError(res.error);
@@ -390,7 +394,7 @@ export default function ProfilePageContent({
     setIsLoggingOut(true);
 
     // action-(đăng xuất)
-    const result = await logoutUser();
+    const result = await callAction(() => logoutUser(), "Không thể đăng xuất. Vui lòng thử lại sau.");
 
     if (!result.success) {
       const errorMsg = (result as { error?: string }).error;

@@ -14,6 +14,7 @@ import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import type { CollectionSearchParams } from "@/src/lib/types/client";
 import { CollectionContext } from "./collectionClient";
 import Spinner from "@/src/components/ui/Spinner";
+import { callAction } from "@/src/lib/utils/callAction";
 
 
 type CollectionProductsClientProps = {
@@ -203,14 +204,14 @@ export default function CollectionProducts({
    const { maxPrice, minPrice } = parsePriceRange(nextPriceRange);
 
 
-   const result = await getProductsAction({
+   const result = await callAction(() => getProductsAction({
      scentId: nextScentId ? Number(nextScentId) : undefined,
      limit: pageSize,
      maxPrice,
      minPrice,
      page: nextPage,
      search: nextSearch.trim() || undefined,
-   });
+   }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
 
 
    if ("error" in result && result.error) {

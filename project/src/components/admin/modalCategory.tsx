@@ -18,6 +18,7 @@ import type {
   AdminModalCategoryProps,
 } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const initialFormValues: AdminCategoryFormValues = {
   description: "",
@@ -72,10 +73,10 @@ export default function ModalCategory({
     setIsSubmitting(true);
 
     try {
-      const result = await createCategoryAction({
+      const result = await callAction(() => createCategoryAction({
         name: categoryName,
         description: formValues.description.trim() || undefined,
-      });
+      }), "Không thể thêm danh mục. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         const message = getFriendlyResponseError(result.error);
