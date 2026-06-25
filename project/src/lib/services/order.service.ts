@@ -9,6 +9,7 @@ import type {
   GetListOrdersParams,
   UpdateOrderStatusInput,
 } from "../validations/order.schema";
+
 import {
   emitNewOrderToAdmin,
   emitNewPaymentToAdmin,
@@ -1019,7 +1020,7 @@ export const OrderService = {
       orderId: order.id,
       orderNumber: order.order_number,
       status: orderStatusMap[OrderStatus.CANCELLED] as AdminOrderStatus,
-    }).catch((error) => {
+    }).catch((error: unknown) => {
       console.error("[emitOrderUpdatedToAdmin] Không thể phát ORDER_UPDATED:", error);
     });
 

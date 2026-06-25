@@ -397,6 +397,7 @@ export async function setupAdminOrderSocket({
           return;
         }
 
+
         if (event.event === "NEW_CONTACT") {
           const result = await authPool.query(
             `SELECT
