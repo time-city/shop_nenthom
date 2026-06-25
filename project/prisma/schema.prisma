@@ -68,6 +68,7 @@ enum DiscountType {
 
 enum NotificationType {
   NEW_ORDER
+  NEW_CONTACT
   ORDER_CANCELLED
   PRODUCT_UNAVAILABLE
 
