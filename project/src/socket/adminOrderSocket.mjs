@@ -5,6 +5,7 @@ import { WebSocket, WebSocketServer } from "ws";
 const { Client, Pool } = pg;
 
 export const ADMIN_ORDER_WEBSOCKET_PATH = "/ws/admin/orders";
+export const PAYMENT_ORDER_WEBSOCKET_PATH = "/ws/orders/payment";
 export const USER_NOTIFICATION_WEBSOCKET_PATH = "/ws/users/notifications";
 
 const SESSION_COOKIE_NAME = "session";
@@ -124,8 +125,52 @@ export async function setupAdminOrderSocket({
 
     if (
       pathname !== ADMIN_ORDER_WEBSOCKET_PATH &&
+      pathname !== PAYMENT_ORDER_WEBSOCKET_PATH &&
       pathname !== USER_NOTIFICATION_WEBSOCKET_PATH
     ) {
+      return;
+    }
+
+    if (pathname === PAYMENT_ORDER_WEBSOCKET_PATH) {
+      const orderId = url.searchParams.get("orderId");
+      const orderNumber = url.searchParams.get("orderNumber");
+
+      if (!orderId || !orderNumber) {
+        rejectUpgrade(socket, 400, "Không thể xác định đơn hàng.");
+        return;
+      }
+
+      void authPool
+        .query(
+          `SELECT "id", "order_number", "payment_status", "total_cents", "transaction_id", "paid_at"
+           FROM "public"."orders"
+           WHERE "id" = $1::uuid AND "order_number" = $2
+           LIMIT 1`,
+          [orderId, orderNumber],
+        )
+        .then((result) => {
+          const order = result.rows[0];
+          if (!order) {
+            rejectUpgrade(socket, 404, "Không tìm thấy đơn hàng.");
+            return;
+          }
+
+          websocketServer.handleUpgrade(request, socket, head, (websocket) => {
+            websocketServer.emit("connection", websocket, request, {
+              kind: "payment",
+              orderId: order.id,
+              orderNumber: order.order_number,
+              paidAt: order.paid_at,
+              paymentStatus: order.payment_status,
+              totalCents: order.total_cents,
+              transactionId: order.transaction_id,
+            });
+          });
+        })
+        .catch((error) => {
+          console.error("[admin-order-socket] Không thể xác thực đơn thanh toán:", error);
+          rejectUpgrade(socket, 500, "Lỗi kết nối máy chủ.");
+        });
       return;
     }
 
@@ -200,6 +245,36 @@ export async function setupAdminOrderSocket({
           );
         });
     } else {
+      if (connection.kind === "payment") {
+        websocket.send(
+          JSON.stringify({
+            data: {
+              orderId: connection.orderId,
+              orderNumber: connection.orderNumber,
+            },
+            event: "PAYMENT_CONNECTED",
+          }),
+        );
+
+        if (connection.paymentStatus === "PAID") {
+          websocket.send(
+            JSON.stringify({
+              data: {
+                orderId: connection.orderId,
+                orderNumber: connection.orderNumber,
+                paidAt: connection.paidAt
+                  ? new Date(connection.paidAt).toISOString()
+                  : new Date().toISOString(),
+                totalCents: connection.totalCents,
+                transactionId: connection.transactionId,
+              },
+              event: "PAYMENT_SUCCESS",
+            }),
+          );
+        }
+        return;
+      }
+
       websocket.send(
         JSON.stringify({
           data: { userId: connection.userId },
@@ -232,6 +307,16 @@ export async function setupAdminOrderSocket({
 
         const connection = connectionBySocket.get(client);
         if (!connection) return;
+
+        if (event.event === "PAYMENT_SUCCESS") {
+          if (
+            connection.kind === "payment" &&
+            connection.orderId === event.data.orderId
+          ) {
+            client.send(JSON.stringify(event));
+          }
+          return;
+        }
 
         if (event.event === "CART_PRODUCTS_REMOVED") {
           if (
@@ -303,6 +388,14 @@ export async function setupAdminOrderSocket({
         }
 
         if (connection.kind !== "admin") return;
+
+        if (
+          event.event === "NEW_PAYMENT" ||
+          event.event === "ORDER_UPDATED"
+        ) {
+          client.send(JSON.stringify(event));
+          return;
+        }
 
         if (event.event === "NEW_CONTACT") {
           const result = await authPool.query(

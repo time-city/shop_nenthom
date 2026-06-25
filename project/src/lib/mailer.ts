@@ -103,10 +103,23 @@ export async function sendResetPasswordEmail({ email, otp, resetUrl }: SendReset
 // Gửi bill đơn hàng cho cả khách vãng lai và user đã đăng nhập sau khi tạo đơn thành công.
 export async function sendOrderBillEmail(params: SendOrderBillEmailParams) {
   const { from, transporter } = createMailTransporter();
+  const isBankTransfer = params.paymentMethod === "bank";
   const paymentText =
     params.paymentMethod === "cod"
       ? "Thanh toán khi nhận hàng"
       : "Chuyển khoản ngân hàng";
+  const headingText = isBankTransfer
+    ? "ChamCham đã nhận thanh toán đơn hàng của bạn"
+    : "ChamCham đã nhận đơn hàng của bạn";
+  const introText = isBankTransfer
+    ? `Cảm ơn ${escapeHtml(params.fullname)} đã thanh toán. Dưới đây là thông tin đơn hàng của bạn.`
+    : `Cảm ơn ${escapeHtml(params.fullname)} đã đặt hàng. Dưới đây là thông tin đơn hàng tạm tính của bạn.`;
+  const totalLabel = isBankTransfer
+    ? "Đã thanh toán:"
+    : "Tạm tính:";
+  const closingText = isBankTransfer
+    ? "ChamCham đã ghi nhận thanh toán và sẽ chuẩn bị đơn hàng của bạn."
+    : "ChamCham sẽ liên hệ nếu cần xác nhận thêm thông tin giao hàng.";
   const itemRows = params.items
     .map((item) => {
       const optionText = [item.scent, item.size, item.color, item.pack]
@@ -135,12 +148,13 @@ export async function sendOrderBillEmail(params: SendOrderBillEmailParams) {
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #2C1810; background: #F8F0E4; padding: 24px;">
         <div style="max-width: 640px; margin: 0 auto; background: #fffaf3; border: 1px solid #eadfd2; padding: 28px;">
           ${getEmailHeader()}
-          <h2 style="margin: 0 0 8px; color: #6B1218;">ChamCham đã nhận đơn hàng của bạn</h2>
-          <p style="margin: 0 0 20px;">Cảm ơn ${escapeHtml(params.fullname)} đã đặt hàng. Dưới đây là thông tin đơn hàng của bạn.</p>
+          <h2 style="margin: 0 0 8px; color: #6B1218;">${headingText}</h2>
+          <p style="margin: 0 0 20px;">${introText}</p>
 
           <div style="background: #F8F0E4; padding: 16px; margin-bottom: 20px;">
             <div><strong>Mã đơn hàng:</strong> #${escapeHtml(params.orderNumber)}</div>
             <div><strong>Phương thức thanh toán:</strong> ${paymentText}</div>
+            <div><strong>Trạng thái thanh toán:</strong> ${isBankTransfer ? `Đã thanh toán ${formatCurrency(params.total)}` : "Thanh toán khi nhận hàng"}</div>
             <div><strong>Người nhận:</strong> ${escapeHtml(params.fullname)}</div>
             <div><strong>Số điện thoại:</strong> ${escapeHtml(params.phone)}</div>
             <div><strong>Địa chỉ:</strong> ${escapeHtml(params.address)}, ${escapeHtml(params.city)}</div>
@@ -152,7 +166,7 @@ export async function sendOrderBillEmail(params: SendOrderBillEmailParams) {
 
           <div style="margin-top: 20px; border-top: 2px solid #eadfd2; padding-top: 16px;">
             <div style="display: flex; justify-content: space-between;">
-              <span>Tạm tính:</span>
+              <span>Tiền sản phẩm:</span>
               <strong>${formatCurrency(params.subtotal)}</strong>
             </div>
             <div style="display: flex; justify-content: space-between;">
@@ -160,12 +174,12 @@ export async function sendOrderBillEmail(params: SendOrderBillEmailParams) {
               <strong>${formatCurrency(params.shipping)}</strong>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 18px; color: #6B1218; margin-top: 8px;">
-              <span>Tổng cộng:</span>
+              <span>${totalLabel}</span>
               <strong>${formatCurrency(params.total)}</strong>
             </div>
           </div>
 
-          <p style="margin-top: 24px; color: #6B4C35;">ChamCham sẽ liên hệ nếu cần xác nhận thêm thông tin giao hàng.</p>
+          <p style="margin-top: 24px; color: #6B4C35;">${closingText}</p>
         </div>
       </div>
     `,

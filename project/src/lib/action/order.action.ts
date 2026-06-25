@@ -3,7 +3,6 @@
 import { cookies } from "next/headers";
 import { updateTag } from "next/cache";
 import { requireAdmin } from "../requireAdmin";
-import { emitNewOrderToAdmin } from "../events/adminOrderEvents";
 import { getPublicErrorMessage } from "../utils/publicError";
 import { OrderService } from "../services/order.service";
 import { getSession } from "../session";
@@ -41,18 +40,7 @@ export async function createOrderAction(params: CreateOrderInput) {
     const { userId, sessionId } = await getCartIdentity();
     const order = await OrderService.createOrder(parsed.data, userId, sessionId);
 
-    try {
-      updateTag("dashboard-overview");
-      await emitNewOrderToAdmin({
-        createdAt: order.createdAt,
-        customerName: order.fullname,
-        orderId: order.orderId,
-        orderNumber: order.orderNumber,
-        totalCents: order.total,
-      });
-    } catch (eventError) {
-      console.error("[emitNewOrderToAdmin] Không thể phát NEW_ORDER:", eventError);
-    }
+    updateTag("dashboard-overview");
 
     return { success: true, data: order }
   } catch (err) {
@@ -93,6 +81,26 @@ export async function getMyOrderDetailAction(orderNumber: string) {
     return { success: true, data: order }
   } catch (err) {
     return { error: (err as Error).message }
+  }
+}
+
+export async function getOrderPaymentStatusAction(params: {
+  orderId: string;
+  orderNumber: string;
+}) {
+  if (!params.orderId || !params.orderNumber) {
+    return { error: "Không thể xác định đơn hàng." };
+  }
+
+  try {
+    const payment = await OrderService.getPaymentStatus(
+      params.orderId,
+      params.orderNumber,
+    );
+
+    return { success: true, data: payment };
+  } catch (err) {
+    return { error: (err as Error).message };
   }
 }
 

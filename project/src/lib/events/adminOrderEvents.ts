@@ -1,6 +1,7 @@
 import "server-only";
 
 import { NotificationType, OrderStatus, Role, UserStatus } from "@prisma/client";
+import type { AdminOrder, AdminOrderStatus } from "../types/admin";
 import prisma from "../prisma";
 
 export const ADMIN_ORDER_EVENT_CHANNEL =
@@ -9,6 +10,7 @@ export const ADMIN_ORDER_EVENT_CHANNEL =
 export type NewOrderAdminPayload = {
   createdAt: string;
   customerName: string;
+  order: AdminOrder;
   orderId: string;
   orderNumber: string;
   pendingOrderCount: number;
@@ -19,6 +21,32 @@ export type NewOrderAdminPayload = {
 export type NewOrderAdminEvent = {
   data: NewOrderAdminPayload;
   event: "NEW_ORDER";
+};
+
+export type NewPaymentAdminPayload = {
+  order: AdminOrder;
+  orderId: string;
+  orderNumber: string;
+  paidAt: string;
+  totalCents: number;
+  transactionId: string;
+};
+
+export type NewPaymentAdminEvent = {
+  data: NewPaymentAdminPayload;
+  event: "NEW_PAYMENT";
+};
+
+export type OrderUpdatedAdminPayload = {
+  order: AdminOrder;
+  orderId: string;
+  orderNumber: string;
+  status: AdminOrderStatus;
+};
+
+export type OrderUpdatedAdminEvent = {
+  data: OrderUpdatedAdminPayload;
+  event: "ORDER_UPDATED";
 };
 
 type EmitNewOrderToAdminInput = Omit<
@@ -72,6 +100,38 @@ export async function emitNewOrderToAdmin(
       status: "PENDING",
     },
     event: "NEW_ORDER",
+  };
+
+  await prisma.$queryRaw`
+    SELECT pg_notify(
+      ${ADMIN_ORDER_EVENT_CHANNEL},
+      ${JSON.stringify(event)}
+    )::text
+  `;
+
+  return event;
+}
+
+export async function emitNewPaymentToAdmin(input: NewPaymentAdminPayload) {
+  const event: NewPaymentAdminEvent = {
+    data: input,
+    event: "NEW_PAYMENT",
+  };
+
+  await prisma.$queryRaw`
+    SELECT pg_notify(
+      ${ADMIN_ORDER_EVENT_CHANNEL},
+      ${JSON.stringify(event)}
+    )::text
+  `;
+
+  return event;
+}
+
+export async function emitOrderUpdatedToAdmin(input: OrderUpdatedAdminPayload) {
+  const event: OrderUpdatedAdminEvent = {
+    data: input,
+    event: "ORDER_UPDATED",
   };
 
   await prisma.$queryRaw`

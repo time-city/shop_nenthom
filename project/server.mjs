@@ -3,6 +3,7 @@ import nextEnv from "@next/env";
 import next from "next";
 import {
   ADMIN_ORDER_WEBSOCKET_PATH,
+  PAYMENT_ORDER_WEBSOCKET_PATH,
   USER_NOTIFICATION_WEBSOCKET_PATH,
   setupAdminOrderSocket,
 } from "./src/socket/adminOrderSocket.mjs";
@@ -50,6 +51,9 @@ async function start() {
     );
     console.log(
       `> User notification endpoint: ws://${hostname}:${port}${USER_NOTIFICATION_WEBSOCKET_PATH}`,
+    );
+    console.log(
+      `> Payment endpoint: ws://${hostname}:${port}${PAYMENT_ORDER_WEBSOCKET_PATH}`,
     );
   });
 
