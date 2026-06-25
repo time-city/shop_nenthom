@@ -243,10 +243,116 @@ export async function setupAdminOrderSocket({
           return;
         }
 
+        if (event.event === "ORDER_CANCELLED") {
+          if (
+            connection.kind !== "user" ||
+            connection.userId !== event.data.userId
+          ) {
+            return;
+          }
+
+          const result = await authPool.query(
+            `SELECT
+               notification."id",
+               notification."type",
+               notification."title",
+               notification."message",
+               notification."data",
+               notification."is_read" AS "isRead",
+               to_char(
+                 notification."created_at" AT TIME ZONE 'UTC',
+                 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
+               ) AS "createdAt",
+               (
+                 SELECT COUNT(*)::int
+                 FROM "public"."notifications" unread
+                 WHERE unread."user_id" = $1::uuid
+                   AND unread."is_read" = FALSE
+               ) AS "unreadNotificationCount"
+             FROM "public"."notifications" notification
+             WHERE notification."user_id" = $1::uuid
+               AND notification."order_id" = $2::uuid
+               AND notification."type" = 'ORDER_CANCELLED'
+             LIMIT 1`,
+            [connection.userId, event.data.orderId],
+          );
+          const notification = result.rows[0];
+
+          if (!notification) return;
+
+          client.send(
+            JSON.stringify({
+              ...event,
+              data: {
+                ...event.data,
+                notification: {
+                  createdAt: notification.createdAt,
+                  data: notification.data,
+                  id: notification.id,
+                  isRead: notification.isRead,
+                  message: notification.message,
+                  title: notification.title,
+                  type: notification.type,
+                },
+                unreadNotificationCount:
+                  notification.unreadNotificationCount ?? 0,
+              },
+            }),
+          );
+          return;
+        }
+
         if (connection.kind !== "admin") return;
 
         if (event.event === "NEW_CONTACT") {
-          client.send(JSON.stringify(event));
+          const result = await authPool.query(
+            `SELECT
+               notification."id",
+               notification."type",
+               notification."title",
+               notification."message",
+               notification."data",
+               notification."is_read" AS "isRead",
+               to_char(
+                 notification."created_at" AT TIME ZONE 'UTC',
+                 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
+               ) AS "createdAt",
+               (
+                 SELECT COUNT(*)::int
+                 FROM "public"."notifications" unread
+                 WHERE unread."user_id" = $1::uuid
+                   AND unread."is_read" = FALSE
+               ) AS "unreadNotificationCount"
+             FROM "public"."notifications" notification
+             WHERE notification."user_id" = $1::uuid
+               AND notification."type" = 'NEW_CONTACT'
+               AND notification."data"->>'contactId' = $2
+             LIMIT 1`,
+            [connection.userId, event.data.contactId],
+          );
+          const notification = result.rows[0];
+
+          if (!notification) return;
+
+          client.send(
+            JSON.stringify({
+              ...event,
+              data: {
+                ...event.data,
+                notification: {
+                  createdAt: notification.createdAt,
+                  data: notification.data,
+                  id: notification.id,
+                  isRead: notification.isRead,
+                  message: notification.message,
+                  title: notification.title,
+                  type: notification.type,
+                },
+                unreadNotificationCount:
+                  notification.unreadNotificationCount ?? 0,
+              },
+            }),
+          );
           return;
         }
 
@@ -260,7 +366,10 @@ export async function setupAdminOrderSocket({
              notification."message",
              notification."data",
              notification."is_read" AS "isRead",
-             notification."created_at" AS "createdAt",
+             to_char(
+               notification."created_at" AT TIME ZONE 'UTC',
+               'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
+             ) AS "createdAt",
              (
                SELECT COUNT(*)::int
                FROM "public"."notifications" unread

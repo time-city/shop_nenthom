@@ -29,6 +29,7 @@ type EmitNewOrderToAdminInput = Omit<
 export async function emitNewOrderToAdmin(
   input: EmitNewOrderToAdminInput,
 ) {
+  const orderCreatedAt = new Date(input.createdAt);
   const notificationData = {
     createdAt: input.createdAt,
     customerName: input.customerName,
@@ -52,6 +53,7 @@ export async function emitNewOrderToAdmin(
   if (admins.length > 0) {
     await prisma.notification.createMany({
       data: admins.map((admin) => ({
+        created_at: orderCreatedAt,
         data: notificationData,
         message: `${input.customerName} vừa đặt đơn ${input.orderNumber}`,
         order_id: input.orderId,
