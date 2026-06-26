@@ -1,5 +1,6 @@
 import { DiscountType, NotificationType, OrderStatus, PaymentMethod, PaymentStatus, Prisma } from "@prisma/client";
 import type { AdminOrder, AdminOrderStatus } from "../types/admin";
+import type { SendOrderBillEmailParams } from "../types/email";
 import { sendOrderBillEmail, sendOrderCancellationEmail } from "../mailer";
 import prisma from "../prisma";
 import { clientOrderStatusMap, orderStatusMap, paymentStatusMap } from "../types/order";
@@ -8,7 +9,13 @@ import type {
   GetListOrdersParams,
   UpdateOrderStatusInput,
 } from "../validations/order.schema";
-import { emitOrderCancelledToUser } from "../events/userOrderEvents";
+
+import {
+  emitNewOrderToAdmin,
+  emitNewPaymentToAdmin,
+  emitOrderUpdatedToAdmin,
+} from "../events/adminOrderEvents";
+import { emitOrderCancelledToUser, emitPaymentSuccessToUser } from "../events/userOrderEvents";
 
 
 const shippingFeeCents = 0;
@@ -22,7 +29,7 @@ const getToppingIds = (value: unknown) =>
 
 
 // Sinh mã đơn ngắn để khách hàng/admin dễ tra cứu.
-const createOrderNumber = () => `CC-${Date.now().toString(36).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+const createOrderNumber = () => `DH-${Date.now().toString(36).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
 
 // Chuẩn hóa mã giảm giá trước khi so sánh với dữ liệu trong DB.
@@ -30,15 +37,46 @@ function normalizeDiscountCode(code: string) {
   return code.trim().toUpperCase();
 }
 
+function normalizeOrderPaymentCode(code: string) {
+  return code.replace(/[^a-z0-9]/gi, "").toUpperCase();
+}
+
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+type AdminOrderRealtimeSource = {
+  created_at: Date;
+  order_number: string;
+  payment_status: PaymentStatus;
+  shipping_fullname: string;
+  status: OrderStatus;
+  total_cents: number;
+};
+
+function toAdminOrderRow(order: AdminOrderRealtimeSource): AdminOrder {
+  return {
+    customer: order.shipping_fullname,
+    date: order.created_at.toISOString(),
+    id: order.order_number,
+    payment: paymentStatusMap[order.payment_status],
+    status: orderStatusMap[order.status] as AdminOrderStatus,
+    total: order.total_cents,
+  };
 }
 
 
 type OrderDetailViewer = {
   role: "ADMIN" | "CUSTOMER";
   userId?: string;
+};
+
+type ConfirmSepayPaymentInput = {
+  amountIn: number;
+  orderNumber: string;
+  transactionDate?: string | null;
+  transactionId: string;
 };
 
 const orderItemSelect = {
@@ -67,6 +105,71 @@ const orderHistoryItemSelect = {
     packaging: { select: { name: true } },
   },
 } as const;
+
+async function buildOrderBillEmailParams(
+  orderId: string,
+): Promise<SendOrderBillEmailParams | null> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      guest_email: true,
+      payment_method: true,
+      shipping_address: true,
+      shipping_city: true,
+      shipping_cents: true,
+      shipping_fullname: true,
+      shipping_phone: true,
+      subtotal_cents: true,
+      total_cents: true,
+      order_number: true,
+      user: { select: { email: true } },
+      items: orderHistoryItemSelect,
+    },
+  });
+
+  if (!order) return null;
+
+  const email = order.user?.email ?? order.guest_email;
+  if (!email) return null;
+
+  const toppingIds = [
+    ...new Set(order.items.flatMap((item) => getToppingIds(item.toppings_json))),
+  ];
+  const toppings = toppingIds.length
+    ? await prisma.topping.findMany({
+      where: { id: { in: toppingIds } },
+      select: { id: true, name: true },
+    })
+    : [];
+  const toppingById = new Map(toppings.map((topping) => [topping.id, topping.name]));
+
+  return {
+    address: order.shipping_address,
+    city: order.shipping_city,
+    email,
+    fullname: order.shipping_fullname,
+    items: order.items.map((item) => ({
+      color: item.color?.name,
+      name: item.product.name,
+      pack: item.packaging?.name,
+      price: item.unit_price_cents,
+      quantity: item.quantity,
+      scent: item.scent?.name ?? item.product.name,
+      size: item.size?.weight_gram
+        ? `${item.size.name} (${item.size.weight_gram}g)`
+        : item.size?.name ?? "Mặc định",
+      toppings: getToppingIds(item.toppings_json)
+        .map((id) => toppingById.get(id))
+        .filter((name): name is string => Boolean(name)),
+    })),
+    orderNumber: order.order_number,
+    paymentMethod: order.payment_method === PaymentMethod.BANK_TRANSFER ? "bank" : "cod",
+    phone: order.shipping_phone,
+    shipping: order.shipping_cents,
+    subtotal: order.subtotal_cents,
+    total: order.total_cents,
+  };
+}
 
 
 export const OrderService = {
@@ -331,10 +434,208 @@ export const OrderService = {
         zip: data.shipping_postal_code,
       };
 
-      sendOrderBillEmail(orderBill).catch(() => undefined);
+      if (paymentMethod === PaymentMethod.COD) {
+        sendOrderBillEmail(orderBill).catch(() => undefined);
+      }
+
+      emitNewOrderToAdmin({
+        createdAt: order.created_at.toISOString(),
+        customerName: order.shipping_fullname,
+        order: toAdminOrderRow(order),
+        orderId: order.id,
+        orderNumber: order.order_number,
+        totalCents: order.total_cents,
+      }).catch((error) => {
+        console.error("[emitNewOrderToAdmin] Không thể phát NEW_ORDER:", error);
+      });
 
       return orderBill;
     } finally {}
+  },
+
+  async confirmSepayPayment(input: ConfirmSepayPaymentInput) {
+    const normalizedPaymentCode = normalizeOrderPaymentCode(input.orderNumber);
+    const exactOrder = await prisma.order.findUnique({
+      where: { order_number: input.orderNumber },
+      select: {
+        created_at: true,
+        id: true,
+        order_number: true,
+        payment_method: true,
+        payment_status: true,
+        shipping_fullname: true,
+        status: true,
+        total_cents: true,
+      },
+    });
+    const order = exactOrder ?? (await prisma.order.findMany({
+      where: {
+        payment_method: PaymentMethod.BANK_TRANSFER,
+        payment_status: { not: PaymentStatus.PAID },
+      },
+      orderBy: { created_at: "desc" },
+      select: {
+        created_at: true,
+        id: true,
+        order_number: true,
+        payment_method: true,
+        payment_status: true,
+        shipping_fullname: true,
+        status: true,
+        total_cents: true,
+      },
+      take: 50,
+    })).find((candidate) => {
+      const normalizedOrderNumber = normalizeOrderPaymentCode(candidate.order_number);
+
+      return (
+        normalizedOrderNumber === normalizedPaymentCode ||
+        normalizedOrderNumber.includes(normalizedPaymentCode) ||
+        normalizedPaymentCode.includes(normalizedOrderNumber)
+      );
+    });
+
+    if (!order) {
+      console.warn("[confirmSepayPayment] Không tìm thấy đơn phù hợp.", {
+        receivedOrderNumber: input.orderNumber,
+        normalizedPaymentCode,
+      });
+
+      throw new Error("Không tìm thấy đơn hàng phù hợp với giao dịch.");
+    }
+
+    if (order.payment_method !== PaymentMethod.BANK_TRANSFER) {
+      console.warn("[confirmSepayPayment] Đơn không chọn chuyển khoản.", {
+        orderNumber: order.order_number,
+        paymentMethod: order.payment_method,
+      });
+
+      throw new Error("Đơn hàng này không chọn thanh toán chuyển khoản.");
+    }
+
+    if (input.amountIn < order.total_cents) {
+      console.warn("[confirmSepayPayment] Số tiền chuyển khoản chưa đủ.", {
+        amountIn: input.amountIn,
+        orderNumber: order.order_number,
+        totalCents: order.total_cents,
+      });
+
+      throw new Error("Số tiền chuyển khoản chưa đủ để xác nhận thanh toán.");
+    }
+
+    if (order.payment_status === PaymentStatus.PAID) {
+      return {
+        alreadyPaid: true,
+        orderId: order.id,
+        orderNumber: order.order_number,
+        paid: true,
+      };
+    }
+
+    const paidAt = input.transactionDate
+      ? new Date(input.transactionDate.replace(" ", "T"))
+      : new Date();
+    const safePaidAt = Number.isNaN(paidAt.getTime()) ? new Date() : paidAt;
+
+    const updated = await prisma.order.updateMany({
+      where: {
+        id: order.id,
+        payment_status: { not: PaymentStatus.PAID },
+      },
+      data: {
+        is_paid: true,
+        paid_at: safePaidAt,
+        payment_status: PaymentStatus.PAID,
+        transaction_id: input.transactionId,
+      },
+    });
+
+    if (updated.count === 0) {
+      return {
+        alreadyPaid: true,
+        orderId: order.id,
+        orderNumber: order.order_number,
+        paid: true,
+      };
+    }
+
+    await prisma.orderHistoryLog.create({
+      data: {
+        current_status: order.status,
+        note: `SePay xác nhận thanh toán thành công. Mã giao dịch: ${input.transactionId}`,
+        order_id: order.id,
+        previous_status: order.status,
+      },
+    });
+
+    const orderBill = await buildOrderBillEmailParams(order.id);
+    if (orderBill) {
+      sendOrderBillEmail(orderBill).catch((error) => {
+        console.error(
+          `[confirmSepayPayment] Đơn ${order.order_number} đã thanh toán nhưng gửi email thất bại:`,
+          error,
+        );
+      });
+    }
+
+    await emitPaymentSuccessToUser({
+      orderId: order.id,
+      orderNumber: order.order_number,
+      paidAt: safePaidAt.toISOString(),
+      totalCents: order.total_cents,
+      transactionId: input.transactionId,
+    });
+
+    await emitNewPaymentToAdmin({
+      order: toAdminOrderRow({
+        ...order,
+        payment_status: PaymentStatus.PAID,
+      }),
+      orderId: order.id,
+      orderNumber: order.order_number,
+      paidAt: safePaidAt.toISOString(),
+      totalCents: order.total_cents,
+      transactionId: input.transactionId,
+    });
+
+    return {
+      alreadyPaid: false,
+      orderId: order.id,
+      orderNumber: order.order_number,
+      paid: true,
+    };
+  },
+
+  async getPaymentStatus(orderId: string, orderNumber: string) {
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        order_number: orderNumber,
+      },
+      select: {
+        id: true,
+        is_paid: true,
+        order_number: true,
+        paid_at: true,
+        payment_status: true,
+        total_cents: true,
+        transaction_id: true,
+      },
+    });
+
+    if (!order) {
+      throw new Error("Không tìm thấy đơn hàng phù hợp.");
+    }
+
+    return {
+      isPaid: order.is_paid || order.payment_status === PaymentStatus.PAID,
+      orderId: order.id,
+      orderNumber: order.order_number,
+      paidAt: order.paid_at?.toISOString() ?? null,
+      paymentStatus: order.payment_status,
+      totalCents: order.total_cents,
+      transactionId: order.transaction_id,
+    };
   },
 
 
@@ -556,7 +857,15 @@ export const OrderService = {
   async updateOrderStatus(data: UpdateOrderStatusInput, adminId: string) {
     const order = await prisma.order.findUnique({
       where: { order_number: data.order_number },
-      select: { id: true, status: true },
+      select: {
+        created_at: true,
+        id: true,
+        order_number: true,
+        payment_status: true,
+        shipping_fullname: true,
+        status: true,
+        total_cents: true,
+      },
     });
 
 
@@ -581,6 +890,17 @@ export const OrderService = {
       }),
     ]);
 
+    emitOrderUpdatedToAdmin({
+      order: toAdminOrderRow({
+        ...order,
+        status: data.status,
+      }),
+      orderId: order.id,
+      orderNumber: order.order_number,
+      status: orderStatusMap[data.status] as AdminOrderStatus,
+    }).catch((error) => {
+      console.error("[emitOrderUpdatedToAdmin] Không thể phát ORDER_UPDATED:", error);
+    });
 
     return OrderService.getOrderDetailForAdmin(data.order_number);
   },
@@ -599,11 +919,14 @@ export const OrderService = {
     const order = await prisma.order.findFirst({
       where: queryWhere,
       select: {
+        created_at: true,
         id: true,
         order_number: true,
+        payment_status: true,
         status: true,
         guest_email: true,
         shipping_fullname: true,
+        total_cents: true,
         user: { select: { email: true, id: true } },
         discount_usages: { select: { discount_code_id: true } },
       }
@@ -689,6 +1012,18 @@ export const OrderService = {
       }
     }
 
+    emitOrderUpdatedToAdmin({
+      order: toAdminOrderRow({
+        ...order,
+        status: OrderStatus.CANCELLED,
+      }),
+      orderId: order.id,
+      orderNumber: order.order_number,
+      status: orderStatusMap[OrderStatus.CANCELLED] as AdminOrderStatus,
+    }).catch((error: unknown) => {
+      console.error("[emitOrderUpdatedToAdmin] Không thể phát ORDER_UPDATED:", error);
+    });
+
     const customerEmail = order.user?.email ?? order.guest_email;
     let emailSent = false;
 
@@ -761,12 +1096,13 @@ export const OrderService = {
       };
 
       if (keyword) {
-        const isOrderNumber = keyword.toUpperCase().startsWith('CC-');
+        const upperKeyword = keyword.toUpperCase();
+        const isOrderNumber = upperKeyword.startsWith('DH-') || upperKeyword.startsWith('CC-');
         const isPhone = /^[0-9+.\s-]{9,15}$/.test(keyword); // Kiểm tra nếu là số điện thoại
 
         if (isOrderNumber) {
           // Nếu là mã đơn hàng, bốc duy nhất theo order_number (Tốc độ < 1ms)
-          where.order_number = { equals: keyword.toUpperCase() };
+          where.order_number = { equals: upperKeyword };
         } else if (isPhone) {
           // Nếu là số điện thoại, chỉ search trên các trường phone (Ăn index phone)
           where.OR = [
