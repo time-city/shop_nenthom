@@ -5,6 +5,8 @@ import { useToast } from "@/src/components/ui/toast-provider";
 import ModalSupport from "@/src/components/admin/modalSupport";
 import LoadingState from "@/src/components/ui/loadingState";
 import { useSupportStore } from "@/src/store/useSupportStore";
+import TableResponsiveWrapper from "./TableResponsiveWrapper";
+import AdminHeader from "./AdminHeader";
 import type {
   AdminContactItemInterface,
   AdminContactsSuccessResponseInterface,
@@ -19,6 +21,7 @@ import type {
   AdminSupportMessage,
   AdminSupportStatus,
 } from "@/src/lib/types/admin";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const statusLabels: Record<AdminSupportStatus, string> = {
   replied: "Đã phản hồi",
@@ -76,13 +79,13 @@ export default function SupportClient() {
       setIsLoadingContacts(true);
       setError(null);
 
-      const result = await getContactsAction({
+      const result = await callAction(() => getContactsAction({
         limit: 100,
         page: 1,
         ...(filterStatusMap[activeFilter]
           ? { status: filterStatusMap[activeFilter] }
           : {}),
-      });
+      }), "Không thể tải danh sách liên hệ. Vui lòng thử lại sau.");
       if (cancelled) return;
 
       if ("error" in result && result.error) {
@@ -127,10 +130,10 @@ export default function SupportClient() {
     setIsMarkingReplied(true);
 
     try {
-      const result = await updateContactStatusAction({
+      const result = await callAction(() => updateContactStatusAction({
         id: String(contactId),
         status: "REPLIED",
-      });
+      }), "Không thể cập nhật trạng thái liên hệ. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         toast.error(getFriendlyResponseError(result.error));
@@ -157,38 +160,35 @@ export default function SupportClient() {
 
   return (
     <>
-      <header className="dashboard-top-header">
-        <div className="dashboard-top-header-left">
-          <button
-            className="dashboard-mobile-toggle"
-            type="button"
-            aria-label="Menu"
-            onClick={() => window.dispatchEvent(new Event("toggle-admin-sidebar"))}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
+      <AdminHeader
+        title="Hỗ trợ / Liên hệ"
+        subtitle="Tin nhắn từ khách hàng"
+      >
+        <div className="dashboard-filter-chips">
+          {[
+            { label: "Tất cả", value: "all" },
+            { label: "Chưa phản hồi", value: "unread" },
+            { label: "Đã phản hồi", value: "replied" },
+          ].map((filter) => (
+            <button
+              key={filter.value}
+              className={`dashboard-filter-chip ${
+                activeFilter === filter.value ? "active" : ""
+              }`}
+              type="button"
+              disabled={isLoadingContacts}
+              onClick={() => setActiveFilter(filter.value as AdminSupportFilter)}
             >
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="dashboard-page-title">Hỗ trợ / Liên hệ</h1>
-            <p className="dashboard-page-subtitle">
-              Tin nhắn từ khách hàng
-            </p>
-          </div>
+              {filter.label}
+            </button>
+          ))}
         </div>
+      </AdminHeader>
 
-        <div className="dashboard-top-header-right">
-          <div className="dashboard-filter-chips">
+      <div className="dashboard-page-content">
+        {/* Mobile filter chips */}
+        <div className="flex lg:hidden justify-center mb-6">
+          <div className="dashboard-filter-chips w-full justify-center">
             {[
               { label: "Tất cả", value: "all" },
               { label: "Chưa phản hồi", value: "unread" },
@@ -196,7 +196,7 @@ export default function SupportClient() {
             ].map((filter) => (
               <button
                 key={filter.value}
-                className={`dashboard-filter-chip ${
+                className={`dashboard-filter-chip flex-1 text-center ${
                   activeFilter === filter.value ? "active" : ""
                 }`}
                 type="button"
@@ -208,86 +208,85 @@ export default function SupportClient() {
             ))}
           </div>
         </div>
-      </header>
-
-      <div className="dashboard-page-content">
         <section className="dashboard-card">
           <div className="dashboard-card-body no-padding">
             <div className="dashboard-table-wrapper">
-              <table className="dashboard-admin-table">
-                <thead>
-                  <tr>
-                    <th>Ngày gửi</th>
-                    <th>Tên khách</th>
-                    <th>Email</th>
-                    <th>Chủ đề</th>
-                    <th>Trạng thái</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoadingContacts ? (
+              <TableResponsiveWrapper minWidth={800}>
+                <table className="dashboard-admin-table">
+                  <thead>
                     <tr>
-                      <td colSpan={5} className="px-5 py-5">
-                        <LoadingState label="Đang tải tin nhắn hỗ trợ..." />
-                      </td>
+                      <th>Ngày gửi</th>
+                      <th>Tên khách</th>
+                      <th>Email</th>
+                      <th>Chủ đề</th>
+                      <th>Trạng thái</th>
                     </tr>
-                  ) : null}
+                  </thead>
+                  <tbody>
+                    {isLoadingContacts ? (
+                      <tr>
+                        <td colSpan={5} className="px-5 py-5">
+                          <LoadingState label="Đang tải tin nhắn hỗ trợ..." />
+                        </td>
+                      </tr>
+                    ) : null}
 
-                  {!isLoadingContacts && error ? (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-5 py-8 text-center text-sm text-[#8A1119]"
-                      >
-                        {error}
-                      </td>
-                    </tr>
-                  ) : null}
-
-                  {!isLoadingContacts && !error && filteredContacts.map((contact) => (
-                    <tr
-                      key={contact.id}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedContact(contact)}
-                    >
-                      <td>{formatDateTime(contact.date)}</td>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          {contact.status === "unread" ? (
-                            <span
-                              className="size-2 shrink-0 rounded-full bg-[#6B1218]"
-                              aria-hidden="true"
-                            />
-                          ) : null}
-                          {contact.name}
-                        </div>
-                      </td>
-                      <td className="text-sm text-[#6B4C35]">{contact.email}</td>
-                      <td>{contact.subject}</td>
-                      <td>
-                        <span
-                          className={`dashboard-status ${
-                            statusClassNames[contact.status]
-                          }`}
+                    {!isLoadingContacts && error ? (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-5 py-8 text-center text-sm text-[#8A1119]"
                         >
-                          {statusLabels[contact.status]}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                          {error}
+                        </td>
+                      </tr>
+                    ) : null}
 
-                  {!isLoadingContacts && !error && filteredContacts.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-5 py-8 text-center text-sm text-[#6B4C35]"
+                    {!isLoadingContacts && !error && filteredContacts.map((contact) => (
+                      <tr
+                        key={contact.id}
+                        className="cursor-pointer"
+                        onClick={() => setSelectedContact(contact)}
                       >
-                        Chưa có tin nhắn hỗ trợ
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
+                        <td>{formatDateTime(contact.date)}</td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            {contact.status === "unread" ? (
+                              <span
+                                className="size-2 shrink-0 rounded-full bg-[#6B1218]"
+                                aria-hidden="true"
+                              />
+                            ) : null}
+                            {contact.name}
+                          </div>
+                        </td>
+                        <td className="text-sm text-[#6B4C35]">{contact.email}</td>
+                        <td>{contact.subject}</td>
+                        <td>
+                          <span
+                            className={`dashboard-status ${
+                              statusClassNames[contact.status]
+                            }`}
+                          >
+                            {statusLabels[contact.status]}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {!isLoadingContacts && !error && filteredContacts.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-5 py-8 text-center text-sm text-[#6B4C35]"
+                        >
+                          Chưa có tin nhắn hỗ trợ
+                        </td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+              </TableResponsiveWrapper>
             </div>
           </div>
         </section>

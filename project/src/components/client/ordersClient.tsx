@@ -12,6 +12,7 @@ import DetailOrder from "@/src/components/client/detailOrder";
 import ClientPagination from "@/src/components/admin/clientPagination";
 import { useCartStore } from "@/src/store/useCartStore";
 import Spinner from "@/src/components/ui/Spinner";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const statusLabel: Record<ClientOrderRecord["status"], string> = {
   canceled: "Đã huỷ",
@@ -55,10 +56,10 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
 
     const fetchOrders = async () => {
       try {
-        const response = await getMyOrdersAction({
+        const response = await callAction(() => getMyOrdersAction({
           limit: pageSize,
           page: currentPage,
-        });
+        }), "Không thể tải đơn hàng của bạn. Vui lòng thử lại sau.");
         if (cancelled) return;
 
         if ("error" in response && response.error) {

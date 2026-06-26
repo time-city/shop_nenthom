@@ -30,6 +30,7 @@ import type {
   AdminProductFormValues,
 } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const initialProductFormValues: AdminProductFormValues = {
   base_price_cents: "",
@@ -37,8 +38,10 @@ const initialProductFormValues: AdminProductFormValues = {
   description: "",
   image_data_url: "",
   image_file_name: "",
+  ingredients: "",
   is_active: true,
   name: "",
+  usage_instructions: "",
 };
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -89,8 +92,10 @@ export default function ModalEditProduct({
         description: product.description ?? "",
         image_data_url: "",
         image_file_name: "",
+        ingredients: (product as { ingredients?: string | null }).ingredients ?? "",
         is_active: product.is_active,
         name: product.name,
+        usage_instructions: (product as { usage_instructions?: string | null }).usage_instructions ?? "",
       });
       setAvatarUrl(currentImages[0] ?? "");
       setSubImageUrls(currentImages.slice(1, 4));
@@ -109,7 +114,7 @@ export default function ModalEditProduct({
       setIsLoadingCategories(true);
 
       // action-(lấy danh sách category cho edit product)
-      const result = await getCategoriesAction();
+      const result = await callAction(() => getCategoriesAction(), "Không thể tải danh mục. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         toast.error(getFriendlyResponseError(result.error));
@@ -283,14 +288,16 @@ export default function ModalEditProduct({
 
     try {
       // action-(cập nhật sản phẩm)
-      const result = await updateProductAction(product.id, {
+      const result = await callAction(() => updateProductAction(product.id, {
         base_price_cents: productPrice,
         category_id: categoryId,
         description: formValues.description.trim() || undefined,
+        ingredients: formValues.ingredients.trim() || undefined,
+        usage_instructions: formValues.usage_instructions.trim() || undefined,
         images: [avatarUrl, ...subImageUrls.slice(0, 3)],
         is_active: formValues.is_active,
         name: productName,
-      });
+      }), "Không thể cập nhật sản phẩm. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         const message = getFriendlyResponseError(result.error);
@@ -409,9 +416,31 @@ export default function ModalEditProduct({
             label="Mô tả"
             placeholder="Mô tả chi tiết về sản phẩm..."
             multiline
-            minRows={4}
+            minRows={3}
             value={formValues.description}
             onChange={(event) => updateField("description", event.target.value)}
+            fullWidth
+            className={styles.field}
+          />
+
+          <TextField
+            label="Thành phần"
+            placeholder="Liệt kê các thành phần chính của sản phẩm..."
+            multiline
+            minRows={3}
+            value={formValues.ingredients}
+            onChange={(event) => updateField("ingredients", event.target.value)}
+            fullWidth
+            className={styles.field}
+          />
+
+          <TextField
+            label="Cách sử dụng"
+            placeholder="Hướng dẫn sử dụng sản phẩm..."
+            multiline
+            minRows={3}
+            value={formValues.usage_instructions}
+            onChange={(event) => updateField("usage_instructions", event.target.value)}
             fullWidth
             className={styles.field}
           />

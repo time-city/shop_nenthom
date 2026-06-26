@@ -6,6 +6,7 @@ import { getUserOrdersAction } from "../../lib/action/user.action";
 import ClientPagination from "./clientPagination";
 import type { AdminPaginationMeta } from "@/src/lib/types/admin";
 import Spinner from "@/src/components/ui/Spinner";
+import { callAction } from "@/src/lib/utils/callAction";
 
 interface ClientOrderModalProps {
     user: User | null;
@@ -42,10 +43,10 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
             setIsLoading(true);
             setError(null);
             try {
-                const res = await getUserOrdersAction(user.id, {
+                const res = await callAction(() => getUserOrdersAction(user.id, {
                     limit: pageSize,
                     page: currentPage,
-                });
+                }), "Không thể tải đơn hàng của khách hàng. Vui lòng thử lại sau.");
                 if (cancelled) return;
                 if ("error" in res && res.error) {
                     setError(res.error);

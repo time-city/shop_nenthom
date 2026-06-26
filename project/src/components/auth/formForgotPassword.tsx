@@ -15,6 +15,7 @@ import { useToast } from "@/src/components/ui/toast-provider";
 import { forgotPassword as forgotPasswordAction } from "../../lib/action/auth.action";
 import type { ForgotPasswordValues } from "../../lib/types/client";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const initialValues: ForgotPasswordValues = {
   email: "",
@@ -62,7 +63,7 @@ export default function FormForgotPassword() {
     const email = values.email.trim().toLowerCase();
 
     // action-(gửi OTP quên mật khẩu)
-    const result = await forgotPasswordAction({ email });
+    const result = await callAction(() => forgotPasswordAction({ email }), "Không thể gửi yêu cầu đặt lại mật khẩu. Vui lòng thử lại sau.");
     if (!result.success) {
       const message = result.error ? getFriendlyResponseError(result.error) : "Không thể gửi mã OTP";
       setErrorMessage(message);

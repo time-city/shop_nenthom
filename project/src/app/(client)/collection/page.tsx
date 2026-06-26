@@ -3,6 +3,7 @@ import type { ClientProductsSuccessResponseInterface } from "@/src/interface/cli
 import { getCurrentUser } from "@/src/lib/action/user.action";
 import { getProductsAction, getScentsAction } from "@/src/lib/action/product.action";
 import type { CollectionPageProps } from "@/src/lib/types/client";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const pageSize = 4;
 
@@ -24,7 +25,7 @@ export default async function CollectionPage({
   }
 
   const [result, currentUser, scentResult] = await Promise.all([
-    getProductsAction({
+    callAction(() => getProductsAction({
       limit: pageSize,
       page: activePage,
       scentId: Number.isFinite(activeScentId)
@@ -33,9 +34,9 @@ export default async function CollectionPage({
       search: activeSearch || undefined,
       minPrice,
       maxPrice,
-    }),
-    getCurrentUser(),
-    getScentsAction(),
+    }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau."),
+    callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau."),
+    callAction(() => getScentsAction(), "Không thể tải danh sách hương. Vui lòng thử lại sau."),
   ]);
 
   const scents =

@@ -10,6 +10,58 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+    console.log('🌱 Thêm 20 sản phẩm nến thơm mới...');
+    
+    // Tìm hoặc tạo category
+    let category = await prisma.category.findFirst();
+    if (!category) {
+        category = await prisma.category.create({
+            data: { name: 'Nến Thơm Tổng Hợp', description: 'Danh mục nến thơm tổng hợp', is_active: true }
+        });
+    }
+
+    const newProducts = [
+        { name: 'Nến Thơm Hương Mùa Thu', base_price_cents: 150000, description: 'Hương thơm nồng ấm của quế và cam.' },
+        { name: 'Nến Thơm Biển Xanh', base_price_cents: 160000, description: 'Mang hơi thở của biển cả vào không gian nhà bạn.' },
+        { name: 'Nến Thơm Hoa Hồng Cổ Điển', base_price_cents: 170000, description: 'Hương hoa hồng lãng mạn và quyến rũ.' },
+        { name: 'Nến Thơm Gỗ Tuyết Tùng', base_price_cents: 180000, description: 'Hương gỗ ấm áp, nam tính và mộc mạc.' },
+        { name: 'Nến Thơm Vani Ngọt Ngào', base_price_cents: 140000, description: 'Ngọt ngào, dịu nhẹ mang lại cảm giác thư giãn.' },
+        { name: 'Nến Thơm Trà Xanh Thanh Khiết', base_price_cents: 150000, description: 'Giúp thanh lọc không khí, giảm căng thẳng.' },
+        { name: 'Nến Thơm Oải Hương (Lavender)', base_price_cents: 190000, description: 'Mùi hương tinh tế giúp ngủ ngon và sâu giấc.' },
+        { name: 'Nến Thơm Cà Phê Sáng', base_price_cents: 160000, description: 'Đánh thức tinh thần bằng hương cà phê rang xay.' },
+        { name: 'Nến Thơm Gió Mùa Xuân', base_price_cents: 155000, description: 'Hương cỏ xanh và hoa ly tươi mát.' },
+        { name: 'Nến Thơm Rừng Thông Đà Lạt', base_price_cents: 175000, description: 'Hương thông xanh ngát, se lạnh.' },
+        { name: 'Nến Thơm Quả Mọng (Berry)', base_price_cents: 165000, description: 'Mùi hương trái cây chua ngọt, tươi vui.' },
+        { name: 'Nến Thơm Hoa Nhài (Jasmine)', base_price_cents: 150000, description: 'Hương hoa nhài thoang thoảng, thanh lịch.' },
+        { name: 'Nến Thơm Chanh Sả', base_price_cents: 145000, description: 'Đuổi muỗi, làm sạch không khí, sảng khoái.' },
+        { name: 'Nến Thơm Gỗ Đàn Hương', base_price_cents: 195000, description: 'Hương thơm thiền định, an thần.' },
+        { name: 'Nến Thơm Hoa Cúc La Mã', base_price_cents: 160000, description: 'Giảm stress, dịu nhẹ và thư thái.' },
+        { name: 'Nến Thơm Quế Hồi', base_price_cents: 150000, description: 'Tuyệt vời cho những ngày mưa lạnh.' },
+        { name: 'Nến Thơm Đào Ngọt', base_price_cents: 140000, description: 'Hương đào chín mọng, đáng yêu.' },
+        { name: 'Nến Thơm Hổ Phách Sang Trọng', base_price_cents: 200000, description: 'Hương thơm trầm ấm, quyến rũ, bí ẩn.' },
+        { name: 'Nến Thơm Bạc Hà Mát Lạnh', base_price_cents: 145000, description: 'Làm bừng tỉnh mọi giác quan.' },
+        { name: 'Nến Thơm Dạ Lan Hương', base_price_cents: 170000, description: 'Hương hoa nồng nàn trong đêm.' },
+    ];
+
+    console.log('⏳ Đang tạo 20 sản phẩm...');
+    let count = 0;
+    for (const p of newProducts) {
+        await prisma.product.create({
+            data: {
+                category_id: category.id,
+                name: p.name,
+                base_price_cents: p.base_price_cents,
+                description: p.description,
+                images: ['https://res.cloudinary.com/demo/image/upload/sample.jpg'],
+                is_active: true
+            }
+        });
+        count++;
+    }
+    console.log(`✅ Đã thêm mới ${count} sản phẩm thành công!`);
+
+    return; // <-- Dừng tại đây, KHÔNG chạy các lệnh xoá bên dưới
+
     console.log('🌱 Bắt đầu dọn dẹp dữ liệu cũ (Reset)...');
 
     // Xóa dữ liệu cũ theo thứ tự đúng để tránh lỗi foreign key
@@ -33,7 +85,8 @@ async function main() {
     await prisma.topping.deleteMany();
 
     console.log('🌱 Bắt đầu khởi tạo dữ liệu mẫu...');
-    const defaultPasswordHash = await bcrypt.hash('123456', 10);
+    const
+        defaultPasswordHash = await bcrypt.hash('123456', 10);
 
     // ==========================================
     // 1. TẠO USERS & ADDRESSES

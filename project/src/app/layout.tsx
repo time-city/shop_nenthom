@@ -4,6 +4,7 @@ import ToastProvider from "../components/ui/toast-provider";
 import StoreProvider from "../components/ui/storeProvider";
 import { getCurrentUser } from "../lib/action/user.action";
 import "./globals.css";
+import { callAction } from "@/src/lib/utils/callAction";
 
 
 const dmSans = DM_Sans({
@@ -44,7 +45,7 @@ export default async function RootLayout({
  children: React.ReactNode;
 }>) {
  // action-(check role layout tổng)
- const currentUser = await getCurrentUser();
+ const currentUser = await callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau.");
 
 
  return (

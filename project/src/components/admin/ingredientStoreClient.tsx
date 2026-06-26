@@ -15,6 +15,8 @@ import ModalDeleteConfirm from "@/src/components/admin/modalDeleteConfirm";
 const ModalIngredient = dynamic(() => import("@/src/components/admin/modalIngredient"), { ssr: false });
 const ModalEditIngre = dynamic(() => import("@/src/components/admin/modalEditIngre"), { ssr: false });
 import LoadingState from "@/src/components/ui/loadingState";
+import TableResponsiveWrapper from "./TableResponsiveWrapper";
+import AdminHeader from "./AdminHeader";
 import {
   AdminDeleteButton,
   AdminEditButton,
@@ -59,6 +61,7 @@ import type {
   AdminTableShellProps,
 } from "@/src/lib/types/admin";
 import ingredientStyles from "@/src/styles/adminIngredientStore.module.css";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const tabs: AdminMaterialTab[] = [
   { addLabel: "Thêm mùi hương", icon: Flower2, id: "scent", label: "Mùi hương" },
@@ -176,7 +179,7 @@ export default function IngredientStoreClient() {
       setError(null);
 
       // action-(lấy danh sách nguyên liệu)
-      const result = await getCustomizationOptionsAction();
+      const result = await callAction(() => getCustomizationOptionsAction(), "Không thể tải tùy chọn tùy chỉnh. Vui lòng thử lại sau.");
       if (cancelled) return;
 
       if ("error" in result && result.error) {
@@ -230,10 +233,10 @@ export default function IngredientStoreClient() {
     setIsDeletingIngredient(true);
 
     // action-(xóa option nguyên liệu)
-    const result = await deleteOptionAction({
+    const result = await callAction(() => deleteOptionAction({
       id: deleteTarget.item.id,
       type: deleteOptionTypeMap[deleteTarget.type],
-    });
+    }), "Không thể xóa tùy chọn. Vui lòng thử lại sau.");
 
     if ("error" in result && result.error) {
       toast.error(getFriendlyResponseError(result.error));
@@ -253,11 +256,11 @@ export default function IngredientStoreClient() {
   const saveNewIngredient = async (values: AdminIngredientFormValues) => {
     if (modalType === "scent") {
       // action-(tạo mùi hương)
-      const result = await createScentAction({
+      const result = await callAction(() => createScentAction({
         is_active: true,
         name: values.name,
         price_extra_cents: values.price_extra_cents,
-      });
+      }), "Không thể thêm hương. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         return handleIngredientFormError(result.error);
@@ -277,12 +280,12 @@ export default function IngredientStoreClient() {
 
     if (modalType === "color") {
       // action-(tạo màu sáp)
-      const result = await createWaxColorAction({
+      const result = await callAction(() => createWaxColorAction({
         hex_code: values.hex ?? "#F5E6D3",
         is_active: true,
         name: values.name,
         price_extra_cents: values.price_extra_cents,
-      });
+      }), "Không thể thêm màu sáp. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         return handleIngredientFormError(result.error);
@@ -302,12 +305,12 @@ export default function IngredientStoreClient() {
 
     if (modalType === "size") {
       // action-(tạo kích thước)
-      const result = await createSizeAction({
+      const result = await callAction(() => createSizeAction({
         is_active: true,
         name: values.name,
         price_extra_cents: values.price_extra_cents,
         weight_gram: values.weight_gram,
-      });
+      }), "Không thể thêm kích thước. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         return handleIngredientFormError(result.error);
@@ -327,12 +330,12 @@ export default function IngredientStoreClient() {
 
     if (modalType === "topping") {
       // action-(tạo topping)
-      const result = await createToppingAction({
+      const result = await callAction(() => createToppingAction({
         in_stock: values.in_stock ?? true,
         is_active: true,
         name: values.name,
         price_extra_cents: values.price_extra_cents,
-      });
+      }), "Không thể thêm topping. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         return handleIngredientFormError(result.error);
@@ -352,11 +355,11 @@ export default function IngredientStoreClient() {
 
     if (modalType === "type") {
       // action-(tạo bao bì)
-      const result = await createPackagingAction({
+      const result = await callAction(() => createPackagingAction({
         is_active: true,
         name: values.name,
         price_extra_cents: values.price_extra_cents,
-      });
+      }), "Không thể thêm kiểu đóng gói. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         return handleIngredientFormError(result.error);
@@ -384,10 +387,10 @@ export default function IngredientStoreClient() {
   ) => {
     if (editTarget?.type === "scent") {
       // action-(cập nhật mùi hương)
-      const result = await updateScentAction(item.id, {
+      const result = await callAction(() => updateScentAction(item.id, {
         name: values.name,
         price_extra_cents: values.price_extra_cents,
-      });
+      }), "Không thể cập nhật hương. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         return handleIngredientFormError(result.error);
@@ -410,11 +413,11 @@ export default function IngredientStoreClient() {
 
     if (editTarget?.type === "color") {
       // action-(cập nhật màu sáp)
-      const result = await updateWaxColorAction(item.id, {
+      const result = await callAction(() => updateWaxColorAction(item.id, {
         hex_code: values.hex ?? item.hex ?? "#F5E6D3",
         name: values.name,
         price_extra_cents: values.price_extra_cents,
-      });
+      }), "Không thể cập nhật màu sáp. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         return handleIngredientFormError(result.error);
@@ -437,11 +440,11 @@ export default function IngredientStoreClient() {
 
     if (editTarget?.type === "size") {
       // action-(cập nhật kích thước)
-      const result = await updateSizeAction(item.id, {
+      const result = await callAction(() => updateSizeAction(item.id, {
         name: values.name,
         price_extra_cents: values.price_extra_cents,
         weight_gram: values.weight_gram,
-      });
+      }), "Không thể cập nhật kích thước. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         return handleIngredientFormError(result.error);
@@ -464,11 +467,11 @@ export default function IngredientStoreClient() {
 
     if (editTarget?.type === "topping") {
       // action-(cập nhật topping)
-      const result = await updateToppingAction(item.id, {
+      const result = await callAction(() => updateToppingAction(item.id, {
         in_stock: values.in_stock ?? item.in_stock ?? true,
         name: values.name,
         price_extra_cents: values.price_extra_cents,
-      });
+      }), "Không thể cập nhật topping. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         return handleIngredientFormError(result.error);
@@ -491,10 +494,10 @@ export default function IngredientStoreClient() {
 
     if (editTarget?.type === "type") {
       // action-(cập nhật bao bì)
-      const result = await updatePackagingAction(item.id, {
+      const result = await callAction(() => updatePackagingAction(item.id, {
         name: values.name,
         price_extra_cents: values.price_extra_cents,
-      });
+      }), "Không thể cập nhật kiểu đóng gói. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         return handleIngredientFormError(result.error);
@@ -521,36 +524,10 @@ export default function IngredientStoreClient() {
 
   return (
     <>
-      <header className="dashboard-top-header">
-        <div className="dashboard-top-header-left">
-          <button
-            className="dashboard-mobile-toggle"
-            type="button"
-            aria-label="Menu"
-            onClick={() => window.dispatchEvent(new Event("toggle-admin-sidebar"))}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="dashboard-page-title">Kho Nguyên liệu</h1>
-            <p className="dashboard-page-subtitle">
-              Quản lý mùi hương, màu sáp, kích thước, topping và bao bì
-            </p>
-          </div>
-        </div>
-      </header>
+      <AdminHeader
+        title="Kho Nguyên liệu"
+        subtitle="Quản lý mùi hương, màu sáp, kích thước, topping và bao bì"
+      />
 
       <div className="dashboard-page-content">
         <section className="rounded-2xl border border-[#6B4E35]/15 bg-[#F8F0E4] p-5 shadow-[0_6px_18px_rgba(44,24,16,0.08)]">
@@ -597,7 +574,7 @@ export default function IngredientStoreClient() {
             </button>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             {isLoadingOptions ? (
               <LoadingState label="Đang tải dữ liệu nguyên liệu..." />
             ) : null}
@@ -686,21 +663,23 @@ function TableShell({
   headers,
 }: AdminTableShellProps) {
   return (
-    <table className="w-full min-w-[680px] border-collapse text-left">
-      <thead>
-        <tr>
-          {headers.map((header, index) => (
-            <th
-              key={index}
-              className="bg-[#F2E8D9]/70 px-5 py-3 text-xs font-bold uppercase tracking-[0.1em] text-[#6B4C35]"
-            >
-              {header}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>{children}</tbody>
-    </table>
+    <TableResponsiveWrapper minWidth={680}>
+      <table className="w-full min-w-[680px] border-collapse text-left">
+        <thead>
+          <tr>
+            {headers.map((header, index) => (
+              <th
+                key={index}
+                className="bg-[#F2E8D9]/70 px-5 py-3 text-xs font-bold uppercase tracking-[0.1em] text-[#6B4C35]"
+              >
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>{children}</tbody>
+      </table>
+    </TableResponsiveWrapper>
   );
 }
 

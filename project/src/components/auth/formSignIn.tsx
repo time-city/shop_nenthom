@@ -16,6 +16,7 @@ import { loginUser } from "../../lib/action/auth.action";
 import type { SignInValues } from "../../lib/types/client";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import { useCartStore } from "@/src/store/useCartStore";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const initialValues: SignInValues = {
   email: "",
@@ -102,10 +103,10 @@ export default function FormSignIn() {
     }
 
     // action-(đăng nhập)
-    const result = await loginUser({
+    const result = await callAction(() => loginUser({
       email,
       password,
-    });
+    }), "Không thể đăng nhập. Vui lòng thử lại sau.");
 
     if (!result.success) {
       showError(getFriendlyResponseError(result.error ?? "Đăng nhập thất bại"));

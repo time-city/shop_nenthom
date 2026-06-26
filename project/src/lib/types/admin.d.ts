@@ -133,8 +133,10 @@ export type AdminProductFormValues = {
   description: string;
   image_data_url: string;
   image_file_name: string;
+  ingredients: string;
   is_active: boolean;
   name: string;
+  usage_instructions: string;
 };
 
 /** Props cho modal xác nhận xoá sản phẩm trong admin. */
@@ -153,7 +155,7 @@ export type AdminModalDeleteProductProps = {
 /** Props cho modal xác nhận xoá dùng chung trong admin. */
 export type AdminDeleteConfirmModalProps = {
   confirmLabel?: string;
-  description?: string;
+  description?: ReactNode;
   isDeleting?: boolean;
   itemName?: string;
   loadingLabel?: string;
@@ -352,3 +354,56 @@ export type DashboardLatestOrder = {
 
 /** Thời gian lọc thống kê trên dashboard admin. */
 export type DashboardActiveChip = "today" | "week" | "month";
+
+/** Một thông báo hiển thị trong danh sách admin. */
+export type AdminNotification = import("../../interface/adminInterface").AdminNotificationInterface;
+
+/** Dữ liệu thông báo admin chi tiết */
+export type AdminNotificationData = {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  data: unknown;
+  isRead: boolean;
+  createdAt: string;
+};
+
+/** Message WebSocket nhận từ cổng admin */
+export type AdminWebSocketMessage =
+  | {
+      event: "CONNECTED";
+      data: {
+        pendingContactCount: number;
+        unreadNotificationCount: number;
+      };
+    }
+  | {
+      event: "NEW_ORDER";
+      data: {
+        orderId: string;
+        orderNumber: string;
+        customerName: string;
+        totalCents: number;
+        createdAt: string;
+        notification?: AdminNotificationData;
+        unreadNotificationCount?: number;
+      };
+    }
+  | {
+      event: "NEW_CONTACT";
+      data: {
+        contactId: string;
+        name: string;
+        subject: string;
+        createdAt: string;
+      };
+    };
+
+/** Options truyền vào hook useAdminOrderSocket */
+export type UseAdminOrderSocketOptions = {
+  onConnected?: (data: { pendingContactCount: number; unreadNotificationCount: number }) => void;
+  onNewOrder?: (data: Extract<AdminWebSocketMessage, { event: "NEW_ORDER" }>["data"] & { event?: never }) => void;
+  onNewContact?: (data: { contactId: string; name: string; subject: string; createdAt: string }) => void;
+};
+

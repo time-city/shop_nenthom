@@ -30,6 +30,7 @@ import type {
   AdminProductFormValues,
 } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const initialProductFormValues: AdminProductFormValues = {
   base_price_cents: "",
@@ -37,8 +38,10 @@ const initialProductFormValues: AdminProductFormValues = {
   description: "",
   image_data_url: "",
   image_file_name: "",
+  ingredients: "",
   is_active: true,
   name: "",
+  usage_instructions: "",
 };
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -89,7 +92,7 @@ export default function ModalProduct({
       setIsLoadingCategories(true);
 
       // action-(lấy danh sách category cho product)
-      const result = await getCategoriesAction();
+      const result = await callAction(() => getCategoriesAction(), "Không thể tải danh mục. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         toast.error(getFriendlyResponseError(result.error));
@@ -261,16 +264,18 @@ export default function ModalProduct({
       // action-(tạo sản phẩm)
       // CHANGED: Submit payload with avatar_url, sub_images, and images (for compatibility)
       const filteredSubImages = subImageUrls.filter((url) => url !== "");
-      const result = await createProductAction({
+      const result = await callAction(() => createProductAction({
         base_price_cents: productPrice,
         category_id: categoryId,
         description: formValues.description.trim() || undefined,
+        ingredients: formValues.ingredients.trim() || undefined,
+        usage_instructions: formValues.usage_instructions.trim() || undefined,
         images: [avatarUrl, ...filteredSubImages],
         avatar_url: avatarUrl,
         sub_images: filteredSubImages,
         is_active: formValues.is_active,
         name: productName,
-      });
+      }), "Không thể thêm sản phẩm. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         const message = getFriendlyResponseError(result.error);
@@ -393,9 +398,31 @@ export default function ModalProduct({
             label="Mô tả"
             placeholder="Mô tả chi tiết về sản phẩm..."
             multiline
-            minRows={4}
+            minRows={3}
             value={formValues.description}
             onChange={(event) => updateField("description", event.target.value)}
+            fullWidth
+            className={styles.field}
+          />
+
+          <TextField
+            label="Thành phần"
+            placeholder="Liệt kê các thành phần chính của sản phẩm..."
+            multiline
+            minRows={3}
+            value={formValues.ingredients}
+            onChange={(event) => updateField("ingredients", event.target.value)}
+            fullWidth
+            className={styles.field}
+          />
+
+          <TextField
+            label="Cách sử dụng"
+            placeholder="Hướng dẫn sử dụng sản phẩm..."
+            multiline
+            minRows={3}
+            value={formValues.usage_instructions}
+            onChange={(event) => updateField("usage_instructions", event.target.value)}
             fullWidth
             className={styles.field}
           />

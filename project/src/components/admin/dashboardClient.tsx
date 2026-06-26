@@ -12,6 +12,9 @@ import type {
   DashboardLatestOrder,
   DashboardActiveChip,
 } from "@/src/lib/types/admin";
+import { callAction } from "@/src/lib/utils/callAction";
+import AdminHeader from "./AdminHeader";
+import TableResponsiveWrapper from "./TableResponsiveWrapper";
 
 const statusLabels: Record<string, string> = {
   cancelled: "Đã huỷ",
@@ -35,7 +38,7 @@ export default function DashboardClient() {
       setIsLoading(true);
       setError(null);
       try {
-        const result = await getDashboardOverviewAction({ period: activeChip });
+        const result = await callAction(() => getDashboardOverviewAction({ period: activeChip }), "Không thể tải dữ liệu tổng quan. Vui lòng thử lại sau.");
         if (cancelled) return;
         if ("error" in result && result.error) {
           setError(getFriendlyResponseError(result.error));
@@ -129,54 +132,55 @@ export default function DashboardClient() {
 
   return (
     <>
-      <header className="dashboard-top-header">
-        <div className="dashboard-top-header-left">
+      <AdminHeader
+        title="Dashboard"
+        subtitle="Xin chào, Admin! Đây là tổng quan hôm nay."
+      >
+        <div className="dashboard-filter-chips">
           <button
-            className="dashboard-mobile-toggle"
+            className={`dashboard-filter-chip ${activeChip === "today" ? "active" : ""}`}
             type="button"
-            aria-label="Menu"
-            onClick={() => window.dispatchEvent(new Event("toggle-admin-sidebar"))}
+            onClick={() => setActiveChip("today")}
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
+            Hôm nay
           </button>
-          <div>
-            <h1 className="dashboard-page-title">Dashboard</h1>
-            <p className="dashboard-page-subtitle">
-              Xin chào, Admin! Đây là tổng quan hôm nay.
-            </p>
-          </div>
+          <button
+            className={`dashboard-filter-chip ${activeChip === "week" ? "active" : ""}`}
+            type="button"
+            onClick={() => setActiveChip("week")}
+          >
+            Tuần
+          </button>
+          <button
+            className={`dashboard-filter-chip ${activeChip === "month" ? "active" : ""}`}
+            type="button"
+            onClick={() => setActiveChip("month")}
+          >
+            Tháng
+          </button>
         </div>
+      </AdminHeader>
 
-        <div className="dashboard-top-header-right">
-          <div className="dashboard-filter-chips">
+      <div className="dashboard-page-content">
+        {/* Mobile filter chips */}
+        <div className="flex lg:hidden justify-center mb-6 w-full box-border">
+          <div className="dashboard-filter-chips w-full flex box-border">
             <button
-              className={`dashboard-filter-chip ${activeChip === "today" ? "active" : ""}`}
+              className={`dashboard-filter-chip flex-1 text-center transition-all ${activeChip === "today" ? "active font-semibold" : ""}`}
               type="button"
               onClick={() => setActiveChip("today")}
             >
               Hôm nay
             </button>
             <button
-              className={`dashboard-filter-chip ${activeChip === "week" ? "active" : ""}`}
+              className={`dashboard-filter-chip flex-1 text-center transition-all ${activeChip === "week" ? "active font-semibold" : ""}`}
               type="button"
               onClick={() => setActiveChip("week")}
             >
               Tuần
             </button>
             <button
-              className={`dashboard-filter-chip ${activeChip === "month" ? "active" : ""}`}
+              className={`dashboard-filter-chip flex-1 text-center transition-all ${activeChip === "month" ? "active font-semibold" : ""}`}
               type="button"
               onClick={() => setActiveChip("month")}
             >
@@ -184,9 +188,6 @@ export default function DashboardClient() {
             </button>
           </div>
         </div>
-      </header>
-
-      <div className="dashboard-page-content">
         {isLoading ? (
           <div className="py-20 flex justify-center items-center">
             <LoadingState label="Đang tải dữ liệu báo cáo..." />
@@ -279,44 +280,46 @@ export default function DashboardClient() {
                 </div>
                 <div className="dashboard-card-body no-padding">
                   <div className="dashboard-table-wrapper">
-                    <table className="dashboard-admin-table">
-                      <thead>
-                        <tr>
-                          <th>Mã đơn</th>
-                          <th>Khách hàng</th>
-                          <th>Tổng tiền</th>
-                          <th>Trạng thái</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {latestOrders.length > 0 ? (
-                          latestOrders.map((order) => (
-                            <tr key={order.orderNumber}>
-                              <td className="font-semibold text-[#7A1218]">
-                                <Link href={`/admin/ordersManagement/${order.orderNumber}`} className="hover:underline">
-                                  {order.orderNumber}
-                                </Link>
-                              </td>
-                              <td>{order.customer}</td>
-                              <td className="font-semibold">
-                                {order.totalCents.toLocaleString("vi-VN")}đ
-                              </td>
-                              <td>
-                                <span className={`dashboard-status ${order.status}`}>
-                                  {statusLabels[order.status] ?? order.status}
-                                </span>
+                    <TableResponsiveWrapper minWidth={600}>
+                      <table className="dashboard-admin-table">
+                        <thead>
+                          <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {latestOrders.length > 0 ? (
+                            latestOrders.map((order) => (
+                              <tr key={order.orderNumber}>
+                                <td className="font-semibold text-[#7A1218]">
+                                  <Link href={`/admin/ordersManagement/${order.orderNumber}`} className="hover:underline">
+                                    {order.orderNumber}
+                                  </Link>
+                                </td>
+                                <td>{order.customer}</td>
+                                <td className="font-semibold">
+                                  {order.totalCents.toLocaleString("vi-VN")}đ
+                                </td>
+                                <td>
+                                  <span className={`dashboard-status ${order.status}`}>
+                                    {statusLabels[order.status] ?? order.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={4} className="text-center text-[#6B4C35]">
+                                Chưa có dữ liệu đơn hàng
                               </td>
                             </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="text-center text-[#6B4C35]">
-                              Chưa có dữ liệu đơn hàng
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                          )}
+                        </tbody>
+                      </table>
+                    </TableResponsiveWrapper>
                   </div>
                 </div>
               </div>

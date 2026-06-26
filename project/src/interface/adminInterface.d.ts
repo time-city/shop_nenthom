@@ -251,4 +251,12 @@ export interface AdminContactsSuccessResponseInterface {
 }
 
 
-
+/** Notification item trả về từ action lấy danh sách thông báo admin. */
+export interface AdminNotificationInterface {
+  created_at: Date | string;
+  id: string;
+  is_read: boolean;
+  message: string;
+  title: string;
+  type: string;
+}

@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/src/lib/action/user.action";
 import { useCartStore } from "@/src/store/useCartStore";
 import type { Order } from "../../lib/types/client";
 import Spinner from "@/src/components/ui/Spinner";
+import { callAction } from "@/src/lib/utils/callAction";
 
 export default function OrderConfirmationClient() {
   const { lastOrder, clearLastOrder } = useCartStore();
@@ -31,7 +32,7 @@ export default function OrderConfirmationClient() {
         return;
       }
       try {
-        const user = await getCurrentUser();
+        const user = await callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau.");
         setHasToken(Boolean(user));
       } catch {
         setHasToken(false);

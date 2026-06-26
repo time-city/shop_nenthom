@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { Order } from "@/src/lib/types/client";
 import { getOrCreateCartAction } from "@/src/lib/action/cart.action";
+import { callAction } from "@/src/lib/utils/callAction";
 
 export interface AppliedDiscount {
   code: string;
@@ -71,7 +72,7 @@ export const useCartStore = create<CartStore>()(
 
       fetchCartCount: async () => {
         try {
-          const result = await getOrCreateCartAction();
+          const result = await callAction(() => getOrCreateCartAction(), "Không thể tải giỏ hàng. Vui lòng thử lại sau.");
           if ("success" in result && result.success && result.cart) {
             set({ cartCount: result.cart.items.length });
           } else {

@@ -5,6 +5,7 @@ import { logoutUser } from "../../lib/action/auth.action";
 import { useCartStore } from "@/src/store/useCartStore";
 import { useUserStore } from "@/src/store/useUserStore";
 import { useSupportStore } from "@/src/store/useSupportStore";
+import { callAction } from "@/src/lib/utils/callAction";
 
 interface MobileMenuProps {
   links: { href: string; label: string }[];
@@ -38,7 +39,7 @@ export default function MobileMenu({ links, currentUser }: MobileMenuProps) {
   }, [isOpen]);
 
   const handleLogout = async () => {
-    await logoutUser();
+    await callAction(() => logoutUser(), "Không thể đăng xuất. Vui lòng thử lại sau.");
     useCartStore.getState().clearCart();
     useUserStore.getState().clearUser();
     useSupportStore.getState().clearSupport();
@@ -67,7 +68,7 @@ export default function MobileMenu({ links, currentUser }: MobileMenuProps) {
       <button
         ref={buttonRef}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex size-10 items-center justify-center rounded-full border border-[#f5f0e8]/20 text-[#f5f0e8] transition-all duration-200 hover:border-[#f5f0e8]/40"
+        className="flex size-8 md:size-10 items-center justify-center rounded-full border border-[#f5f0e8]/20 text-[#f5f0e8] transition-all duration-200 hover:border-[#f5f0e8]/40"
         type="button"
         aria-label={isOpen ? "Đóng menu" : "Mở menu"}
       >
@@ -107,32 +108,34 @@ export default function MobileMenu({ links, currentUser }: MobileMenuProps) {
         )}
       </button>
 
-      {isOpen && (
-        <div
-          ref={menuRef}
-          className="fixed top-20 left-0 right-0 z-[200] bg-[#6B1218] text-[#F5F0E8] rounded-b-[12px] p-4 shadow-xl border-t border-[#f5f0e8]/15 animate-dropdown-slide-down flex flex-col gap-1"
-        >
-          {links.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={(e) => handleLinkClick(e, link.href)}
-              className="block py-3 text-sm font-medium uppercase tracking-wider text-[#F5F0E8] hover:opacity-80 transition-opacity border-b border-[rgba(245,240,232,0.15)]"
-            >
-              {link.label}
-            </a>
-          ))}
+      <div
+        ref={menuRef}
+        className={`fixed top-20 left-0 right-0 z-[200] bg-[#6B1218] text-[#F5F0E8] rounded-b-[12px] p-4 shadow-xl border-t border-[#f5f0e8]/15 flex flex-col gap-1 transition-all duration-300 ease-out origin-top ${
+          isOpen
+            ? "opacity-100 translate-y-0 pointer-events-auto visible"
+            : "opacity-0 -translate-y-2 pointer-events-none invisible"
+        }`}
+      >
+        {links.map((link) => (
+          <a
+            key={link.href}
+            href={link.href}
+            onClick={(e) => handleLinkClick(e, link.href)}
+            className="block py-3 text-sm font-medium uppercase tracking-wider text-[#F5F0E8] hover:opacity-80 transition-opacity border-b border-[rgba(245,240,232,0.15)]"
+          >
+            {link.label}
+          </a>
+        ))}
 
-          {Boolean(currentUser) && (
-            <button
-              onClick={handleLogout}
-              className="w-full mt-4 bg-[rgba(245,240,232,0.1)] text-[#F5F0E8] hover:text-[#6B1218] hover:bg-[#F5F0E8] py-2.5 px-4 rounded-[8px] text-center transition-all duration-200 font-semibold block"
-            >
-              Đăng Xuất
-            </button>
-          )}
-        </div>
-      )}
+        {Boolean(currentUser) && (
+          <button
+            onClick={handleLogout}
+            className="w-full mt-4 bg-[rgba(245,240,232,0.1)] text-[#F5F0E8] hover:text-[#6B1218] hover:bg-[#F5F0E8] py-2.5 px-4 rounded-[8px] text-center transition-all duration-200 font-semibold block"
+          >
+            Đăng Xuất
+          </button>
+        )}
+      </div>
     </div>
   );
 }

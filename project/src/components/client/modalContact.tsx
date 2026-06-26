@@ -8,6 +8,7 @@ import { submitContactAction } from "../../lib/action/contact.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import { useSupportStore } from "@/src/store/useSupportStore";
 import type { ClientContactFormValues } from "../../lib/types/client";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const initialValues: ClientContactFormValues = {
   email: "",
@@ -31,7 +32,7 @@ export default function ModalContact() {
 
     const loadCurrentUser = async () => {
       // action-(lấy user liên hệ)
-      const user = await getCurrentUser();
+      const user = await callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau.");
 
       if (!isMounted || !user) return;
 
@@ -134,7 +135,7 @@ export default function ModalContact() {
       };
 
       // action-(gửi liên hệ)
-      const result = await submitContactAction(values);
+      const result = await callAction(() => submitContactAction(values), "Không thể gửi liên hệ. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         setErrors((currentErrors) => ({

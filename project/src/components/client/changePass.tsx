@@ -5,6 +5,7 @@ import type { FormEvent } from "react";
 import { useToast } from "@/src/components/ui/toast-provider";
 import { changePassword } from "@/src/lib/action/auth.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import { callAction } from "@/src/lib/utils/callAction";
 
 interface ModalChangePasswordProps {
   open: boolean;
@@ -58,11 +59,11 @@ export default function ModalChangePassword({ open, onClose }: ModalChangePasswo
 
     setIsSubmitting(true);
     try {
-      const result = await changePassword({
+      const result = await callAction(() => changePassword({
         currentPassword,
         newPassword,
         confirmPassword,
-      });
+      }), "Không thể đổi mật khẩu. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         const message = getFriendlyResponseError(result.error);

@@ -10,6 +10,7 @@ import type {
   CartPaymentMethod,
   CheckoutFormProps,
 } from "../../lib/types/client";
+import { callAction } from "@/src/lib/utils/callAction";
 
 
 
@@ -35,7 +36,7 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
 
     const loadCurrentUser = async () => {
       // action-(lấy user checkout)
-      const user = await getCurrentUser();
+      const user = await callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau.");
 
       if (!isMounted) return;
 

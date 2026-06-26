@@ -1,10 +1,11 @@
 import ProfilePageContent from "@/src/components/client/profileClient";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "../../../lib/action/user.action";
+import { callAction } from "@/src/lib/utils/callAction";
 
 export default async function ProfilePage() {
   // action-(check user profile)
-  const currentUser = await getCurrentUser();
+  const currentUser = await callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau.");
 
   if (!currentUser) {
     redirect("/login?redirect=/profile");

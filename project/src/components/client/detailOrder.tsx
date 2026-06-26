@@ -12,6 +12,7 @@ import type {
   DetailOrderProps,
   OrderDetail,
 } from "../../lib/types/client";
+import { callAction } from "@/src/lib/utils/callAction";
 
 const statusLabel: Record<OrderDetail["status"], string> = {
   canceled: "Đã huỷ",
@@ -56,8 +57,8 @@ export default function DetailOrder({
     const fetchDetail = async () => {
       try {
         const response = isAdmin
-          ? await getOrderDetailForAdminAction({ order_number: orderNumber })
-          : await getMyOrderDetailAction(orderNumber);
+          ? await callAction(() => getOrderDetailForAdminAction({ order_number: orderNumber }), "Không thể tải chi tiết đơn hàng. Vui lòng thử lại sau.")
+          : await callAction(() => getMyOrderDetailAction(orderNumber), "Không thể tải chi tiết đơn hàng. Vui lòng thử lại sau.");
         if (!isMounted) return;
 
         if ("error" in response) {
@@ -100,10 +101,10 @@ export default function DetailOrder({
     setCancelError("");
 
     try {
-      const result = await cancelMyOrderAction({
+      const result = await callAction(() => cancelMyOrderAction({
         order_id: order.id,
         reason: cancelReason.trim(),
-      });
+      }), "Không thể hủy đơn hàng. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
         setCancelError(result.error);
