@@ -33,7 +33,8 @@ async function main() {
     await prisma.topping.deleteMany();
 
     console.log('🌱 Bắt đầu khởi tạo dữ liệu mẫu...');
-    const defaultPasswordHash = await bcrypt.hash('123456', 10);
+    const
+        defaultPasswordHash = await bcrypt.hash('123456', 10);
 
     // ==========================================
     // 1. TẠO USERS & ADDRESSES
