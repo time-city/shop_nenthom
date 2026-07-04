@@ -73,9 +73,9 @@ export default function ModalProduct({
   useEffect(() => {
     if (!open) return;
 
-    setFormValues(initialProductFormValues);
-
     const loadCategories = async () => {
+      setFormValues(initialProductFormValues);
+
       setIsLoadingCategories(true);
 
       // action-(lấy danh sách category cho product)

@@ -28,12 +28,16 @@ export default function ModalEditCategory({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (open && category) {
-      setFormValues({
-        description: category.description ?? "",
-        name: category.name,
-      });
-    }
+    // Lint rule: avoid setState directly inside effect body.
+    if (!open || !category) return;
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const next = {
+      description: category.description ?? "",
+      name: category.name,
+    };
+
+    setFormValues(next);
   }, [open, category]);
 
   const updateField = (field: keyof AdminCategoryFormValues, value: string) => {

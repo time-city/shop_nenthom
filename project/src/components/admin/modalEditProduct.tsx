@@ -94,7 +94,7 @@ export default function ModalEditProduct({
 
     const currentImage = getFirstImageUrl(product.images);
 
-    setFormValues({
+    const nextFormValues: AdminProductFormValues = {
       base_price_cents: String(product.base_price_cents),
       category_id: String(product.category_id),
       description: product.description ?? "",
@@ -104,7 +104,9 @@ export default function ModalEditProduct({
       is_active: product.is_active,
       name: product.name,
       usage_instructions: "",
-    });
+    };
+
+    setFormValues(nextFormValues);
 
 
 

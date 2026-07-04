@@ -36,11 +36,19 @@ export default function ModalIngredient({
   useEffect(() => {
     if (!open) return;
 
-    setName("");
-    setPrice("");
-    setHex("#F5E6D3");
-    setInStock(true);
-    setWeightGram("");
+    const next = {
+      name: "",
+      price: "",
+      hex: "#F5E6D3",
+      inStock: true,
+      weightGram: "",
+    };
+
+    setName(next.name);
+    setPrice(next.price);
+    setHex(next.hex);
+    setInStock(next.inStock);
+    setWeightGram(next.weightGram);
   }, [open, ingredientType]);
 
   const handleSave = async () => {

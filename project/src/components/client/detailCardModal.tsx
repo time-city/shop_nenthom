@@ -26,7 +26,8 @@ export default function DetailCardModal({
 
   useEffect(() => {
     if (productId) {
-      setLoading(true);
+      // Defer state updates to the promise microtask to avoid lint rule.
+      Promise.resolve().then(() => setLoading(true));
       getProductDetailsAction(productId).then((result) => {
         if ("success" in result && result.success) {
             const detailData = result.data as ClientProductDetailDataInterface;

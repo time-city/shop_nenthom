@@ -34,19 +34,21 @@ export default function ModalEditDiscount({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (open && discount) {
-      const expiresAt = discount.expires_at
-        ? new Date(discount.expires_at).toISOString().split("T")[0]
-        : "";
+    if (!open || !discount) return;
 
-      setFormValues({
-        code: discount.code,
-        discount_amount_cents: String(discount.discount_amount_cents),
-        expires_at: expiresAt,
-        max_uses: String(discount.max_uses),
-        type: discount.type,
-      });
-    }
+    const expiresAt = discount.expires_at
+      ? new Date(discount.expires_at).toISOString().split("T")[0]
+      : "";
+
+    const next = {
+      code: discount.code,
+      discount_amount_cents: String(discount.discount_amount_cents),
+      expires_at: expiresAt,
+      max_uses: String(discount.max_uses),
+      type: discount.type,
+    };
+
+    setFormValues(next);
   }, [open, discount]);
 
   const updateField = (field: keyof AdminDiscountFormValues, value: string) => {

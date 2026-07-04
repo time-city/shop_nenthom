@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "set -a && source .env && set +a && npx tsx prisma/seed.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

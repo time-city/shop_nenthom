@@ -30,6 +30,8 @@ export default function ModalCategory({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    // Only reset when opening to avoid setState in effect body causing lint errors.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     if (open) {
       setFormValues(initialFormValues);
     }

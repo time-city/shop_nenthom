@@ -37,6 +37,7 @@ export default function ModalDiscount({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    // Reset only when modal opens to satisfy eslint react-hooks rule.
     if (!open) return;
 
     setFormValues(initialDiscountFormValues);

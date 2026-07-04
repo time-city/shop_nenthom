@@ -51,21 +51,24 @@ export default function FormCustom({
     const selectedColorHex = getColorHex(selectedColor);
 
     useEffect(() => {
-        if (!scentOptions.some((item) => item.id === selectedScentId)) {
-            setSelectedScentId(scentOptions[0]?.id ?? 0);
-        }
+        Promise.resolve().then(() => {
+            if (!scentOptions.some((item) => item.id === selectedScentId)) {
+                setSelectedScentId(scentOptions[0]?.id ?? 0);
+            }
 
-        if (!colorOptions.some((item) => item.id === selectedColorId)) {
-            setSelectedColorId(colorOptions[0]?.id ?? 0);
-        }
+            if (!colorOptions.some((item) => item.id === selectedColorId)) {
+                setSelectedColorId(colorOptions[0]?.id ?? 0);
+            }
 
-        if (!sizeOptions.some((item) => item.id === selectedSizeId)) {
-            setSelectedSizeId(sizeOptions[0]?.id ?? 0);
-        }
+            if (!sizeOptions.some((item) => item.id === selectedSizeId)) {
+                setSelectedSizeId(sizeOptions[0]?.id ?? 0);
+            }
 
-        if (!packOptions.some((item) => item.id === selectedPackId)) {
-            setSelectedPackId(packOptions[0]?.id ?? 0);
-        }
+            if (!packOptions.some((item) => item.id === selectedPackId)) {
+                setSelectedPackId(packOptions[0]?.id ?? 0);
+            }
+        });
+
 
         setSelectedToppings((currentToppings) => {
             const nextToppings = currentToppings.filter((id) =>

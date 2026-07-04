@@ -47,11 +47,17 @@ export default function ModalEditIngre({
   useEffect(() => {
     if (!item) return;
 
-    setName(item.name);
-    setPrice(toNumberValue(item.price));
-    setHex(item.hex ?? "#F5E6D3");
-    setInStock(item.in_stock ?? true);
-    setWeightGram(String(item.weight_gram ?? ""));
+    const nextName = item.name;
+    const nextPrice = toNumberValue(item.price);
+    const nextHex = item.hex ?? "#F5E6D3";
+    const nextInStock = item.in_stock ?? true;
+    const nextWeightGram = String(item.weight_gram ?? "");
+
+    setName(nextName);
+    setPrice(nextPrice);
+    setHex(nextHex);
+    setInStock(nextInStock);
+    setWeightGram(nextWeightGram);
   }, [item]);
 
   const handleSave = async () => {
