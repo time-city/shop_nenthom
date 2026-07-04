@@ -140,7 +140,7 @@ export default function HomeClient() {
       <div 
         className="relative -mt-20 overflow-hidden bg-cover bg-center bg-fixed text-[#F5F0E8]"
         style={{
-          backgroundImage: `linear-gradient(180deg, rgba(84, 18, 24, 0.45) 0%, rgba(61, 10, 15, 0.6) 55%, rgba(28, 6, 8, 0.72) 100%), url(${bgImage.src})`,
+          backgroundImage: `linear-gradient(180deg, rgba(58, 8, 15, 0.75) 0%, rgba(58, 8, 15, 0.85) 55%, rgba(58, 8, 15, 0.95) 100%), url(${bgImage.src})`,
           backgroundBlendMode: "multiply",
         }}
       >
