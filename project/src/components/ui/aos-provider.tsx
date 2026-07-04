@@ -17,9 +17,10 @@ export default function AosProvider() {
       initializedRef.current = true;
       AOS.init({
         once: true,
-        duration: 800,
-        offset: 50,
+        duration: 900,
+        offset: 60,
         easing: "ease-out-cubic",
+        delay: 0,
       });
 
       window.setTimeout(() => AOS.refreshHard(), 120);

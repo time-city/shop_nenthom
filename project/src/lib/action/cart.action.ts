@@ -1,4 +1,5 @@
 'use server'
+import { getPublicErrorMessage } from "../utils/publicError";
 
 import { randomUUID } from "crypto";
 import { cookies } from "next/headers";
@@ -36,7 +37,7 @@ export async function getOrCreateCartAction() {
     const cart = await CartService.getOrCreateCart(userId, sessionId);
     return { success: true, cart };
   } catch (err) {
-    return { error: (err as Error).message };
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
   }
 }
 
@@ -49,7 +50,7 @@ export async function addToCartAction(params: unknown) {
     const item = await CartService.addToCart(parsed.data, userId, sessionId)
     return { success: true, data: item }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
 
@@ -63,7 +64,7 @@ export async function updateCartItemAction(params: unknown) {
     const item = await CartService.updateCartItem(cartId, parsed.data.itemId, parsed.data.quantity)
     return { success: true, data: item }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
 
@@ -78,7 +79,7 @@ export async function removeCartItemAction(params:unknown) {
     await CartService.removeCartItem(cartId, parsed.data.itemId)
     return { success: true }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
 
@@ -90,6 +91,6 @@ export async function clearCartAction() {
     await CartService.clearCart(cartId)
     return { success: true }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }

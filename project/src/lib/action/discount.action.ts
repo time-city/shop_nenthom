@@ -1,4 +1,5 @@
 'use server'
+import { getPublicErrorMessage } from "../utils/publicError";
 
 import { requireAdmin } from "../requireAdmin";
 import { DiscountService } from "../services/discount.service";
@@ -30,7 +31,7 @@ export async function applyDiscountAction(params: ApplyDiscountInput) {
         const discount = await DiscountService.applyDiscount(parsed.data, session.sub);
         return { success: true, data: discount };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -46,7 +47,7 @@ export async function getDiscountsAction(params: Partial<GetDiscountsParams> = {
         const discounts = await DiscountService.getDiscounts(parsed.data);
         return { success: true, ...discounts };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -62,7 +63,7 @@ export async function createDiscountAction(params: CreateDiscountInput) {
         const discount = await DiscountService.createDiscount(parsed.data);
         return { success: true, data: discount };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -81,7 +82,7 @@ export async function updateDiscountAction(id: string, params: UpdateDiscountInp
         const discount = await DiscountService.updateDiscount(idParsed.data.id, parsed.data);
         return { success: true, data: discount };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -97,6 +98,6 @@ export async function disableDiscountAction(params: DisableDiscountInput) {
         const discount = await DiscountService.disableDiscount(parsed.data.id);
         return { success: true, data: discount };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getOrderDetailForAdminAction } from "../../../../lib/action/order.action";
-import DetailOrderAdmin from "../../../../components/admin/detailOrderAdmin";
+import DetailOrderAdmin from "@/src/components/admin/order/detailOrderAdmin";
 import type { OrderDetail } from "../../../../lib/types/client";
 import { callAction } from "@/src/lib/utils/callAction";
 

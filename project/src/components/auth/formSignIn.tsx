@@ -152,18 +152,42 @@ export default function FormSignIn() {
   };
 
   return (
-    <main className="h-dvh overflow-hidden bg-[#7A1218]">
+    <main 
+      className="h-dvh overflow-hidden bg-cover bg-center bg-no-repeat relative animate-bg-fade"
+      style={{ backgroundImage: "url('/option_background.jpg')" }}
+    >
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes page-enter {
+          0% { opacity: 0; transform: translateY(30px) scale(0.97); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-page-enter {
+          animation: page-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes bg-fade-in {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        .animate-bg-fade {
+          animation: bg-fade-in 0.8s ease-out forwards;
+        }
+      `}} />
+      {/* Overlay to ensure form readability against background */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+
       <button
         type="button"
         onClick={() => router.push("/")}
-        className="fixed left-6 top-6 flex size-10 items-center justify-center rounded-full border border-[#F5F0E8]/30 bg-[#F5F0E8]/15 text-lg text-[#F5F0E8] backdrop-blur-sm transition hover:bg-[#F5F0E8] hover:text-[#6B1218] z-50"
+        className="fixed left-6 top-6 flex size-10 items-center justify-center rounded-full border border-[#F5F0E8]/30 bg-[#F5F0E8]/15 text-lg text-[#F5F0E8] backdrop-blur-sm transition hover:bg-[#F5F0E8] hover:text-[#6B1218] z-50 animate-bg-fade"
         aria-label="Quay về trang chủ"
       >
         ←
       </button>
-      <div className="flex h-full flex-col">
+      <div className="relative z-10 flex h-full flex-col">
         <section className="flex min-h-0 flex-1 items-center justify-center px-4 py-4 sm:px-6 lg:px-8">
-        <div className="relative w-full max-w-[440px] rounded-[22px] border border-[#f5f0e8]/20 bg-[#F5F0E8] px-5 py-6 text-[#2C1810] shadow-[0_24px_70px_rgba(30,6,8,0.28)] sm:px-8 sm:py-7">
+        <div 
+          className="animate-page-enter relative w-full max-w-[440px] rounded-[22px] border border-[#f5f0e8]/40 bg-[#F5F0E8]/95 px-5 py-6 text-[#2C1810] shadow-[0_24px_70px_rgba(0,0,0,0.55)] backdrop-blur-md sm:px-8 sm:py-7 opacity-0"
+        >
           <p className="mb-2 text-center text-[0.7rem] uppercase tracking-[0.22em] text-[#7A1218]/75">
             ChamCham Studio
           </p>
@@ -185,10 +209,11 @@ export default function FormSignIn() {
             enableReinitialize
             validate={validateSignIn}
             onSubmit={handleSubmit}
+            validateOnMount={true}
           >
-            {({ errors, isSubmitting, setFieldValue, touched, values }) => (
+            {({ errors, isSubmitting, setFieldValue, touched, values, isValid }) => (
               <Form>
-                <div className="mb-4">
+                <div className="relative mb-4 pb-5">
                   <label
                     htmlFor="email"
                     className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
@@ -200,20 +225,20 @@ export default function FormSignIn() {
                     name="email"
                     type="text"
                     placeholder="your@email.com"
-                    className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
+                    className={`min-h-11 w-full rounded-xl border bg-white/80 px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
                       touched.email && errors.email
                         ? "border-[#6B1218]"
                         : "border-[#2c1810]/20"
                     }`}
                   />
                   {touched.email && errors.email ? (
-                    <p className="mt-2 text-xs text-[#6B1218]">
+                    <p className="absolute bottom-0 left-0 text-[11px] text-[#6B1218] sm:text-xs">
                       {errors.email}
                     </p>
                   ) : null}
                 </div>
 
-                <div className="mb-4">
+                <div className="relative mb-4 pb-5">
                   <label
                     htmlFor="password"
                     className="mb-2 block text-[0.68rem] font-normal uppercase tracking-widest text-[#2C1810] sm:text-xs"
@@ -225,14 +250,14 @@ export default function FormSignIn() {
                     name="password"
                     type="password"
                     placeholder="••••••••"
-                    className={`min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
+                    className={`min-h-11 w-full rounded-xl border bg-white/80 px-3.5 py-2.5 text-[0.92rem] text-[#2C1810] transition-colors placeholder:text-[#2c1810]/35 focus:border-[#7A1218] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#6B1218]/10 ${
                       touched.password && errors.password
                         ? "border-[#6B1218]"
                         : "border-[#2c1810]/20"
                     }`}
                   />
                   {touched.password && errors.password ? (
-                    <p className="mt-2 text-xs text-[#6B1218]">
+                    <p className="absolute bottom-0 left-0 text-[11px] text-[#6B1218] sm:text-xs">
                       {errors.password}
                     </p>
                   ) : null}
@@ -273,7 +298,7 @@ export default function FormSignIn() {
                 <button
                   type="submit"
                   className="mb-3 min-h-12 w-full rounded-full bg-[#7A1218] px-4 py-3.5 text-[0.74rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_14px_28px_rgba(107,18,24,0.22)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !isValid}
                 >
                   {isSubmitting ? "Đang đăng nhập..." : "Đăng Nhập"}
                 </button>
@@ -307,7 +332,7 @@ export default function FormSignIn() {
         </div>
         </section>
 
-        <footer className="shrink-0 border-t border-[#f5f0e8]/10 px-4 py-3 text-center text-[0.72rem] tracking-[0.12em] text-[#F5F0E8]/65">
+        <footer className="shrink-0 border-t border-white/20 px-4 py-3 text-center text-[0.72rem] tracking-[0.12em] text-white/80">
           © 2025 ChamCham · Handcrafted in Việt Nam
         </footer>
       </div>

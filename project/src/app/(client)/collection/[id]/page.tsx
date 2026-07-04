@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getProductDetailsAction } from "@/src/lib/action/product.action";
 import { getCurrentUser } from "@/src/lib/action/user.action";
-import DetailCardProduct from "@/src/components/client/detailCardProduct";
+import DetailCardProduct from "@/src/components/client/product/detailCardProduct";
 import type { ClientProductDetailDataInterface } from "@/src/interface/clientInterface";
 import type { ProductDetailPageProps } from "@/src/lib/types/client";
 import { callAction } from "@/src/lib/utils/callAction";

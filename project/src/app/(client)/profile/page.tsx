@@ -1,4 +1,4 @@
-import ProfilePageContent from "@/src/components/client/profileClient";
+import ProfilePageContent from "@/src/components/client/user/profileClient";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "../../../lib/action/user.action";
 import { callAction } from "@/src/lib/utils/callAction";

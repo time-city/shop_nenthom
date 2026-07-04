@@ -1,4 +1,5 @@
 'use server'
+import { getPublicErrorMessage } from "../utils/publicError";
 
 import { DashboardService } from '../services/dashboard.service'
 import { requireAdmin } from '../requireAdmin'
@@ -20,6 +21,6 @@ export async function getDashboardOverviewAction(
     const overview = await DashboardService.getOverview(parsed.data)
     return { success: true, data: overview }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }

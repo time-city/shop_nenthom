@@ -1,42 +1,48 @@
 import Link from "next/link";
-import NotFoundButtons from "../components/client/notFoundButtons";
+import NotFoundButtons from "@/src/components/client/common/notFoundButtons";
 
 export default function NotFound() {
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F0E4] text-[#2C1810] px-6">
-            {/* Self-contained float animation style */}
+        <div
+            className="min-h-screen flex flex-col items-center justify-center px-6 bg-cover bg-center bg-no-repeat relative"
+            style={{ backgroundImage: "url('/option_background.jpg')" }}
+        >
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/50" />
+
             <style
                 dangerouslySetInnerHTML={{
                     __html: `
-            @keyframes float-candle {
-              0%, 100% { transform: translateY(0px); }
-              50% { transform: translateY(-12px); }
+            @keyframes page-enter {
+              0% { opacity: 0; transform: translateY(24px); }
+              100% { opacity: 1; transform: translateY(0); }
             }
-            .animate-float-candle {
-              animation: float-candle 3s ease-in-out infinite;
+            .animate-page-enter {
+              animation: page-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             }
           `,
                 }}
             />
 
-            <div className="text-center max-w-lg w-full">
+            <div className="animate-page-enter relative z-10 w-full max-w-lg text-center opacity-0">
+                {/* Studio label */}
+                <p className="mb-3 text-[0.68rem] uppercase tracking-[0.22em] text-[#F5F0E8]/60">
+                    ChamCham Studio
+                </p>
+
                 {/* Error Code */}
-                <div className="font-serif text-[7rem] md:text-[10rem] font-light text-[#8B7355] leading-none tracking-tight opacity-90 select-none">
+                <div className="font-serif text-[8rem] md:text-[10rem] font-light text-[#F5F0E8] leading-none tracking-tight opacity-90 select-none">
                     404
                 </div>
 
                 {/* Page Title */}
-                <h1 className="font-serif text-3xl md:text-5xl font-light text-[#2C1810] mt-2 mb-4">
+                <h1 className="font-serif text-2xl md:text-4xl font-light text-[#F5F0E8] mt-2 mb-4">
                     Trang Không Tìm Thấy
                 </h1>
 
-                {/* Animated Illustration */}
-                <div className="text-5xl md:text-6xl my-6 animate-float-candle select-none">
-                    🕯️
-                </div>
 
                 {/* Error Description */}
-                <p className="font-sans text-sm md:text-base text-[#6B4C35] leading-relaxed mb-8 max-w-md mx-auto">
+                <p className="font-sans text-sm text-[#F5F0E8]/75 leading-relaxed mb-8 max-w-md mx-auto">
                     Xin lỗi, trang bạn đang tìm kiếm đã bị dịch chuyển hoặc không tồn tại.
                     Hãy quay lại trang chủ hoặc khám phá các tùy chọn khác của chúng tôi.
                 </p>
@@ -45,48 +51,33 @@ export default function NotFound() {
                 <NotFoundButtons />
 
                 {/* Suggestions List */}
-                <div className="mt-16 pt-8 border-t border-[#6B4C35]/15 text-left">
-                    <h2 className="font-sans text-xs font-bold tracking-[0.1em] uppercase text-[#8B7355] mb-4">
+                <div className="mt-10 pt-7 border-t border-white/20 text-left">
+                    <h2 className="font-sans text-[0.65rem] font-bold tracking-[0.12em] uppercase text-[#F5F0E8]/50 mb-4">
                         Những trang phổ biến
                     </h2>
                     <ul className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
                         <li>
-                            <Link
-                                href="/#home"
-                                className="block p-2 text-xs text-[#2C1810] hover:text-[#6B1218] transition-all duration-200 border border-[#6B4C35]/10 rounded hover:border-[#6B1218]/30 bg-white/50"
-                            >
+                            <Link href="/#home" className="block p-2 text-xs text-[#F5F0E8]/80 hover:text-[#F5F0E8] transition-all duration-200 border border-white/20 rounded-xl hover:border-white/50 hover:bg-white/10">
                                 Trang Chủ
                             </Link>
                         </li>
                         <li>
-                            <Link
-                                href="/#custom"
-                                className="block p-2 text-xs text-[#2C1810] hover:text-[#6B1218] transition-all duration-200 border border-[#6B4C35]/10 rounded hover:border-[#6B1218]/30 bg-white/50"
-                            >
+                            <Link href="/#custom" className="block p-2 text-xs text-[#F5F0E8]/80 hover:text-[#F5F0E8] transition-all duration-200 border border-white/20 rounded-xl hover:border-white/50 hover:bg-white/10">
                                 Tùy Chỉnh
                             </Link>
                         </li>
                         <li>
-                            <Link
-                                href="/#story"
-                                className="block p-2 text-xs text-[#2C1810] hover:text-[#6B1218] transition-all duration-200 border border-[#6B4C35]/10 rounded hover:border-[#6B1218]/30 bg-white/50"
-                            >
+                            <Link href="/#story" className="block p-2 text-xs text-[#F5F0E8]/80 hover:text-[#F5F0E8] transition-all duration-200 border border-white/20 rounded-xl hover:border-white/50 hover:bg-white/10">
                                 Câu Chuyện
                             </Link>
                         </li>
                         <li>
-                            <Link
-                                href="/#contact"
-                                className="block p-2 text-xs text-[#2C1810] hover:text-[#6B1218] transition-all duration-200 border border-[#6B4C35]/10 rounded hover:border-[#6B1218]/30 bg-white/50"
-                            >
+                            <Link href="/#contact" className="block p-2 text-xs text-[#F5F0E8]/80 hover:text-[#F5F0E8] transition-all duration-200 border border-white/20 rounded-xl hover:border-white/50 hover:bg-white/10">
                                 Liên Hệ
                             </Link>
                         </li>
                         <li>
-                            <Link
-                                href="/cart"
-                                className="block p-2 text-xs text-[#2C1810] hover:text-[#6B1218] transition-all duration-200 border border-[#6B4C35]/10 rounded hover:border-[#6B1218]/30 bg-white/50 col-span-2 sm:col-span-1"
-                            >
+                            <Link href="/cart" className="block p-2 text-xs text-[#F5F0E8]/80 hover:text-[#F5F0E8] transition-all duration-200 border border-white/20 rounded-xl hover:border-white/50 hover:bg-white/10 col-span-2 sm:col-span-1">
                                 Giỏ Hàng
                             </Link>
                         </li>

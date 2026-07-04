@@ -1,5 +1,5 @@
 import { getOrdersAction } from "../../../lib/action/order.action";
-import OrdersManagementClient from "@/src/components/admin/ordersManagementClient";
+import OrdersManagementClient from "@/src/components/admin/order/ordersManagementClient";
 import { callAction } from "@/src/lib/utils/callAction";
 
 export default async function OrdersManagementPage() {

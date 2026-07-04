@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/src/lib/action/user.action";
-import ProfilePageContent from "@/src/components/client/profileClient";
-import ModalChangePassword from "@/src/components/client/changePass";
+import ProfilePageContent from "@/src/components/client/user/profileClient";
+import ModalChangePassword from "@/src/components/client/user/changePass";
 import LoadingState from "@/src/components/ui/loadingState";
 import { callAction } from "@/src/lib/utils/callAction";
 export default function ChangePasswordPage() {

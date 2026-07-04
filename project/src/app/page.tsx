@@ -1,4 +1,4 @@
-import LandingLayout from "@/src/components/client/landingLayout";
+import LandingLayout from "@/src/components/client/layout/landingLayout";
 import { getCurrentUser } from "../lib/action/user.action";
 import { redirect } from "next/navigation";
 import type { CollectionPageProps } from "../lib/types/client";

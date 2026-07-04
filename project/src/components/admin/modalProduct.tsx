@@ -4,33 +4,28 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Modal from "@mui/material/Modal";
 import Select from "@mui/material/Select";
+import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import FormHelperText from "@mui/material/FormHelperText";
-import type { ChangeEvent, MouseEvent } from "react";
+import type { ChangeEvent } from "react";
 import { useEffect, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { toast } from "react-toastify";
 import type {
   AdminCategoriesSuccessResponseInterface,
   AdminProductCategoryInterface,
 } from "../../interface/adminInterface";
 import { getCategoriesAction } from "../../lib/action/category.action";
 import { createProductAction } from "../../lib/action/product.action";
-import {
-  getFriendlyResponseError,
-  isUserInputError,
-} from "@/src/lib/utils/errorMessage";
-import { uploadToCloudinary } from "@/src/lib/utils/uploadImage"; // CHANGED: Import uploadToCloudinary
 import type {
   AdminModalProductProps,
   AdminProductFormValues,
 } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
-import { callAction } from "@/src/lib/utils/callAction";
 
 const initialProductFormValues: AdminProductFormValues = {
   base_price_cents: "",
@@ -38,64 +33,53 @@ const initialProductFormValues: AdminProductFormValues = {
   description: "",
   image_data_url: "",
   image_file_name: "",
-  ingredients: "",
   is_active: true,
   name: "",
-  usage_instructions: "",
 };
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
-// CHANGED: Removed readImageFile as it is replaced by Cloudinary uploads
+const readImageFile = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Không thể đọc file ảnh"));
+    };
+    reader.onerror = () => reject(new Error("Không thể đọc file ảnh"));
+    reader.readAsDataURL(file);
+  });
 
 export default function ModalProduct({
   onClose,
   onSave,
   open,
-  categories: propCategories,
-}: AdminModalProductProps & { categories?: AdminProductCategoryInterface[] }) {
-  const { toast } = useToast();
+}: AdminModalProductProps) {
   const [categories, setCategories] = useState<AdminProductCategoryInterface[]>([]);
   const [formValues, setFormValues] = useState<AdminProductFormValues>(
     initialProductFormValues,
   );
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // CHANGED: State for avatar and sub images
-  const [avatarUrl, setAvatarUrl] = useState<string>("");
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
-  const [subImageUrls, setSubImageUrls] = useState<string[]>([]);
-  const [isUploadingSubImages, setIsUploadingSubImages] = useState<boolean>(false);
-
-  // CHANGED: Reset avatar and sub images states on open
   useEffect(() => {
     if (!open) return;
 
-    const resetTimer = window.setTimeout(() => {
-      setFormValues(initialProductFormValues);
-      setAvatarUrl("");
-      setSubImageUrls([]);
-      setIsSubmitting(false);
-      setErrors({});
-      if (propCategories && propCategories.length > 0) {
-        setCategories(propCategories);
-      }
-    }, 0);
-
-    if (propCategories && propCategories.length > 0) {
-      return () => window.clearTimeout(resetTimer);
-    }
+    setFormValues(initialProductFormValues);
 
     const loadCategories = async () => {
       setIsLoadingCategories(true);
 
       // action-(lấy danh sách category cho product)
-      const result = await callAction(() => getCategoriesAction(), "Không thể tải danh mục. Vui lòng thử lại sau.");
+      const result = await getCategoriesAction();
 
       if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
+        toast.error(result.error);
         setCategories([]);
         setIsLoadingCategories(false);
         return;
@@ -110,8 +94,7 @@ export default function ModalProduct({
     };
 
     void loadCategories();
-    return () => window.clearTimeout(resetTimer);
-  }, [open, toast, propCategories]);
+  }, [open]);
 
   const updateField = (
     field: keyof AdminProductFormValues,
@@ -121,198 +104,97 @@ export default function ModalProduct({
       ...currentValues,
       [field]: value,
     }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
   };
 
-  // CHANGED: Avatar file upload handler
-  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (isSubmitting || isUploadingAvatar) return;
-
+  const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setErrors((prev) => ({ ...prev, avatar: "Vui lòng chọn đúng file ảnh" }));
+      toast.error("Vui lòng chọn đúng file ảnh");
       event.target.value = "";
       return;
     }
 
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      setErrors((prev) => ({ ...prev, avatar: "Ảnh tối đa 5MB" }));
+      toast.error("Ảnh tối đa 5MB");
       event.target.value = "";
       return;
     }
 
-    setIsUploadingAvatar(true);
-    setErrors((prev) => ({ ...prev, avatar: "" }));
-
     try {
-      const url = await uploadToCloudinary(file);
-      setAvatarUrl(url);
-    } catch {
-      toast.error("Tải ảnh đại diện thất bại");
-      setErrors((prev) => ({ ...prev, avatar: "Upload thất bại" }));
-    } finally {
-      setIsUploadingAvatar(false);
-      event.target.value = "";
-    }
-  };
-
-  // CHANGED: Sub images file upload handler (multiple files at once)
-  const handleSubImagesChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (isSubmitting || isUploadingSubImages) return;
-
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    const fileList = Array.from(files);
-
-    if (fileList.length > 3) {
-      setErrors((prev) => ({
-        ...prev,
-        sub_images: "Chỉ được chọn tối đa 3 ảnh phụ",
+      const imageDataUrl = await readImageFile(file);
+      setFormValues((currentValues) => ({
+        ...currentValues,
+        image_data_url: imageDataUrl,
+        image_file_name: file.name,
       }));
-      event.target.value = "";
-      return;
-    }
-
-    for (const file of fileList) {
-      if (!file.type.startsWith("image/")) {
-        setErrors((prev) => ({ ...prev, sub_images: "Vui lòng chọn đúng file ảnh" }));
-        event.target.value = "";
-        return;
-      }
-      if (file.size > MAX_IMAGE_SIZE_BYTES) {
-        setErrors((prev) => ({ ...prev, sub_images: "Ảnh phụ tối đa 5MB" }));
-        event.target.value = "";
-        return;
-      }
-    }
-
-    setIsUploadingSubImages(true);
-    setErrors((prev) => ({ ...prev, sub_images: "" }));
-
-    try {
-      const uploadPromises = fileList.map((file) => uploadToCloudinary(file));
-      const urls = await Promise.all(uploadPromises);
-      setSubImageUrls(urls);
-    } catch {
-      toast.error("Tải ảnh phụ thất bại");
-      setErrors((prev) => ({ ...prev, sub_images: "Upload thất bại" }));
+    } catch (error) {
+      toast.error((error as Error).message);
     } finally {
-      setIsUploadingSubImages(false);
       event.target.value = "";
     }
-  };
-
-  const handleRemoveAvatar = (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setAvatarUrl("");
-  };
-
-  const handleRemoveSubImage = (
-    event: MouseEvent<HTMLButtonElement>,
-    imageIndex: number,
-  ) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setSubImageUrls((currentImages) =>
-      currentImages.filter((_, index) => index !== imageIndex),
-    );
   };
 
   const handleSave = async () => {
-    if (isSubmitting) return;
-
     const productName = formValues.name.trim();
     const productPrice = Number(formValues.base_price_cents);
     const categoryId = Number(formValues.category_id);
-
-    const newErrors: Record<string, string> = {};
+    const imageDataUrl = formValues.image_data_url.trim();
 
     if (!productName) {
-      newErrors.name = "Vui lòng nhập tên sản phẩm";
+      toast.error("Vui lòng nhập tên sản phẩm");
+      return;
     }
 
     if (!Number.isFinite(categoryId) || categoryId <= 0) {
-      newErrors.category_id = "Vui lòng chọn danh mục";
+      toast.error("Vui lòng chọn danh mục");
+      return;
     }
 
-    if (!formValues.base_price_cents.trim()) {
-      newErrors.base_price_cents = "Vui lòng nhập giá sản phẩm";
-    } else if (!Number.isFinite(productPrice) || productPrice < 0) {
-      newErrors.base_price_cents = "Giá sản phẩm không hợp lệ";
+    if (!Number.isFinite(productPrice) || productPrice < 0) {
+      toast.error("Giá sản phẩm không hợp lệ");
+      return;
     }
 
-    // CHANGED: Validate avatarUrl instead of imageDataUrl
-    if (!avatarUrl) {
-      newErrors.avatar = "Vui lòng chọn ảnh đại diện sản phẩm";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    if (!imageDataUrl) {
+      toast.error("Vui lòng chọn ảnh sản phẩm");
       return;
     }
 
     setIsSubmitting(true);
 
-    try {
-      // action-(tạo sản phẩm)
-      // CHANGED: Submit payload with avatar_url, sub_images, and images (for compatibility)
-      const filteredSubImages = subImageUrls.filter((url) => url !== "");
-      const result = await callAction(() => createProductAction({
-        base_price_cents: productPrice,
-        category_id: categoryId,
-        description: formValues.description.trim() || undefined,
-        ingredients: formValues.ingredients.trim() || undefined,
-        usage_instructions: formValues.usage_instructions.trim() || undefined,
-        images: [avatarUrl, ...filteredSubImages],
-        avatar_url: avatarUrl,
-        sub_images: filteredSubImages,
-        is_active: formValues.is_active,
-        name: productName,
-      }), "Không thể thêm sản phẩm. Vui lòng thử lại sau.");
+    // action-(tạo sản phẩm)
+    const result = await createProductAction({
+      base_price_cents: productPrice,
+      category_id: categoryId,
+      description: formValues.description.trim() || undefined,
+      images: [imageDataUrl],
+      is_active: formValues.is_active,
+      name: productName,
+    });
 
-      if ("error" in result && result.error) {
-        const message = getFriendlyResponseError(result.error);
-        if (isUserInputError(message)) {
-          const field = message.toLowerCase().includes("danh mục")
-            ? "category_id"
-            : message.toLowerCase().includes("tên sản phẩm")
-              ? "name"
-              : "form";
-          setErrors((currentErrors) => ({
-            ...currentErrors,
-            [field]: message,
-          }));
-        } else {
-          toast.error(message);
-        }
-        return;
-      }
-
-      if ("success" in result && result.success) {
-        toast.success("Đã thêm sản phẩm");
-        await onSave?.();
-        // CHANGED: Reset avatar and sub images states on success
-        setAvatarUrl("");
-        setSubImageUrls([]);
-        setFormValues(initialProductFormValues);
-        onClose();
-      }
-    } finally {
+    if ("error" in result && result.error) {
+      toast.error(result.error);
       setIsSubmitting(false);
+      return;
     }
+
+    if ("success" in result && result.success) {
+      toast.success("Đã thêm sản phẩm");
+      await onSave?.();
+      setFormValues(initialProductFormValues);
+      onClose();
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
     <Modal
       open={open}
-      onClose={isSubmitting ? undefined : onClose}
+      onClose={onClose}
       aria-labelledby="product-modal-title"
       aria-describedby="product-modal-description"
     >
@@ -329,7 +211,6 @@ export default function ModalProduct({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -352,11 +233,9 @@ export default function ModalProduct({
               onChange={(event) => updateField("name", event.target.value)}
               fullWidth
               className={styles.field}
-              error={Boolean(errors.name)}
-              helperText={errors.name}
             />
 
-            <FormControl fullWidth className={styles.field} error={Boolean(errors.category_id)}>
+            <FormControl fullWidth className={styles.field}>
               <InputLabel id="product-category-label">Danh mục</InputLabel>
               <Select
                 labelId="product-category-label"
@@ -376,7 +255,6 @@ export default function ModalProduct({
                   </MenuItem>
                 ))}
               </Select>
-              {errors.category_id && <FormHelperText>{errors.category_id}</FormHelperText>}
             </FormControl>
           </Box>
 
@@ -390,78 +268,39 @@ export default function ModalProduct({
             }
             fullWidth
             className={styles.field}
-            error={Boolean(errors.base_price_cents)}
-            helperText={errors.base_price_cents}
           />
 
           <TextField
             label="Mô tả"
             placeholder="Mô tả chi tiết về sản phẩm..."
             multiline
-            minRows={3}
+            minRows={4}
             value={formValues.description}
             onChange={(event) => updateField("description", event.target.value)}
             fullWidth
             className={styles.field}
           />
 
-          <TextField
-            label="Thành phần"
-            placeholder="Liệt kê các thành phần chính của sản phẩm..."
-            multiline
-            minRows={3}
-            value={formValues.ingredients}
-            onChange={(event) => updateField("ingredients", event.target.value)}
-            fullWidth
-            className={styles.field}
-          />
-
-          <TextField
-            label="Cách sử dụng"
-            placeholder="Hướng dẫn sử dụng sản phẩm..."
-            multiline
-            minRows={3}
-            value={formValues.usage_instructions}
-            onChange={(event) => updateField("usage_instructions", event.target.value)}
-            fullWidth
-            className={styles.field}
-          />
-
-          {/* CHANGED: Render avatar upload field */}
           <Box>
             <Typography
               component="label"
-              htmlFor="product-avatar-upload"
+              htmlFor="product-image-upload"
               className={styles.sectionLabel}
             >
-              Ảnh đại diện (Avatar)
+              Ảnh sản phẩm
             </Typography>
-            <label
-              htmlFor="product-avatar-upload"
-              className={styles.uploadArea}
-              style={{ borderColor: errors.avatar ? "#6B1218" : undefined }}
-            >
-              {isUploadingAvatar ? (
-                <span className={styles.uploadText}>Đang tải ảnh đại diện...</span>
-              ) : avatarUrl ? (
+            <label htmlFor="product-image-upload" className={styles.uploadArea}>
+              {formValues.image_data_url ? (
                 <>
-                  <Box className={styles.imagePreviewWrapper}>
-                    <Box
-                      component="img"
-                      src={avatarUrl}
-                      alt="Ảnh đại diện"
-                      className="h-32 w-32 rounded-xl object-cover shadow-[0_14px_34px_rgba(44,24,16,0.16)]"
-                    />
-                    <button
-                      type="button"
-                      className={styles.removeImageButton}
-                      onClick={handleRemoveAvatar}
-                      aria-label="Xóa ảnh đại diện"
-                      title="Xóa ảnh"
-                    >
-                      ×
-                    </button>
-                  </Box>
+                  <Box
+                    component="img"
+                    src={formValues.image_data_url}
+                    alt={formValues.image_file_name || "Ảnh sản phẩm"}
+                    className="mb-3 h-32 w-32 rounded-xl object-cover shadow-[0_14px_34px_rgba(44,24,16,0.16)]"
+                  />
+                  <span className={styles.uploadText}>
+                    Đã chọn <strong>{formValues.image_file_name}</strong>
+                  </span>
                   <span className={styles.uploadHint}>
                     Bấm để chọn ảnh khác
                   </span>
@@ -470,101 +309,34 @@ export default function ModalProduct({
                 <>
                   <span className={styles.uploadIcon}>📷</span>
                   <span className={styles.uploadText}>
-                    Chọn ảnh đại diện cho sản phẩm
+                    Kéo thả ảnh hoặc <strong>chọn file từ máy</strong>
                   </span>
                   <span className={styles.uploadHint}>PNG, JPG tối đa 5MB</span>
                 </>
               )}
               <input
-                id="product-avatar-upload"
+                id="product-image-upload"
                 type="file"
                 accept="image/*"
                 hidden
-                onChange={handleAvatarChange}
-                disabled={isSubmitting || isUploadingAvatar}
+                onChange={handleImageChange}
               />
             </label>
-            {errors.avatar && (
-              <p style={{ color: "#6B1218", fontSize: 12, marginTop: 4 }}>
-                {errors.avatar}
-              </p>
-            )}
           </Box>
 
-          {/* CHANGED: Render sub-images fields in a single box */}
-          <Box>
-            <Typography
-              component="label"
-              htmlFor="product-sub-images-upload"
-              className={styles.sectionLabel}
-            >
-              Ảnh phụ (Chọn tối đa 3 ảnh)
-            </Typography>
-            <label
-              htmlFor="product-sub-images-upload"
-              className={styles.uploadArea}
-              style={{ borderColor: errors.sub_images ? "#6B1218" : undefined }}
-            >
-              {isUploadingSubImages ? (
-                <span className={styles.uploadText}>Đang tải ảnh phụ...</span>
-              ) : subImageUrls.length > 0 ? (
-                <>
-                  <Box className={styles.subImagesPreview}>
-                    {subImageUrls.map((url, idx) => (
-                      <Box key={`${url}-${idx}`} className={styles.imagePreviewWrapper}>
-                        <Box
-                          component="img"
-                          src={url}
-                          alt={`Ảnh phụ ${idx + 1}`}
-                          className="h-20 w-20 rounded-xl object-cover shadow-[0_8px_20px_rgba(44,24,16,0.12)]"
-                        />
-                        <button
-                          type="button"
-                          className={styles.removeImageButton}
-                          onClick={(event) => handleRemoveSubImage(event, idx)}
-                          aria-label={`Xóa ảnh phụ ${idx + 1}`}
-                          title="Xóa ảnh"
-                        >
-                          ×
-                        </button>
-                      </Box>
-                    ))}
-                  </Box>
-                  <span className={styles.uploadText}>
-                    Đã chọn <strong>{subImageUrls.length} ảnh phụ</strong>
-                  </span>
-                  <span className={styles.uploadHint}>
-                    Bấm để chọn lại các ảnh phụ khác (tối đa 3)
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className={styles.uploadIcon}>📷</span>
-                  <span className={styles.uploadText}>
-                    Chọn các ảnh phụ (chọn tối đa 3 ảnh cùng lúc)
-                  </span>
-                  <span className={styles.uploadHint}>PNG, JPG tối đa 5MB</span>
-                </>
-              )}
-              <input
-                id="product-sub-images-upload"
-                type="file"
-                accept="image/*"
-                multiple
-                hidden
-                onChange={handleSubImagesChange}
-                disabled={isSubmitting || isUploadingSubImages}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formValues.is_active}
+                onChange={(event) =>
+                  updateField("is_active", event.target.checked)
+                }
+                className={styles.greenSwitch}
               />
-            </label>
-            {errors.sub_images && (
-              <p style={{ color: "#6B1218", fontSize: 12, marginTop: 4 }}>
-                {errors.sub_images}
-              </p>
-            )}
-          </Box>
-          {errors.form && (
-            <FormHelperText error>{errors.form}</FormHelperText>
-          )}
+            }
+            label="Hiển thị sản phẩm trên website"
+            className={styles.formControlLabel}
+          />
         </Box>
 
         <Divider className={styles.divider} />
@@ -573,7 +345,6 @@ export default function ModalProduct({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting}
             className={styles.ghostButton}
           >
             Hủy

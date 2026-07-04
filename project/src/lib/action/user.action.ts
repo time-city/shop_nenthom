@@ -1,4 +1,5 @@
 'use server'
+import { getPublicErrorMessage } from "../utils/publicError";
 import { cache } from "react";
 import { requireAdmin } from "../requireAdmin";
 import { getSession } from "../session";
@@ -31,7 +32,7 @@ export async function updateProfileAction(data: UpdateProfileFormState) {
         const user = await UserService.updateProfile(session.sub, parsed.data);
         return { success: true, message: 'Cập nhật thông tin thành công', data: user };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -61,7 +62,7 @@ export async function getAllUsersAction(
             meta: users.meta,
         };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -75,7 +76,7 @@ export async function toggleUserStatusAction(userId: string) {
         await UserService.toggleUserStatus(userId);
         return { success: true };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -88,7 +89,7 @@ export async function toggleUserRoleAction(userId: string) {
         await UserService.toggleUserRole(userId);
         return { success: true };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -109,7 +110,7 @@ export async function getUserOrdersAction(
         const orders = await UserService.getUserOrders(userId, page, limit);
         return { success: true, ...orders };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 

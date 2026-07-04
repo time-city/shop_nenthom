@@ -1,4 +1,5 @@
 'use server'
+import { getPublicErrorMessage } from "../utils/publicError";
 import { AuthService } from "../services/auth.service";
 import { createSession, deleteSession, getSession } from "../session";
 import {
@@ -33,7 +34,7 @@ export async function registerUser(data: RegisterFormState) {
 
         return { success: true, user };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -68,7 +69,7 @@ export async function loginUser(data: LoginFormState) {
             }
         };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -97,7 +98,7 @@ export async function forgotPassword(data: ForgotPasswordInput): Promise<
             message: 'Chúng tôi đã gửi mã OTP đặt lại mật khẩu.',
         };
     } catch (err) {
-        return { success: false, error: (err as Error).message };
+        return { success: false, error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -116,7 +117,7 @@ export async function resetPassword(data: ResetPasswordInput) {
             message: 'Mật khẩu đã được cập nhật. Bạn có thể đăng nhập lại.',
         };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -139,7 +140,7 @@ export async function resendResetPasswordOtp(data: ResendOtpInput): Promise<
             message: 'Mã OTP mới đã được gửi đến email của bạn.',
         };
     } catch (err) {
-        return { success: false, error: (err as Error).message };
+        return { success: false, error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }
 
@@ -164,6 +165,6 @@ export async function changePassword(data: ChangePasswordInput) {
             message: 'Mật khẩu đã được cập nhật.',
         };
     } catch (err) {
-        return { error: (err as Error).message };
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
     }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
@@ -21,9 +21,7 @@ export default function ModalIngredient({
   const [price, setPrice] = useState("");
   const [hex, setHex] = useState("#F5E6D3");
   const [inStock, setInStock] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [weightGram, setWeightGram] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const nameLabel =
     ingredientType === "color"
       ? "Tên màu"
@@ -38,66 +36,33 @@ export default function ModalIngredient({
   useEffect(() => {
     if (!open) return;
 
-    startTransition(() => {
-      setName("");
-      setPrice("");
-      setHex("#F5E6D3");
-      setInStock(true);
-      setIsSaving(false);
-      setWeightGram("");
-      setErrors({});
-    });
+    setName("");
+    setPrice("");
+    setHex("#F5E6D3");
+    setInStock(true);
+    setWeightGram("");
   }, [open, ingredientType]);
 
   const handleSave = async () => {
-    if (isSaving) return;
+    const shouldClose = await onSave?.({
+      hex,
+      in_stock: inStock,
+      is_active: true,
+      name: name.trim(),
+      price_extra_cents: Number(price) || 0,
+      stock: inStock ? 1 : 0,
+      weight_gram: Number(weightGram) || 0,
+    });
 
-    const nextErrors: Record<string, string> = {};
-    if (!name.trim()) nextErrors.name = "Vui lòng nhập tên nguyên liệu";
-    if (price && (!Number.isFinite(Number(price)) || Number(price) < 0)) {
-      nextErrors.price = "Giá cộng thêm không hợp lệ";
-    }
-    if (
-      ingredientType === "size" &&
-      (!weightGram || !Number.isFinite(Number(weightGram)) || Number(weightGram) <= 0)
-    ) {
-      nextErrors.weightGram = "Khối lượng không hợp lệ";
-    }
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
-      return;
-    }
+    if (shouldClose === false) return;
 
-    setErrors({});
-    setIsSaving(true);
-
-    try {
-      const shouldClose = await onSave?.({
-        hex,
-        in_stock: inStock,
-        is_active: true,
-        name: name.trim(),
-        price_extra_cents: Number(price) || 0,
-        stock: inStock ? 1 : 0,
-        weight_gram: Number(weightGram) || 0,
-      });
-
-      if (typeof shouldClose === "string") {
-        setErrors({ form: shouldClose });
-        return;
-      }
-      if (shouldClose === false) return;
-
-      onClose();
-    } finally {
-      setIsSaving(false);
-    }
+    onClose();
   };
 
   return (
     <Modal
       open={open}
-      onClose={isSaving ? undefined : onClose}
+      onClose={onClose}
       aria-labelledby="ingredient-modal-title"
       aria-describedby="ingredient-modal-description"
     >
@@ -114,7 +79,6 @@ export default function ModalIngredient({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isSaving}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -136,8 +100,6 @@ export default function ModalIngredient({
             placeholder="Nhập tên..."
             fullWidth
             className={styles.field}
-            error={Boolean(errors.name)}
-            helperText={errors.name}
           />
 
           <TextField
@@ -148,8 +110,6 @@ export default function ModalIngredient({
             type="number"
             fullWidth
             className={styles.field}
-            error={Boolean(errors.price)}
-            helperText={errors.price}
           />
 
           {ingredientType === "size" ? (
@@ -161,13 +121,8 @@ export default function ModalIngredient({
               type="number"
               fullWidth
               className={styles.field}
-              error={Boolean(errors.weightGram)}
-              helperText={errors.weightGram}
             />
           ) : null}
-          {errors.form && (
-            <Typography className={styles.formError}>{errors.form}</Typography>
-          )}
 
           {ingredientType === "color" ? (
             <Box>
@@ -224,7 +179,6 @@ export default function ModalIngredient({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isSaving}
             className={styles.ghostButton}
           >
             Hủy
@@ -233,10 +187,9 @@ export default function ModalIngredient({
             type="button"
             variant="contained"
             onClick={handleSave}
-            disabled={isSaving}
             className={styles.primaryButton}
           >
-            {isSaving ? "Đang lưu..." : "Lưu"}
+            Lưu
           </Button>
         </Box>
       </Box>

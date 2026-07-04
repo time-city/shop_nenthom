@@ -22,15 +22,20 @@ const markIntroReady = (emitEvent = true) => {
 };
 
 export default function IntroContent() {
-  const [phase, setPhase] = useState<IntroPhase>("black");
-  const [visible, setVisible] = useState(true);
+  // Dùng lazy initializer: chạy 1 lần tại client trước khi render đầu tiên.
+  // Nếu intro đã xem → bắt đầu với visible=false, không flash màn đen.
+  const [visible, setVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return sessionStorage.getItem("intro-shown") !== "true";
+  });
+  const [phase, setPhase] = useState<IntroPhase>(() => {
+    if (typeof window === "undefined") return "black";
+    return sessionStorage.getItem("intro-shown") === "true" ? "hide" : "black";
+  });
 
   useEffect(() => {
     if (sessionStorage.getItem("intro-shown") === "true") {
-      window.requestAnimationFrame(() => {
-        markIntroReady();
-        setVisible(false);
-      });
+      markIntroReady();
       return;
     }
 

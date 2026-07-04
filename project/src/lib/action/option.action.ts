@@ -1,4 +1,5 @@
 'use server'
+import { getPublicErrorMessage } from "../utils/publicError";
 
 import { requireAdmin } from "../requireAdmin"
 import { OptionService } from "../services/option.service"
@@ -16,7 +17,7 @@ export async function createScentAction(params: unknown) {
         const scent = await OptionService.createScent(parsed.data)
         return { success: true, data: scent }
     } catch (err) {
-        return { error: (err as Error).message }
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
     }
 }
 
@@ -32,7 +33,7 @@ export async function updateScentAction(id: number, params: unknown) {
         const scent = await OptionService.updateScent(id, parsed.data)
         return { success: true, data: scent }
     } catch (err) {
-        return { error: (err as Error).message }
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
     }
 }
 
@@ -48,7 +49,7 @@ export async function createWaxColorAction(params: unknown) {
         const color = await OptionService.createWaxColor(parsed.data)
         return { success: true, data: color }
     } catch (err) {
-        return { error: (err as Error).message }
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
     }
 }
 
@@ -64,7 +65,7 @@ export async function updateWaxColorAction(id: number, params: unknown) {
         const color = await OptionService.updateWaxColor(id, parsed.data)
         return { success: true, data: color }
     } catch (err) {
-        return { error: (err as Error).message }
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
     }
 }
 
@@ -80,7 +81,7 @@ export async function createSizeAction(params: unknown) {
         const size = await OptionService.createSize(parsed.data)
         return { success: true, data: size }
     } catch (err) {
-        return { error: (err as Error).message }
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
     }
 }
 
@@ -96,7 +97,7 @@ export async function updateSizeAction(id: number, params: unknown) {
         const size = await OptionService.updateSize(id, parsed.data)
         return { success: true, data: size }
     } catch (err) {
-        return { error: (err as Error).message }
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
     }
 }
 
@@ -112,7 +113,7 @@ export async function createPackagingAction(params: unknown) {
         const packaging = await OptionService.createPackaging(parsed.data)
         return { success: true, data: packaging }
     } catch (err) {
-        return { error: (err as Error).message }
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
     }
 }
 
@@ -128,7 +129,7 @@ export async function updatePackagingAction(id: number, params: unknown) {
         const packaging = await OptionService.updatePackaging(id, parsed.data)
         return { success: true, data: packaging }
     } catch (err) {
-        return { error: (err as Error).message }
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
     }
 }
 
@@ -145,7 +146,7 @@ export async function createToppingAction(params: unknown) {
         const topping = await OptionService.createTopping(parsed.data)
         return { success: true, data: topping }
     } catch (err) {
-        return { error: (err as Error).message }
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
     }
 }
 
@@ -161,7 +162,7 @@ export async function updateToppingAction(id: number, params: unknown) {
         const topping = await OptionService.updateTopping(id, parsed.data)
         return { success: true, data: topping }
     } catch (err) {
-        return { error: (err as Error).message }
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
     }
 }
 
@@ -177,6 +178,6 @@ export async function deleteOptionAction(params: unknown) {
         await OptionService.deleteOption(parsed.data.type, parsed.data.id)
         return { success: true }
     } catch (err) {
-        return { error: (err as Error).message }
+        return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
     }
 }

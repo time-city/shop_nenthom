@@ -58,6 +58,19 @@ export default async function RootLayout({
        data-role={currentUser?.role ?? "GUEST"}
        suppressHydrationWarning
      >
+        {/* Inline script chạy đồng bộ trước khi browser paint đầu tiên */}
+        {/* Nếu intro chưa được xem → set intro-playing ngay để tránh flash nội dung */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+  try {
+    if (sessionStorage.getItem('intro-shown') !== 'true') {
+      document.body.classList.add('intro-playing');
+    }
+  } catch(e) {}
+})();`,
+          }}
+        />
        <StoreProvider>
         <ToastProvider>
           {children}

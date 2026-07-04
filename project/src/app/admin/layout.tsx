@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import Navbar from "../../components/admin/navbar";
+import Navbar from "@/src/components/admin/layout/navbar";
 import { getSession } from "../../lib/session";
 
 export default async function AdminLayout({

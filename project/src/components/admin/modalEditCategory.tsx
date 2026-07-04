@@ -6,19 +6,14 @@ import Divider from "@mui/material/Divider";
 import Modal from "@mui/material/Modal";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { startTransition, useEffect, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { updateCategoryAction } from "../../lib/action/category.action";
-import {
-  getFriendlyResponseError,
-  isUserInputError,
-} from "@/src/lib/utils/errorMessage";
 import type {
   AdminCategoryFormValues,
   AdminModalEditCategoryProps,
 } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
-import { callAction } from "@/src/lib/utils/callAction";
 
 export default function ModalEditCategory({
   category,
@@ -26,23 +21,17 @@ export default function ModalEditCategory({
   onSave,
   open,
 }: AdminModalEditCategoryProps) {
-  const { toast } = useToast();
   const [formValues, setFormValues] = useState<AdminCategoryFormValues>({
     description: "",
     name: "",
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open && category) {
-      startTransition(() => {
-        setFormValues({
-          description: category.description ?? "",
-          name: category.name,
-        });
-        setErrors({});
-        setIsSubmitting(false);
+      setFormValues({
+        description: category.description ?? "",
+        name: category.name,
       });
     }
   }, [open, category]);
@@ -52,61 +41,47 @@ export default function ModalEditCategory({
       ...current,
       [field]: value,
     }));
-    if (errors[field]) {
-      setErrors((currentErrors) => ({
-        ...currentErrors,
-        [field]: "",
-      }));
-    }
   };
 
   const handleSave = async () => {
-    if (!category || isSubmitting) return;
-
+    if (!category) return;
     const categoryName = formValues.name.trim();
 
     if (!categoryName) {
-      setErrors({ name: "Vui lòng nhập tên danh mục" });
+      toast.error("Vui lòng nhập tên danh mục");
       return;
     }
 
-    setErrors({});
     setIsSubmitting(true);
 
-    try {
-      const result = await callAction(() => updateCategoryAction(category.id, {
-        name: categoryName,
-        description: formValues.description.trim() || undefined,
-      }), "Không thể cập nhật danh mục. Vui lòng thử lại sau.");
+    const result = await updateCategoryAction(category.id, {
+      name: categoryName,
+      description: formValues.description.trim() || undefined,
+    });
 
-      if ("error" in result && result.error) {
-        const message = getFriendlyResponseError(result.error);
-        if (isUserInputError(message)) {
-          setErrors({ name: message });
-        } else {
-          toast.error(message);
-        }
-        return;
-      }
-
-      if ("success" in result && result.success) {
-        toast.success("Đã cập nhật danh mục thành công");
-        await onSave?.();
-        onClose();
-      }
-    } finally {
+    if ("error" in result && result.error) {
+      toast.error(result.error);
       setIsSubmitting(false);
+      return;
     }
+
+    if ("success" in result && result.success) {
+      toast.success("Đã cập nhật danh mục thành công");
+      await onSave?.();
+      onClose();
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
     <Modal
       open={open}
-      onClose={isSubmitting ? undefined : onClose}
+      onClose={onClose}
       aria-labelledby="edit-category-modal-title"
       aria-describedby="edit-category-modal-description"
     >
-      <Box className={`${styles.modalPaper} ${styles.categoryPaper}`}>
+      <Box className={`${styles.modalPaper} ${styles.productPaper}`}>
         <Box className={styles.header}>
           <Typography
             id="edit-category-modal-title"
@@ -119,7 +94,6 @@ export default function ModalEditCategory({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -139,8 +113,6 @@ export default function ModalEditCategory({
             placeholder="Nhập tên danh mục..."
             value={formValues.name}
             onChange={(event) => updateField("name", event.target.value)}
-            error={Boolean(errors.name)}
-            helperText={errors.name}
             fullWidth
             className={styles.field}
           />
@@ -163,7 +135,6 @@ export default function ModalEditCategory({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting}
             className={styles.ghostButton}
           >
             Hủy

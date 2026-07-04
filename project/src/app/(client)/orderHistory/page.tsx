@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "../../../lib/action/user.action";
-import OrdersClient from "@/src/components/client/ordersClient";
+import OrdersClient from "@/src/components/client/order/ordersClient";
 import { callAction } from "@/src/lib/utils/callAction";
 
 export default async function OrderHistoryPage() {

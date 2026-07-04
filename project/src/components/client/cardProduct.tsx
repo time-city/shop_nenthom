@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
 import type { CardProductProps } from "../../lib/types/client";
 import styles from "../../styles/cardProduct.module.css";
 
@@ -29,66 +29,56 @@ const getCandleWaxClass = (color: string) => {
 export default function CardProduct({
   candleColor,
   href,
-  imageUrl,
   name,
   price,
   scentNote,
 }: CardProductProps) {
+  const router = useRouter();
+  const detailHref = href;
+  const openDetail = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    router.push(detailHref, { scroll: false });
+  };
+
   return (
-    <article
-      className="product-card group flex flex-col h-full overflow-hidden rounded-[14px] bg-[#F5F0E8] text-[#2C1810] shadow-[0_14px_30px_rgba(44,8,12,0.22)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(44,8,12,0.28)]"
-    >
-      <Link
-        href={href}
+    <article className="product-card group overflow-hidden rounded-[14px] bg-[#F5F0E8] text-[#2C1810] shadow-[0_14px_30px_rgba(44,8,12,0.22)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(44,8,12,0.28)]">
+      <a
+        href={detailHref}
+        onClick={openDetail}
         aria-label={`Xem chi tiết ${name}`}
-        className="product-image relative block w-full aspect-square overflow-hidden bg-[#FAF6F0] p-0 transition duration-300"
+        className="product-image flex h-48 items-center justify-center bg-[#F5F0E8] transition group-hover:bg-[#F2E8D9] sm:h-52 xl:h-56"
       >
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={name}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            loading="lazy"
-            className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
+        <div className="candle-preview relative h-[104px] w-[76px] rounded-[6px_6px_5px_5px] shadow-[0_16px_30px_rgba(44,24,16,0.12),inset_-9px_0_16px_rgba(126,93,56,0.08),inset_7px_0_13px_rgba(255,255,255,0.26)] sm:h-[122px] sm:w-[90px]">
+          <div
+            className={`${styles.candleWax} ${getCandleWaxClass(candleColor ?? "#F5E6D3")}`}
           />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-[#2C1810]/5">
-            <div className="candle-preview relative h-[104px] w-[76px] rounded-[6px_6px_5px_5px] shadow-[0_16px_30px_rgba(44,24,16,0.12),inset_-9px_0_16px_rgba(126,93,56,0.08),inset_7px_0_13px_rgba(255,255,255,0.26)] sm:h-[122px] sm:w-[90px]">
-              <div
-                className={`${styles.candleWax} ${getCandleWaxClass(candleColor ?? "#F5E6D3")}`}
-              />
-              <div className="absolute -top-3 left-1/2 h-4 w-5 -translate-x-1/2 rounded-[4px_4px_0_0] bg-[#D6A15F]" />
-              <div className="absolute -top-2 left-1/2 h-3 w-1.5 -translate-x-1/2 rounded-full bg-[#FF9800] shadow-[0_0_16px_rgba(255,152,0,0.68)]" />
-            </div>
-          </div>
-        )}
-      </Link>
-
-      <div className="product-info flex flex-col flex-grow border-t border-[#2C1810]/5 p-5 sm:p-6">
-        <div className="flex-grow">
-          <Link href={href} className="block">
-            <h3 className="line-clamp-1 font-serif text-[1.18rem] sm:text-[1.32rem] font-medium leading-tight text-[#2C1810] transition group-hover:text-[#6B1218]">
-              {name}
-            </h3>
-          </Link>
-
-          <p className="scent-note mt-2 line-clamp-1 text-[0.8rem] leading-4 text-[#2C1810]/80">
-            {scentNote || "Nến thơm thủ công tinh giản."}
-          </p>
+          <div className="absolute -top-3 left-1/2 h-4 w-5 -translate-x-1/2 rounded-[4px_4px_0_0] bg-[#D6A15F]" />
+          <div className="absolute -top-2 left-1/2 h-3 w-1.5 -translate-x-1/2 rounded-full bg-[#FF9800] shadow-[0_0_16px_rgba(255,152,0,0.68)]" />
         </div>
+      </a>
 
-        <div className="mt-6 pt-4 border-t border-[#2C1810]/5 flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
-          <span className="product-price font-sans text-[1.12rem] font-bold text-[#6B1218] whitespace-nowrap">
-            {formatPrice(price)}
-          </span>
-          <Link
-            href={href}
-            className="btn-add-cart flex h-9.5 items-center justify-center rounded-full bg-[#6B1218] px-5 text-center text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-[#F5F0E8] shadow-[0_4px_10px_rgba(107,18,24,0.15)] transition hover:bg-[#520d12] hover:shadow-[0_6px_14px_rgba(107,18,24,0.25)] whitespace-nowrap"
-          >
-            Chi tiết
-          </Link>
-        </div>
+      <div className="product-info border-t border-[#2C1810]/5 px-4 py-5 sm:px-5">
+        <a href={detailHref} onClick={openDetail} className="block">
+          <h3 className="line-clamp-1 font-serif text-[1.25rem] font-light leading-tight text-[#2C1810] transition group-hover:text-[#7A1218] sm:text-[1.42rem]">
+            {name}
+          </h3>
+        </a>
+
+        <p className="scent-note mt-2 line-clamp-1 text-[0.82rem] leading-5 text-[#2C1810]/72">
+          {scentNote || "Nến thơm thủ công tinh giản."}
+        </p>
+
+        <p className="product-price mt-5 font-serif text-[0.98rem] text-[#7A1218]">
+          {formatPrice(price)}
+        </p>
+
+        <a
+          href={detailHref}
+          onClick={openDetail}
+          className="btn-add-cart mt-5 flex min-h-10 w-full items-center justify-center rounded-full bg-[#7A1218] px-4 text-center text-[0.68rem] font-medium uppercase tracking-[0.1em] text-[#F5F0E8] shadow-[0_10px_18px_rgba(122,18,24,0.2)] transition hover:bg-[#5F0D12] hover:shadow-[0_14px_26px_rgba(122,18,24,0.32)]"
+        >
+          Xem chi tiết
+        </a>
       </div>
     </article>
   );

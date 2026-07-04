@@ -6,19 +6,14 @@ import Divider from "@mui/material/Divider";
 import Modal from "@mui/material/Modal";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { startTransition, useEffect, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { createCategoryAction } from "../../lib/action/category.action";
-import {
-  getFriendlyResponseError,
-  isUserInputError,
-} from "@/src/lib/utils/errorMessage";
 import type {
   AdminCategoryFormValues,
   AdminModalCategoryProps,
 } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
-import { callAction } from "@/src/lib/utils/callAction";
 
 const initialFormValues: AdminCategoryFormValues = {
   description: "",
@@ -30,19 +25,13 @@ export default function ModalCategory({
   onSave,
   open,
 }: AdminModalCategoryProps) {
-  const { toast } = useToast();
   const [formValues, setFormValues] =
     useState<AdminCategoryFormValues>(initialFormValues);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
-      startTransition(() => {
-        setFormValues(initialFormValues);
-        setErrors({});
-        setIsSubmitting(false);
-      });
+      setFormValues(initialFormValues);
     }
   }, [open]);
 
@@ -51,62 +40,47 @@ export default function ModalCategory({
       ...current,
       [field]: value,
     }));
-    if (errors[field]) {
-      setErrors((currentErrors) => ({
-        ...currentErrors,
-        [field]: "",
-      }));
-    }
   };
 
   const handleSave = async () => {
-    if (isSubmitting) return;
-
     const categoryName = formValues.name.trim();
 
     if (!categoryName) {
-      setErrors({ name: "Vui lòng nhập tên danh mục" });
+      toast.error("Vui lòng nhập tên danh mục");
       return;
     }
 
-    setErrors({});
     setIsSubmitting(true);
 
-    try {
-      const result = await callAction(() => createCategoryAction({
-        name: categoryName,
-        description: formValues.description.trim() || undefined,
-      }), "Không thể thêm danh mục. Vui lòng thử lại sau.");
+    const result = await createCategoryAction({
+      name: categoryName,
+      description: formValues.description.trim() || undefined,
+    });
 
-      if ("error" in result && result.error) {
-        const message = getFriendlyResponseError(result.error);
-        if (isUserInputError(message)) {
-          setErrors({ name: message });
-        } else {
-          toast.error(message);
-        }
-        return;
-      }
-
-      if ("success" in result && result.success) {
-        toast.success("Đã thêm danh mục thành công");
-        await onSave?.();
-        setFormValues(initialFormValues);
-        onClose();
-      }
-    } finally {
+    if ("error" in result && result.error) {
+      toast.error(result.error);
       setIsSubmitting(false);
+      return;
     }
+
+    if ("success" in result && result.success) {
+      toast.success("Đã thêm danh mục thành công");
+      await onSave?.();
+      setFormValues(initialFormValues);
+      onClose();
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
     <Modal
       open={open}
-      onClose={isSubmitting ? undefined : onClose}
+      onClose={onClose}
       aria-labelledby="category-modal-title"
       aria-describedby="category-modal-description"
     >
-      <Box className={`${styles.modalPaper} ${styles.categoryPaper}`}>
+      <Box className={`${styles.modalPaper} ${styles.productPaper}`}>
         <Box className={styles.header}>
           <Typography
             id="category-modal-title"
@@ -119,7 +93,6 @@ export default function ModalCategory({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -139,8 +112,6 @@ export default function ModalCategory({
             placeholder="Nhập tên danh mục..."
             value={formValues.name}
             onChange={(event) => updateField("name", event.target.value)}
-            error={Boolean(errors.name)}
-            helperText={errors.name}
             fullWidth
             className={styles.field}
           />
@@ -163,7 +134,6 @@ export default function ModalCategory({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting}
             className={styles.ghostButton}
           >
             Hủy

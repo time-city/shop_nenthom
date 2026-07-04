@@ -1,14 +1,10 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
-import { getCurrentUser } from "../../lib/action/user.action";
+import { useState } from "react";
+import { toast } from "react-toastify";
 import { submitContactAction } from "../../lib/action/contact.action";
-import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
-import { useSupportStore } from "@/src/store/useSupportStore";
 import type { ClientContactFormValues } from "../../lib/types/client";
-import { callAction } from "@/src/lib/utils/callAction";
 
 const initialValues: ClientContactFormValues = {
   email: "",
@@ -18,155 +14,60 @@ const initialValues: ClientContactFormValues = {
 };
 
 export default function ModalContact() {
-  const { toast } = useToast();
-  const { incrementUnread } = useSupportStore();
   const [formValues, setFormValues] =
     useState<ClientContactFormValues>(initialValues);
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof ClientContactFormValues | "form", string>>
-  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadCurrentUser = async () => {
-      // action-(lấy user liên hệ)
-      const user = await callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau.");
-
-      if (!isMounted || !user) return;
-
-      setFormValues((currentValues) => ({
-        ...currentValues,
-        email: currentValues.email || user.email || "",
-        name: currentValues.name || user.fullname || "",
-      }));
-    };
-
-    void loadCurrentUser();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const validateField = (field: keyof ClientContactFormValues, value: string): string => {
-    const trimmed = value.trim();
-
-    if (!trimmed) {
-      if (field === "message") {
-        return "Vui lòng nhập nội dung tin nhắn";
-      }
-      return "Vui lòng không để trống";
-    }
-
-    if (field === "email") {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.(com|vn|net|org|edu|gov|io|co|info|biz|me|cc|us|uk|jp|kr|tw|sg|live|store|shop|online|xyz|pro|work|tech|dev|app|asia|eu|ca|fr|de|au)(?:\.[a-z]{2,})?$/i;
-      if (!emailRegex.test(trimmed)) {
-        return "Email không đúng định dạng";
-      }
-    }
-
-    return "";
-  };
-
-  const handleChange = (field: keyof ClientContactFormValues, value: string) => {
-    setFormValues((prev) => ({
-      ...prev,
+  const updateField = (
+    field: keyof ClientContactFormValues,
+    value: string,
+  ) => {
+    setFormValues((currentValues) => ({
+      ...currentValues,
       [field]: value,
     }));
-
-    if (errors[field]) {
-      const errorMsg = validateField(field, value);
-      setErrors((prev) => {
-        const next = { ...prev };
-        if (errorMsg) {
-          next[field] = errorMsg;
-        } else {
-          delete next[field];
-        }
-        return next;
-      });
-    }
-  };
-
-  const getInputClass = (fieldName: keyof ClientContactFormValues) => {
-    const hasError = Boolean(errors[fieldName]);
-    return `w-full rounded-md border ${
-      hasError
-        ? "border-[#6B1218] focus:ring-[#6B1218]/10"
-        : "border-[#2c1810]/15 focus:border-[#7A1218] focus:ring-[#6B1218]/10"
-    } bg-[#F8F0E4] px-4 py-2.5 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:ring-4`;
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (isSubmitting) return;
+    const values: ClientContactFormValues = {
+      email: formValues.email.trim(),
+      message: formValues.message.trim(),
+      name: formValues.name.trim(),
+      subject: formValues.subject.trim(),
+    };
 
-    const newErrors: Partial<Record<keyof ClientContactFormValues, string>> = {};
-    const fieldsToValidate: Array<keyof ClientContactFormValues> = ["name", "email", "subject", "message"];
-
-    fieldsToValidate.forEach((field) => {
-      const errorMsg = validateField(field, formValues[field]);
-      if (errorMsg) {
-        newErrors[field] = errorMsg;
-      }
-    });
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      const firstErrorField = Object.keys(newErrors)[0] as keyof ClientContactFormValues;
-      const element = document.getElementById(`contact-${firstErrorField}`);
-      if (element) {
-        element.focus();
-      }
+    if (!values.name || !values.email || !values.subject || !values.message) {
+      toast.error("Vui lòng điền đầy đủ thông tin liên hệ");
       return;
     }
 
     setIsSubmitting(true);
 
-    try {
-      const values: ClientContactFormValues = {
-        email: formValues.email.trim(),
-        message: formValues.message.trim(),
-        name: formValues.name.trim(),
-        subject: formValues.subject.trim(),
-      };
+    // action-(gửi liên hệ)
+    const result = await submitContactAction(values);
 
-      // action-(gửi liên hệ)
-      const result = await callAction(() => submitContactAction(values), "Không thể gửi liên hệ. Vui lòng thử lại sau.");
-
-      if ("error" in result && result.error) {
-        setErrors((currentErrors) => ({
-          ...currentErrors,
-          form: getFriendlyResponseError(result.error),
-        }));
-        return;
-      }
-
-      if ("success" in result && result.success) {
-        toast.success("Đã gửi lời nhắn, ChamCham sẽ phản hồi sớm");
-        // Tăng số tin chưa phản hồi để badge navbar admin cập nhật
-        incrementUnread();
-        setFormValues((currentValues) => ({
-          ...currentValues,
-          message: "",
-          subject: "",
-        }));
-        setErrors({});
-      }
-    } finally {
+    if ("error" in result && result.error) {
+      toast.error(result.error);
       setIsSubmitting(false);
+      return;
     }
+
+    if ("success" in result && result.success) {
+      toast.success("Đã gửi lời nhắn, ChamCham sẽ phản hồi sớm");
+      setFormValues(initialValues);
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
-    <form id="contactForm" className="mt-4 space-y-3.5" onSubmit={handleSubmit}>
+    <form id="contactForm" className="mt-8 space-y-5" onSubmit={handleSubmit}>
       <div className="form-group">
         <label
           htmlFor="contact-name"
-          className="mb-1 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
+          className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
         >
           Tên của bạn
         </label>
@@ -175,42 +76,34 @@ export default function ModalContact() {
           type="text"
           placeholder="Nhập tên"
           value={formValues.name}
-          onChange={(event) => handleChange("name", event.target.value)}
-          className={getInputClass("name")}
+          onChange={(event) => updateField("name", event.target.value)}
+          required
+          className="w-full rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
         />
-        {errors.name && (
-          <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
-            {errors.name}
-          </span>
-        )}
       </div>
 
       <div className="form-group">
         <label
           htmlFor="contact-email"
-          className="mb-1 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
+          className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
         >
           Email
         </label>
         <input
           id="contact-email"
-          type="text"
+          type="email"
           placeholder="your@email.com"
           value={formValues.email}
-          onChange={(event) => handleChange("email", event.target.value)}
-          className={getInputClass("email")}
+          onChange={(event) => updateField("email", event.target.value)}
+          required
+          className="w-full rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
         />
-        {errors.email && (
-          <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
-            {errors.email}
-          </span>
-        )}
       </div>
 
       <div className="form-group">
         <label
           htmlFor="contact-subject"
-          className="mb-1 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
+          className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
         >
           Chủ đề
         </label>
@@ -219,20 +112,16 @@ export default function ModalContact() {
           type="text"
           placeholder="Chủ đề của bạn"
           value={formValues.subject}
-          onChange={(event) => handleChange("subject", event.target.value)}
-          className={getInputClass("subject")}
+          onChange={(event) => updateField("subject", event.target.value)}
+          required
+          className="w-full rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
         />
-        {errors.subject && (
-          <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
-            {errors.subject}
-          </span>
-        )}
       </div>
 
       <div className="form-group">
         <label
           htmlFor="contact-message"
-          className="mb-1 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
+          className="mb-2 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
         >
           Tin nhắn
         </label>
@@ -240,15 +129,11 @@ export default function ModalContact() {
           id="contact-message"
           placeholder="Nội dung tin nhắn..."
           value={formValues.message}
-          onChange={(event) => handleChange("message", event.target.value)}
-          rows={4}
-          className={`${getInputClass("message")} min-h-36 w-full resize-y rounded-md border outline-none transition placeholder:text-[#2c1810]/38 focus:ring-4`}
+          onChange={(event) => updateField("message", event.target.value)}
+          required
+          rows={6}
+          className="min-h-36 w-full resize-y rounded-md border border-[#2c1810]/15 bg-[#F8F0E4] px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#2c1810]/38 focus:border-[#7A1218] focus:ring-4 focus:ring-[#6B1218]/10"
         />
-        {errors.message && (
-          <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
-            {errors.message}
-          </span>
-        )}
       </div>
 
       <button
@@ -258,9 +143,6 @@ export default function ModalContact() {
       >
         {isSubmitting ? "Đang gửi..." : "Gửi Tin Nhắn"}
       </button>
-      {errors.form && (
-        <p className="text-xs font-medium text-[#6B1218]">{errors.form}</p>
-      )}
     </form>
   );
 }

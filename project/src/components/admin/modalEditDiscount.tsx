@@ -9,19 +9,14 @@ import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { startTransition, useEffect, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { updateDiscountAction } from "../../lib/action/discount.action";
-import {
-  getFriendlyResponseError,
-  isUserInputError,
-} from "@/src/lib/utils/errorMessage";
 import type {
   AdminDiscountFormValues,
   AdminModalEditDiscountProps,
 } from "../../lib/types/admin";
 import styles from "../../styles/adminModal.module.css";
-import { callAction } from "@/src/lib/utils/callAction";
 
 export default function ModalEditDiscount({
   discount,
@@ -29,7 +24,6 @@ export default function ModalEditDiscount({
   onSave,
   open,
 }: AdminModalEditDiscountProps) {
-  const { toast } = useToast();
   const [formValues, setFormValues] = useState<AdminDiscountFormValues>({
     code: "",
     discount_amount_cents: "",
@@ -37,7 +31,6 @@ export default function ModalEditDiscount({
     max_uses: "",
     type: "PERCENTAGE",
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -46,16 +39,12 @@ export default function ModalEditDiscount({
         ? new Date(discount.expires_at).toISOString().split("T")[0]
         : "";
 
-      startTransition(() => {
-        setFormValues({
-          code: discount.code,
-          discount_amount_cents: String(discount.discount_amount_cents),
-          expires_at: expiresAt,
-          max_uses: String(discount.max_uses),
-          type: discount.type,
-        });
-        setErrors({});
-        setIsSubmitting(false);
+      setFormValues({
+        code: discount.code,
+        discount_amount_cents: String(discount.discount_amount_cents),
+        expires_at: expiresAt,
+        max_uses: String(discount.max_uses),
+        type: discount.type,
       });
     }
   }, [open, discount]);
@@ -65,81 +54,67 @@ export default function ModalEditDiscount({
       ...currentValues,
       [field]: value,
     }));
-    if (errors[field]) {
-      setErrors((currentErrors) => ({
-        ...currentErrors,
-        [field]: "",
-      }));
-    }
   };
 
   const handleSave = async () => {
-    if (!discount || isSubmitting) return;
+    if (!discount) return;
 
     const code = formValues.code.trim().toUpperCase();
     const discountAmount = Number(formValues.discount_amount_cents);
     const maxUses = Number(formValues.max_uses);
 
-    const validationErrors: Record<string, string> = {};
-
     if (!code) {
-      validationErrors.code = "Vui lòng nhập mã giảm giá";
-    }
-
-    if (!formValues.discount_amount_cents || !Number.isFinite(discountAmount) || discountAmount <= 0) {
-      validationErrors.discount_amount_cents = "Giá trị giảm không hợp lệ";
-    } else if (formValues.type === "PERCENTAGE" && discountAmount > 100) {
-      validationErrors.discount_amount_cents = "Phần trăm giảm giá không được vượt quá 100";
-    }
-
-    if (!formValues.max_uses || !Number.isInteger(maxUses) || maxUses <= 0) {
-      validationErrors.max_uses = "Số lượt tối đa không hợp lệ";
-    }
-
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+      toast.error("Vui lòng nhập mã giảm giá");
       return;
     }
 
-    setErrors({});
+    if (!Number.isFinite(discountAmount) || discountAmount <= 0) {
+      toast.error("Giá trị giảm không hợp lệ");
+      return;
+    }
+
+    if (formValues.type === "PERCENTAGE" && discountAmount > 100) {
+      toast.error("Phần trăm giảm giá không được vượt quá 100");
+      return;
+    }
+
+    if (!Number.isInteger(maxUses) || maxUses <= 0) {
+      toast.error("Số lượt tối đa không hợp lệ");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    try {
-      // action-(cập nhật mã giảm giá)
-      const result = await callAction(() => updateDiscountAction(discount.id, {
-        code,
-        discount_amount_cents: discountAmount,
-        expires_at: formValues.expires_at
-          ? new Date(`${formValues.expires_at}T23:59:59`)
-          : undefined,
-        max_uses: maxUses,
-        type: formValues.type,
-      }), "Không thể cập nhật mã giảm giá. Vui lòng thử lại sau.");
+    // action-(cập nhật mã giảm giá)
+    const result = await updateDiscountAction(discount.id, {
+      code,
+      discount_amount_cents: discountAmount,
+      expires_at: formValues.expires_at
+        ? new Date(`${formValues.expires_at}T23:59:59`)
+        : undefined,
+      max_uses: maxUses,
+      type: formValues.type,
+    });
 
-      if ("error" in result && result.error) {
-        const message = getFriendlyResponseError(result.error);
-        if (isUserInputError(message)) {
-          setErrors({ code: message });
-        } else {
-          toast.error(message);
-        }
-        return;
-      }
-
-      if ("success" in result && result.success) {
-        toast.success("Đã cập nhật mã giảm giá");
-        await onSave?.();
-        onClose();
-      }
-    } finally {
+    if ("error" in result && result.error) {
+      toast.error(result.error);
       setIsSubmitting(false);
+      return;
     }
+
+    if ("success" in result && result.success) {
+      toast.success("Đã cập nhật mã giảm giá");
+      await onSave?.();
+      onClose();
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
     <Modal
       open={open}
-      onClose={isSubmitting ? undefined : onClose}
+      onClose={onClose}
       aria-labelledby="edit-discount-modal-title"
       aria-describedby="edit-discount-modal-description"
     >
@@ -156,7 +131,6 @@ export default function ModalEditDiscount({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -176,8 +150,6 @@ export default function ModalEditDiscount({
             placeholder="Nhập mã giảm giá"
             value={formValues.code}
             onChange={(event) => updateField("code", event.target.value)}
-            error={Boolean(errors.code)}
-            helperText={errors.code}
             fullWidth
             className={`${styles.field} ${styles.uppercaseField}`}
           />
@@ -220,8 +192,6 @@ export default function ModalEditDiscount({
               onChange={(event) =>
                 updateField("discount_amount_cents", event.target.value)
               }
-              error={Boolean(errors.discount_amount_cents)}
-              helperText={errors.discount_amount_cents}
               fullWidth
               className={styles.field}
             />
@@ -231,8 +201,6 @@ export default function ModalEditDiscount({
               type="number"
               value={formValues.max_uses}
               onChange={(event) => updateField("max_uses", event.target.value)}
-              error={Boolean(errors.max_uses)}
-              helperText={errors.max_uses}
               fullWidth
               className={styles.field}
             />
@@ -255,7 +223,6 @@ export default function ModalEditDiscount({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting}
             className={styles.ghostButton}
           >
             Hủy

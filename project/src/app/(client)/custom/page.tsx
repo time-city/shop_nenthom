@@ -1,4 +1,4 @@
-import FormCustom from "../../../components/client/formCustom";
+import FormCustom from "@/src/components/client/common/formCustom";
 import type { ClientCustomizationOptionsSuccessResponseInterface } from "../../../interface/clientInterface";
 import { getCustomizationOptionsAction } from "../../../lib/action/product.action";
 import { callAction } from "@/src/lib/utils/callAction";

@@ -44,7 +44,7 @@ export async function createOrderAction(params: CreateOrderInput) {
 
     return { success: true, data: order }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
 
@@ -62,7 +62,7 @@ export async function getMyOrdersAction(params: { page?: number; limit?: number 
     const orders = await OrderService.getMyOrders(session.sub, page, limit)
     return { success: true as const, ...orders }
   } catch (err) {
-    return { success: false as const, error: (err as Error).message }
+    return { success: false as const, error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
 
@@ -80,7 +80,7 @@ export async function getMyOrderDetailAction(orderNumber: string) {
 
     return { success: true, data: order }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
 
@@ -100,7 +100,7 @@ export async function getOrderPaymentStatusAction(params: {
 
     return { success: true, data: payment };
   } catch (err) {
-    return { error: (err as Error).message };
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") };
   }
 }
 
@@ -116,7 +116,7 @@ export async function getOrdersAction(params: Partial<GetListOrdersParams> = {})
     const orders = await OrderService.getOrders(parsed.data)
     return { success: true, ...orders }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
 
@@ -138,7 +138,7 @@ export async function getOrderDetailForAdminAction(params: unknown) {
     if (!order) return { error: 'Không tìm thấy đơn hàng phù hợp' }
     return { success: true, data: order }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
 
@@ -154,7 +154,7 @@ export async function updateOrderStatusAction(params: UpdateOrderStatusInput) {
     const order = await OrderService.updateOrderStatus(parsed.data, admin.adminId)
     return { success: true, data: order }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
 

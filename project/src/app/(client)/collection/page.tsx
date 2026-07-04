@@ -1,4 +1,4 @@
-import CollectionClient from "@/src/components/client/collectionClient";
+import CollectionClient from "@/src/components/client/collection/collectionClient";
 import type { ClientProductsSuccessResponseInterface } from "@/src/interface/clientInterface";
 import { getCurrentUser } from "@/src/lib/action/user.action";
 import { getProductsAction, getScentsAction } from "@/src/lib/action/product.action";

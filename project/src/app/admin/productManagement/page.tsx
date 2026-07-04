@@ -1,4 +1,4 @@
-import ProductManagementClient from "@/src/components/admin/productManagementClient";
+import ProductManagementClient from "@/src/components/admin/product/productManagementClient";
 
 export default function ProductManagementPage() {
   return <ProductManagementClient />;

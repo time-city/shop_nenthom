@@ -1,4 +1,5 @@
 'use server'
+import { getPublicErrorMessage } from "../utils/publicError";
 
 import { requireAdmin } from '../requireAdmin'
 import { emitNewContactToAdmin } from '../events/adminContactEvents'
@@ -27,7 +28,7 @@ export async function submitContactAction(params: SubmitContactInput) {
 
     return { success: true, data: contact }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
 
@@ -43,7 +44,7 @@ export async function getContactsAction(params: Partial<GetContactsParams> = {})
     const contacts = await ContactService.getContacts(parsed.data)
     return { success: true, ...contacts }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
 
@@ -59,6 +60,6 @@ export async function updateContactStatusAction(params: UpdateContactStatusInput
     const contact = await ContactService.updateContactStatus(parsed.data)
     return { success: true, data: contact }
   } catch (err) {
-    return { error: (err as Error).message }
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }

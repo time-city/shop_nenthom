@@ -24,7 +24,6 @@ const formatDateTime = (value?: string) => {
 
 export default function ModalSupport({
   contact,
-  isMarkingReplied = false,
   onClose,
   onMarkReplied,
   open,
@@ -40,7 +39,7 @@ export default function ModalSupport({
   return (
     <Modal
       open={open}
-      onClose={isMarkingReplied ? undefined : onClose}
+      onClose={onClose}
       aria-labelledby="support-modal-title"
       aria-describedby="support-modal-description"
     >
@@ -57,7 +56,6 @@ export default function ModalSupport({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isMarkingReplied}
             aria-label="Đóng modal"
             className={styles.closeButton}
           >
@@ -103,12 +101,7 @@ export default function ModalSupport({
         <Divider className={styles.divider} />
 
         <Box className={styles.footer}>
-          <Button
-            type="button"
-            onClick={onClose}
-            disabled={isMarkingReplied}
-            className={styles.ghostButton}
-          >
+          <Button type="button" onClick={onClose} className={styles.ghostButton}>
             Đóng
           </Button>
           {!isReplied && contact ? (
@@ -116,10 +109,9 @@ export default function ModalSupport({
               type="button"
               variant="contained"
               onClick={handleMarkReplied}
-              disabled={isMarkingReplied}
               className={styles.primaryButton}
             >
-              {isMarkingReplied ? "Đang lưu..." : "Đánh dấu đã phản hồi"}
+              Đánh dấu đã phản hồi
             </Button>
           ) : null}
         </Box>

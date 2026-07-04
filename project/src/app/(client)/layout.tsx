@@ -1,5 +1,5 @@
-import Footer from "../../components/client/footer";
-import Header from "../../components/client/header";
+import Footer from "@/src/components/client/layout/footer";
+import Header from "@/src/components/client/layout/header";
 import Intro from "../../components/ui/intro";
 import AosProvider from "../../components/ui/aos-provider";
 
