@@ -1,0 +1,66 @@
+import { z } from 'zod';
+
+
+const optionalPriceSchema = z.preprocess(
+   (value) => value === '' || value === null ? undefined : value,
+   z.coerce.number().min(0, 'Giá không hợp lệ').optional(),
+);
+
+
+export const productSchema = z.object({
+   page: z.coerce.number().min(1).default(1),
+   limit: z.coerce.number().min(1).max(100).default(12),
+   categoryId: z.coerce.number().optional(),
+   includeCustom: z.coerce.boolean().default(false),
+   maxPrice: optionalPriceSchema,
+   minPrice: optionalPriceSchema,
+   scentId: z.coerce.number().int().positive('Hương liệu không hợp lệ').optional(),
+   search: z.string().optional(),
+}).refine(
+   ({ minPrice, maxPrice }) =>
+       minPrice === undefined || maxPrice === undefined || minPrice <= maxPrice,
+   {
+       message: 'Giá tối thiểu không được lớn hơn giá tối đa',
+       path: ['minPrice'],
+   },
+);
+
+
+export type GetProductsParams = z.infer<typeof productSchema>;
+
+
+
+
+export const createProductSchema = z.object({
+   category_id: z.coerce.number().int().positive('Vui lòng chọn danh mục sản phẩm'),
+   name: z.string().min(1, 'Tên sản phẩm không được để trống'),
+   base_price_cents: z.coerce.number().min(0, 'Giá không hợp lệ'),
+   description: z.string().optional(),
+   ingredients: z.string().optional(),
+   usage_instructions: z.string().optional(),
+   images: z.array(z.string().url('Ảnh không hợp lệ. Vui lòng chọn lại ảnh.')).min(1, 'Vui lòng chọn ít nhất một ảnh'),
+   is_active: z.boolean().default(true),
+   scentIds: z.array(z.coerce.number().int().positive()).optional(),
+});
+
+
+export type CreateProductInput = z.infer<typeof createProductSchema>;
+
+export const updateProductSchema = createProductSchema.partial();
+
+export type UpdateProductInput = z.infer<typeof updateProductSchema>;
+
+export const deleteProductSchema = z.object({
+   id: z.string().min(1, 'Không thể xác định sản phẩm cần xóa. Vui lòng tải lại trang.'),
+})
+
+
+export type DeleteProductInput = z.infer<typeof deleteProductSchema>;
+
+
+export const customCandleProductSchema = z.object({
+   productId: z.string().uuid('Chưa thể chuẩn bị nến tùy chỉnh. Vui lòng tải lại trang và thử lại.'),
+});
+
+
+export type CustomCandleProductInput = z.infer<typeof customCandleProductSchema>;

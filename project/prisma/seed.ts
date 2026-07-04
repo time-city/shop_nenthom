@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, Role, UserStatus, ContactStatus, OrderStatus, PaymentMethod, PaymentStatus, DiscountType } from '@prisma/client';
@@ -123,6 +124,11 @@ async function main() {
             is_active: true
         },
     });
+    
+    // Category cho các sản phẩm thêm mới
+    const catCollection = await prisma.category.create({
+        data: { name: 'Nến Thơm Tổng Hợp', description: 'Danh mục nến thơm tổng hợp', is_active: true }
+    });
 
     const product1 = await prisma.product.create({
         data: {
@@ -130,7 +136,7 @@ async function main() {
             name: 'Hũ Thủy Tinh Hổ Phách (Amber Jar)',
             base_price_cents: 180000,
             description: 'Hũ thủy tinh màu hổ phách nắp thiếc đen nhám, tỏa hương đều và giữ mùi cực tốt. Phù hợp cho không gian làm việc.',
-            images: ['https://res.cloudinary.com/demo/image/upload/sample.jpg'],
+            images: ['https://images.unsplash.com/photo-1602874801007-bd458cb6d86b?q=80&w=600&auto=format&fit=crop'],
             is_active: true
         }
     });
@@ -141,7 +147,7 @@ async function main() {
             name: 'Khối Rubik Nghệ Thuật (Bubble Cube)',
             base_price_cents: 150000,
             description: 'Nến tạo hình khối tròn rubik phong cách Hàn Quốc, làm điểm nhấn hoàn hảo cho bàn trang điểm.',
-            images: ['https://res.cloudinary.com/demo/image/upload/sample.jpg'],
+            images: ['https://images.unsplash.com/photo-1572017329972-e14b285375d8?q=80&w=600&auto=format&fit=crop'],
             is_active: true
         }
     });
@@ -281,6 +287,58 @@ async function main() {
             }
         }
     });
+
+    // ==========================================
+    // 8. TẠO THÊM 20 SẢN PHẨM MẪU VỚI ẢNH THẬT
+    // ==========================================
+    const newProducts = [
+        { name: 'Nến Thơm Hương Mùa Thu', base_price_cents: 150000, description: 'Hương thơm nồng ấm của quế và cam.' },
+        { name: 'Nến Thơm Biển Xanh', base_price_cents: 160000, description: 'Mang hơi thở của biển cả vào không gian nhà bạn.' },
+        { name: 'Nến Thơm Hoa Hồng Cổ Điển', base_price_cents: 170000, description: 'Hương hoa hồng lãng mạn và quyến rũ.' },
+        { name: 'Nến Thơm Gỗ Tuyết Tùng', base_price_cents: 180000, description: 'Hương gỗ ấm áp, nam tính và mộc mạc.' },
+        { name: 'Nến Thơm Vani Ngọt Ngào', base_price_cents: 140000, description: 'Ngọt ngào, dịu nhẹ mang lại cảm giác thư giãn.' },
+        { name: 'Nến Thơm Trà Xanh Thanh Khiết', base_price_cents: 150000, description: 'Giúp thanh lọc không khí, giảm căng thẳng.' },
+        { name: 'Nến Thơm Oải Hương (Lavender)', base_price_cents: 190000, description: 'Mùi hương tinh tế giúp ngủ ngon và sâu giấc.' },
+        { name: 'Nến Thơm Cà Phê Sáng', base_price_cents: 160000, description: 'Đánh thức tinh thần bằng hương cà phê rang xay.' },
+        { name: 'Nến Thơm Gió Mùa Xuân', base_price_cents: 155000, description: 'Hương cỏ xanh và hoa ly tươi mát.' },
+        { name: 'Nến Thơm Rừng Thông Đà Lạt', base_price_cents: 175000, description: 'Hương thông xanh ngát, se lạnh.' },
+        { name: 'Nến Thơm Quả Mọng (Berry)', base_price_cents: 165000, description: 'Mùi hương trái cây chua ngọt, tươi vui.' },
+        { name: 'Nến Thơm Hoa Nhài (Jasmine)', base_price_cents: 150000, description: 'Hương hoa nhài thoang thoảng, thanh lịch.' },
+        { name: 'Nến Thơm Chanh Sả', base_price_cents: 145000, description: 'Đuổi muỗi, làm sạch không khí, sảng khoái.' },
+        { name: 'Nến Thơm Gỗ Đàn Hương', base_price_cents: 195000, description: 'Hương thơm thiền định, an thần.' },
+        { name: 'Nến Thơm Hoa Cúc La Mã', base_price_cents: 160000, description: 'Giảm stress, dịu nhẹ và thư thái.' },
+        { name: 'Nến Thơm Quế Hồi', base_price_cents: 150000, description: 'Tuyệt vời cho những ngày mưa lạnh.' },
+        { name: 'Nến Thơm Đào Ngọt', base_price_cents: 140000, description: 'Hương đào chín mọng, đáng yêu.' },
+        { name: 'Nến Thơm Hổ Phách Sang Trọng', base_price_cents: 200000, description: 'Hương thơm trầm ấm, quyến rũ, bí ẩn.' },
+        { name: 'Nến Thơm Bạc Hà Mát Lạnh', base_price_cents: 145000, description: 'Làm bừng tỉnh mọi giác quan.' },
+        { name: 'Nến Thơm Dạ Lan Hương', base_price_cents: 170000, description: 'Hương hoa nồng nàn trong đêm.' },
+    ];
+
+    console.log('⏳ Đang tạo thêm 20 sản phẩm mẫu...');
+    const candleImages = [
+        'https://images.unsplash.com/photo-1522030299830-16b8d3d049fe?q=80&w=600&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1594958826500-1c6e174b29bb?q=80&w=600&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1557088192-3bc3a21626f2?q=80&w=600&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1572017329972-e14b285375d8?q=80&w=600&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1602874801007-bd458cb6d86b?q=80&w=600&auto=format&fit=crop'
+    ];
+
+    let count = 0;
+    for (const p of newProducts) {
+        const randomImage = candleImages[count % candleImages.length];
+        await prisma.product.create({
+            data: {
+                category_id: catCollection.id,
+                name: p.name,
+                base_price_cents: p.base_price_cents,
+                description: p.description,
+                images: [randomImage],
+                is_active: true
+            }
+        });
+        count++;
+    }
+    console.log(`✅ Đã thêm mới ${count} sản phẩm thành công!`);
 
     console.log('✅ Bơm dữ liệu (Seed) thành công! Hãy check Database.');
 }
