@@ -12,21 +12,22 @@ const defaultUser: Required<ClientOrderUserData> = {
   email: "",
   fullname: "",
   phone: "",
+  role: "",
 };
+
 
 const statusLabel: Record<ClientOrderRecord["status"], string> = {
   canceled: "Đã hủy",
-  done: "Hoàn thành",
-  processing: "Đang xử lý",
-  shipping: "Đang giao",
+  pending: "Đang xử lý",
+  confirmed: "Đang giao",
 };
 
 const statusClass: Record<ClientOrderRecord["status"], string> = {
   canceled: "bg-[#2c1810]/10 text-[#6B4C35]",
-  done: "bg-[#6B1218]/10 text-[#6B1218]",
-  processing: "bg-[#F4E2B7] text-[#8B5E3C]",
-  shipping: "bg-[#45A05C]/15 text-[#1F6B3A]",
+  pending: "bg-[#F4E2B7] text-[#8B5E3C]",
+  confirmed: "bg-[#45A05C]/15 text-[#1F6B3A]",
 };
+
 
 const readUser = () => {
   try {

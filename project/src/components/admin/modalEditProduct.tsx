@@ -33,9 +33,12 @@ const initialProductFormValues: AdminProductFormValues = {
   description: "",
   image_data_url: "",
   image_file_name: "",
+  ingredients: "",
   is_active: true,
   name: "",
+  usage_instructions: "",
 };
+
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
@@ -97,9 +100,13 @@ export default function ModalEditProduct({
       description: product.description ?? "",
       image_data_url: currentImage,
       image_file_name: getImageFileName(currentImage),
+      ingredients: "",
       is_active: product.is_active,
       name: product.name,
+      usage_instructions: "",
     });
+
+
 
     const loadCategories = async () => {
       setIsLoadingCategories(true);

@@ -33,9 +33,12 @@ const initialProductFormValues: AdminProductFormValues = {
   description: "",
   image_data_url: "",
   image_file_name: "",
+  ingredients: "",
   is_active: true,
   name: "",
+  usage_instructions: "",
 };
+
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 

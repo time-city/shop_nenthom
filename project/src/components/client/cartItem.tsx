@@ -23,6 +23,7 @@ export default function CartItem({
 
   return (
     <article className="grid gap-5 border-b border-[#6B4C35]/10 px-5 py-6 last:border-b-0 sm:px-7 md:grid-cols-[116px_1fr_auto] md:gap-8 md:py-8">
+
       <div
         className="relative flex size-[92px] items-center justify-center overflow-hidden rounded-xl bg-[linear-gradient(135deg,#F8EFCF_0%,#F8F0E4_52%,#EAD7B0_100%)] text-xl text-[#8B5E3C] shadow-[0_14px_26px_rgba(44,24,16,0.08)] md:size-[116px]"
         aria-hidden="true"
@@ -78,9 +79,10 @@ export default function CartItem({
         </div>
         <button
           type="button"
-          onClick={() => onRemove(index)}
+          onClick={() => onRemove?.(index)}
           className="text-[0.78rem] font-medium uppercase tracking-[0.08em] text-[#6B1218] transition hover:text-[#4A0C10] hover:underline"
         >
+
           <span aria-hidden="true">🗑 </span>
           Xóa
         </button>

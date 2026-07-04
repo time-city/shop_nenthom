@@ -1,1 +1,2 @@
-export { default } from "./modalDeleteConfirm";
+export { default } from "./common/modalDeleteConfirm";
+

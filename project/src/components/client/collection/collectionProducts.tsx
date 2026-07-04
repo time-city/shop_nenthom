@@ -316,7 +316,7 @@ export default function CollectionProducts({
             value={scentId}
             options={[
               { value: "", label: "Tất cả" },
-              ...scents.map((scent) => ({ value: scent.id, label: scent.name })),
+              ...scents.map((scent) => ({ value: String(scent.id), label: scent.name })),
             ]}
             onChange={(nextScentId) => {
               setScentId(nextScentId);

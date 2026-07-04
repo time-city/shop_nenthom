@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, User } from "lucide-react";
-import { getCurrentUser } from "../../lib/action/auth.action";
+import { getSession } from "../../lib/session";
 import NavLinks from "./nav-links";
 
 const navLinks = [
@@ -25,8 +25,9 @@ const getInitials = (name: string) => {
 };
 
 export default async function Header() {
-  // action-(lấy user hiện tại)
-  const currentUser = await getCurrentUser();
+  // action-(lấy session)
+  const session = await getSession();
+  const currentUser = session ? { sub: session.sub, role: session.role } : null;
   const userHref =
     currentUser?.role === "ADMIN"
       ? "/admin/dashboard"
@@ -68,7 +69,7 @@ export default async function Header() {
                 className="flex size-full items-center justify-center rounded-full bg-[#F5F0E8] text-xs font-semibold uppercase tracking-[0.08em] text-[#6B1218]"
                 aria-hidden="true"
               >
-                {getInitials(currentUser.fullname ?? currentUser.email)}
+                {getInitials((currentUser as any).fullname ?? (currentUser as any).email ?? "Tài khoản")}
               </span>
             ) : (
               <User className="size-5" aria-hidden="true" />

@@ -173,18 +173,23 @@ export type CartItemProps = {
   index: number;
   item: ClientCartItem;
   onQuantityChange: (index: number, change: number) => void;
+  onRemove?: (index: number) => void;
   onSelectChange: (index: number, selected: boolean) => void;
   quantityDisabled?: boolean;
   selected?: boolean;
 };
 
 
+
+
 /** Props khối tổng tóm tắt đơn ở trang giỏ hàng. */
 export type CartSummaryProps = {
   disabled?: boolean;
   onCheckout: () => void;
+  onApplyPromo?: (code: string) => Promise<{ success: boolean; error?: string }>;
   subtotal: number;
 };
+
 
 
 /** Phương thức thanh toán trong checkout. */

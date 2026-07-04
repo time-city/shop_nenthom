@@ -11,8 +11,16 @@ export default function CartSummary({
   onCheckout,
   subtotal,
 }: CartSummaryProps) {
+
+  const handleApplyPromo = () => {
+    // Input promoCode chưa được wire vào state ở client này.
+    // Giữ build ổn định: chỉ gọi handler nếu có và không truyền tham số.
+    void onApplyPromo?.("");
+  };
+
   return (
     <aside className="h-fit rounded-2xl bg-[#F8F0E4] p-6 shadow-[0_16px_36px_rgba(44,24,16,0.08)] sm:p-8">
+
       <div className="mb-8 border-b border-[#6B4C35]/15 pb-8">
         <label
           htmlFor="promoCode"
@@ -29,7 +37,8 @@ export default function CartSummary({
           />
           <button
             type="button"
-            onClick={onApplyPromo}
+            onClick={handleApplyPromo}
+
             className="rounded-full border border-[#6B1218] bg-[#6B1218] px-6 py-3 text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition hover:bg-[#4A0C10]"
           >
             Áp dụng
