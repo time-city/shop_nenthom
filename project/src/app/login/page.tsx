@@ -12,7 +12,12 @@ export default async function LoginPage() {
   }
 
   if (currentUser) {
-    redirect("/profile");
+    const hasInfo = !!currentUser.phone && !!currentUser.address;
+    if (!hasInfo) {
+      redirect("/profile");
+    } else {
+      redirect("/");
+    }
   }
 
   return (

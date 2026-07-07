@@ -4,7 +4,7 @@ import NotFoundButtons from "@/src/components/client/common/notFoundButtons";
 export default function NotFound() {
     return (
         <div
-            className="min-h-screen flex flex-col items-center justify-center px-6 bg-cover bg-center bg-no-repeat relative"
+            className="absolute top-0 left-0 w-full min-h-screen flex flex-col items-center justify-center px-6 bg-cover bg-center bg-no-repeat z-50"
             style={{ backgroundImage: "url('/option_background.jpg')" }}
         >
             {/* Overlay */}

@@ -1,19 +1,10 @@
 "use client";
+import { Box, Button, Divider, FormControl, FormHelperText, InputLabel, MenuItem, Modal, Select, TextField, Typography } from "@/src/components/ui/mui-mock";
 
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Modal from "@mui/material/Modal";
-import Select from "@mui/material/Select";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import FormHelperText from "@mui/material/FormHelperText";
+
 import type { ChangeEvent, MouseEvent } from "react";
 import { useEffect, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import type {
   AdminCategoriesSuccessResponseInterface,
   AdminProductCategoryInterface,

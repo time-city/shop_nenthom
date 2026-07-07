@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { OrderDetail } from "@/src/lib/types/client";
-import AdminHeader from "@/src/components/admin/layout/AdminHeader";
-import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/adminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
 
 interface Props {
   initialOrder: OrderDetail;
@@ -81,20 +81,20 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
               Thông tin khách hàng
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
-              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Họ tên:</span>
-              <span style={{ color: "#2C1810", fontWeight: 500 }}>{order.shippingFullname}</span>
+              <span style={{ color: "rgba(255, 255, 255, 0.6)", fontWeight: 600 }}>Họ tên:</span>
+              <span style={{ color: "#F5F0E8", fontWeight: 500 }}>{order.shippingFullname}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
-              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Điện thoại:</span>
-              <span style={{ color: "#2C1810", fontWeight: 500 }}>{order.phone}</span>
+              <span style={{ color: "rgba(255, 255, 255, 0.6)", fontWeight: 600 }}>Điện thoại:</span>
+              <span style={{ color: "#F5F0E8", fontWeight: 500 }}>{order.phone}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
-              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Email:</span>
-              <span style={{ color: "#2C1810", fontWeight: 500 }}>{order.email || "-"}</span>
+              <span style={{ color: "rgba(255, 255, 255, 0.6)", fontWeight: 600 }}>Email:</span>
+              <span style={{ color: "#F5F0E8", fontWeight: 500 }}>{order.email || "-"}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0" }}>
-              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Địa chỉ:</span>
-              <span style={{ color: "#2C1810", fontWeight: 500, textAlign: "right", marginLeft: "20px" }}>
+              <span style={{ color: "rgba(255, 255, 255, 0.6)", fontWeight: 600 }}>Địa chỉ:</span>
+              <span style={{ color: "#F5F0E8", fontWeight: 500, textAlign: "right", marginLeft: "20px" }}>
                 {order.shippingAddress}, {order.shippingCity}
               </span>
             </div>
@@ -103,11 +103,11 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
                 className="mt-3 p-3 text-xs italic rounded-lg"
                 style={{
                   background: "rgba(107, 78, 53, 0.05)",
-                  color: "#6B4C35",
+                  color: "rgba(255, 255, 255, 0.6)",
                   border: "1px solid rgba(107, 78, 53, 0.1)",
                 }}
               >
-                <span className="font-bold block not-italic text-[#6B4C35]/80 mb-1">
+                <span className="font-bold block not-italic text-white/60 mb-1">
                   Ghi chú khách hàng:
                 </span>
                 &ldquo;{order.shippingNote}&rdquo;
@@ -132,24 +132,24 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
               Thanh toán & Giao hàng
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
-              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Phương thức thanh toán:</span>
-              <span style={{ color: "#2C1810", fontWeight: 500, textAlign: "right", marginLeft: "20px" }}>
+              <span style={{ color: "rgba(255, 255, 255, 0.6)", fontWeight: 600 }}>Phương thức thanh toán:</span>
+              <span style={{ color: "#F5F0E8", fontWeight: 500, textAlign: "right", marginLeft: "20px" }}>
                 {order.paymentMethod === "bank" ? "Chuyển khoản ngân hàng" : "COD (Thanh toán khi nhận hàng)"}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
-              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Trạng thái thanh toán:</span>
+              <span style={{ color: "rgba(255, 255, 255, 0.6)", fontWeight: 600 }}>Trạng thái thanh toán:</span>
               <span className={`font-bold ${order.paymentStatus === "paid" ? "text-green-700" : "text-red-700"}`}>
                 {order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
-              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Ngày đặt:</span>
-              <span style={{ color: "#2C1810", fontWeight: 500 }}>{order.date}</span>
+              <span style={{ color: "rgba(255, 255, 255, 0.6)", fontWeight: 600 }}>Ngày đặt:</span>
+              <span style={{ color: "#F5F0E8", fontWeight: 500 }}>{order.date}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
-              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Tổng tiền hàng:</span>
-              <span style={{ color: "#2C1810", fontWeight: 500 }}>{formatCurrency(order.subtotal)}</span>
+              <span style={{ color: "rgba(255, 255, 255, 0.6)", fontWeight: 600 }}>Tổng tiền hàng:</span>
+              <span style={{ color: "#F5F0E8", fontWeight: 500 }}>{formatCurrency(order.subtotal)}</span>
             </div>
             {order.discount > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }} className="text-[#8A1119]">
@@ -158,11 +158,11 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
               </div>
             )}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px dashed rgba(107, 78, 53, 0.12)" }}>
-              <span style={{ color: "#6B4C35", fontWeight: 600 }}>Phí giao hàng:</span>
-              <span style={{ color: "#2C1810", fontWeight: 500 }}>{formatCurrency(order.shipping)}</span>
+              <span style={{ color: "rgba(255, 255, 255, 0.6)", fontWeight: 600 }}>Phí giao hàng:</span>
+              <span style={{ color: "#F5F0E8", fontWeight: 500 }}>{formatCurrency(order.shipping)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0 0 0", borderTop: "1px solid rgba(107, 78, 53, 0.15)", marginTop: "4px" }}>
-              <span style={{ color: "#2C1810", fontWeight: 700 }}>Tổng cộng:</span>
+              <span style={{ color: "#F5F0E8", fontWeight: 700 }}>Tổng cộng:</span>
               <span
                 style={{
                   color: "var(--admin-primary)",
@@ -335,7 +335,7 @@ export default function DetailOrderAdmin({ initialOrder }: Props) {
                   );
                 })
               ) : (
-                <div className="text-center text-sm text-[#6B4C35] py-4">
+                <div className="text-center text-sm text-white/60 py-4">
                   Chưa có lịch sử trạng thái
                 </div>
               )}

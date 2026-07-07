@@ -104,10 +104,10 @@ function OrdersHeader({ user }: OrdersHeaderProps) {
   const initials = useMemo(() => getInitials(user.fullname), [user.fullname]);
 
   return (
-    <div className="flex flex-col gap-5 bg-[#6B1218] px-5 py-7 text-[#F5F0E8] sm:px-8 md:flex-row md:items-center md:justify-between md:gap-8 md:px-12 lg:px-16">
+    <div className="flex flex-col gap-5 bg-black/40 backdrop-blur-md border-b border-[#F5F0E8]/10 px-5 py-7 text-[#F5F0E8] sm:px-8 md:flex-row md:items-center md:justify-between md:gap-8 md:px-12 lg:px-16">
       <div className="flex min-w-0 items-center gap-4 sm:gap-5">
         <div
-          className="flex size-16 shrink-0 items-center justify-center rounded-full border-[3px] border-[#F5F0E8] bg-[#F2E8D9] font-serif text-xl font-bold text-[#6B1218] shadow-[0_8px_18px_rgba(44,24,16,0.25)] sm:size-[72px]"
+          className="flex size-16 shrink-0 items-center justify-center rounded-full border border-[#D6A15F]/50 bg-gradient-to-br from-[#D6A15F]/20 to-black/40 font-serif text-xl font-bold text-[#D6A15F] shadow-[0_8px_18px_rgba(0,0,0,0.25)] sm:size-[72px]"
           aria-hidden="true"
         >
           {initials}
@@ -117,11 +117,11 @@ function OrdersHeader({ user }: OrdersHeaderProps) {
             {user.fullname || "Tài khoản"}
           </div>
           {user.email ? (
-            <div className="mt-1 truncate text-[0.82rem] font-light text-[#f5f0e8]/70 sm:text-[0.85rem]">
+            <div className="mt-1 truncate text-[0.82rem] font-light text-[#F5F0E8]/70 sm:text-[0.85rem]">
               {user.email}
             </div>
           ) : null}
-          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#F2E8D9] px-3 py-1.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-[#6B1218]">
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[#D6A15F]/30 bg-black/30 px-3 py-1.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-[#D6A15F]">
             <span className="text-sm">✦</span>
             Thành viên
           </div>
@@ -131,13 +131,13 @@ function OrdersHeader({ user }: OrdersHeaderProps) {
       <div className="flex w-full gap-2 overflow-x-auto md:w-auto md:justify-end">
         <Link
           href="/profile"
-          className="shrink-0 rounded-t-xl border-b-2 border-transparent px-4 py-3 text-center text-[0.78rem] font-normal tracking-[0.08em] text-[#f5f0e8]/60 transition-colors hover:text-[#f5f0e8]/95 sm:text-[0.85rem]"
+          className="shrink-0 rounded-t-xl border-b-2 border-transparent px-4 py-3 text-center text-[0.78rem] font-normal tracking-[0.08em] text-[#F5F0E8]/60 transition-colors hover:text-[#F5F0E8] sm:text-[0.85rem]"
         >
           Thông Tin Cá Nhân
         </Link>
         <Link
           href="/orders"
-          className="shrink-0 rounded-t-xl border-b-2 border-[#F5F0E8] bg-[#f5f0e8]/15 px-4 py-3 text-center text-[0.78rem] font-normal tracking-[0.08em] text-[#F5F0E8] transition-colors sm:text-[0.85rem]"
+          className="shrink-0 rounded-t-xl border-b-2 border-[#D6A15F] bg-[#D6A15F]/10 px-4 py-3 text-center text-[0.78rem] font-normal tracking-[0.08em] text-[#D6A15F] transition-colors sm:text-[0.85rem]"
         >
           Lịch Sử Đơn Hàng
         </Link>
@@ -151,90 +151,97 @@ export default function Orders() {
   const [orders] = useState<ClientOrderRecord[]>(() => readOrders());
 
   return (
-    <main className="min-h-[calc(100dvh-5rem)] bg-[#F2E8D9] text-[#2C1810]">
-      <OrdersHeader user={user} />
+    <main 
+      className="min-h-screen text-[#F5F0E8] relative bg-cover bg-center bg-no-repeat bg-fixed"
+      style={{ backgroundImage: "url('/assets/option_background.jpg')" }}
+    >
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+      
+      <div className="relative z-10 pt-24">
+        <OrdersHeader user={user} />
 
-      <section className="mx-auto w-full max-w-[908px] px-4 py-8 sm:px-6 md:py-10">
-        <h2 className="relative mb-8 pb-3 font-serif text-[1.45rem] font-bold text-[#2C1810] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-[#6B1218] sm:text-[1.55rem]">
-          Lịch Sử Đơn Hàng
-        </h2>
+        <section className="mx-auto w-full max-w-[908px] px-4 py-8 sm:px-6 md:py-10">
+          <h2 className="relative mb-8 pb-3 font-serif text-[1.45rem] font-bold text-[#F5F0E8] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-[#D6A15F] sm:text-[1.55rem]">
+            Lịch Sử Đơn Hàng
+          </h2>
 
-        {orders.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            {orders.map((order) => (
-              <article
-                key={order.id}
-                className="overflow-hidden rounded-[14px] bg-[#F8F0E4] p-5 shadow-[0_4px_20px_rgba(44,24,16,0.07)] sm:p-6"
-              >
-                <div className="flex flex-col gap-3 border-b border-[#6b4e35]/15 pb-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="font-medium text-[#2C1810]">{order.id}</div>
-                    <div className="mt-1 text-[0.85rem] font-light text-[#6B4C35]">
-                      {order.date}
+          {orders.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {orders.map((order) => (
+                <article
+                  key={order.id}
+                  className="overflow-hidden rounded-3xl bg-[#F5F0E8]/5 backdrop-blur-md border border-[#F5F0E8]/10 p-5 shadow-[0_16px_36px_rgba(0,0,0,0.5)] sm:p-6"
+                >
+                  <div className="flex flex-col gap-3 border-b border-[#F5F0E8]/10 pb-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <div className="font-medium text-[#F5F0E8]">{order.id}</div>
+                      <div className="mt-1 text-[0.85rem] font-light text-[#F5F0E8]/60">
+                        {order.date}
+                      </div>
                     </div>
-                  </div>
-                  <span
-                    className={`w-fit rounded-full px-3 py-1.5 text-[0.75rem] font-medium ${statusClass[order.status]}`}
-                  >
-                    {statusLabel[order.status]}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-3 pt-4">
-                  {order.items.map((item) => (
-                    <div
-                      key={`${order.id}-${item.name}`}
-                      className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:items-baseline sm:gap-4"
+                    <span
+                      className={`w-fit rounded-full px-3 py-1.5 text-[0.75rem] font-medium ${statusClass[order.status]}`}
                     >
-                      <div>
-                        <div className="font-normal text-[#2C1810]">
-                          {item.name}
-                        </div>
-                        {item.detail ? (
-                          <div className="mt-1 text-[0.85rem] font-light italic text-[#6B4C35]">
-                            {item.detail}
-                          </div>
-                        ) : null}
-                      </div>
-                      <div className="font-serif text-base font-bold text-[#6B1218] sm:text-right">
-                        x{item.quantity} · {formatPrice(item.price)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <button
-                    type="button"
-                    className="w-full rounded-full border-[1.5px] border-[#6B1218] bg-transparent px-4 py-2.5 text-[0.74rem] font-medium uppercase tracking-[0.12em] text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8] sm:w-auto"
-                  >
-                    Xem chi tiết
-                  </button>
-                  <div className="flex items-baseline justify-between gap-2 sm:justify-end">
-                    <span className="font-light text-[#6B4C35]">Tổng</span>
-                    <span className="font-serif text-lg font-bold text-[#6B1218]">
-                      {formatPrice(order.total)}
+                      {statusLabel[order.status]}
                     </span>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-4 rounded-2xl bg-[#F8F0E4] px-4 py-12 text-center shadow-[0_4px_20px_rgba(44,24,16,0.07)]">
-            <div className="text-5xl opacity-60">📦</div>
-            <div className="font-serif text-xl font-light italic text-[#6B4C35]">
-              Bạn chưa có đơn hàng nào
+
+                  <div className="flex flex-col gap-3 pt-4">
+                    {order.items.map((item) => (
+                      <div
+                        key={`${order.id}-${item.name}`}
+                        className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:items-baseline sm:gap-4"
+                      >
+                        <div>
+                          <div className="font-normal text-[#F5F0E8]/90">
+                            {item.name}
+                          </div>
+                          {item.detail ? (
+                            <div className="mt-1 text-[0.85rem] font-light italic text-[#F5F0E8]/50">
+                              {item.detail}
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="font-sans text-base font-medium text-[#D6A15F] sm:text-right tracking-wide">
+                          x{item.quantity} · {formatPrice(item.price)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-[#F5F0E8]/10 pt-5">
+                    <button
+                      type="button"
+                      className="w-full rounded-full border border-[#D6A15F]/50 bg-transparent px-5 py-2.5 text-[0.74rem] font-medium uppercase tracking-[0.12em] text-[#D6A15F] transition hover:bg-[#D6A15F] hover:text-[#2C1810] sm:w-auto"
+                    >
+                      Xem chi tiết
+                    </button>
+                    <div className="flex items-end justify-between gap-3 sm:justify-end">
+                      <span className="font-light text-[#F5F0E8]/70 mb-1">Tổng</span>
+                      <span className="font-sans text-[1.4rem] font-bold text-[#D6A15F] leading-none tracking-wide">
+                        {formatPrice(order.total)}
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              ))}
             </div>
-            <Link
-              href="/#collection"
-              className="rounded-full bg-[#6B1218] px-6 py-3 text-[0.75rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] no-underline"
-            >
-              Khám Phá Bộ Sưu Tập
-            </Link>
-          </div>
-        )}
-      </section>
+          ) : (
+            <div className="flex flex-col items-center gap-4 rounded-3xl bg-[#F5F0E8]/5 backdrop-blur-md border border-[#F5F0E8]/10 px-4 py-16 text-center shadow-[0_16px_36px_rgba(0,0,0,0.5)]">
+              <div className="text-5xl opacity-80">🛍</div>
+              <div className="font-serif text-xl font-light italic text-[#F5F0E8]/70">
+                Bạn chưa có đơn hàng nào
+              </div>
+              <Link
+                href="/#collection"
+                className="rounded-full bg-gradient-to-r from-[#D6A15F] to-[#E5C07B] px-8 py-3.5 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] no-underline shadow-[0_10px_24px_rgba(214,161,95,0.3)] transition hover:-translate-y-0.5"
+              >
+                Khám Phá Bộ Sưu Tập
+              </Link>
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   );
 }

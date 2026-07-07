@@ -2,7 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import { getCurrentUser } from "../../../lib/action/user.action";
 import { submitContactAction } from "../../../lib/action/contact.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
@@ -92,11 +92,10 @@ export default function ModalContact() {
 
   const getInputClass = (fieldName: keyof ClientContactFormValues) => {
     const hasError = Boolean(errors[fieldName]);
-    return `w-full rounded-md border ${
-      hasError
-        ? "border-[#ff6b6b] focus:ring-[#ff6b6b]/20"
-        : "border-white/15 focus:border-white/40 focus:ring-white/10"
-    } bg-[#2a1b18] px-4 py-2.5 text-sm text-[#F5F0E8] outline-none transition placeholder:text-white/45 focus:ring-4`;
+    return `w-full rounded-md border ${hasError
+      ? "border-[#ff6b6b] focus:ring-[#ff6b6b]/20"
+      : "border-white/15 focus:border-white/40 focus:ring-white/10"
+      } bg-[#2a1b18] px-4 py-2.5 text-sm text-[#F5F0E8] outline-none transition placeholder:text-white/45 focus:ring-4`;
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -254,7 +253,7 @@ export default function ModalContact() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="submit-btn w-full rounded-md bg-[#7A1218] px-6 py-3.5 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition hover:-translate-y-0.5 hover:bg-[#6B1218] disabled:cursor-not-allowed disabled:opacity-65 sm:w-auto sm:px-10"
+        className="submit-btn w-full rounded-md bg-[#55130e] px-6 py-3.5 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition hover:-translate-y-0.5 hover:bg-[#6B1218] disabled:cursor-not-allowed disabled:opacity-65 sm:w-auto sm:px-10"
       >
         {isSubmitting ? "Đang gửi..." : "Gửi Tin Nhắn"}
       </button>

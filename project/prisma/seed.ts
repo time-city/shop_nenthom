@@ -63,7 +63,9 @@ async function main() {
                     {
                         fullname: 'Nguyễn Văn A',
                         phone: '0987654321',
-                        address: '123 Đường Số 1, Phường 2',
+                        address: '123 Đường Số 1',
+                        ward: 'Phường 2',
+                        district: 'Quận 3',
                         city: 'Hồ Chí Minh',
                         is_default: true,
                     }
@@ -86,6 +88,8 @@ async function main() {
                         fullname: 'Trần Thị B',
                         phone: '0912345678',
                         address: '456 Lê Lợi',
+                        ward: 'Phường Hoàn Kiếm',
+                        district: 'Quận Hoàn Kiếm',
                         city: 'Hà Nội',
                         is_default: true,
                     }

@@ -10,7 +10,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import {
   resetPassword as resetPasswordAction,
   resendResetPasswordOtp,
@@ -256,10 +256,10 @@ export default function FormResetPassword() {
             router.push("/forgot-password");
           }
         }}
-        className="fixed left-6 top-6 flex size-10 items-center justify-center rounded-full border border-[#F5F0E8]/30 bg-[#F5F0E8]/15 text-lg text-[#F5F0E8] backdrop-blur-sm transition hover:bg-[#F5F0E8] hover:text-[#6B1218] z-50 animate-bg-fade"
+        className="group fixed left-6 top-6 flex size-10 items-center justify-center rounded-full border border-[#F5F0E8]/30 bg-[#F5F0E8]/15 text-lg text-[#F5F0E8] backdrop-blur-sm transition hover:bg-[#F5F0E8] hover:text-[#6B1218] z-50 animate-bg-fade"
         aria-label="Quay lại"
       >
-        ←
+        <span className="inline-block transition-transform duration-200 group-hover:-translate-x-1">←</span>
       </button>
       <div className="relative z-10 flex h-full flex-col">
         <section className="flex min-h-0 flex-1 items-center justify-center px-4 py-4 sm:px-6 lg:px-8">

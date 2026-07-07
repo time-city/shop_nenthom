@@ -11,9 +11,9 @@ export default function NotFoundButtons() {
       <button
         id="btn-go-back"
         onClick={() => router.back()}
-        className="px-6 py-2.5 text-sm font-sans border border-[#6B4C35]/40 text-[#6B4C35] rounded hover:bg-[#6B4C35]/10 transition-all duration-200"
+        className="group px-6 py-2.5 text-sm font-sans border border-[#6B4C35]/40 text-[#6B4C35] rounded hover:bg-[#6B4C35]/10 transition-all duration-200"
       >
-        ← Quay lại
+        <span className="inline-block transition-transform duration-200 group-hover:-translate-x-1">←</span> Quay lại
       </button>
       <Link
         id="btn-go-home"

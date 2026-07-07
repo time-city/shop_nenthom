@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import type {
   UserNotificationWebSocketMessage as WebSocketMessage,
   UseUserNotificationSocketOptions,

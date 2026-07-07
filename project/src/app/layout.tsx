@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans, Geist_Mono } from "next/font/google";
-import ToastProvider from "../components/ui/toast-provider";
+import ToastProvider from "../components/ui/toastProvider";
 import StoreProvider from "../components/ui/storeProvider";
 import { getCurrentUser } from "../lib/action/user.action";
 import "./globals.css";

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import ClientSearchBar from "@/src/components/admin/customer/clientSearchBar";
-import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import AdminHeader from "@/src/components/admin/layout/adminHeader";
 import ClientTable from "@/src/components/admin/customer/clientTable";
 import ClientPagination from "@/src/components/admin/customer/clientPagination";
 import ClientOrderModal from "@/src/components/admin/customer/clientOrderModal";
@@ -108,7 +108,7 @@ export default function ClientManagement() {
                   setCurrentPage(1);
                 }}
               />
-              <span className="text-sm font-medium text-[#6B4C35]">
+              <span className="text-sm font-medium text-white/60">
                 {searchQuery
                   ? `Kết quả trang này: ${filteredUsers.length} / ${meta.total}`
                   : `Tổng số: ${meta.total} khách hàng`}

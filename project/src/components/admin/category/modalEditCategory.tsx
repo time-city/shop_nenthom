@@ -1,13 +1,9 @@
 "use client";
+import { Box, Button, Divider, Modal, TextField, Typography } from "@/src/components/ui/mui-mock";
 
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
-import Modal from "@mui/material/Modal";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
+
 import { startTransition, useEffect, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import { updateCategoryAction } from "../../../lib/action/category.action";
 import {
   getFriendlyResponseError,

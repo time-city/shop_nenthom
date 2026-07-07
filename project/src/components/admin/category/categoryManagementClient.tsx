@@ -1,13 +1,13 @@
 "use client";
 
 import { startTransition, useCallback, useEffect, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import ModalCategory from "@/src/components/admin/category/modalCategory";
 import ModalDeleteConfirm from "@/src/components/admin/common/modalDeleteConfirm";
 import ModalEditCategory from "@/src/components/admin/category/modalEditCategory";
 import LoadingState from "@/src/components/ui/loadingState";
-import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/adminHeader";
 import {
   AdminDeleteButton,
   AdminEditButton,
@@ -203,7 +203,7 @@ export default function CategoryManagementClient() {
             </div>
 
             {isLoading ? (
-              <LoadingState
+              <LoadingState type="table"
                 label="Đang tải danh sách danh mục..."
                 className="m-5"
               />
@@ -214,7 +214,7 @@ export default function CategoryManagementClient() {
               </div>
             ) : null}
             {!isLoading && !error && categories.length === 0 ? (
-              <div className="px-5 py-8 text-center text-sm text-[#6B4C35]">
+              <div className="px-5 py-8 text-center text-sm text-white/60">
                 Chưa có danh mục nào
               </div>
             ) : null}
@@ -248,7 +248,7 @@ export default function CategoryManagementClient() {
             </span>
             ? Thao tác này không thể hoàn tác. Nếu xóa, các sản phẩm thuộc danh mục này cũng sẽ bị xóa theo.
             {isLoadingImpact ? (
-              <span style={{ display: "block", marginTop: 6, color: "#6B4C35", fontStyle: "italic" }}>
+              <span style={{ display: "block", marginTop: 6, color: "rgba(255, 255, 255, 0.6)", fontStyle: "italic" }}>
                 Đang kiểm tra tác động...
               </span>
             ) : categoryImpact && categoryImpact.productCount > 0 ? (
@@ -256,7 +256,7 @@ export default function CategoryManagementClient() {
                 ⚠️ Chi tiết: {categoryImpact.productCount} sản phẩm sẽ bị ngừng bán.
               </span>
             ) : categoryImpact && categoryImpact.productCount === 0 ? (
-              <span style={{ display: "block", marginTop: 6, color: "#6B4C35", fontStyle: "italic" }}>
+              <span style={{ display: "block", marginTop: 6, color: "rgba(255, 255, 255, 0.6)", fontStyle: "italic" }}>
                 Danh mục này hiện không có sản phẩm nào.
               </span>
             ) : null}

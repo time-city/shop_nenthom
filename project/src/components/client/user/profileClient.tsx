@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useState } from "react";
-import type { Driver } from "driver.js";
-import { useToast } from "@/src/components/ui/toast-provider";
-import Spinner from "@/src/components/ui/Spinner";
+import { type FormEvent, useEffect, useState, useCallback } from "react";
+import { useToast } from "@/src/components/ui/toastProvider";
+import LoadingState from "@/src/components/ui/loadingState";
 import { logoutUser } from "@/src/lib/action/auth.action";
 import { getCurrentUser, updateProfileAction } from "@/src/lib/action/user.action";
+import { getUserAddressesAction, createAddressAction, updateAddressAction, deleteAddressAction, setDefaultAddressAction } from "@/src/lib/action/address.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
-import { PROVINCE_POSTAL_CODE_MAP } from "@/src/lib/utils/provincePostalCodes";
 import { useUserStore } from "@/src/store/useUserStore";
 import { useCartStore } from "@/src/store/useCartStore";
 import { useSupportStore } from "@/src/store/useSupportStore";
@@ -19,6 +18,11 @@ import type {
   ProfileFieldProps,
 } from "@/src/lib/types/client";
 import { callAction } from "@/src/lib/utils/callAction";
+import AddressModal, { AddressFormData } from "./addressModal";
+import { MapPin, Star, Trash2, Edit2, Plus } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const ModalDeleteConfirmClient = dynamic(() => import("@/src/components/client/common/modalDeleteConfirmClient"), { ssr: false });
 
 const defaultUser: Required<ClientProfileUserData> = {
   address: "",
@@ -29,7 +33,6 @@ const defaultUser: Required<ClientProfileUserData> = {
   role: "",
   zip: "",
 };
-
 
 function Field({
   className = "",
@@ -46,7 +49,7 @@ function Field({
     <div className={`flex flex-col gap-2 ${className}`}>
       <label
         htmlFor={id}
-        className="text-[0.7rem] font-normal uppercase tracking-[0.1em] text-[#6B4C35] sm:text-xs"
+        className="text-[0.7rem] font-normal uppercase tracking-[0.1em] text-[#F5F0E8]/70 sm:text-xs"
       >
         {label}
       </label>
@@ -57,12 +60,12 @@ function Field({
         onChange={(event) => onChange(id, event.target.value)}
         disabled={disabled}
         className={`w-full rounded-[10px] border-[1.5px] ${hasError
-          ? "border-[#6B1218] focus:ring-[#6B1218]/10"
-          : "border-[#6b4e35]/20 focus:border-[#6B1218] focus:ring-[#6B1218]/10"
-          } bg-white px-4 py-3 text-[0.95rem] text-[#2C1810] outline-none transition focus:ring-4 disabled:bg-[#F2E8D9]/40 disabled:text-[#6B4C35]/65 disabled:cursor-not-allowed`}
+          ? "border-red-500 focus:ring-red-500/10"
+          : "border-[#F5F0E8]/20 focus:border-[#D6A15F] focus:ring-[#D6A15F]/10"
+          } bg-black/40 px-4 py-3 text-[0.95rem] text-[#F5F0E8] outline-none transition focus:ring-4 disabled:bg-black/20 disabled:text-[#F5F0E8]/40 disabled:cursor-not-allowed placeholder:text-[#F5F0E8]/30`}
       />
       {error && (
-        <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
+        <span className="text-xs text-red-400 mt-1 normal-case tracking-normal font-medium">
           {error}
         </span>
       )}
@@ -89,6 +92,23 @@ export default function ProfilePageContent({
   const [error, setError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState("");
 
+  // Address Book state
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<AddressFormData | null>(null);
+  const [deleteAddressId, setDeleteAddressId] = useState<string | null>(null);
+
+  const loadAddresses = useCallback(async () => {
+    try {
+      const res = await getUserAddressesAction();
+      if (res.success && res.data) {
+        setAddresses(res.data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const fetchUser = async () => {
@@ -112,6 +132,7 @@ export default function ProfilePageContent({
           };
           setProfile(userProfile);
           useUserStore.getState().setUser(userProfile);
+          await loadAddresses();
         }
       } catch (err) {
         if (!cancelled) {
@@ -127,141 +148,7 @@ export default function ProfilePageContent({
     return () => {
       cancelled = true;
     };
-  }, [initialUser]);
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    let activeDriver: Driver | null = null;
-    let isCancelled = false;
-
-    const hasSeenGuide = localStorage.getItem("hasSeenProfileGuide");
-    if (!hasSeenGuide) {
-      const startTour = async () => {
-        try {
-          const { driver } = await import("driver.js");
-          if (isCancelled) return;
-
-          const driverObj = driver({
-            showProgress: true,
-            nextBtnText: "Tiếp tục",
-            prevBtnText: "Quay lại",
-            doneBtnText: "Hoàn tất",
-            onNextClick: (_element, _step, { driver: currentDriver }) => {
-              if (currentDriver.isLastStep()) {
-                currentDriver.destroy();
-                return;
-              }
-
-              currentDriver.moveNext();
-            },
-            onCloseClick: (_element, _step, { driver: currentDriver }) => {
-              currentDriver.destroy();
-            },
-            steps: [
-              {
-                element: "#fullname",
-                popover: {
-                  title: "Họ và Tên",
-                  description: "Nhập họ và tên đầy đủ của bạn để hiển thị trên hóa đơn và thông tin giao nhận.",
-                  side: "bottom",
-                  align: "start"
-                }
-              },
-              {
-                element: "#email",
-                popover: {
-                  title: "Địa chỉ Email",
-                  description: "Địa chỉ email dùng để đăng nhập và nhận thông báo về đơn hàng của bạn.",
-                  side: "bottom",
-                  align: "start"
-                }
-              },
-              {
-                element: "#phone",
-                popover: {
-                  title: "Số Điện Thoại",
-                  description: "Nhập số điện thoại liên hệ chính xác để giao nhận hàng.",
-                  side: "bottom",
-                  align: "start"
-                }
-              },
-              {
-                element: "#city",
-                popover: {
-                  title: "Tỉnh / Thành Phố",
-                  description: "Chọn Tỉnh / Thành phố nơi bạn sinh sống để tính toán phí vận chuyển phù hợp.",
-                  side: "bottom",
-                  align: "start"
-                }
-              },
-              {
-                element: "#address",
-                popover: {
-                  title: "Địa Chỉ Giao Hàng",
-                  description: "Ghi cụ thể địa chỉ nhận hàng của bạn (số nhà, đường, quận/huyện,...).",
-                  side: "top",
-                  align: "start"
-                }
-              },
-              {
-                element: "#zip",
-                popover: {
-                  title: "Mã Bưu Chính",
-                  description: "Mã bưu chính (ZIP code) được tự động điền dựa trên Tỉnh / Thành phố đã chọn.",
-                  side: "top",
-                  align: "start"
-                }
-              },
-              {
-                element: "#profile-submit-btn",
-                popover: {
-                  title: "Lưu Thay Đổi",
-                  description: "Nhấn nút này để hoàn tất và lưu các thông tin cập nhật.",
-                  side: "top",
-                  align: "start"
-                }
-              }
-            ],
-            onDestroyed: () => {
-              // Lưu vào localStorage khi tour đóng (Hoàn tất, Bỏ qua hoặc đóng X) để không hiện lại
-              localStorage.setItem("hasSeenProfileGuide", "true");
-            },
-            onPopoverRender: (popover) => {
-              if (!popover.footerButtons.querySelector(".profile-tour-skip-btn")) {
-                const skipBtn = document.createElement("button");
-                skipBtn.setAttribute("type", "button");
-                skipBtn.className = "profile-tour-skip-btn";
-                skipBtn.innerText = "Bỏ qua";
-                skipBtn.addEventListener("click", () => {
-                  driverObj.destroy();
-                });
-                popover.footerButtons.insertBefore(skipBtn, popover.footerButtons.firstChild);
-              }
-            }
-          });
-
-          activeDriver = driverObj;
-
-          window.setTimeout(() => {
-            if (activeDriver === driverObj && !isCancelled) {
-              driverObj.drive();
-            }
-          }, 600);
-        } catch (err) {
-          console.error("Failed to load driver.js:", err);
-        }
-      };
-      void startTour();
-    }
-
-    return () => {
-      isCancelled = true;
-      if (activeDriver) {
-        activeDriver.destroy();
-      }
-    };
-  }, [isLoading]);
+  }, [initialUser, loadAddresses]);
 
   const validateField = (field: keyof Required<ClientProfileUserData>, value: string): string => {
     const trimmed = value.trim();
@@ -305,26 +192,6 @@ export default function ProfilePageContent({
         return next;
       });
     }
-  };
-
-  const handleCityChange = (selectedCity: string) => {
-    setProfile((current) => {
-      const nextZip = selectedCity
-        ? PROVINCE_POSTAL_CODE_MAP[selectedCity] || current.zip
-        : "";
-      return {
-        ...current,
-        city: selectedCity,
-        zip: nextZip,
-      };
-    });
-
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next.city;
-      delete next.zip;
-      return next;
-    });
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -371,13 +238,9 @@ export default function ProfilePageContent({
           setSaveError(message);
         }
       } else {
-        // Lưu thông tin mới vào Zustand store
         updateUser({
           fullname: profile.fullname,
           phone: profile.phone,
-          address: profile.address,
-          city: profile.city,
-          zip: profile.zip,
         });
 
         toast.success("Cập nhật thông tin thành công");
@@ -390,10 +253,8 @@ export default function ProfilePageContent({
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
-
     setIsLoggingOut(true);
 
-    // action-(đăng xuất)
     const result = await callAction(() => logoutUser(), "Không thể đăng xuất. Vui lòng thử lại sau.");
 
     if (!result.success) {
@@ -405,12 +266,10 @@ export default function ProfilePageContent({
     }
 
     localStorage.removeItem("remember");
-    // Xóa user khỏi Zustand store khi logout
     clearUser();
     clearCart();
     useSupportStore.getState().clearSupport();
-    const message = "Đăng xuất thành công";
-    toast.success(message);
+    toast.success("Đăng xuất thành công");
 
     window.setTimeout(() => {
       router.replace("/login");
@@ -418,135 +277,231 @@ export default function ProfilePageContent({
     }, 900);
   };
 
+  const handleSaveAddress = async (data: AddressFormData) => {
+    if (data.id) {
+      const res = await updateAddressAction(data.id, data);
+      if (res.error) throw new Error(res.error);
+      toast.success("Cập nhật địa chỉ thành công");
+    } else {
+      const res = await createAddressAction(data);
+      if (res.error) throw new Error(res.error);
+      toast.success("Thêm địa chỉ thành công");
+    }
+    loadAddresses();
+  };
+
+  const handleDeleteAddress = async () => {
+    if (!deleteAddressId) return;
+    const res = await deleteAddressAction(deleteAddressId);
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      toast.success("Xóa địa chỉ thành công");
+      setDeleteAddressId(null);
+      loadAddresses();
+    }
+  };
+
+  const handleSetDefaultAddress = async (id: string) => {
+    const res = await setDefaultAddressAction(id);
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      toast.success("Đã đặt làm địa chỉ mặc định");
+      loadAddresses();
+    }
+  };
+
   return (
-    <main className="min-h-[calc(100dvh-5rem)] bg-[#F2E8D9] text-[#2C1810]">
+    <main 
+      className="min-h-screen text-[#F5F0E8] relative bg-cover bg-center bg-no-repeat bg-fixed"
+      style={{ backgroundImage: "url('/assets/option_background.jpg')" }}
+    >
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+      
+      <div className="relative z-10 pt-24 pb-16">
+        <section className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 md:py-10 lg:py-12">
+          
+          <div className="flex flex-col gap-8">
+            {/* Thông tin tài khoản */}
+            <div className="rounded-3xl bg-[#F5F0E8]/5 backdrop-blur-md border border-[#F5F0E8]/10 p-5 shadow-[0_16px_36px_rgba(0,0,0,0.5)] sm:p-7 md:p-9 lg:p-10">
+              <h2 className="relative mb-7 pb-4 font-serif text-[1.55rem] font-bold text-[#F5F0E8] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-14 after:bg-[#D6A15F] sm:text-[1.9rem]">
+                Thông Tin Cá Nhân
+              </h2>
 
-      <section className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 md:py-10 lg:py-12">
-        <div className="rounded-2xl bg-[#F8F0E4] p-5 shadow-[0_4px_24px_rgba(44,24,16,0.08)] sm:p-7 md:p-9 lg:p-10">
-          <h2 className="relative mb-7 pb-4 font-serif text-[1.55rem] font-bold text-[#2C1810] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-14 after:bg-[#6B1218] sm:text-[1.9rem]">
-            Thông Tin Cá Nhân
-          </h2>
+              {isLoading ? (
+                <div className="flex h-40 flex-col items-center justify-center gap-3">
+                  <LoadingState type="default" label="Đang tải thông tin cá nhân..." className="border-0 bg-transparent shadow-none" />
+                </div>
+              ) : error ? (
+                <div className="flex h-40 items-center justify-center">
+                  <div className="text-lg text-red-400 font-medium">{error}</div>
+                </div>
+              ) : (
+                <form autoComplete="off" onSubmit={handleSubmit}>
+                  <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+                    <Field
+                      id="fullname"
+                      label="Họ và Tên"
+                      value={profile.fullname}
+                      onChange={updateField}
+                      error={errors.fullname}
+                    />
+                    <Field
+                      id="email"
+                      label="Email"
+                      type="email"
+                      value={profile.email}
+                      onChange={updateField}
+                      error={errors.email}
+                      disabled
+                    />
+                    <Field
+                      id="phone"
+                      label="Số Điện Thoại"
+                      type="tel"
+                      value={profile.phone}
+                      onChange={updateField}
+                      error={errors.phone}
+                    />
+                  </div>
 
-          {isLoading ? (
-            <div className="flex h-40 flex-col items-center justify-center gap-3">
-              <Spinner size="lg" />
-              <div className="text-lg text-[#6B4C35]">Đang tải thông tin cá nhân...</div>
+                  {saveError && (
+                    <p className="mt-5 text-sm font-medium text-red-400">
+                      {saveError}
+                    </p>
+                  )}
+
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <button
+                      id="profile-submit-btn"
+                      type="submit"
+                      disabled={isSaving}
+                      className="rounded-full border-0 bg-gradient-to-r from-[#D6A15F] to-[#E5C07B] px-8 py-3.5 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] shadow-[0_6px_24px_rgba(214,161,95,0.28)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 sm:px-10 sm:text-[0.8rem]"
+                    >
+                      {isSaving ? "Đang lưu..." : "Lưu Thay Đổi"}
+                    </button>
+                    <Link
+                      href="/profile/changePassword"
+                      className="rounded-full border border-[#D6A15F]/50 bg-transparent px-6 py-3.5 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#D6A15F] transition hover:bg-[#D6A15F] hover:text-[#2C1810] sm:text-[0.8rem] text-center"
+                    >
+                      Đổi Mật Khẩu
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="rounded-full border border-[#F5F0E8]/30 bg-transparent px-6 py-3.5 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition hover:border-red-500 hover:bg-red-500/20 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-60 sm:text-[0.8rem]"
+                    >
+                      {isLoggingOut ? "Đang Đăng Xuất..." : "Đăng Xuất"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
-          ) : error ? (
-            <div className="flex h-40 items-center justify-center">
-              <div className="text-lg text-[#6B1218] font-medium">{error}</div>
-            </div>
-          ) : (
-            <form autoComplete="off" onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-                <Field
-                  id="fullname"
-                  label="Họ và Tên"
-                  value={profile.fullname}
-                  onChange={updateField}
-                  error={errors.fullname}
-                />
-                <Field
-                  id="email"
-                  label="Email"
-                  type="email"
-                  value={profile.email}
-                  onChange={updateField}
-                  error={errors.email}
-                />
-                <Field
-                  id="phone"
-                  label="Số Điện Thoại"
-                  type="tel"
-                  value={profile.phone}
-                  onChange={updateField}
-                  error={errors.phone}
-                />
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="city"
-                    className="text-[0.7rem] font-normal uppercase tracking-[0.1em] text-[#6B4C35] sm:text-xs"
+
+            {/* Sổ Địa Chỉ */}
+            {!isLoading && !error && (
+              <div className="rounded-3xl bg-[#F5F0E8]/5 backdrop-blur-md border border-[#F5F0E8]/10 p-5 shadow-[0_16px_36px_rgba(0,0,0,0.5)] sm:p-7 md:p-9 lg:p-10">
+                <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
+                  <h2 className="relative pb-4 font-serif text-[1.55rem] font-bold text-[#F5F0E8] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-14 after:bg-[#D6A15F] sm:text-[1.9rem]">
+                    Sổ Địa Chỉ
+                  </h2>
+                  <button
+                    onClick={() => {
+                      setEditingAddress(null);
+                      setIsAddressModalOpen(true);
+                    }}
+                    className="flex items-center gap-2 rounded-full border border-[#D6A15F]/50 bg-[#D6A15F]/10 px-5 py-2.5 text-sm font-medium text-[#D6A15F] transition hover:bg-[#D6A15F] hover:text-[#2C1810]"
                   >
-                    Tỉnh / Thành Phố
-                  </label>
-                  <select
-                    id="city"
-                    value={profile.city}
-                    onChange={(event) => handleCityChange(event.target.value)}
-                    className={`w-full rounded-[10px] border-[1.5px] ${errors.city
-                      ? "border-[#6B1218] focus:ring-[#6B1218]/10"
-                      : "border-[#6b4e35]/20 focus:border-[#6B1218] focus:ring-[#6B1218]/10"
-                      } bg-white px-4 py-3 text-[0.95rem] text-[#2C1810] outline-none transition focus:ring-4`}
-                  >
-                    <option value="">Chọn tỉnh/thành...</option>
-                    {Object.keys(PROVINCE_POSTAL_CODE_MAP).map((cityName) => (
-                      <option key={cityName} value={cityName}>
-                        {cityName}
-                      </option>
-                    ))}
-                    {profile.city && !PROVINCE_POSTAL_CODE_MAP[profile.city] && (
-                      <option value={profile.city}>{profile.city}</option>
-                    )}
-                  </select>
-                  {errors.city && (
-                    <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
-                      {errors.city}
-                    </span>
+                    <Plus className="h-4 w-4" /> Thêm Địa Chỉ
+                  </button>
+                </div>
+
+                <div className="grid gap-4">
+                  {addresses.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-[#F5F0E8]/20 p-8 text-center">
+                      <MapPin className="mx-auto mb-3 h-8 w-8 text-[#F5F0E8]/40" />
+                      <p className="text-[#F5F0E8]/60">Bạn chưa có địa chỉ giao hàng nào</p>
+                    </div>
+                  ) : (
+                    addresses.map((addr) => (
+                      <div 
+                        key={addr.id}
+                        className={`relative overflow-hidden rounded-xl border ${addr.is_default ? "border-[#D6A15F] bg-[#D6A15F]/5" : "border-[#F5F0E8]/10 bg-black/30"} p-5 transition-colors hover:border-[#D6A15F]/50`}
+                      >
+                        {addr.is_default && (
+                          <div className="absolute right-0 top-0 flex items-center gap-1 rounded-bl-xl bg-[#D6A15F] px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#1A0506]">
+                            <Star className="h-3 w-3 fill-current" /> Mặc định
+                          </div>
+                        )}
+                        <div className="mb-3 flex items-start justify-between gap-4">
+                          <div>
+                            <div className="mb-1 flex items-center gap-3">
+                              <span className="font-semibold text-[#F5F0E8]">{addr.fullname}</span>
+                              <span className="text-[#F5F0E8]/40">|</span>
+                              <span className="text-[#F5F0E8]/80">{addr.phone}</span>
+                            </div>
+                            <p className="text-[0.95rem] text-[#F5F0E8]/70">
+                              {addr.address}, {addr.ward}, {addr.district}, {addr.city}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 border-t border-[#F5F0E8]/10 pt-3">
+                          <button
+                            onClick={() => {
+                              setEditingAddress(addr);
+                              setIsAddressModalOpen(true);
+                            }}
+                            className="flex items-center gap-1.5 text-sm text-[#D6A15F] hover:text-[#E5C07B]"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" /> Chỉnh sửa
+                          </button>
+                          {!addr.is_default && (
+                            <>
+                              <button
+                                onClick={() => handleSetDefaultAddress(addr.id)}
+                                className="text-sm text-[#F5F0E8]/60 hover:text-[#D6A15F]"
+                              >
+                                Thiết lập mặc định
+                              </button>
+                              <button
+                                onClick={() => setDeleteAddressId(addr.id)}
+                                className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" /> Xóa
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
-                <Field
-                  id="address"
-                  label="Địa Chỉ Giao Hàng"
-                  value={profile.address}
-                  onChange={updateField}
-                  error={errors.address}
-                  className="md:col-span-2"
-                />
-                <Field
-                  id="zip"
-                  label="Mã Bưu Chính"
-                  value={profile.zip}
-                  onChange={updateField}
-                  error={errors.zip}
-                  disabled={true}
-                  className="md:col-span-2"
-                />
               </div>
+            )}
+          </div>
+        </section>
+      </div>
 
-              {saveError && (
-                <p className="mt-5 text-sm font-medium text-[#6B1218]">
-                  {saveError}
-                </p>
-              )}
+      <AddressModal
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        onSave={handleSaveAddress}
+        initialData={editingAddress}
+        defaultFullname={profile.fullname}
+        defaultPhone={profile.phone}
+      />
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <button
-                  id="profile-submit-btn"
-                  type="submit"
-                  disabled={isSaving}
-                  className="rounded-full border-0 bg-[#6B1218] px-8 py-3.5 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_6px_24px_rgba(107,18,24,0.28)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-50 sm:px-10 sm:text-[0.8rem]"
-                >
-                  {isSaving ? "Đang lưu..." : "Lưu Thay Đổi"}
-                </button>
-                <Link
-                  href="/profile/changePassword"
-                  className="rounded-full border-[1.5px] border-[#6B1218] bg-transparent px-6 py-3 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8] sm:text-[0.8rem] text-center"
-                >
-                  Đổi Mật Khẩu
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="rounded-full border-[1.5px] border-[#2C1810]/25 bg-transparent px-6 py-3 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-60 sm:text-[0.8rem]"
-                >
-                  {isLoggingOut ? "Đang Đăng Xuất..." : "Đăng Xuất"}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      </section>
+      <ModalDeleteConfirmClient
+        open={!!deleteAddressId}
+        itemName="địa chỉ này"
+        isDeleting={false}
+        title="Xóa địa chỉ?"
+        confirmLabel="Xóa"
+        onClose={() => setDeleteAddressId(null)}
+        onConfirm={handleDeleteAddress}
+      />
     </main>
   );
 }

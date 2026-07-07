@@ -1,13 +1,9 @@
 "use client";
+import { Box, Button, Divider, Modal, Switch, TextField, Typography } from "@/src/components/ui/mui-mock";
+
 
 import { startTransition, useEffect, useState } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
-import Modal from "@mui/material/Modal";
-import Switch from "@mui/material/Switch";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
+
 import type { AdminModalIngredientProps } from "../../../lib/types/admin";
 import styles from "../../../styles/adminModal.module.css";
 

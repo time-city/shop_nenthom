@@ -2,7 +2,7 @@ import { useOptimistic, useTransition, useState } from "react";
 import { ClipboardList, Lock, Unlock } from "lucide-react";
 import ClientStatusBadge from "@/src/components/admin/customer/clientStatusBadge";
 import ModalDeleteConfirm from "@/src/components/admin/common/modalDeleteConfirm";
-import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
+import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
 
 import type { AdminUser as User } from "@/src/lib/types/admin";
 
@@ -63,16 +63,16 @@ export default function ClientTable({
 
   return (
     <>
-      <div className="rounded-[12px] border border-[#6B4E35]/15 bg-[#F8F0E4] shadow-md overflow-visible">
+      <div className="dashboard-card overflow-hidden no-padding">
         <TableResponsiveWrapper minWidth={850}>
-          <table className="w-full text-left border-collapse">
+          <table className="dashboard-admin-table">
             <thead>
-            <tr className="bg-[#6B1218] text-[#F5F0E8] text-xs uppercase font-semibold">
-              <th className="px-6 py-4">Họ và tên</th>
-              <th className="px-6 py-4">Liên hệ</th>
-              <th className="px-6 py-4">Ngày tham gia</th>
-              <th className="px-6 py-4">Trạng thái & Vai trò</th>
-              <th className="px-6 py-4 text-right">Hành động</th>
+            <tr>
+              <th>Họ và tên</th>
+              <th>Liên hệ</th>
+              <th>Ngày tham gia</th>
+              <th>Trạng thái & Vai trò</th>
+              <th className="text-right">Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -80,22 +80,22 @@ export default function ClientTable({
               optimisticUsers.map((user) => (
                 <tr
                   key={user.id}
-                  className="border-b border-[#6B4E35]/10 text-sm text-[#2C1810] hover:bg-[#6B1218]/5 transition-colors"
+                  className="hover:bg-black/20 transition-colors"
                 >
-                  <td className="px-6 py-4 font-bold text-[#6B1218]">{user.name}</td>
-                  <td className="px-6 py-4">
-                    <div className="text-xs font-semibold">{user.email}</div>
-                    <div className="text-xs text-[#6B4C35]/80">{user.phone}</div>
+                  <td className="font-bold text-[#F5F0E8]">{user.name}</td>
+                  <td>
+                    <div className="text-xs font-semibold text-[#F5F0E8]">{user.email}</div>
+                    <div className="text-xs text-[#F5F0E8]/60">{user.phone}</div>
                   </td>
-                  <td className="px-6 py-4">{user.createdAt}</td>
-                  <td className="px-6 py-4">
+                  <td>{user.createdAt}</td>
+                  <td>
                     <ClientStatusBadge isActive={user.isActive} role={user.role} />
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="text-right">
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => onViewOrders(user)}
-                        className="p-2 text-xs font-semibold rounded bg-[#F2E8D9] text-[#6B1218] border border-[#6B1218]/15 hover:bg-[#6B1218]/10 transition-all duration-200"
+                        className="p-2 text-xs font-semibold rounded bg-[rgba(248,240,228,0.05)] text-[#D6A15F] border border-[#D6A15F]/30 hover:bg-[#D6A15F]/10 transition-all duration-200"
                         type="button"
                         title="Xem đơn hàng"
                       >
@@ -103,11 +103,10 @@ export default function ClientTable({
                       </button>
                       <button
                         onClick={() => handleToggleStatus(user.id)}
-                        disabled={isPending}
-                        className={`p-2 text-xs font-semibold rounded border transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${
+                        className={`p-2 text-xs font-semibold rounded border transition-all duration-200 flex items-center justify-center ${
                           user.isActive
-                            ? "bg-[#FFEBEE] text-[#C62828] border-[#C62828]/15 hover:bg-[#FFEBEE]/80"
-                            : "bg-[#E8F5E9] text-[#2E7D32] border-[#2E7D32]/15 hover:bg-[#E8F5E9]/80"
+                            ? "bg-[rgba(248,240,228,0.05)] text-red-400 border-red-400/30 hover:bg-red-400/10"
+                            : "bg-[rgba(248,240,228,0.05)] text-green-400 border-green-400/30 hover:bg-green-400/10"
                         }`}
                         type="button"
                         title={user.isActive ? "Khóa tài khoản" : "Kích hoạt tài khoản"}
@@ -124,7 +123,7 @@ export default function ClientTable({
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-[#6B4C35] text-sm">
+                <td colSpan={5} className="px-6 py-12 text-center text-white/60 text-sm">
                   Không tìm thấy khách hàng nào phù hợp.
                 </td>
               </tr>

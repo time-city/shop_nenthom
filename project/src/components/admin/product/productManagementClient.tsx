@@ -8,12 +8,12 @@ import {
  useEffect,
  useState,
 } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import dynamic from "next/dynamic";
 import LoadingState from "@/src/components/ui/loadingState";
 import ModalDeleteConfirm from "@/src/components/admin/common/modalDeleteConfirm";
-import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/adminHeader";
 
 const ModalProduct = dynamic(() => import("@/src/components/admin/product/modalProduct"), { ssr: false });
 const ModalEditProduct = dynamic(() => import("@/src/components/admin/product/modalEditProduct"), { ssr: false });
@@ -284,7 +284,7 @@ export default function ProductManagementClient() {
              </TableResponsiveWrapper>
            </div>
            {isLoadingProducts ? (
-             <LoadingState
+             <LoadingState type="table"
                label="Đang tải danh sách sản phẩm..."
                className="m-5"
              />
@@ -295,7 +295,7 @@ export default function ProductManagementClient() {
              </div>
            ) : null}
            {!isLoadingProducts && !error && products.length === 0 ? (
-             <div className="px-5 py-8 text-center text-sm text-[#6B4C35]">
+             <div className="px-5 py-8 text-center text-sm text-white/60">
                Chưa có sản phẩm nào
              </div>
            ) : null}
@@ -326,7 +326,7 @@ export default function ProductManagementClient() {
          <>
            Sản phẩm <span style={{ color: "#6b1218", fontWeight: 700 }}>{deleteProduct?.name}</span> sẽ được ẩn khỏi cửa hàng. Lịch sử đơn hàng vẫn được giữ nguyên.
            {isLoadingProductImpact ? (
-             <span style={{ display: "block", marginTop: 6, color: "#6B4C35", fontStyle: "italic" }}>
+             <span style={{ display: "block", marginTop: 6, color: "rgba(255, 255, 255, 0.6)", fontStyle: "italic" }}>
                Đang kiểm tra tác động...
              </span>
            ) : productImpact && (productImpact.cartCount > 0 || productImpact.activeOrderCount > 0) ? (

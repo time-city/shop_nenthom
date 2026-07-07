@@ -3,11 +3,24 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUp } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  if (
+    pathname?.startsWith("/collection/") || 
+    pathname?.startsWith("/cart") ||
+    pathname?.startsWith("/profile") ||
+    pathname?.startsWith("/orderHistory") ||
+    pathname?.startsWith("/orders")
+  ) {
+    return null;
+  }
 
   return (
     <>

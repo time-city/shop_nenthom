@@ -20,6 +20,7 @@ export default function AdminHeader({ title, subtitle, backUrl, children }: Admi
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [pendingOrdersCount, setPendingOrdersCount] = useState<number>(0);
+  const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
   const unreadCount = useSupportStore((state) => state.unreadCount);
   const hasHydrated = useSupportStore((state) => state._hasHydrated);
 
@@ -68,6 +69,15 @@ export default function AdminHeader({ title, subtitle, backUrl, children }: Admi
     };
   }, []);
 
+  const toggleSidebar = () => {
+    if (window.innerWidth >= 1024) {
+      document.body.classList.toggle('admin-sidebar-collapsed');
+      setIsDesktopCollapsed(document.body.classList.contains('admin-sidebar-collapsed'));
+    } else {
+      window.dispatchEvent(new Event("toggle-admin-sidebar"));
+    }
+  };
+
   return (
     <header className="dashboard-top-header admin-responsive-header">
       {/* 1. Left: Hamburger menu toggle / back button */}
@@ -75,7 +85,7 @@ export default function AdminHeader({ title, subtitle, backUrl, children }: Admi
         {backUrl ? (
           <Link
             href={backUrl}
-            className="flex items-center justify-center w-[38px] h-[38px] rounded-lg border border-[#6B4E35]/15 text-[#6B4C35] hover:bg-[#6B1218]/5 transition-colors"
+            className="flex items-center justify-center w-[38px] h-[38px] rounded-lg border border-[#D6A15F]/30 text-[#D6A15F] hover:bg-[#D6A15F]/10 transition-colors"
           >
             <svg
               width="20"
@@ -93,10 +103,10 @@ export default function AdminHeader({ title, subtitle, backUrl, children }: Admi
           </Link>
         ) : (
           <button
-            className="dashboard-mobile-toggle flex items-center justify-center w-[38px] h-[38px]"
+            className="flex items-center justify-center w-[38px] h-[38px] rounded-lg border border-[#D6A15F]/30 text-[#D6A15F] hover:bg-[#D6A15F]/10 transition-colors"
             type="button"
-            aria-label="Menu"
-            onClick={() => window.dispatchEvent(new Event("toggle-admin-sidebar"))}
+            aria-label="Toggle Menu"
+            onClick={toggleSidebar}
           >
             <Menu size={22} aria-hidden="true" />
           </button>
@@ -105,11 +115,11 @@ export default function AdminHeader({ title, subtitle, backUrl, children }: Admi
 
       {/* 2. Middle: Page title (centered on mobile, left-aligned on desktop) */}
       <div className="admin-header-title-slot">
-        <h1 className="dashboard-page-title font-serif text-[1.15rem] md:text-2xl font-bold text-[#2C1810] inline-block">
+        <h1 className="dashboard-page-title font-serif text-[1.15rem] md:text-2xl font-bold inline-block">
           {title}
         </h1>
         {subtitle && (
-          <p className="dashboard-page-subtitle hidden lg:block text-xs text-[#6B4C35]/85 mt-0.5">
+          <p className="dashboard-page-subtitle hidden lg:block text-xs mt-0.5">
             {subtitle}
           </p>
         )}

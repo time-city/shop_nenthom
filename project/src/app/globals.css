@@ -1,13 +1,14 @@
 @import "tailwindcss";
-@import "driver.js/dist/driver.css";
 
-html, body {
+body {
   overflow-x: hidden;
   max-width: 100vw;
   box-sizing: border-box;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -45,9 +46,23 @@ h5 {
 }
 
 
-body[data-role="ADMIN"] {
-  background: #F2E8D9;
-  color: #2C1810;
+.dashboard-admin-layout {
+  background: url('/assets/bg_1.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: #F5F0E8;
+}
+
+.dashboard-admin-layout::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: -1;
 }
 
 
@@ -317,18 +332,20 @@ body.intro-ready footer {
   --admin-primary: #6B1218;
   --admin-primary-dark: #4A0C10;
   --admin-sidebar-bg: #2C1810;
-  --admin-sidebar-hover: rgba(245, 240, 232, 0.08);
-  --admin-sidebar-active: rgba(107, 18, 24, 0.35);
+  --admin-sidebar-hover: rgba(214, 161, 95, 0.1);
+  --admin-sidebar-active: rgba(214, 161, 95, 0.2);
   --admin-cream-warm: #F5F0E8;
   --admin-text-sidebar: rgba(245, 240, 232, 0.7);
-  --admin-sidebar-width: 310px;
+  --admin-sidebar-width: 240px;
+  --admin-sidebar-collapsed-width: 80px;
   --admin-font-display: "Cormorant Garamond", "Playfair Display", Georgia, serif;
   --admin-font-body: "DM Sans", "Inter", Arial, sans-serif;
 }
 
 
 .admin-sidebar {
-  background: var(--admin-sidebar-bg);
+  background: url('/assets/rose_bg.jpg') no-repeat center center;
+  background-size: cover;
   bottom: 0;
   display: flex;
   flex-direction: column;
@@ -338,41 +355,56 @@ body.intro-ready footer {
   top: 0;
   width: var(--admin-sidebar-width);
   z-index: 100;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 5, 6, 0.85);
+  /* Dark overlay */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: -1;
 }
 
 
 .admin-sidebar-header {
   align-items: center;
-  border-bottom: 1px solid rgba(245, 240, 232, 0.08);
+  border-bottom: 1px solid rgba(214, 161, 95, 0.2);
+  /* Gold border */
   display: flex;
-  gap: 0.85rem;
-  padding: 1.65rem 1.8rem 1.3rem;
+  gap: 0.75rem;
+  padding: 1.25rem 1.25rem 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 
 .admin-sidebar-logo {
   border-radius: 999px;
   flex-shrink: 0;
-  height: 56px;
+  height: 40px;
   object-fit: contain;
-  width: 56px;
+  width: 40px;
 }
 
 
 .admin-sidebar-brand {
   display: flex;
   flex-direction: column;
-  min-width: 0;
 }
 
 
 .admin-sidebar-brand-name {
-  color: var(--admin-cream-warm);
-  font-family: var(--admin-font-display);
-  font-size: 1.45rem;
+  color: #D6A15F;
+  /* Gold */
+  font-family: var(--font-cormorant-garamond);
+  font-size: 1.2rem;
   font-weight: 700;
   line-height: 1;
+  letter-spacing: 0.05em;
 }
 
 
@@ -393,6 +425,8 @@ body.intro-ready footer {
   overflow-y: auto;
   padding: 1rem 0 0.5rem;
   scrollbar-width: none;
+  position: relative;
+  z-index: 1;
 }
 
 .admin-sidebar-nav::-webkit-scrollbar {
@@ -401,34 +435,34 @@ body.intro-ready footer {
 
 
 .admin-sidebar-section {
-  margin-bottom: 0.6rem;
-  padding: 0 0.95rem;
+  margin-bottom: 0.4rem;
+  padding: 0 0.75rem;
 }
 
 
 .admin-sidebar-section-title {
   color: rgba(245, 240, 232, 0.32);
   font-family: var(--admin-font-body);
-  font-size: 0.78rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.18em;
-  padding: 0.4rem 0.85rem;
+  letter-spacing: 0.15em;
+  padding: 0.25rem 0.85rem;
   text-transform: uppercase;
 }
 
 
 .admin-sidebar-link {
   align-items: center;
-  border-radius: 12px;
+  border-radius: 8px;
   color: var(--admin-text-sidebar);
   display: flex;
   font-family: var(--admin-font-body);
-  font-size: 0.98rem;
+  font-size: 0.8rem;
   font-weight: 400;
-  gap: 0.95rem;
-  margin-bottom: 0.2rem;
-  min-height: 46px;
-  padding: 0.65rem 1rem;
+  gap: 0.6rem;
+  margin-bottom: 0.1rem;
+  min-height: 36px;
+  padding: 0.4rem 0.75rem;
   position: relative;
   text-decoration: none;
   transition: background 0.2s ease, color 0.2s ease;
@@ -442,14 +476,17 @@ body.intro-ready footer {
 
 
 .admin-sidebar-link.active {
-  background: var(--admin-sidebar-active);
-  color: var(--admin-cream-warm);
+  background: rgba(214, 161, 95, 0.15);
+  /* Gold tint */
+  color: #D6A15F;
+  /* Gold text */
   font-weight: 500;
+  border: 1px solid rgba(214, 161, 95, 0.3);
 }
 
 
 .admin-sidebar-link.active::before {
-  background: var(--admin-primary);
+  background: #D6A15F;
   border-radius: 0 4px 4px 0;
   content: "";
   height: 58%;
@@ -477,9 +514,11 @@ body.intro-ready footer {
 
 .admin-sidebar-badge {
   align-items: center;
-  background: var(--admin-primary);
+  background: #D6A15F;
+  /* Gold bg */
   border-radius: 999px;
-  color: var(--admin-cream-warm);
+  color: #1A0506;
+  /* Dark text */
   display: inline-flex;
   font-size: 0.76rem;
   font-weight: 700;
@@ -764,17 +803,19 @@ body.intro-ready footer {
 
 
 .admin-sidebar-footer {
-  border-top: 1px solid rgba(245, 240, 232, 0.08);
-  padding: 1.25rem 1rem 1.4rem;
+  border-top: 1px solid rgba(214, 161, 95, 0.2);
+  padding: 0.75rem 0.75rem 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 
 .admin-sidebar-user {
   align-items: center;
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
-  gap: 0.75rem;
-  padding: 0.75rem;
+  gap: 0.6rem;
+  padding: 0.5rem;
   transition: background 0.2s ease;
 }
 
@@ -786,17 +827,17 @@ body.intro-ready footer {
 
 .admin-sidebar-avatar {
   align-items: center;
-  background: var(--admin-primary);
-  border: 2px solid rgba(245, 240, 232, 0.22);
+  background: rgba(214, 161, 95, 0.2);
+  border: 1px solid rgba(214, 161, 95, 0.5);
   border-radius: 999px;
-  color: var(--admin-cream-warm);
+  color: #D6A15F;
   display: flex;
   flex-shrink: 0;
-  font-size: 0.88rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  height: 44px;
+  height: 34px;
   justify-content: center;
-  width: 44px;
+  width: 34px;
 }
 
 
@@ -809,7 +850,7 @@ body.intro-ready footer {
 .admin-sidebar-user-name {
   color: var(--admin-cream-warm);
   font-family: var(--admin-font-body);
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -820,7 +861,7 @@ body.intro-ready footer {
 .admin-sidebar-user-role {
   color: rgba(245, 240, 232, 0.45);
   font-family: var(--admin-font-body);
-  font-size: 0.78rem;
+  font-size: 0.68rem;
   font-weight: 300;
 }
 
@@ -828,16 +869,16 @@ body.intro-ready footer {
 .admin-sidebar-logout {
   align-items: center;
   background: transparent;
-  border: 0;
-  border-radius: 12px;
-  color: rgba(245, 240, 232, 0.5);
+  border: 1px solid rgba(245, 240, 232, 0.05);
+  border-radius: 10px;
+  color: rgba(245, 240, 232, 0.6);
   cursor: pointer;
   display: flex;
   font-family: var(--admin-font-body);
-  font-size: 0.92rem;
-  gap: 0.75rem;
-  margin-top: 0.35rem;
-  padding: 0.75rem;
+  font-size: 0.85rem;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+  padding: 0.6rem 0.75rem;
   text-align: left;
   transition: background 0.2s ease, color 0.2s ease;
   width: 100%;
@@ -846,6 +887,7 @@ body.intro-ready footer {
 
 .admin-sidebar-logout:hover {
   background: rgba(185, 28, 28, 0.15);
+  border-color: rgba(185, 28, 28, 0.25);
   color: #F5A5A5;
 }
 
@@ -886,25 +928,28 @@ body.intro-ready footer {
 
 
 .dashboard-admin-layout {
-  background: #F2E8D9;
-  color: #2C1810;
   display: flex;
   min-height: 100vh;
+  position: relative;
+  z-index: 1;
 }
 
 
 .dashboard-main-content {
   flex: 1;
   margin-left: var(--admin-sidebar-width);
-  min-height: 100vh;
+  padding: 2rem 2.5rem;
   width: calc(100% - var(--admin-sidebar-width));
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 
 .dashboard-top-header {
   align-items: center;
-  background: #F8F0E4;
-  border-bottom: 1px solid rgba(107, 78, 53, 0.15);
+  background: rgba(26, 5, 6, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(245, 240, 232, 0.1);
   display: flex;
   gap: 1.5rem;
   justify-content: space-between;
@@ -962,8 +1007,8 @@ body.intro-ready footer {
 
 
 .dashboard-page-title {
-  color: #2C1810;
-  font-family: var(--admin-font-display);
+  color: #F5F0E8;
+  font-family: var(--font-cormorant-garamond);
   font-size: 1.78rem;
   font-weight: 700;
   line-height: 1.05;
@@ -972,8 +1017,8 @@ body.intro-ready footer {
 
 
 .dashboard-page-subtitle {
-  color: #6B4C35;
-  font-family: var(--admin-font-body);
+  color: rgba(245, 240, 232, 0.7);
+  font-family: var(--font-dm-sans);
   font-size: 0.92rem;
   margin-top: 0.35rem;
 }
@@ -990,8 +1035,8 @@ body.intro-ready footer {
 
 .dashboard-filter-chips {
   align-items: center;
-  background: #F2E8D9;
-  border: 1px solid rgba(107, 78, 53, 0.14);
+  background: rgba(214, 161, 95, 0.1);
+  border: 1px solid rgba(214, 161, 95, 0.3);
   border-radius: 999px;
   display: flex;
   gap: 0.25rem;
@@ -1014,7 +1059,6 @@ body.intro-ready footer {
 
 .dashboard-filter-chip.active,
 .dashboard-filter-chip:hover {
-  background: #6B1218;
   color: #F5F0E8;
 }
 
@@ -1059,16 +1103,18 @@ body.intro-ready footer {
 
 .dashboard-stat-card,
 .dashboard-card {
-  background: #F8F0E4;
-  border: 1px solid rgba(107, 78, 53, 0.12);
+  background: rgba(245, 240, 232, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(245, 240, 232, 0.1);
   border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(44, 24, 16, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
 
 .dashboard-stat-card {
-  min-height: 188px;
-  padding: 1.7rem;
+  min-height: 100px;
+  padding: 1.4rem 1.25rem;
 }
 
 
@@ -1134,19 +1180,18 @@ body.intro-ready footer {
 
 
 .dashboard-stat-value {
-  color: #2C1810;
-  font-family: var(--admin-font-body);
-  font-size: 2.05rem;
+  color: #F5F0E8;
+  font-family: var(--font-dm-sans);
+  font-size: 1.6rem;
   font-weight: 700;
-  line-height: 1.1;
-  margin-top: 1.5rem;
+  line-height: 1.2;
 }
 
 
 .dashboard-stat-label {
-  color: #6B4C35;
-  font-size: 0.88rem;
-  margin-top: 0.25rem;
+  color: rgba(245, 240, 232, 0.7);
+  font-size: 0.8rem;
+  margin-bottom: 0.15rem;
 }
 
 
@@ -1158,14 +1203,14 @@ body.intro-ready footer {
 }
 
 
-.dashboard-grid-2 > * {
+.dashboard-grid-2>* {
   min-width: 0;
 }
 
 
 .dashboard-card-header {
   align-items: center;
-  border-bottom: 1px solid rgba(107, 78, 53, 0.12);
+  border-bottom: 1px solid rgba(214, 161, 95, 0.2);
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -1175,8 +1220,8 @@ body.intro-ready footer {
 
 
 .dashboard-card-title {
-  color: #2C1810;
-  font-family: var(--admin-font-display);
+  color: #F5F0E8;
+  font-family: var(--font-cormorant-garamond);
   font-size: 1.35rem;
   font-weight: 700;
   margin: 0;
@@ -1206,8 +1251,8 @@ body.intro-ready footer {
 
 
 .dashboard-admin-table th {
-  background: rgba(242, 232, 217, 0.72);
-  color: #6B4C35;
+  background: rgba(214, 161, 95, 0.15);
+  color: #D6A15F;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -1219,8 +1264,8 @@ body.intro-ready footer {
 
 
 .dashboard-admin-table td {
-  border-top: 1px solid rgba(107, 78, 53, 0.1);
-  color: #2C1810;
+  border-top: 1px solid rgba(245, 240, 232, 0.1);
+  color: #F5F0E8;
   font-size: 0.9rem;
   padding: 0.85rem 1.15rem;
   vertical-align: middle;
@@ -1238,7 +1283,7 @@ body.intro-ready footer {
   align-items: center;
   background: transparent;
   border-radius: 999px;
-  color: #6B1218;
+  color: #D6A15F;
   display: flex;
   font-size: 1.15rem;
   font-weight: 700;
@@ -1254,7 +1299,7 @@ body.intro-ready footer {
 
 
 .dashboard-product-note {
-  color: #6B4C35;
+  color: rgba(245, 240, 232, 0.6);
   font-size: 0.78rem;
   margin-top: 0.18rem;
 }
@@ -1533,7 +1578,7 @@ body.intro-ready footer {
 
 
 .orders-empty-state {
-  color: #6B4C35;
+  color: rgba(245, 240, 232, 0.6);
   font-size: 0.9rem;
   padding: 2rem;
   text-align: center;
@@ -1626,13 +1671,13 @@ body.intro-ready footer {
 
 .product-btn-ghost {
   background: transparent;
-  color: #6B4C35;
+  color: rgba(245, 240, 232, 0.7);
 }
 
 
 .product-btn-ghost:hover {
-  background: rgba(107, 78, 53, 0.06);
-  color: #2C1810;
+  background: rgba(245, 240, 232, 0.1);
+  color: #F5F0E8;
 }
 
 
@@ -1724,10 +1769,13 @@ body.intro-ready footer {
 
 
 .admin-modal {
-  background: #F8F0E4;
-  border: 1px solid rgba(107, 78, 53, 0.14);
+  background: rgba(245, 240, 232, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(245, 240, 232, 0.15);
   border-radius: 16px;
-  box-shadow: 0 16px 48px rgba(44, 24, 16, 0.16);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  color: #F5F0E8;
   max-height: 88vh;
   overflow-y: auto;
   width: 100%;
@@ -1741,7 +1789,7 @@ body.intro-ready footer {
 
 .admin-modal-header {
   align-items: center;
-  border-bottom: 1px solid rgba(107, 78, 53, 0.14);
+  border-bottom: 1px solid rgba(245, 240, 232, 0.1);
   display: flex;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
@@ -1749,7 +1797,7 @@ body.intro-ready footer {
 
 
 .admin-modal-title {
-  color: #2C1810;
+  color: #F5F0E8;
   font-family: var(--admin-font-display);
   font-size: 1.25rem;
   font-weight: 700;
@@ -1762,7 +1810,7 @@ body.intro-ready footer {
   background: transparent;
   border: 0;
   border-radius: 8px;
-  color: #6B4C35;
+  color: rgba(245, 240, 232, 0.6);
   cursor: pointer;
   display: flex;
   font-size: 1.25rem;
@@ -1774,8 +1822,8 @@ body.intro-ready footer {
 
 
 .admin-modal-close:hover {
-  background: rgba(185, 28, 28, 0.08);
-  color: #B91C1C;
+  background: rgba(245, 240, 232, 0.1);
+  color: #F5F0E8;
 }
 
 
@@ -1786,7 +1834,7 @@ body.intro-ready footer {
 
 .admin-modal-footer {
   align-items: center;
-  border-top: 1px solid rgba(107, 78, 53, 0.14);
+  border-top: 1px solid rgba(245, 240, 232, 0.1);
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
@@ -1807,7 +1855,7 @@ body.intro-ready footer {
 
 
 .product-form-label {
-  color: #6B4C35;
+  color: #D6A15F;
   display: block;
   font-size: 0.72rem;
   font-weight: 700;
@@ -1820,14 +1868,20 @@ body.intro-ready footer {
 .product-form-input,
 .product-form-select,
 .product-form-textarea {
-  background: #fff;
-  border: 1.5px solid rgba(107, 78, 53, 0.18);
+  background: rgba(26, 5, 6, 0.4);
+  border: 1.5px solid rgba(245, 240, 232, 0.15);
   border-radius: 8px;
-  color: #2C1810;
+  color: #F5F0E8;
   font-family: var(--admin-font-body);
   font-size: 0.88rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   width: 100%;
+}
+
+.product-form-input::placeholder,
+.product-form-select::placeholder,
+.product-form-textarea::placeholder {
+  color: rgba(245, 240, 232, 0.4);
 }
 
 
@@ -1840,7 +1894,7 @@ body.intro-ready footer {
 
 .product-form-select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B4C35' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23D6A15F' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-position: right 1rem center;
   background-repeat: no-repeat;
   padding-right: 2.5rem;
@@ -1857,18 +1911,19 @@ body.intro-ready footer {
 .product-form-input:focus,
 .product-form-select:focus,
 .product-form-textarea:focus {
-  border-color: #6B1218;
-  box-shadow: 0 0 0 3px rgba(107, 18, 24, 0.08);
+  border-color: #D6A15F;
+  box-shadow: 0 0 0 3px rgba(214, 161, 95, 0.15);
   outline: none;
+  background: rgba(26, 5, 6, 0.6);
 }
 
 
 .product-upload-area {
   align-items: center;
-  background: rgba(107, 78, 53, 0.025);
-  border: 2px dashed rgba(107, 78, 53, 0.2);
+  background: rgba(26, 5, 6, 0.3);
+  border: 2px dashed rgba(214, 161, 95, 0.3);
   border-radius: 12px;
-  color: #6B4C35;
+  color: rgba(245, 240, 232, 0.8);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -1882,13 +1937,13 @@ body.intro-ready footer {
 
 
 .product-upload-area:hover {
-  background: rgba(107, 18, 24, 0.08);
-  border-color: #6B1218;
+  background: rgba(26, 5, 6, 0.5);
+  border-color: #D6A15F;
 }
 
 
 .product-upload-icon {
-  color: #6B1218;
+  color: #D6A15F;
   margin-bottom: 0.2rem;
 }
 
@@ -1899,13 +1954,13 @@ body.intro-ready footer {
 
 
 .product-upload-text strong {
-  color: #6B1218;
+  color: #D6A15F;
   font-weight: 700;
 }
 
 
 .product-upload-hint {
-  color: #6B4C35;
+  color: rgba(245, 240, 232, 0.5);
   font-size: 0.72rem;
   opacity: 0.85;
 }
@@ -2130,7 +2185,59 @@ body.intro-ready footer {
   .dashboard-mobile-toggle {
     display: flex;
   }
+}
 
+/* ============================================
+  Desktop Sidebar Collapse State
+  ============================================ */
+body.admin-sidebar-collapsed {
+  --admin-sidebar-width: var(--admin-sidebar-collapsed-width);
+}
+
+body.admin-sidebar-collapsed .admin-sidebar-brand-name,
+body.admin-sidebar-collapsed .admin-sidebar-brand-sub,
+body.admin-sidebar-collapsed .admin-sidebar-link span,
+body.admin-sidebar-collapsed .admin-sidebar-section-title,
+body.admin-sidebar-collapsed .admin-sidebar-user-info,
+body.admin-sidebar-collapsed .admin-sidebar-badge,
+body.admin-sidebar-collapsed .admin-sidebar-logout {
+  display: none;
+}
+
+body.admin-sidebar-collapsed .admin-sidebar-header {
+  padding: 1rem 0;
+  justify-content: center;
+}
+
+body.admin-sidebar-collapsed .admin-sidebar-logo {
+  width: 40px;
+  height: 40px;
+}
+
+body.admin-sidebar-collapsed .admin-sidebar-link {
+  justify-content: center;
+  padding: 0.75rem 0;
+}
+
+body.admin-sidebar-collapsed .admin-sidebar-icon {
+  margin-right: 0;
+}
+
+body.admin-sidebar-collapsed .admin-sidebar-user {
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+body.admin-sidebar-collapsed .admin-sidebar-avatar {
+  width: 40px;
+  height: 40px;
+}
+
+body.admin-sidebar-collapsed .admin-sidebar-nav {
+  padding: 1rem 0.5rem;
+}
+
+@media (max-width: 1023px) {
   .notification-admin-sidebar-trigger {
     display: none;
   }
@@ -2253,6 +2360,7 @@ body.intro-ready footer {
     line-height: 1.45;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden;
   }
 

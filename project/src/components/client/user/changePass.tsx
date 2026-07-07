@@ -2,7 +2,7 @@
 
 import { startTransition, useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import { changePassword } from "@/src/lib/action/auth.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import { callAction } from "@/src/lib/utils/callAction";

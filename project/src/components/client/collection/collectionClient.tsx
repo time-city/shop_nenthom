@@ -241,12 +241,10 @@ function CollectionClientInner({
                 0%, 100% {
                   filter: drop-shadow(0 4px 12px rgba(0,0,0,1));
                   opacity: 0.85;
-                  transform: scale(1);
                 }
                 50% {
                   filter: drop-shadow(0 4px 16px rgba(229,192,123,0.4));
                   opacity: 1;
-                  transform: scale(1.01);
                 }
               }
               .animate-elegant-glow {
@@ -255,8 +253,8 @@ function CollectionClientInner({
                 transition: all 0.3s ease;
               }
             `}} />
-            <p className="animate-elegant-glow text-[1.2rem] sm:text-[1.3rem] font-normal italic leading-relaxed tracking-wide text-white">
-              Khám phá những sáng tạo nến thơm được chọn lọc kỹ lưỡng
+            <p className="animate-elegant-glow font-serif text-[1.4rem] sm:text-[1.7rem] font-light leading-relaxed tracking-wider text-white text-center">
+              Tinh hoa <span className="text-[#E5C07B] font-medium italic">nến thơm nghệ thuật</span>, chế tác thủ công.
             </p>
           </div>
 

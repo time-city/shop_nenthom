@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import heroImage from "../../../../asset/image-Photoroom.png";
-import bgImage from "../../../../asset/bg_1.jpg";
+import heroImage from "@/public/assets/image-Photoroom.png";
+import bgImage from "@/public/assets/bg_1.jpg";
 import { useEffect, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
 import type {
@@ -16,11 +16,11 @@ import { callAction } from "@/src/lib/utils/callAction";
 
 const scentTags = ["Vanilla & Cedar", "Linen & Sage", "Oud & Amber"];
 const categoryBgClasses = [
-  "bg-[#6B543A]",
-  "bg-[#9C8A73]",
-  "bg-[#8DA089]",
-  "bg-[#7A1218]",
-  "bg-[#8B363A]",
+  "bg-[#6B1218]", // Warm Red
+  "bg-[#2C1810]", // Deep Wood
+  "bg-[#6B4C35]", // Warm Brown
+  "bg-[#4A2A22]", // Dark Reddish Brown
+  "bg-[#8B262C]", // Lighter Warm Red
 ];
 
 export default function HomeClient() {
@@ -33,7 +33,7 @@ export default function HomeClient() {
           title: category.name,
           description:
             category.description ||
-            "Khám phá những sáng tạo nến thơm được chọn lọc kỹ lưỡng.",
+            "Tinh hoa nến thơm nghệ thuật, chế tác thủ công.",
           buttonLabel: "Xem Danh Mục",
           bgClass: categoryBgClasses[index % categoryBgClasses.length],
           href: "/#collection",

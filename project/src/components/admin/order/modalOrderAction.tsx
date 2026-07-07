@@ -1,12 +1,9 @@
 "use client";
+import { Box, Button, Divider, Modal, TextField, Typography } from "@/src/components/ui/mui-mock";
+
 
 import { useState } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
-import Modal from "@mui/material/Modal";
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
+
 import styles from "../../../styles/adminModal.module.css";
 
 type OrderActionType = "confirm" | "cancel";

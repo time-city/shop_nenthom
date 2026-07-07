@@ -52,12 +52,12 @@ export default function CheckoutSummary({
   };
 
   return (
-    <aside className="h-fit rounded-2xl border border-[#6B4C35]/10 bg-[#F8F0E4] p-6 shadow-[0_16px_36px_rgba(44,24,16,0.08)] sm:p-8">
+    <aside className="h-fit rounded-3xl border border-[#F5F0E8]/10 bg-[#F5F0E8]/5 backdrop-blur-md p-6 shadow-[0_16px_36px_rgba(0,0,0,0.5)] sm:p-8">
       {/* mã khuyến mãi */}
-      <div className="mb-8 border-b border-[#6B4C35]/15 pb-8">
+      <div className="mb-8 border-b border-[#F5F0E8]/15 pb-8">
         <label
           htmlFor="promoCode"
-          className="mb-3 block text-[0.72rem] uppercase tracking-[0.14em] text-[#6B4C35]"
+          className="mb-3 block text-[0.72rem] uppercase tracking-[0.14em] text-[#F5F0E8]/70"
         >
           Mã Khuyến Mãi
         </label>
@@ -71,34 +71,34 @@ export default function CheckoutSummary({
               setPromoInput(e.target.value.toUpperCase());
               if (promoError) setPromoError("");
             }}
-            style={{ borderColor: promoError ? "#6B1218" : undefined }}
-            className="min-w-0 flex-1 rounded-full border-[1.5px] border-[#6B4C35]/25 bg-white px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#6B4C35]/45 focus:border-[#6B1218] focus:ring-4 focus:ring-[#6B1218]/10"
+            style={{ borderColor: promoError ? "#ff6b6b" : undefined }}
+            className="min-w-0 flex-1 rounded-full border-[1.5px] border-[#F5F0E8]/20 bg-black/40 backdrop-blur-sm px-4 py-3 text-sm text-[#F5F0E8] outline-none transition placeholder:text-[#F5F0E8]/45 focus:border-[#D6A15F] focus:ring-4 focus:ring-[#D6A15F]/10"
           />
           <button
             type="button"
             onClick={handleApply}
-            className="rounded-full border border-[#6B1218] bg-[#6B1218] px-6 py-3 text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition hover:bg-[#4A0C10]"
+            className="rounded-full border border-[#D6A15F] bg-gradient-to-r from-[#D6A15F] to-[#E5C07B] px-6 py-3 text-[0.72rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] transition hover:-translate-y-0.5 shadow-[0_5px_15px_rgba(214,161,95,0.3)]"
           >
             Áp dụng
           </button>
         </div>
         {promoError && (
-          <p style={{ color: "#6B1218", fontSize: 12, marginTop: 4 }}>
+          <p style={{ color: "#ff6b6b", fontSize: 12, marginTop: 4 }}>
             {promoError}
           </p>
         )}
         {appliedDiscountCode && (
-          <p style={{ color: "#1F6B3A", fontSize: 12, marginTop: 6, fontWeight: 500 }}>
+          <p style={{ color: "#D6A15F", fontSize: 12, marginTop: 6, fontWeight: 500 }}>
             ✓ Đã áp dụng mã: {appliedDiscountCode} ({discountType === "PERCENTAGE" ? "Giảm theo %" : "Giảm theo số tiền"})
           </p>
         )}
       </div>
 
-      <h2 className="mb-6 border-b-2 border-[#6B1218] pb-4 font-serif text-[1.25rem] font-bold text-[#2C1810]">
+      <h2 className="relative mb-6 pb-4 font-serif text-[1.25rem] font-bold text-[#F5F0E8] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-[#D6A15F]">
         Tóm Tắt Đơn Hàng
       </h2>
 
-      <div className="mb-6 max-h-[300px] overflow-auto border-b border-[#6B4C35]/15 pb-5">
+      <div className="mb-6 max-h-[300px] overflow-auto border-b border-[#F5F0E8]/15 pb-5 pr-2 scrollbar-hide">
         {items.map((item, index) => {
           const quantity = Math.max(item.quantity, 1);
           const itemTotal = item.price * quantity;
@@ -106,13 +106,17 @@ export default function CheckoutSummary({
           return (
             <div
               key={`${getItemName(item)}-${index}`}
-              className="flex justify-between gap-4 border-b border-[#6B4C35]/10 py-4 text-sm last:border-b-0"
+              className="flex justify-between gap-4 border-b border-[#F5F0E8]/10 py-4 text-sm last:border-b-0"
             >
-              <span className="text-[#2C1810]">
-                {getItemName(item)}
-                {item.size ? ` (${item.size})` : ""} x {quantity}
-              </span>
-              <span className="shrink-0 font-serif font-bold text-[#6B1218]">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[#F5F0E8] font-medium leading-tight">
+                  {getItemName(item)}
+                </span>
+                <span className="text-[#F5F0E8]/50 text-[0.8rem] font-light">
+                  {item.size ? `${item.size} • ` : ""}SL: {quantity}
+                </span>
+              </div>
+              <span className="shrink-0 font-sans font-semibold text-[#D6A15F] mt-0.5 tracking-wide">
                 {formatPrice(itemTotal)}
               </span>
             </div>
@@ -120,27 +124,27 @@ export default function CheckoutSummary({
         })}
       </div>
 
-      <div className="mb-4 flex justify-between gap-4 text-sm font-light text-[#6B4C35]">
-        <span>Tạm tính:</span>
-        <span>{formatPrice(subtotal)}</span>
+      <div className="mb-4 flex justify-between gap-4 text-sm text-[#F5F0E8]/80">
+        <span className="font-light">Tạm tính:</span>
+        <span className="font-sans font-medium tracking-wide">{formatPrice(subtotal)}</span>
       </div>
-      <div className="mb-4 flex justify-between gap-4 text-sm font-light text-[#6B4C35]">
-        <span>Phí vận chuyển:</span>
-        <span className="italic text-[#8B5E3C]">{formatPrice(shippingFee)}</span>
+      <div className="mb-4 flex justify-between gap-4 text-sm text-[#F5F0E8]/80">
+        <span className="font-light">Phí vận chuyển:</span>
+        <span className="font-sans font-medium tracking-wide text-[#D6A15F]">{formatPrice(shippingFee)}</span>
       </div>
       {discountAmount > 0 && appliedDiscountCode && (
-        <div className="mb-4 flex justify-between gap-4 text-sm font-medium text-[#8A1119]">
+        <div className="mb-4 flex justify-between gap-4 text-sm font-medium text-[#D6A15F]">
           <span>Giảm giá ({appliedDiscountCode} - {discountType === "PERCENTAGE" ? "%" : "tiền"}):</span>
-          <span>-{formatPrice(discountAmount)}</span>
+          <span className="font-sans tracking-wide">-{formatPrice(discountAmount)}</span>
         </div>
       )}
-      <div className="mb-5 flex justify-between gap-4 text-sm font-light text-[#6B4C35]">
-        <span>Thuế:</span>
-        <span>0đ</span>
+      <div className="mb-5 flex justify-between gap-4 text-sm text-[#F5F0E8]/80">
+        <span className="font-light">Thuế:</span>
+        <span className="font-sans font-medium tracking-wide">0đ</span>
       </div>
-      <div className="mb-8 flex justify-between gap-4 border-t-2 border-[#6B4C35]/15 pt-5 text-[#2C1810]">
-        <span>Tổng cộng:</span>
-        <span className="font-serif text-[1.6rem] text-[#2C1810]">
+      <div className="mb-8 flex justify-between gap-4 border-t border-[#F5F0E8]/15 pt-5 items-end">
+        <span className="text-[#F5F0E8] font-medium mb-1 tracking-wide">Tổng cộng:</span>
+        <span className="font-sans text-[1.8rem] leading-none font-bold text-[#D6A15F] tracking-wide">
           {formatPrice(total)}
         </span>
       </div>
@@ -149,7 +153,7 @@ export default function CheckoutSummary({
         type="submit"
         form="checkoutForm"
         disabled={isSubmitting}
-        className="mb-4 w-full rounded-full bg-[#6B1218] px-6 py-4 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.28)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-65 disabled:hover:translate-y-0"
+        className="mb-4 w-full rounded-full bg-gradient-to-r from-[#D6A15F] to-[#E5C07B] px-6 py-4 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] shadow-[0_10px_24px_rgba(214,161,95,0.3)] transition hover:-translate-y-0.5 hover:shadow-[0_15px_30px_rgba(214,161,95,0.4)] disabled:cursor-not-allowed disabled:opacity-65 disabled:hover:translate-y-0"
       >
         {isSubmitting ? "Đang xử lý..." : "Hoàn Thành Đơn Hàng"}
       </button>
@@ -157,7 +161,7 @@ export default function CheckoutSummary({
         type="button"
         onClick={onBackToCart}
         disabled={isSubmitting}
-        className="w-full rounded-full border border-[#6B1218] px-6 py-3.5 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-55"
+        className="w-full rounded-full border border-[#D6A15F]/50 px-6 py-3.5 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#D6A15F] transition hover:bg-[#D6A15F] hover:text-[#2C1810] disabled:cursor-not-allowed disabled:opacity-55"
       >
         Quay Lại Giỏ Hàng
       </button>

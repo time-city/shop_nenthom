@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ClientProductOptionItemInterface } from "../../../interface/clientInterface";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import { addToCartAction } from "../../../lib/action/cart.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import { useCartStore } from "@/src/store/useCartStore";
 import type { FormCustomProps } from "../../../lib/types/client";
 import { callAction } from "@/src/lib/utils/callAction";
-import optionBgImage from "../../../../asset/option_background.jpg";
+import optionBgImage from "@/public/assets/option_background.jpg";
 
 
 const customBasePrice = 189000;
@@ -242,6 +242,7 @@ export default function FormCustom({
                     animation-duration: 560ms;
                     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
                     animation-fill-mode: both;
+                    will-change: opacity, transform;
                 }
                 .step-transition.step-next {
                     animation-name: step-fade-next;

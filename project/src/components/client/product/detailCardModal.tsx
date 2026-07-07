@@ -1,12 +1,12 @@
 "use client";
+import { Box, Modal } from "@/src/components/ui/mui-mock";
 
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getProductDetailsAction } from "../../../lib/action/product.action";
 import DetailCardProduct from "@/src/components/client/product/detailCardProduct";
-import Box from "@mui/material/Box";
-import Modal from "@mui/material/Modal";
+
 import LoadingState from "../../ui/loadingState";
 import type {
  ClientProductDetailDataInterface,
@@ -15,7 +15,6 @@ import type {
 import type { DetailCardModalProps } from "../../../lib/types/client";
 import styles from "../../../styles/clientModal.module.css";
 import { callAction } from "@/src/lib/utils/callAction";
-
 
 export default function DetailCardModal({
  isAuthenticated = false,
@@ -28,10 +27,8 @@ export default function DetailCardModal({
  const [loading, setLoading] = useState(false);
  const cacheRef = useRef<Map<string, ClientProductDetailInterface>>(new Map());
 
-
  useEffect(() => {
    let ignore = false;
-
 
    const timerId = window.setTimeout(() => {
      if (!productId) {
@@ -46,11 +43,9 @@ export default function DetailCardModal({
        return;
      }
 
-
      setLoading(true);
      callAction(() => getProductDetailsAction(productId), "Không thể tải chi tiết sản phẩm. Vui lòng thử lại sau.").then((result) => {
        if (ignore) return;
-
 
        if ("success" in result && result.success) {
            const detailData = result.data as ClientProductDetailDataInterface;
@@ -79,16 +74,13 @@ export default function DetailCardModal({
        setLoading(false);
      });
 
-
    }, 0);
-
 
    return () => {
      ignore = true;
      window.clearTimeout(timerId);
    };
  }, [productId]);
-
 
  const handleClose = () => {
    // Xoá productId khỏi URL để tắt modal mà KHÔNG chuyển trang
@@ -97,13 +89,10 @@ export default function DetailCardModal({
    const query = params.toString();
    const newPath = query ? `${pathname}?${query}` : pathname;
 
-
    router.replace(newPath, { scroll: false });
  };
 
-
  if (!productId) return null;
-
 
  if (loading || !product) {
    return (
@@ -120,7 +109,6 @@ export default function DetailCardModal({
    );
  }
 
-
  return (
    <DetailCardProduct
        key={product.id}
@@ -130,5 +118,4 @@ export default function DetailCardModal({
    />
  );
 }
-
 

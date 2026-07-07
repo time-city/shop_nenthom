@@ -134,9 +134,9 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
   const getInputClass = (fieldName: keyof FullFormValues) => {
     const hasError = Boolean(errors[fieldName]);
     return `rounded-xl border-[1.5px] ${hasError
-        ? "border-[#6B1218] focus:ring-[#6B1218]/10"
-        : "border-[#6B4C35]/20 focus:border-[#6B1218] focus:ring-[#6B1218]/10"
-      } bg-white px-4 py-3 text-sm text-[#2C1810] outline-none transition placeholder:text-[#6B4C35]/35 focus:ring-4`;
+        ? "border-[#ff6b6b] focus:ring-[#ff6b6b]/20"
+        : "border-[#F5F0E8]/20 focus:border-[#D6A15F] focus:ring-[#D6A15F]/20"
+      } bg-black/40 px-4 py-3 text-sm text-[#F5F0E8] outline-none transition placeholder:text-[#F5F0E8]/35 focus:ring-4 backdrop-blur-sm`;
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -178,24 +178,24 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
     <form
       id="checkoutForm"
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-[#6B4C35]/10 bg-[#F8F0E4] p-5 shadow-[0_16px_36px_rgba(44,24,16,0.08)] sm:p-7 lg:p-8"
+      className="rounded-3xl border border-[#F5F0E8]/10 bg-[#F5F0E8]/5 backdrop-blur-md p-5 shadow-[0_16px_36px_rgba(0,0,0,0.5)] sm:p-7 lg:p-8"
     >
       <fieldset disabled={isSubmitting} className="contents">
         {!hasSession && (
-          <div className="mb-8 rounded-xl bg-[#6B1218] px-5 py-4 text-sm font-light text-[#F5F0E8]">
+          <div className="mb-8 rounded-xl bg-[#3a080f]/80 px-5 py-4 text-sm font-light text-[#F5F0E8]">
             🎁 Đăng ký thành viên để nhận ưu đãi cho lần mua tiếp theo{" "}
-            <a href="/register" className="font-medium text-[#F2E8D9]">
+            <a href="/register" className="font-medium text-[#D6A15F] hover:text-[#E5C07B] transition">
               Đăng ký ngay →
             </a>
           </div>
         )}
 
         <section className="mb-10">
-          <h2 className="relative mb-6 pb-4 font-serif text-[1.25rem] font-bold text-[#2C1810] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-[#6B1218]">
+          <h2 className="relative mb-6 pb-4 font-serif text-[1.25rem] font-bold text-[#F5F0E8] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-[#D6A15F]">
             Thông Tin Thanh Toán
           </h2>
           <div className="grid gap-5 md:grid-cols-2">
-            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35]">
+            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70">
               Họ và Tên
               <input
                 type="text"
@@ -205,12 +205,12 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
                 className={getInputClass("fullname")}
               />
               {errors.fullname && (
-                <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
+                <span className="text-xs text-[#ff6b6b] mt-1 normal-case tracking-normal font-medium">
                   {errors.fullname}
                 </span>
               )}
             </label>
-            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35]">
+            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70">
               Email
               <input
                 type="text"
@@ -220,12 +220,12 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
                 className={getInputClass("email")}
               />
               {errors.email && (
-                <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
+                <span className="text-xs text-[#ff6b6b] mt-1 normal-case tracking-normal font-medium">
                   {errors.email}
                 </span>
               )}
             </label>
-            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35]">
+            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70">
               Số Điện Thoại
               <input
                 type="text"
@@ -236,7 +236,7 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
                 className={getInputClass("phone")}
               />
               {errors.phone && (
-                <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
+                <span className="text-xs text-[#ff6b6b] mt-1 normal-case tracking-normal font-medium">
                   {errors.phone}
                 </span>
               )}
@@ -245,11 +245,11 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
         </section>
 
         <section className="mb-10">
-          <h2 className="relative mb-6 pb-4 font-serif text-[1.25rem] font-bold text-[#2C1810] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-[#6B1218]">
+          <h2 className="relative mb-6 pb-4 font-serif text-[1.25rem] font-bold text-[#F5F0E8] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-[#D6A15F]">
             Địa Chỉ Giao Hàng
           </h2>
           <div className="grid gap-5 md:grid-cols-2">
-            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35] md:col-span-2">
+            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70 md:col-span-2">
               Địa Chỉ
               <input
                 type="text"
@@ -260,12 +260,12 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
                 className={getInputClass("address")}
               />
               {errors.address && (
-                <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
+                <span className="text-xs text-[#ff6b6b] mt-1 normal-case tracking-normal font-medium">
                   {errors.address}
                 </span>
               )}
             </label>
-            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35]">
+            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70">
               Tỉnh / Thành Phố
               <select
                 name="city"
@@ -284,22 +284,22 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
                 )}
               </select>
               {errors.city && (
-                <span className="text-xs text-[#6B1218] mt-1 normal-case tracking-normal font-medium">
+                <span className="text-xs text-[#ff6b6b] mt-1 normal-case tracking-normal font-medium">
                   {errors.city}
                 </span>
               )}
             </label>
-            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35]">
+            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70">
               Mã Bưu Chính
               <input
                 type="text"
                 name="zip"
                 value={formValues.zip}
                 readOnly
-                className={`${getInputClass("zip")} cursor-not-allowed bg-[#F2E8D9]/40 text-[#6B4C35]/65`}
+                className={`${getInputClass("zip")} cursor-not-allowed bg-black/20 text-[#F5F0E8]/50`}
               />
             </label>
-            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#6B4C35] md:col-span-2">
+            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70 md:col-span-2">
               Ghi Chú Đơn Hàng (Tùy Chọn)
               <textarea
                 name="note"
@@ -313,14 +313,14 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
         </section>
 
         <section>
-          <h2 className="relative mb-6 pb-4 font-serif text-[1.25rem] font-bold text-[#2C1810] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-[#6B1218]">
+          <h2 className="relative mb-6 pb-4 font-serif text-[1.25rem] font-bold text-[#F5F0E8] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-[#D6A15F]">
             Phương Thức Thanh Toán
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
             <label
-              className={`relative cursor-pointer rounded-xl border-[1.5px] px-5 py-4 text-center text-sm transition ${payment === "cod"
-                  ? "border-[#6B1218] bg-[#6B1218]/5 text-[#2C1810]"
-                  : "border-[#6B4C35]/20 bg-white text-[#2C1810]"
+              className={`relative cursor-pointer rounded-xl border-[1.5px] px-5 py-4 text-center text-sm transition backdrop-blur-sm ${payment === "cod"
+                  ? "border-[#D6A15F] bg-[#D6A15F]/20 text-[#D6A15F]"
+                  : "border-[#F5F0E8]/20 bg-black/40 text-[#F5F0E8]"
                 }`}
             >
               <input
@@ -334,9 +334,9 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
               Thanh Toán Khi Nhận Hàng
             </label>
             <label
-              className={`relative cursor-pointer rounded-xl border-[1.5px] px-5 py-4 text-center text-sm transition ${payment === "bank"
-                  ? "border-[#6B1218] bg-[#6B1218]/5 text-[#2C1810]"
-                  : "border-[#6B4C35]/20 bg-white text-[#2C1810]"
+              className={`relative cursor-pointer rounded-xl border-[1.5px] px-5 py-4 text-center text-sm transition backdrop-blur-sm ${payment === "bank"
+                  ? "border-[#D6A15F] bg-[#D6A15F]/20 text-[#D6A15F]"
+                  : "border-[#F5F0E8]/20 bg-black/40 text-[#F5F0E8]"
                 }`}
             >
               <input
@@ -352,15 +352,15 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
           </div>
 
           {payment === "bank" ? (
-            <div className="mt-5 rounded-xl bg-white p-4 text-sm leading-7 text-[#6B4C35]">
+            <div className="mt-5 rounded-xl bg-black/40 border border-[#F5F0E8]/10 p-4 text-sm leading-7 text-[#F5F0E8]/80 backdrop-blur-sm">
               <p>
-                <strong>Ngân hàng:</strong> Vietcombank
+                <strong className="text-[#F5F0E8]">Ngân hàng:</strong> Vietcombank
               </p>
               <p>
-                <strong>Số tài khoản:</strong> 1234567890
+                <strong className="text-[#F5F0E8]">Số tài khoản:</strong> 1234567890
               </p>
               <p>
-                <strong>Chủ tài khoản:</strong> CHAMCHAM
+                <strong className="text-[#F5F0E8]">Chủ tài khoản:</strong> CHAMCHAM
               </p>
             </div>
           ) : null}

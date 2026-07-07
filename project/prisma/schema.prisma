@@ -99,6 +99,7 @@ model User {
   discount_usages    DiscountUsage[]
   history_logs       OrderHistoryLog[] @relation("AdminLogs")
   notifications      Notification[]
+  reviews            Review[]
 
   @@index([role, created_at])
   @@map("users")
@@ -111,6 +112,8 @@ model ShippingAddress {
   fullname    String
   phone       String
   address     String
+  ward        String
+  district    String
   city        String
   postal_code String?
   is_default  Boolean @default(false)
@@ -171,6 +174,7 @@ model Product {
   cart_items  CartItem[]
   order_items OrderItem[]
   scents      ProductScent[]
+  reviews     Review[]
 
   @@index([category_id, is_active, base_price_cents])
   @@index([created_at(sort: Desc)])
@@ -456,5 +460,32 @@ model DiscountUsage {
   order         Order        @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   @@map("discount_usages")
+  @@schema("public")
+}
+
+// ==========================================
+// 8. ĐÁNH GIÁ SẢN PHẨM (REVIEWS)
+// ==========================================
+
+model Review {
+  id              String    @id @default(uuid()) @db.Uuid
+  product_id      String    @db.Uuid
+  user_id         String    @db.Uuid
+  rating          Int       // 1 to 5
+  content         String    @db.Text
+  images          String[]  // Array of Cloudinary URLs
+  is_published    Boolean   @default(false)
+  admin_reply     String?   @db.Text
+  replied_at      DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  // Relations
+  product         Product   @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id, is_published])
+  @@index([user_id])
+  @@map("reviews")
   @@schema("public")
 }

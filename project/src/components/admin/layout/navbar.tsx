@@ -67,6 +67,16 @@ const managementLinks: AdminNavItem[] = [
     ),
   },
   {
+    href: "/admin/reviews",
+    label: "Đánh giá",
+    icon: (
+      <>
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        <polygon points="12 6 13.5 9 17 9.5 14.5 12 15 15.5 12 14 9 15.5 9.5 12 7 9.5 10.5 9" fill="currentColor" opacity="0.3" />
+      </>
+    ),
+  },
+  {
     href: "/admin/ingredientStore",
     label: "Kho nguyên liệu",
     icon: (

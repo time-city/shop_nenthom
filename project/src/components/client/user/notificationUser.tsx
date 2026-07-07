@@ -19,7 +19,7 @@ import { callAction } from "@/src/lib/utils/callAction";
 import { useUserNotificationSocket } from "@/src/hooks/useUserNotificationSocket";
 import { useCartStore } from "@/src/store/useCartStore";
 import type { UserNotification, OrderCancelledData } from "@/src/lib/types/client";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 
 const formatNotificationTime = (value: Date | string) => {
   const date = new Date(value);

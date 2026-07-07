@@ -42,6 +42,8 @@ export type DetailCardProductProps = {
   product: import("../../interface/clientInterface").ClientProductDetailInterface;
   onClose?: () => void;
   isModal?: boolean;
+  similarProducts?: import("../../interface/clientInterface").ClientProductItemInterface[];
+  initialReviews?: any;
 };
 
 

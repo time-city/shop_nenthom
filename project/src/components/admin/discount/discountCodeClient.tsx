@@ -2,14 +2,14 @@
 
 import { Plus } from "lucide-react";
 import { startTransition, useCallback, useEffect, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import dynamic from "next/dynamic";
 import ModalDeleteProduct from "@/src/components/admin/product/modalDeleteProduct";
 const ModalDiscount = dynamic(() => import("@/src/components/admin/discount/modalDiscount"), { ssr: false });
 const ModalEditDiscount = dynamic(() => import("@/src/components/admin/discount/modalEditDiscount"), { ssr: false });
 import LoadingState from "@/src/components/ui/loadingState";
-import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/adminHeader";
 import { AdminEditButton } from "@/src/components/ui/actionButtons";
 import { disableDiscountAction, getDiscountsAction } from "@/src/lib/action/discount.action";
 import type {
@@ -166,8 +166,8 @@ export default function DiscountCodeClient() {
                         <td>
                           <div className="flex items-center gap-2">
                             <span className="font-semibold">{discount.used_count}</span>
-                            <span className="text-[#6B4C35]">/</span>
-                            <span className="text-[#6B4C35]">{discount.max_uses}</span>
+                            <span className="text-white/60">/</span>
+                            <span className="text-white/60">{discount.max_uses}</span>
                           </div>
                           <div className="mt-1.5 h-1.5 w-24 overflow-hidden rounded-full bg-[#6B4E35]/15">
                             <div
@@ -180,7 +180,7 @@ export default function DiscountCodeClient() {
                         </td>
 
                         <td>
-                          <span className="text-sm text-[#6B4C35]">{formatDate(discount.expires_at)}</span>
+                          <span className="text-sm text-white/60">{formatDate(discount.expires_at)}</span>
                         </td>
 
                         <td>
@@ -233,7 +233,7 @@ export default function DiscountCodeClient() {
                     {isLoading ? (
                       <tr>
                         <td colSpan={7} className="px-5 py-5">
-                          <LoadingState label="Đang tải danh sách mã giảm giá..." />
+                          <LoadingState type="table" label="Đang tải danh sách mã giảm giá..." />
                         </td>
                       </tr>
                     ) : null}
@@ -248,7 +248,7 @@ export default function DiscountCodeClient() {
 
                     {!isLoading && !error && discounts.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-5 py-8 text-center text-sm text-[#6B4C35]">
+                        <td colSpan={7} className="px-5 py-8 text-center text-sm text-white/60">
                           Chưa có dữ liệu mã giảm giá
                         </td>
                       </tr>

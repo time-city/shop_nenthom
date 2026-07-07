@@ -1,7 +1,9 @@
 import Footer from "@/src/components/client/layout/footer";
 import Header from "@/src/components/client/layout/header";
 import Intro from "../../components/ui/intro";
-import AosProvider from "../../components/ui/aos-provider";
+import AosProvider from "../../components/ui/aosProvider";
+
+import MainWrapper from "@/src/components/client/layout/mainWrapper";
 
 export default function ClientLayout({
   children,
@@ -13,7 +15,7 @@ export default function ClientLayout({
       <AosProvider />
       <Intro />
       <Header />
-      <div className="flex flex-1 flex-col pt-20">{children}</div>
+      <MainWrapper>{children}</MainWrapper>
       <Footer />
     </>
   );

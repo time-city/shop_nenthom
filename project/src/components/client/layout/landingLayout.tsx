@@ -1,13 +1,15 @@
 import Footer from "@/src/components/client/layout/footer";
 import Header from "@/src/components/client/layout/header";
 import Intro from "../../ui/intro";
-import HomePage from "@/src/app/(client)/home/page";
-import CollectionPage from "@/src/app/(client)/collection/page";
-import CustomPage from "@/src/app/(client)/custom/page";
-import StoryPage from "@/src/app/(client)/story/page";
-import ContactPage from "@/src/app/(client)/contact/page";
+import HomePage from "@/src/app/(client)/home/section";
+import CollectionPage from "@/src/app/(client)/collection/section";
+import CustomPage from "@/src/app/(client)/custom/section";
+import StoryPage from "@/src/app/(client)/story/section";
+import ContactPage from "@/src/app/(client)/contact/section";
 import type { CollectionPageProps } from "@/src/lib/types/client";
-import mainBgImage from "../../../../asset/bg_1.jpg";
+import mainBgImage from "@/public/assets/bg_1.jpg";
+
+import AosProvider from "../../ui/aosProvider";
 
 interface LandingLayoutProps {
   searchParams?: CollectionPageProps["searchParams"];
@@ -16,6 +18,7 @@ interface LandingLayoutProps {
 export default function LandingLayout({ searchParams }: LandingLayoutProps) {
   return (
     <>
+      <AosProvider />
       <Intro />
       <Header />
       <div className="flex flex-1 flex-col pt-20">

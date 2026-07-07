@@ -13,7 +13,7 @@ import { getProductsAction } from "@/src/lib/action/product.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import type { CollectionSearchParams } from "@/src/lib/types/client";
 import { CollectionContext } from "@/src/components/client/collection/collectionClient";
-import Spinner from "@/src/components/ui/Spinner";
+import Spinner from "@/src/components/ui/spinner";
 import { callAction } from "@/src/lib/utils/callAction";
 import CustomDropdown from "@/src/components/client/common/customDropdown";
 
@@ -74,7 +74,7 @@ export default function CollectionProducts({
   initialFilters,
   initialMeta,
   initialProducts,
-  pageSize,
+  pageSize = 8,
 }: CollectionProductsClientProps) {
   const context = useContext(CollectionContext);
 
@@ -399,45 +399,50 @@ export default function CollectionProducts({
            100% { opacity: 1; transform: translateY(0); }
          }
          .animate-slide-up-fade {
-           animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+           animation: slideUpFade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
            opacity: 0;
          }
        `}} />
-        {isLoading ? (
-          <div className="absolute inset-x-0 top-4 z-10 mx-auto w-fit flex items-center gap-2 rounded-full bg-[#F5F0E8] px-4 py-2 text-sm text-[#7A1218] shadow-[0_10px_24px_rgba(44,8,12,0.22)]">
-            <Spinner size="sm" />
-            <span>Đang tải sản phẩm...</span>
-          </div>
-        ) : null}
-
-
         <div
-          className={`collection-grid mx-auto mt-10 grid max-w-[1180px] grid-cols-2 gap-4 sm:grid-cols-2 sm:gap-7 xl:grid-cols-4 ${isLoading ? "opacity-55 transition-opacity duration-300" : "transition-opacity duration-300"}`}
+          className="collection-grid mx-auto mt-10 flex max-w-[1180px] snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 sm:grid sm:grid-cols-2 sm:gap-7 sm:overflow-x-visible sm:px-0 xl:grid-cols-4 transition-opacity duration-300 scrollbar-hide"
           id="collection-grid"
         >
-          {pageProducts.map((product, index) => (
-            <div
-              key={`${product.id}-${currentPage}`}
-              className="animate-slide-up-fade"
-              style={{ animationDelay: `${index * 80}ms` }}
-              suppressHydrationWarning
-            >
-              <CardProduct
-                href={`/collection/${product.id}`}
-                id={product.id}
-                imageUrl={getAvatarImage(product.images)}
-                index={index}
-                name={product.name}
-                price={product.base_price_cents}
-                scentNote={
-                  product.description ??
-                  product.category?.description ??
-                  product.category?.name ??
-                  "Nến thơm thủ công tinh giản."
-                }
-              />
-            </div>
-          ))}
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={`skeleton-${i}`} className="w-[60vw] shrink-0 snap-center sm:w-auto flex flex-col gap-4 rounded-[2rem] bg-black/10 backdrop-blur-xl border border-[#F5F0E8]/5 p-4 shadow-lg animate-pulse">
+                <div className="aspect-[4/5] w-full rounded-2xl bg-[#F5F0E8]/10"></div>
+                <div className="px-2 pb-2">
+                  <div className="h-5 w-3/4 bg-[#F5F0E8]/10 rounded mb-2"></div>
+                  <div className="h-4 w-1/2 bg-[#F5F0E8]/10 rounded mb-4"></div>
+                  <div className="h-10 w-full bg-[#F5F0E8]/10 rounded-xl"></div>
+                </div>
+              </div>
+            ))
+          ) : (
+            pageProducts.map((product, index) => (
+              <div
+                key={`${product.id}-${currentPage}`}
+                className="w-[60vw] shrink-0 snap-center sm:w-auto animate-slide-up-fade"
+                style={{ animationDelay: `${index * 150}ms` }}
+                suppressHydrationWarning
+              >
+                <CardProduct
+                  href={`/collection/${product.id}`}
+                  id={product.id}
+                  imageUrl={getAvatarImage(product.images)}
+                  index={index}
+                  name={product.name}
+                  price={product.base_price_cents}
+                  scentNote={
+                    product.description ??
+                    product.category?.description ??
+                    product.category?.name ??
+                    "Nến thơm thủ công tinh giản."
+                  }
+                />
+              </div>
+            ))
+          )}
         </div>
       </div>
 

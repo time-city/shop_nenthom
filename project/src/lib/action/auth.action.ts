@@ -2,6 +2,7 @@
 import { getPublicErrorMessage } from "../utils/publicError";
 import { AuthService } from "../services/auth.service";
 import { createSession, deleteSession, getSession } from "../session";
+import prisma from "../prisma";
 import {
     ChangePasswordInput,
     ForgotPasswordInput,
@@ -58,6 +59,11 @@ export async function loginUser(data: LoginFormState) {
             ? await AuthService.consumeNewUserFlag(user.id)
             : false;
 
+        const defaultAddress = await prisma.shippingAddress.findFirst({
+            where: { user_id: user.id, is_default: true }
+        });
+        const hasInfo = !!user.phone && !!defaultAddress;
+
         return {
             success: true,
             user: {
@@ -66,6 +72,7 @@ export async function loginUser(data: LoginFormState) {
                 email: user.email,
                 role: user.role,
                 is_newUser: isNewUser,
+                has_info: hasInfo,
             }
         };
     } catch (err) {

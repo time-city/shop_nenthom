@@ -9,14 +9,14 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import dynamic from "next/dynamic";
 import ModalDeleteConfirm from "@/src/components/admin/common/modalDeleteConfirm";
 const ModalIngredient = dynamic(() => import("@/src/components/admin/ingredient/modalIngredient"), { ssr: false });
 const ModalEditIngre = dynamic(() => import("@/src/components/admin/ingredient/modalEditIngre"), { ssr: false });
 import LoadingState from "@/src/components/ui/loadingState";
-import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/adminHeader";
 import {
   AdminDeleteButton,
   AdminEditButton,
@@ -530,7 +530,7 @@ export default function IngredientStoreClient() {
       />
 
       <div className="dashboard-page-content">
-        <section className="rounded-2xl border border-[#6B4E35]/15 bg-[#F8F0E4] p-5 shadow-[0_6px_18px_rgba(44,24,16,0.08)]">
+        <section className="dashboard-card p-5">
           <div
             className="mb-6 flex gap-0 overflow-x-auto overflow-y-hidden border-b-2 border-[#6B4E35]/15"
             role="tablist"
@@ -543,10 +543,10 @@ export default function IngredientStoreClient() {
               return (
                 <button
                   key={tab.id}
-                  className={`relative flex shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors after:absolute after:bottom-[-2px] after:left-0 after:h-0.5 after:w-full after:origin-center after:scale-x-0 after:bg-[#6B1218] after:transition-transform ${
+                  className={`relative flex shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors after:absolute after:bottom-[-2px] after:left-0 after:h-0.5 after:w-full after:origin-center after:scale-x-0 after:bg-[#D6A15F] after:transition-transform ${
                     active
-                      ? "text-[#6B1218] after:scale-x-100"
-                      : "text-[#6B4C35] hover:text-[#2C1810]"
+                      ? "text-[#D6A15F] after:scale-x-100"
+                      : "text-white/60 hover:text-white"
                   }`}
                   type="button"
                   role="tab"
@@ -561,7 +561,7 @@ export default function IngredientStoreClient() {
           </div>
 
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-sm text-[#6B4C35]">
+            <span className="text-sm text-white/60">
               {counts[activeTab]} mục trong {activeConfig.label.toLowerCase()}
             </span>
             <button
@@ -576,7 +576,7 @@ export default function IngredientStoreClient() {
 
           <div className="overflow-visible">
             {isLoadingOptions ? (
-              <LoadingState label="Đang tải dữ liệu nguyên liệu..." />
+              <LoadingState type="table" label="Đang tải dữ liệu nguyên liệu..." />
             ) : null}
             {!isLoadingOptions && error ? (
               <div className="px-5 py-8 text-center text-sm text-[#8A1119]">
@@ -670,7 +670,7 @@ function TableShell({
             {headers.map((header, index) => (
               <th
                 key={index}
-                className="bg-[#F2E8D9]/70 px-5 py-3 text-xs font-bold uppercase tracking-[0.1em] text-[#6B4C35]"
+                className="bg-[rgba(214,161,95,0.15)] px-5 py-3 text-xs font-bold uppercase tracking-[0.1em] text-[#D6A15F]"
               >
                 {header}
               </th>
@@ -685,7 +685,7 @@ function TableShell({
 
 function TableCell({ children }: AdminTableCellProps) {
   return (
-    <td className="border-t border-[#6B4E35]/10 px-5 py-4 text-sm text-[#2C1810]">
+    <td className="border-t border-[#F5F0E8]/10 px-5 py-4 text-sm text-[#F5F0E8]">
       {children}
     </td>
   );
@@ -701,7 +701,7 @@ function ScentTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
             <span className="font-bold">{item.name}</span>
           </TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#6B1218] text-xl">{item.price}</span>
+            <span className="font-serif font-bold text-[#D6A15F] text-xl">{item.price}</span>
           </TableCell>
           <TableCell>
             <ActionButtons
@@ -732,7 +732,7 @@ function ColorTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
           </TableCell>
           <TableCell>{item.hex}</TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#6B1218] text-xl">{item.price}</span>
+            <span className="font-serif font-bold text-[#D6A15F] text-xl">{item.price}</span>
           </TableCell>
           <TableCell>
             <ActionButtons
@@ -756,7 +756,7 @@ function SizeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
             <span className="font-bold">{item.name}</span>
           </TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#6B1218] text-xl">{item.price}</span>
+            <span className="font-serif font-bold text-[#D6A15F] text-xl">{item.price}</span>
           </TableCell>
           <TableCell>
             <ActionButtons
@@ -780,7 +780,7 @@ function ToppingTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
             <span className="font-bold">{item.name}</span>
           </TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#6B1218] text-xl">{item.price}</span>
+            <span className="font-serif font-bold text-[#D6A15F] text-xl">{item.price}</span>
           </TableCell>
           <TableCell>
             <span
@@ -815,7 +815,7 @@ function TypeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
             <span className="font-bold">{item.name}</span>
           </TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#6B1218] text-xl">{item.price}</span>
+            <span className="font-serif font-bold text-[#D6A15F] text-xl">{item.price}</span>
           </TableCell>
           <TableCell>
             <ActionButtons

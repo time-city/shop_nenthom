@@ -43,6 +43,8 @@ export const UserService = {
 
             const addressData = {
                 city: data.city,
+                district: "",
+                ward: "",
                 fullname: data.fullname,
                 phone: data.phone,
                 address: data.address,

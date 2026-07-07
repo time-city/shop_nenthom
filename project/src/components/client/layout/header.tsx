@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, User, ClipboardList } from "lucide-react";
 import { getCurrentUser } from "../../../lib/action/user.action";
-import NavLinks from "@/src/components/client/layout/nav-links";
+import NavLinks from "@/src/components/client/layout/navLinks";
 import MobileMenu from "@/src/components/client/layout/mobileMenu";
 import CartBadge from "@/src/components/client/cart/cartBadge";
 import OrderBadge from "@/src/components/client/order/orderBadge";

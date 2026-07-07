@@ -1,16 +1,9 @@
 "use client";
+import { Box, Button, Divider, FormControlLabel, Modal, Radio, RadioGroup, TextField, Typography } from "@/src/components/ui/mui-mock";
 
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Modal from "@mui/material/Modal";
-import Radio from "@mui/material/Radio";
-import RadioGroup from "@mui/material/RadioGroup";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
+
 import { startTransition, useEffect, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import { createDiscountAction } from "../../../lib/action/discount.action";
 import {
   getFriendlyResponseError,

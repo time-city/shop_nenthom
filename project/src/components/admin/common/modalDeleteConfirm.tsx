@@ -1,10 +1,7 @@
 "use client";
+import { Box, Button, Divider, Modal, Typography } from "@/src/components/ui/mui-mock";
 
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
-import Modal from "@mui/material/Modal";
-import Typography from "@mui/material/Typography";
+
 import type { AdminDeleteConfirmModalProps } from "../../../lib/types/admin";
 import styles from "../../../styles/adminModal.module.css";
 

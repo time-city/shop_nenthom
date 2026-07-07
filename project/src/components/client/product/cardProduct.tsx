@@ -4,6 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import type { CardProductProps } from "../../../lib/types/client";
 import styles from "../../../styles/cardProduct.module.css";
+import { useTransition } from "react";
+import { addToCartAction } from "@/src/lib/action/cart.action";
+import { useCartStore } from "@/src/store/useCartStore";
+import { useToast } from "@/src/components/ui/toastProvider";
 
 const formatPrice = (price: number | string) => {
   if (typeof price === "number") {
@@ -27,20 +31,47 @@ const getCandleWaxClass = (color: string) => {
 };
 
 export default function CardProduct({
+  id,
   candleColor,
   href,
   imageUrl,
   name,
   price,
   scentNote,
-}: CardProductProps) {
+}: CardProductProps & { id?: string }) {
+  const [isPending, startTransition] = useTransition();
+  const incrementCartCount = useCartStore((state) => state.incrementCartCount);
+  const decrementCartCount = useCartStore((state) => state.decrementCartCount);
+  const { toast } = useToast();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault(); // Ngăn Link bao ngoài (nếu có)
+    e.stopPropagation();
+
+    if (!id || isPending) return;
+
+    // 1. Optimistic update
+    incrementCartCount(1);
+    toast.success("Đã thêm vào giỏ hàng");
+
+    // 2. Call API
+    startTransition(async () => {
+      const result = await addToCartAction({ product_id: id, quantity: 1 });
+      if (result?.error) {
+        // Rollback
+        decrementCartCount(1);
+        toast.error(result.error);
+      }
+    });
+  };
+
   return (
     <article
-      className="product-card group flex flex-col h-full overflow-hidden rounded-md bg-[#F5F0E8] text-[#2C1810] shadow-[0_14px_30px_rgba(44,8,12,0.22)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(44,8,12,0.28)]"
+      className="product-card group relative flex flex-col h-full overflow-hidden rounded-md bg-[#F5F0E8] text-[#2C1810] shadow-[0_14px_30px_rgba(44,8,12,0.22)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(44,8,12,0.28)]"
     >
-      <Link
-        href={href}
-        aria-label={`Xem chi tiết ${name}`}
+      <Link href={href} className="absolute inset-0 z-10" aria-label={`Xem chi tiết ${name}`} />
+      
+      <div
         className="product-image relative block w-full aspect-[4/5] overflow-hidden bg-[#FAF6F0] p-0 transition duration-300"
       >
         {imageUrl ? (
@@ -63,31 +94,30 @@ export default function CardProduct({
             </div>
           </div>
         )}
-      </Link>
+      </div>
 
-      <div className="product-info flex flex-col flex-grow border-t border-[#2C1810]/5 p-3 sm:p-5">
+      <div className="product-info flex flex-col flex-grow border-t border-[#2C1810]/5 p-3 sm:p-5 relative z-20 pointer-events-none">
         <div className="flex-grow">
-          <Link href={href} className="block">
-            <h3 className="line-clamp-1 font-serif text-[1rem] sm:text-[1.32rem] font-medium leading-tight text-[#2C1810] transition group-hover:text-[#6B1218]">
-              {name}
-            </h3>
-          </Link>
+          <h3 className="line-clamp-1 font-serif text-[1rem] sm:text-[1.32rem] font-medium leading-tight text-[#2C1810] transition group-hover:text-[#6B1218]">
+            {name}
+          </h3>
 
           <p className="scent-note mt-1 sm:mt-2 line-clamp-1 text-[0.75rem] sm:text-[0.8rem] leading-4 text-[#2C1810]/80">
             {scentNote || "Nến thơm thủ công tinh giản."}
           </p>
         </div>
 
-        <div className="mt-3 pt-3 sm:mt-5 sm:pt-4 border-t border-[#2C1810]/5 flex flex-col items-stretch sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+        <div className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-[#2C1810]/5 flex flex-col justify-end gap-2 sm:gap-3">
           <span className="product-price font-sans text-[1rem] sm:text-[1.12rem] font-bold text-[#6B1218] whitespace-nowrap">
             {formatPrice(price)}
           </span>
-          <Link
-            href={href}
-            className="btn-add-cart flex h-8 sm:h-9 items-center justify-center rounded-md bg-[#6B1218] px-3 sm:px-5 text-center text-[0.65rem] sm:text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-[#F5F0E8] shadow-[0_4px_10px_rgba(107,18,24,0.15)] transition hover:bg-[#520d12] hover:shadow-[0_6px_14px_rgba(107,18,24,0.25)] whitespace-nowrap"
+          <button
+            onClick={handleAddToCart}
+            disabled={isPending}
+            className="btn-add-cart pointer-events-auto flex h-8 sm:h-9 items-center justify-center rounded-md bg-[#6B1218] px-3 sm:px-5 text-center text-[0.65rem] sm:text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-[#F5F0E8] shadow-[0_4px_10px_rgba(107,18,24,0.15)] transition group-hover:bg-[#520d12] group-hover:shadow-[0_6px_14px_rgba(107,18,24,0.25)] whitespace-nowrap disabled:opacity-70"
           >
-            Chi tiết
-          </Link>
+            {isPending ? "Đang thêm..." : "Thêm vào giỏ"}
+          </button>
         </div>
       </div>
     </article>

@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { startTransition, useEffect, useState, useRef } from "react";
 import type { CartItemProps } from "../../../lib/types/client";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("vi-VN").format(price) + "đ";
@@ -96,7 +97,7 @@ export default function CartItem({
       : "";
 
   return (
-    <article className="grid gap-5 border-b border-[#6B4C35]/10 px-5 py-6 last:border-b-0 sm:px-7 md:grid-cols-[auto_116px_1fr_auto] md:gap-8 md:py-8">
+    <article className="grid gap-5 border-b border-[#F5F0E8]/10 px-5 py-6 last:border-b-0 sm:px-7 md:grid-cols-[auto_116px_1fr_auto] md:gap-8 md:py-8">
       <label className="flex items-start pt-1">
         <span className="sr-only">Chọn sản phẩm {getItemName(item)}</span>
         <input
@@ -104,14 +105,17 @@ export default function CartItem({
           checked={selected}
           onChange={(event) => onSelectChange(index, event.target.checked)}
           disabled={disabled}
-          className="size-5 rounded border-[#6B4C35]/30 accent-[#6B1218] disabled:cursor-not-allowed disabled:opacity-45"
+          className="size-5 rounded border-[#F5F0E8]/30 accent-[#D6A15F] disabled:cursor-not-allowed disabled:opacity-45"
         />
       </label>
 
       <div
-        className="relative flex size-[92px] items-center justify-center overflow-hidden rounded-xl bg-[#FAF6F0] shadow-[0_14px_26px_rgba(44,24,16,0.08)] md:size-[116px]"
+        className="relative flex size-[92px] items-center justify-center overflow-hidden rounded-xl bg-black/40 shadow-[0_14px_26px_rgba(0,0,0,0.4)] md:size-[116px] border border-[#F5F0E8]/10 group"
         aria-hidden="true"
       >
+        {item.productId ? (
+          <Link href={`/collection/${item.productId}`} className="absolute inset-0 z-10" aria-label={`Xem ${getItemName(item)}`} />
+        ) : null}
         {item.imageUrl ? (
           <Image
             src={item.imageUrl}
@@ -119,7 +123,7 @@ export default function CartItem({
             width={116}
             height={116}
             unoptimized
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : (
           <span className="text-xl">🕯</span>
@@ -127,36 +131,42 @@ export default function CartItem({
       </div>
 
       <div>
-        <h3 className="mb-3 font-serif text-[1.4rem] font-medium leading-tight text-[#2C1810]">
-          {getItemName(item)}
+        <h3 className="mb-3 font-serif text-[1.4rem] font-medium leading-tight text-[#F5F0E8] transition-colors hover:text-[#D6A15F]">
+          {item.productId ? (
+            <Link href={`/collection/${item.productId}`}>
+              {getItemName(item)}
+            </Link>
+          ) : (
+            getItemName(item)
+          )}
         </h3>
         {item.color ? (
-          <p className="mb-2 text-sm font-light text-[#6B4C35]">
+          <p className="mb-2 text-sm font-light text-[#F5F0E8]/70">
             Màu: {item.color}
           </p>
         ) : null}
         {item.size ? (
-          <p className="mb-2 text-sm font-light text-[#6B4C35]">
+          <p className="mb-2 text-sm font-light text-[#F5F0E8]/70">
             Kích thước: {item.size}
           </p>
         ) : null}
         {packLabel ? (
-          <p className="mb-2 text-sm font-light text-[#6B4C35]">
+          <p className="mb-2 text-sm font-light text-[#F5F0E8]/70">
             Bao bì: {packLabel}
           </p>
         ) : null}
       </div>
 
       <div className="text-left md:text-right">
-        <div className="mb-5 font-serif text-[1.45rem] font-bold text-[#6B1218]">
+        <div className="mb-5 font-serif text-[1.45rem] font-bold text-[#D6A15F]">
           {formatPrice(itemTotal)}
         </div>
-        <div className="mb-5 ml-0 flex w-fit items-center gap-2 rounded-full border border-[#6B4C35]/20 bg-[#F8F0E4] p-1 md:ml-auto">
+        <div className="mb-5 ml-0 flex w-fit items-center gap-2 rounded-full border border-[#D6A15F]/20 bg-black/30 p-1 md:ml-auto">
           <button
             type="button"
             onClick={() => handleQuantityChange(-1)}
             disabled={quantityDisabled}
-            className="flex size-8 items-center justify-center rounded-full border border-[#6B1218]/20 text-lg text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-45"
+            className="flex size-8 items-center justify-center rounded-full border border-[#D6A15F]/30 text-lg text-[#F5F0E8] transition hover:border-[#D6A15F] hover:bg-[#D6A15F] hover:text-[#2C1810] disabled:cursor-not-allowed disabled:opacity-45"
             aria-label="Giảm số lượng"
           >
             −
@@ -191,13 +201,13 @@ export default function CartItem({
               }
             }}
             disabled={quantityDisabled}
-            className="w-10 text-center font-serif text-base font-bold bg-transparent border-none outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className="w-10 text-center font-serif text-base font-bold text-[#F5F0E8] bg-transparent border-none outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
           <button
             type="button"
             onClick={() => handleQuantityChange(1)}
             disabled={quantityDisabled}
-            className="flex size-8 items-center justify-center rounded-full border border-[#6B1218]/20 text-lg text-[#2C1810] transition hover:border-[#6B1218] hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-45"
+            className="flex size-8 items-center justify-center rounded-full border border-[#D6A15F]/30 text-lg text-[#F5F0E8] transition hover:border-[#D6A15F] hover:bg-[#D6A15F] hover:text-[#2C1810] disabled:cursor-not-allowed disabled:opacity-45"
             aria-label="Tăng số lượng"
           >
             +

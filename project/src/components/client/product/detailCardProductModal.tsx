@@ -1,8 +1,9 @@
 "use client";
+import { Box, Modal } from "@/src/components/ui/mui-mock";
+
 
 import React from "react";
-import Box from "@mui/material/Box";
-import Modal from "@mui/material/Modal";
+
 import styles from "../../../styles/detailCardProduct.module.css";
 import { DetailCardProductModalProps } from "../../../interface/clientInterface";
 

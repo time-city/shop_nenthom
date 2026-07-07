@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import ModalSupport from "@/src/components/admin/support/modalSupport";
 import LoadingState from "@/src/components/ui/loadingState";
 import { useSupportStore } from "@/src/store/useSupportStore";
-import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/adminHeader";
 import type {
   AdminContactItemInterface,
   AdminContactsSuccessResponseInterface,
@@ -226,7 +226,7 @@ export default function SupportClient() {
                     {isLoadingContacts ? (
                       <tr>
                         <td colSpan={5} className="px-5 py-5">
-                          <LoadingState label="Đang tải tin nhắn hỗ trợ..." />
+                          <LoadingState type="table" label="Đang tải tin nhắn hỗ trợ..." />
                         </td>
                       </tr>
                     ) : null}
@@ -260,7 +260,7 @@ export default function SupportClient() {
                             {contact.name}
                           </div>
                         </td>
-                        <td className="text-sm text-[#6B4C35]">{contact.email}</td>
+                        <td className="text-sm text-white/60">{contact.email}</td>
                         <td>{contact.subject}</td>
                         <td>
                           <span
@@ -278,7 +278,7 @@ export default function SupportClient() {
                       <tr>
                         <td
                           colSpan={5}
-                          className="px-5 py-8 text-center text-sm text-[#6B4C35]"
+                          className="px-5 py-8 text-center text-sm text-white/60"
                         >
                           Chưa có tin nhắn hỗ trợ
                         </td>

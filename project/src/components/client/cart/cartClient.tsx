@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import {
   getFriendlyResponseError,
   isUserInputError,
@@ -15,6 +15,7 @@ import CartSummary from "@/src/components/client/cart/cartSummary";
 import CheckoutForm from "@/src/components/client/checkout/checkoutForm";
 import CheckoutSummary from "@/src/components/client/checkout/checkoutSummary";
 import LoadingState from "@/src/components/ui/loadingState";
+import CartSuggestedProducts from "@/src/components/client/cart/cartSuggestedProducts";
 import { useCartStore } from "@/src/store/useCartStore";
 import type {
   ClientCartActionItemInterface,
@@ -54,7 +55,7 @@ const mapCartItem = (item: ClientCartActionItemInterface): ClientCartItem => ({
   name: item.product.name,
   pack: item.packaging?.name,
   price: getCartItemPrice(item),
-  productId: item.product_id,
+  productId: item.product.id,
   quantity: item.quantity,
   scent: item.scent?.name ?? item.product.name,
   size: item.size?.weight_gram
@@ -233,6 +234,21 @@ export default function CartClient() {
 
     if (!targetItem?.itemId) return;
 
+    // 1. Lưu state cũ
+    const previousCart = [...cart];
+    const previousSelected = [...selectedItemIds];
+
+    // 2. Cập nhật state UI ngay lập tức
+    const nextCart = cart.filter((_, itemIndex) => itemIndex !== index);
+    setCart(nextCart);
+    setCartCount(nextCart.length);
+    setSelectedItemIds((currentIds) =>
+      currentIds.filter((itemId) => itemId !== targetItem.itemId),
+    );
+    setDeleteIndex(null);
+    toast.success("Đã xóa sản phẩm khỏi giỏ hàng");
+
+    // 3. Gọi API ở background
     setIsMutatingCart(true);
 
     try {
@@ -240,18 +256,18 @@ export default function CartClient() {
       const result = await callAction(() => removeCartItemAction({ itemId: targetItem.itemId }), "Không thể xóa sản phẩm khỏi giỏ hàng. Vui lòng thử lại sau.");
 
       if ("error" in result && result.error) {
+        // Rollback
+        setCart(previousCart);
+        setCartCount(previousCart.length);
+        setSelectedItemIds(previousSelected);
         toast.error(getFriendlyResponseError(result.error));
-        return;
       }
-
-      toast.success("Đã xóa sản phẩm khỏi giỏ hàng");
-      setDeleteIndex(null);
-      const nextCart = cart.filter((_, itemIndex) => itemIndex !== index);
-      setCart(nextCart);
-      setCartCount(nextCart.length);
-      setSelectedItemIds((currentIds) =>
-        currentIds.filter((itemId) => itemId !== targetItem.itemId),
-      );
+    } catch (err) {
+      // Rollback
+      setCart(previousCart);
+      setCartCount(previousCart.length);
+      setSelectedItemIds(previousSelected);
+      toast.error(err instanceof Error ? err.message : "Xóa giỏ hàng thất bại");
     } finally {
       setIsMutatingCart(false);
     }
@@ -409,6 +425,7 @@ export default function CartClient() {
         setSelectedItemIds([]);
         setAppliedDiscount(null);
         setStep("cart");
+        toast.success("Đặt hàng thành công!");
 
         router.push("/orderConfirmation");
       }
@@ -419,92 +436,82 @@ export default function CartClient() {
 
   if (step === "checkout" && selectedCart.length > 0) {
     return (
-      <main className="min-h-screen bg-[#F2E8D9] px-4 py-14 text-[#2C1810] sm:px-8 lg:px-12 xl:px-16">
-        <div className="mb-6">
-          <button
-            type="button"
-            onClick={() => setStep("cart")}
-            className="group flex items-center gap-2 text-sm font-light text-[#8B7355] transition hover:text-[#6B1218]"
-          >
-            <span className="inline-block transition-transform duration-200 group-hover:-translate-x-1">←</span> Quay lại giỏ hàng
-          </button>
-        </div>
+      <main
+        className="min-h-screen relative text-[#F5F0E8] bg-cover bg-center bg-no-repeat bg-fixed"
+        style={{ backgroundImage: "url('/assets/rose_bg.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-[#3a080f]/80 backdrop-blur-[2px]" />
 
-        <section className="mb-8 flex min-h-[90px] flex-col justify-center gap-3 bg-[#6B1218] px-5 py-5 text-[#F5F0E8] sm:px-8 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3.5">
-            {/* <button
+        <div className="relative z-10 px-4 pt-28 pb-14 sm:px-8 lg:px-12 xl:px-16">
+          <div className="mb-6">
+            <button
               type="button"
               onClick={() => setStep("cart")}
-              className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#F5F0E8]/20 bg-[#F5F0E8]/5 text-[#F5F0E8] transition hover:bg-[#F5F0E8] hover:text-[#6B1218]"
-              title="Quay lại giỏ hàng"
+              className="group flex items-center gap-2 text-sm font-light text-[#F5F0E8]/80 transition hover:text-[#FFFFFF]"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="transition-transform duration-200 group-hover:-translate-x-0.5"
-              >
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
-            </button> */}
-            <h1 className="font-serif text-[2.4rem] sm:text-[3.2rem] font-light leading-tight">
-              Thanh Toán
-            </h1>
+              <span className="inline-block transition-transform duration-200 group-hover:-translate-x-1">←</span> Quay lại giỏ hàng
+            </button>
           </div>
-          <div
-            className="flex flex-wrap items-center gap-2 text-[0.78rem] text-[#F5F0E8]/60"
-            aria-label="Breadcrumb"
-          >
-            <span>Giỏ hàng</span>
-            <span>→</span>
-            <span className="font-medium text-[#F5F0E8]">Thanh toán</span>
-            <span>→</span>
-            <span>Hoàn tất</span>
-          </div>
-        </section>
 
-        <section className="grid gap-8 xl:grid-cols-[2fr_1fr] xl:gap-10">
-          <CheckoutForm isSubmitting={isCheckingOut} onComplete={completeOrder} />
-          <CheckoutSummary
-            isSubmitting={isCheckingOut}
-            items={selectedCart}
-            onBackToCart={() => setStep("cart")}
-            onApplyPromo={applyPromo}
-            appliedDiscountCode={appliedDiscount?.code}
-            discountAmount={appliedDiscount?.discount_cents}
-            discountType={appliedDiscount?.type}
-          />
-        </section>
+          <section className="mb-8 flex min-h-[90px] flex-col justify-center gap-3 bg-black/30 backdrop-blur-md border border-[#F5F0E8]/10 rounded-3xl px-6 py-6 sm:px-10 lg:flex-row lg:items-center lg:justify-between shadow-[0_16px_36px_rgba(0,0,0,0.5)]">
+            <div className="flex items-center gap-3.5">
+              <h1 className="font-serif text-[2.4rem] sm:text-[3.2rem] font-light leading-tight">
+                Thanh Toán
+              </h1>
+            </div>
+            <div
+              className="flex flex-wrap items-center gap-2 text-[0.78rem] text-[#F5F0E8]/60"
+              aria-label="Breadcrumb"
+            >
+              <span>Giỏ hàng</span>
+              <span>→</span>
+              <span className="font-medium text-[#F5F0E8]">Thanh toán</span>
+              <span>→</span>
+              <span>Hoàn tất</span>
+            </div>
+          </section>
+
+          <section className="grid gap-8 xl:grid-cols-[2fr_1fr] xl:gap-10">
+            <CheckoutForm isSubmitting={isCheckingOut} onComplete={completeOrder} />
+            <CheckoutSummary
+              isSubmitting={isCheckingOut}
+              items={selectedCart}
+              onBackToCart={() => setStep("cart")}
+              onApplyPromo={applyPromo}
+              appliedDiscountCode={appliedDiscount?.code}
+              discountAmount={appliedDiscount?.discount_cents}
+              discountType={appliedDiscount?.type}
+            />
+          </section>
+        </div>
       </main>
     );
   }
 
   return (
     <>
-      <main className="min-h-screen bg-[#F2E8D9] text-[#2C1810]">
-        <div className="px-4 py-14 sm:px-8 lg:px-12 xl:px-16">
+      <main
+        className="min-h-screen text-[#F5F0E8] relative bg-cover bg-center bg-no-repeat bg-fixed"
+        style={{ backgroundImage: "url('/assets/option_background.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+        <div className="relative z-10 px-4 pt-28 pb-14 sm:px-8 lg:px-12 xl:px-16">
           <div className="mb-10 flex flex-wrap items-center justify-between gap-4 lg:mb-14">
-            <h1 className="w-fit border-b-[3px] border-[#6B1218] pb-3 font-serif text-[2.35rem] font-bold leading-tight text-[#2C1810] sm:text-[2.7rem]">
+            <h1 className="w-fit border-b-[3px] border-[#D6A15F] pb-3 font-serif text-[1.5rem] font-bold leading-tight text-[#F5F0E8] sm:text-[2rem]">
               Giỏ Hàng
             </h1>
             <Link
               href="/#collection"
-              className="text-sm font-light text-[#8B7355] transition hover:text-[#6B1218]"
+              className="group flex items-center gap-2 text-sm font-light text-[#F5F0E8]/80 transition hover:text-[#FFFFFF]"
             >
-              ← Tiếp tục mua sắm
+              <span className="inline-block transition-transform duration-200 group-hover:-translate-x-1">←</span> Tiếp tục mua sắm
             </Link>
           </div>
 
           {error ? (
-            <section className="rounded-2xl bg-[#F8F0E4] px-6 py-16 text-center shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
-              <div className="mb-4 text-5xl text-[#6B1218]">⚠️</div>
-              <p className="mb-8 text-base text-[#6B1218] font-medium">
+            <section className="rounded-3xl bg-black/30 backdrop-blur-md border border-[#F5F0E8]/10 px-6 py-16 text-center shadow-[0_16px_36px_rgba(0,0,0,0.5)]">
+              <div className="mb-4 text-5xl text-[#ff6b6b]">⚠️</div>
+              <p className="mb-8 text-base text-[#F5F0E8] font-medium">
                 {error}
               </p>
               <button
@@ -513,36 +520,37 @@ export default function CartClient() {
                   const cancelled = { value: false };
                   void loadCart(cancelled);
                 }}
-                className="inline-flex rounded-full bg-[#6B1218] px-8 py-3 text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.28)] transition hover:bg-[#4A0C10]"
+                className="inline-flex rounded-full bg-gradient-to-r from-[#D6A15F] to-[#E5C07B] px-8 py-3 text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#2C1810] shadow-[0_10px_24px_rgba(214,161,95,0.3)] transition hover:-translate-y-0.5"
               >
                 Thử lại
               </button>
             </section>
           ) : isLoadingCart ? (
-            <section className="rounded-2xl bg-[#F8F0E4] px-6 py-16 text-center shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
+            <section className="rounded-3xl bg-black/30 backdrop-blur-md border border-[#F5F0E8]/10 p-4 sm:p-6 text-center shadow-[0_16px_36px_rgba(0,0,0,0.5)]">
               <LoadingState
+                type="cart"
                 label="Đang tải giỏ hàng..."
-                className="min-h-40 border-0 bg-transparent shadow-none"
+                className="border-0 bg-transparent shadow-none"
               />
             </section>
           ) : cart.length === 0 ? (
-            <section className="rounded-2xl bg-[#F8F0E4] px-6 py-16 text-center shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
-              <div className="mb-4 text-5xl text-[#6B4C35]/35">🛍</div>
-              <p className="mb-8 text-base text-[#6B4C35]">
+            <section className="rounded-3xl bg-black/30 backdrop-blur-md border border-[#F5F0E8]/10 px-6 py-16 text-center shadow-[0_16px_36px_rgba(0,0,0,0.5)]">
+              <div className="mb-4 text-5xl opacity-80">🛍</div>
+              <p className="mb-8 text-base text-[#F5F0E8]/80 font-light">
                 Giỏ hàng của bạn đang trống
               </p>
               <Link
                 href="/#collection"
-                className="inline-flex rounded-full bg-[#6B1218] px-8 py-3 text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#F5F0E8] shadow-[0_10px_24px_rgba(107,18,24,0.28)] transition hover:bg-[#4A0C10]"
+                className="inline-flex rounded-full bg-gradient-to-r from-[#D6A15F] to-[#E5C07B] px-8 py-3 text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#2C1810] shadow-[0_10px_24px_rgba(214,161,95,0.3)] transition hover:-translate-y-0.5"
               >
                 Bắt Đầu Mua Sắm
               </Link>
             </section>
           ) : (
             <section className="grid gap-8 xl:grid-cols-[2fr_1fr] xl:gap-10">
-              <div className="min-h-[360px] overflow-hidden rounded-2xl bg-[#F8F0E4] shadow-[0_16px_36px_rgba(44,24,16,0.08)]">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#6B4C35]/10 px-5 py-4 sm:px-7">
-                  <p className="text-sm text-[#6B4C35]">
+              <div className="min-h-[360px] overflow-hidden rounded-3xl bg-[#F5F0E8]/5 backdrop-blur-md border border-[#F5F0E8]/10 shadow-[0_16px_36px_rgba(0,0,0,0.5)]">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F5F0E8]/10 px-5 py-4 sm:px-7">
+                  <p className="text-sm text-[#F5F0E8]/70">
                     Đã chọn {selectedCart.length}/{cart.length} sản phẩm
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -550,7 +558,7 @@ export default function CartClient() {
                       type="button"
                       onClick={() => setDeleteSelectedOpen(true)}
                       disabled={isMutatingCart || selectedCart.length === 0}
-                      className="rounded-full border border-[#6B1218]/35 px-4 py-2 text-[0.72rem] font-medium uppercase tracking-widest text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-45"
+                      className="rounded-full border border-[#D6A15F]/50 px-4 py-2 text-[0.72rem] font-medium uppercase tracking-widest text-[#D6A15F] transition hover:bg-[#D6A15F] hover:text-[#2C1810] disabled:cursor-not-allowed disabled:opacity-45"
                     >
                       Xóa đã chọn
                     </button>
@@ -558,7 +566,7 @@ export default function CartClient() {
                       type="button"
                       onClick={() => setDeleteAllOpen(true)}
                       disabled={isMutatingCart || cart.length === 0}
-                      className="rounded-full bg-[#6B1218] px-4 py-2 text-[0.72rem] font-medium uppercase tracking-widest text-[#F5F0E8] transition hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-45"
+                      className="rounded-full bg-red-900/50 border border-red-500/30 px-4 py-2 text-[0.72rem] font-medium uppercase tracking-widest text-red-200 transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-45"
                     >
                       Xóa tất cả
                     </button>
@@ -584,6 +592,8 @@ export default function CartClient() {
               />
             </section>
           )}
+
+          <CartSuggestedProducts />
         </div>
       </main>
 

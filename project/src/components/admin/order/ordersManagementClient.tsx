@@ -8,12 +8,13 @@ import type {
   AdminOrderStatus,
   AdminPaymentStatus,
 } from "@/src/lib/types/admin";
+import CustomSelect from "@/src/components/admin/common/CustomSelect";
 import LoadingState from "@/src/components/ui/loadingState";
-import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/adminHeader";
 import { getOrdersAction, updateOrderStatusAction, cancelOrderAction } from "@/src/lib/action/order.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 import ModalOrderAction from "@/src/components/admin/order/modalOrderAction";
 import { callAction } from "@/src/lib/utils/callAction";
 
@@ -233,7 +234,7 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
       />
 
       <div className="dashboard-page-content">
-        <section className="dashboard-card orders-filter-card">
+        <section className="dashboard-card orders-filter-card relative z-20">
           <div className="dashboard-card-body">
             <div className="orders-filter-bar">
               <label className="orders-search-field" htmlFor="orders-search">
@@ -264,19 +265,17 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
               <label className="sr-only" htmlFor="orders-status">
                 Lọc trạng thái
               </label>
-              <select
-                id="orders-status"
-                className="orders-form-select"
+              <CustomSelect
+                className="w-[180px]"
                 value={status}
-                onChange={(event) =>
-                  setStatus(event.target.value as AdminOrderStatus | "")
-                }
-              >
-                <option value="">Tất cả trạng thái</option>
-                <option value="pending">Đang xác nhận</option>
-                <option value="confirmed">Đã xác nhận</option>
-                <option value="cancelled">Đã huỷ</option>
-              </select>
+                onChange={(val) => setStatus(val as AdminOrderStatus | "")}
+                options={[
+                  { label: "Tất cả trạng thái", value: "" },
+                  { label: "Đang xác nhận", value: "pending" },
+                  { label: "Đã xác nhận", value: "confirmed" },
+                  { label: "Đã huỷ", value: "cancelled" }
+                ]}
+              />
             </div>
           </div>
         </section>
@@ -394,7 +393,7 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
             </div>
 
             {isLoading ? (
-              <LoadingState
+              <LoadingState type="table"
                 label="Đang tải danh sách đơn hàng..."
                 className="m-5"
               />

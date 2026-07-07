@@ -18,7 +18,7 @@ import {
 } from "@/src/lib/action/notification.action";
 import type { AdminNotification } from "@/src/lib/types/admin";
 import { callAction } from "@/src/lib/utils/callAction";
-import { useToast } from "@/src/components/ui/toast-provider";
+import { useToast } from "@/src/components/ui/toastProvider";
 
 type NotificationAdminProps = {
   pendingOrdersCount?: number;

@@ -5,7 +5,7 @@ import { startTransition, useEffect, useState } from "react";
 import { getCurrentUser } from "@/src/lib/action/user.action";
 import { useCartStore } from "@/src/store/useCartStore";
 import type { Order } from "../../../lib/types/client";
-import Spinner from "@/src/components/ui/Spinner";
+import LoadingState from "@/src/components/ui/loadingState";
 import { callAction } from "@/src/lib/utils/callAction";
 
 export default function OrderConfirmationClient() {
@@ -45,8 +45,7 @@ export default function OrderConfirmationClient() {
   if (loading) {
     return (
       <main className="min-h-screen bg-[#F2E8D9] px-4 py-14 pt-28 text-[#2C1810] flex flex-col items-center justify-center gap-4">
-        <Spinner size="xl" />
-        <div className="text-center text-lg font-medium">Đang tải thông tin đơn hàng...</div>
+        <LoadingState type="default" label="Đang tải thông tin đơn hàng..." className="border-0 bg-transparent shadow-none" />
       </main>
     );
   }

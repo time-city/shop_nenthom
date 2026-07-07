@@ -3,13 +3,12 @@ import type { ClientProductsSuccessResponseInterface } from "@/src/interface/cli
 import { getCurrentUser } from "@/src/lib/action/user.action";
 import { getProductsAction, getScentsAction } from "@/src/lib/action/product.action";
 import type { CollectionPageProps } from "@/src/lib/types/client";
-import { callAction } from "@/src/lib/utils/callAction";
 
 const pageSize = 4;
 
 export default async function CollectionPage({
   searchParams,
-}: CollectionPageProps) {
+}: CollectionPageProps = {}) {
   const params = (await searchParams) ?? {};
   const activePage = Math.max(Number(params.page ?? 1), 1);
   const activeScentId = Number(params.scentId);
@@ -25,7 +24,7 @@ export default async function CollectionPage({
   }
 
   const [result, currentUser, scentResult] = await Promise.all([
-    callAction(() => getProductsAction({
+    getProductsAction({
       limit: pageSize,
       page: activePage,
       scentId: Number.isFinite(activeScentId)
@@ -34,9 +33,9 @@ export default async function CollectionPage({
       search: activeSearch || undefined,
       minPrice,
       maxPrice,
-    }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau."),
-    callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau."),
-    callAction(() => getScentsAction(), "Không thể tải danh sách hương. Vui lòng thử lại sau."),
+    }),
+    getCurrentUser(),
+    getScentsAction(),
   ]);
 
   const scents =
@@ -74,6 +73,7 @@ export default async function CollectionPage({
     />
   );
 }
+
 
 
 

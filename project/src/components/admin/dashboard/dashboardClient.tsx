@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import LoadingState from "@/src/components/ui/loadingState";
 
@@ -13,14 +13,73 @@ import type {
   DashboardActiveChip,
 } from "@/src/lib/types/admin";
 import { callAction } from "@/src/lib/utils/callAction";
-import AdminHeader from "@/src/components/admin/layout/AdminHeader";
-import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/adminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
 
 const statusLabels: Record<string, string> = {
   cancelled: "Đã huỷ",
   confirmed: "Đã xác nhận",
   pending: "Đang xác nhận",
 };
+
+function FilterTabs({
+  activeChip,
+  setActiveChip,
+  fullWidth = false,
+}: {
+  activeChip: DashboardActiveChip;
+  setActiveChip: (chip: DashboardActiveChip) => void;
+  fullWidth?: boolean;
+}) {
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const updateIndicator = () => {
+      const activeBtn = containerRef.current?.querySelector(".dashboard-filter-chip.active") as HTMLElement;
+      if (activeBtn) {
+        setIndicatorStyle({
+          left: activeBtn.offsetLeft,
+          width: activeBtn.offsetWidth,
+          opacity: 1,
+        });
+      }
+    };
+    
+    // Slight delay to ensure fonts/layout are ready
+    setTimeout(updateIndicator, 0);
+    window.addEventListener("resize", updateIndicator);
+    return () => window.removeEventListener("resize", updateIndicator);
+  }, [activeChip]);
+
+  return (
+    <div
+      className={`dashboard-filter-chips relative ${fullWidth ? "w-full flex box-border" : ""}`}
+      ref={containerRef}
+    >
+      <div
+        className="absolute top-1 bottom-1 bg-[#6B1218] rounded-[999px] transition-all duration-300 ease-out pointer-events-none"
+        style={{ ...indicatorStyle, zIndex: 0 }}
+      />
+      {[
+        { id: "today", label: "Hôm nay" },
+        { id: "week", label: "Tuần" },
+        { id: "month", label: "Tháng" },
+      ].map((tab) => (
+        <button
+          key={tab.id}
+          className={`dashboard-filter-chip relative z-10 ${fullWidth ? "flex-1 text-center" : ""} transition-colors duration-300 ${activeChip === tab.id ? "active text-[#F5F0E8] font-semibold" : "text-white/60"}`}
+          type="button"
+          onClick={() => setActiveChip(tab.id as DashboardActiveChip)}
+          style={{ background: "transparent" }}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function DashboardClient() {
   const [activeChip, setActiveChip] = useState<DashboardActiveChip>(
@@ -38,7 +97,10 @@ export default function DashboardClient() {
       setIsLoading(true);
       setError(null);
       try {
-        const result = await callAction(() => getDashboardOverviewAction({ period: activeChip }), "Không thể tải dữ liệu tổng quan. Vui lòng thử lại sau.");
+        const result = await Promise.race([
+          callAction(() => getDashboardOverviewAction({ period: activeChip }), "Không thể tải dữ liệu tổng quan. Vui lòng thử lại sau."),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Kết nối quá hạn, vui lòng tải lại trang hoặc thử lại.")), 10000))
+        ]) as Awaited<ReturnType<typeof getDashboardOverviewAction>>;
         if (cancelled) return;
         if ("error" in result && result.error) {
           setError(getFriendlyResponseError(result.error));
@@ -136,57 +198,13 @@ export default function DashboardClient() {
         title="Dashboard"
         subtitle="Xin chào, Admin! Đây là tổng quan hôm nay."
       >
-        <div className="dashboard-filter-chips">
-          <button
-            className={`dashboard-filter-chip ${activeChip === "today" ? "active" : ""}`}
-            type="button"
-            onClick={() => setActiveChip("today")}
-          >
-            Hôm nay
-          </button>
-          <button
-            className={`dashboard-filter-chip ${activeChip === "week" ? "active" : ""}`}
-            type="button"
-            onClick={() => setActiveChip("week")}
-          >
-            Tuần
-          </button>
-          <button
-            className={`dashboard-filter-chip ${activeChip === "month" ? "active" : ""}`}
-            type="button"
-            onClick={() => setActiveChip("month")}
-          >
-            Tháng
-          </button>
-        </div>
+        <FilterTabs activeChip={activeChip} setActiveChip={setActiveChip} />
       </AdminHeader>
 
       <div className="dashboard-page-content">
         {/* Mobile filter chips */}
         <div className="flex lg:hidden justify-center mb-6 w-full box-border">
-          <div className="dashboard-filter-chips w-full flex box-border">
-            <button
-              className={`dashboard-filter-chip flex-1 text-center transition-all ${activeChip === "today" ? "active font-semibold" : ""}`}
-              type="button"
-              onClick={() => setActiveChip("today")}
-            >
-              Hôm nay
-            </button>
-            <button
-              className={`dashboard-filter-chip flex-1 text-center transition-all ${activeChip === "week" ? "active font-semibold" : ""}`}
-              type="button"
-              onClick={() => setActiveChip("week")}
-            >
-              Tuần
-            </button>
-            <button
-              className={`dashboard-filter-chip flex-1 text-center transition-all ${activeChip === "month" ? "active font-semibold" : ""}`}
-              type="button"
-              onClick={() => setActiveChip("month")}
-            >
-              Tháng
-            </button>
-          </div>
+          <FilterTabs activeChip={activeChip} setActiveChip={setActiveChip} fullWidth />
         </div>
         {isLoading ? (
           <div className="py-20 flex justify-center items-center">
@@ -198,12 +216,12 @@ export default function DashboardClient() {
           <>
             <section className="dashboard-stats-grid" aria-label="Dashboard stats">
               {stats.map((stat) => (
-                <article className="dashboard-stat-card" key={stat.label}>
-                  <div className="dashboard-stat-header">
+                <article className="dashboard-stat-card flex items-center justify-between gap-4" key={stat.label}>
+                  <div className="flex items-center gap-4">
                     <div className={`dashboard-stat-icon ${stat.icon}`}>
                       <svg
-                        width="22"
-                        height="22"
+                        width="24"
+                        height="24"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -215,14 +233,16 @@ export default function DashboardClient() {
                         {stat.svg}
                       </svg>
                     </div>
-                    {stat.change ? (
-                      <span className={`dashboard-stat-change ${stat.changeType}`}>
-                        {stat.change}
-                      </span>
-                    ) : null}
+                    <div className="flex flex-col">
+                      <div className="dashboard-stat-label">{stat.label}</div>
+                      <div className="dashboard-stat-value">{stat.value}</div>
+                    </div>
                   </div>
-                  <div className="dashboard-stat-value">{stat.value}</div>
-                  <div className="dashboard-stat-label">{stat.label}</div>
+                  {stat.change ? (
+                    <span className={`dashboard-stat-change ${stat.changeType}`}>
+                      {stat.change}
+                    </span>
+                  ) : null}
                 </article>
               ))}
             </section>
@@ -247,7 +267,7 @@ export default function DashboardClient() {
                         {topProducts.length > 0 ? (
                           topProducts.map((product, idx) => (
                             <tr key={product.productId}>
-                              <td className="w-12 text-center text-xs font-semibold text-[#6B4C35]">#{idx + 1}</td>
+                              <td className="w-12 text-center text-xs font-semibold text-[#D6A15F]">#{idx + 1}</td>
                               <td className="font-medium">{product.name}</td>
                               <td className="text-center">{product.soldQuantity}</td>
                               <td className="text-right font-semibold text-[#7A1218]">
@@ -257,7 +277,7 @@ export default function DashboardClient() {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={4} className="text-center text-[#6B4C35]">
+                            <td colSpan={4} className="text-center text-white/60">
                               Chưa có dữ liệu bán chạy
                             </td>
                           </tr>
@@ -312,7 +332,7 @@ export default function DashboardClient() {
                             ))
                           ) : (
                             <tr>
-                              <td colSpan={4} className="text-center text-[#6B4C35]">
+                              <td colSpan={4} className="text-center text-white/60">
                                 Chưa có dữ liệu đơn hàng
                               </td>
                             </tr>

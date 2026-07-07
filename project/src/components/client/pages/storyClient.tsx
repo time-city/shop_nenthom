@@ -1,5 +1,5 @@
 import Image from "next/image";
-import TiltWrapper from "@/src/components/ui/TiltWrapper";
+import TiltWrapper from "@/src/components/ui/tiltWrapper";
 
 const processSteps = [
   {
