@@ -5,9 +5,9 @@ import type { AdminUser as User } from "@/src/lib/types/admin";
 import { getUserOrdersAction } from "../../../lib/action/user.action";
 import ClientPagination from "@/src/components/admin/customer/clientPagination";
 import type { AdminPaginationMeta } from "@/src/lib/types/admin";
-import Spinner from "@/src/components/ui/spinner";
+import Spinner from "@/src/components/ui/Spinner";
 import { callAction } from "@/src/lib/utils/callAction";
-import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
+import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
 
 interface ClientOrderModalProps {
     user: User | null;
@@ -112,72 +112,71 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
 
                     <div className="rounded-lg border border-[#6B4E35]/15 max-h-[350px] overflow-y-auto">
                         <TableResponsiveWrapper minWidth={500}>
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-[#6B1218] text-[#F5F0E8] text-xs uppercase font-semibold">
-                                    <th className="px-4 py-3">Mã đơn</th>
-                                    <th className="px-4 py-3">Ngày đặt</th>
-                                    <th className="px-4 py-3">Sản phẩm</th>
-                                    <th className="px-4 py-3">Tổng tiền</th>
-                                    <th className="px-4 py-3 text-right">Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {isLoading ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-white/60 text-sm">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <Spinner size="sm" />
-                                                <span>Đang tải danh sách đơn hàng...</span>
-                                            </div>
-                                        </td>
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-[#6B1218] text-[#F5F0E8] text-xs uppercase font-semibold">
+                                        <th className="px-4 py-3">Mã đơn</th>
+                                        <th className="px-4 py-3">Ngày đặt</th>
+                                        <th className="px-4 py-3">Sản phẩm</th>
+                                        <th className="px-4 py-3">Tổng tiền</th>
+                                        <th className="px-4 py-3 text-right">Trạng thái</th>
                                     </tr>
-                                ) : error ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-[#C62828] text-sm">
-                                            {error}
-                                        </td>
-                                    </tr>
-                                ) : orders.length > 0 ? (
-                                    orders.map((order) => (
-                                        <tr
-                                            key={order.id}
-                                            className="border-b border-white/10 text-sm text-[#F5F0E8] hover:bg-white/5 transition-colors"
-                                        >
-                                            <td className="px-4 py-3.5 font-bold font-mono text-[#F5F0E8]">
-                                                {order.id}
-                                            </td>
-                                            <td className="px-4 py-3.5 whitespace-nowrap">
-                                                {order.date}
-                                            </td>
-                                            <td className="px-4 py-3.5 max-w-[200px] truncate" title={order.items}>
-                                                {order.items}
-                                            </td>
-                                            <td className="px-4 py-3.5 font-serif font-bold text-[#6B1218]">
-                                                {order.total}
-                                            </td>
-                                            <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                                    order.status === "Đã xác nhận"
-                                                        ? "bg-[#E8F5E9] text-[#2E7D32]"
-                                                        : order.status === "Đã huỷ"
-                                                          ? "bg-white/10 text-white/60"
-                                                          : "bg-[#FFF9C4] text-[#F57F17]"
-                                                }`}>
-                                                    {order.status}
-                                                </span>
+                                </thead>
+                                <tbody>
+                                    {isLoading ? (
+                                        <tr>
+                                            <td colSpan={5} className="px-4 py-8 text-center text-white/60 text-sm">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <Spinner size="sm" />
+                                                    <span>Đang tải danh sách đơn hàng...</span>
+                                                </div>
                                             </td>
                                         </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-white/60 text-sm">
-                                            Khách hàng này chưa có đơn hàng nào.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : error ? (
+                                        <tr>
+                                            <td colSpan={5} className="px-4 py-8 text-center text-[#C62828] text-sm">
+                                                {error}
+                                            </td>
+                                        </tr>
+                                    ) : orders.length > 0 ? (
+                                        orders.map((order) => (
+                                            <tr
+                                                key={order.id}
+                                                className="border-b border-white/10 text-sm text-[#F5F0E8] hover:bg-white/5 transition-colors"
+                                            >
+                                                <td className="px-4 py-3.5 font-bold font-mono text-[#F5F0E8]">
+                                                    {order.id}
+                                                </td>
+                                                <td className="px-4 py-3.5 whitespace-nowrap">
+                                                    {order.date}
+                                                </td>
+                                                <td className="px-4 py-3.5 max-w-[200px] truncate" title={order.items}>
+                                                    {order.items}
+                                                </td>
+                                                <td className="px-4 py-3.5 font-serif font-bold text-[#6B1218]">
+                                                    {order.total}
+                                                </td>
+                                                <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                                                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${order.status === "Đã xác nhận"
+                                                            ? "bg-[#E8F5E9] text-[#2E7D32]"
+                                                            : order.status === "Đã huỷ"
+                                                                ? "bg-white/10 text-white/60"
+                                                                : "bg-[#FFF9C4] text-[#F57F17]"
+                                                        }`}>
+                                                        {order.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={5} className="px-4 py-8 text-center text-white/60 text-sm">
+                                                Khách hàng này chưa có đơn hàng nào.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </TableResponsiveWrapper>
                     </div>
                     <ClientPagination

@@ -6,8 +6,8 @@ import { useToast } from "@/src/components/ui/toastProvider";
 import ModalSupport from "@/src/components/admin/support/modalSupport";
 import LoadingState from "@/src/components/ui/loadingState";
 import { useSupportStore } from "@/src/store/useSupportStore";
-import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/adminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/AdminHeader";
 import type {
   AdminContactItemInterface,
   AdminContactsSuccessResponseInterface,

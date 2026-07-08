@@ -2,7 +2,7 @@ import { useOptimistic, useTransition, useState } from "react";
 import { ClipboardList, Lock, Unlock } from "lucide-react";
 import ClientStatusBadge from "@/src/components/admin/customer/clientStatusBadge";
 import ModalDeleteConfirm from "@/src/components/admin/common/modalDeleteConfirm";
-import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
+import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
 
 import type { AdminUser as User } from "@/src/lib/types/admin";
 

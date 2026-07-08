@@ -14,8 +14,8 @@ import type {
   DashboardActiveChip,
 } from "@/src/lib/types/admin";
 import { callAction } from "@/src/lib/utils/callAction";
-import AdminHeader from "@/src/components/admin/layout/adminHeader";
-import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
 
 const statusLabels: Record<string, string> = {
   cancelled: "Đã huỷ",

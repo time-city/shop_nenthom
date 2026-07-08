@@ -1,8 +1,8 @@
 import type { LoadingStateProps } from "../../lib/types/ui";
-import Spinner from "./spinner";
+import Spinner from "./Spinner";
 
 // Ensure Spinner stays referenced for JSX (lint rule react/jsx-no-undef)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 
 export default function LoadingState({
   className = "",

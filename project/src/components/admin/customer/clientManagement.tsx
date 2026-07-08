@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { useToast } from "@/src/components/ui/toastProvider";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import ClientSearchBar from "@/src/components/admin/customer/clientSearchBar";
-import AdminHeader from "@/src/components/admin/layout/adminHeader";
+import AdminHeader from "@/src/components/admin/layout/AdminHeader";
 import ClientTable from "@/src/components/admin/customer/clientTable";
 import ClientPagination from "@/src/components/admin/customer/clientPagination";
 import ClientOrderModal from "@/src/components/admin/customer/clientOrderModal";

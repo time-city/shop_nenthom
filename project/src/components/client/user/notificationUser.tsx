@@ -64,7 +64,7 @@ export default function NotificationUser() {
   const [arrivalReferenceTime, setArrivalReferenceTime] = useState(0);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setMounted(true);
   }, []);
 
@@ -182,7 +182,7 @@ export default function NotificationUser() {
 
   useEffect(() => {
     if (mounted) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       void loadNotifications();
     }
   }, [mounted, loadNotifications]);

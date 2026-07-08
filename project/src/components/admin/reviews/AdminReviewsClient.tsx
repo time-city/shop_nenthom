@@ -21,8 +21,8 @@ const fetcher = async ([action, args]: [unknown, unknown]) => {
 };
 import { useToast } from "@/src/components/ui/toastProvider";
 import Modal from "@/src/components/ui/modal";
-import AdminHeader from "@/src/components/admin/layout/adminHeader";
-import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
 
 export default function AdminReviewsClient({ 
   initialData, 

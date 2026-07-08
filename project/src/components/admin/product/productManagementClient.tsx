@@ -13,8 +13,8 @@ import { useToast } from "@/src/components/ui/toastProvider";
 import dynamic from "next/dynamic";
 import LoadingState from "@/src/components/ui/loadingState";
 import ModalDeleteConfirm from "@/src/components/admin/common/modalDeleteConfirm";
-import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/adminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/AdminHeader";
 
 const ModalProduct = dynamic(() => import("@/src/components/admin/product/modalProduct"), { ssr: false });
 const ModalEditProduct = dynamic(() => import("@/src/components/admin/product/modalEditProduct"), { ssr: false });

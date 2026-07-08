@@ -13,7 +13,7 @@ import { getProductsAction } from "@/src/lib/action/product.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import type { CollectionSearchParams } from "@/src/lib/types/client";
 import { CollectionContext } from "@/src/components/client/collection/collectionClient";
-import Spinner from "@/src/components/ui/spinner";
+import Spinner from "@/src/components/ui/Spinner";
 import { callAction } from "@/src/lib/utils/callAction";
 import CustomDropdown from "@/src/components/client/common/customDropdown";
 

@@ -11,8 +11,8 @@ import type {
 } from "@/src/lib/types/admin";
 import CustomSelect from "@/src/components/admin/common/CustomSelect";
 import LoadingState from "@/src/components/ui/loadingState";
-import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/adminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/AdminHeader";
 import { getOrdersAction, updateOrderStatusAction, cancelOrderAction } from "@/src/lib/action/order.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import { useToast } from "@/src/components/ui/toastProvider";

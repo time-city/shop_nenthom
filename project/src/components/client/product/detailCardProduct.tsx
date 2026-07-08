@@ -320,7 +320,7 @@ export default function DetailCardProduct({
             className="relative group flex aspect-[4/5] lg:aspect-square lg:h-[340px] items-center justify-center rounded-2xl p-4 border border-[#2C1810]/5 shadow-[0_20px_50px_rgba(44,24,16,0.06)] overflow-hidden mx-auto w-full select-none cursor-grab active:cursor-grabbing"
           >
             {image ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
+               
               <img
                 src={image}
                 alt={product.name}

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import type { OrderDetail } from "@/src/lib/types/client";
-import AdminHeader from "@/src/components/admin/layout/adminHeader";
-import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
 
 interface Props {
   initialOrder: OrderDetail;

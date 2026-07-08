@@ -16,8 +16,8 @@ import ModalDeleteConfirm from "@/src/components/admin/common/modalDeleteConfirm
 const ModalIngredient = dynamic(() => import("@/src/components/admin/ingredient/modalIngredient"), { ssr: false });
 const ModalEditIngre = dynamic(() => import("@/src/components/admin/ingredient/modalEditIngre"), { ssr: false });
 import LoadingState from "@/src/components/ui/loadingState";
-import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/adminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/AdminHeader";
 import {
   AdminDeleteButton,
   AdminEditButton,

@@ -9,8 +9,8 @@ import ModalDeleteProduct from "@/src/components/admin/product/modalDeleteProduc
 const ModalDiscount = dynamic(() => import("@/src/components/admin/discount/modalDiscount"), { ssr: false });
 const ModalEditDiscount = dynamic(() => import("@/src/components/admin/discount/modalEditDiscount"), { ssr: false });
 import LoadingState from "@/src/components/ui/loadingState";
-import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/adminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/AdminHeader";
 import { AdminEditButton } from "@/src/components/ui/actionButtons";
 import { disableDiscountAction, getDiscountsAction } from "@/src/lib/action/discount.action";
 import type {

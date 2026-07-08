@@ -7,8 +7,8 @@ import ModalCategory from "@/src/components/admin/category/modalCategory";
 import ModalDeleteConfirm from "@/src/components/admin/common/modalDeleteConfirm";
 import ModalEditCategory from "@/src/components/admin/category/modalEditCategory";
 import LoadingState from "@/src/components/ui/loadingState";
-import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
-import AdminHeader from "@/src/components/admin/layout/adminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
+import AdminHeader from "@/src/components/admin/layout/AdminHeader";
 import {
   AdminDeleteButton,
   AdminEditButton,
