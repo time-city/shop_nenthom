@@ -542,7 +542,7 @@ export default function ProductManagementClient() {
                   ⚠️ CẢNH BÁO: Hành động này sẽ bị lỗi nếu sản phẩm đã có lịch sử đơn hàng (để bảo toàn báo cáo doanh thu).
                 </span>
                 <span style={{ display: "block", marginTop: "8px" }}>
-                  Chúng tôi khuyến khích bạn chọn <strong>"Ngừng bán"</strong> (Ẩn khỏi cửa hàng) thay vì xóa cứng để đảm bảo an toàn cho dữ liệu đơn hàng.
+Chúng tôi khuyến khích bạn chọn <strong>&ldquo;Ngừng bán&rdquo;</strong> (Ẩn khỏi cửa hàng) thay vì xóa cứng để đảm bảo an toàn cho dữ liệu đơn hàng.
                 </span>
               </Typography>
             </Box>
@@ -601,7 +601,7 @@ export default function ProductManagementClient() {
           <>
             Hành động này sẽ <span style={{ color: "#ff6b6b", fontWeight: 700 }}>XÓA CỨNG</span> sản phẩm <strong style={{ color: "#E5C07B" }}>{hardDeleteProduct?.name}</strong> khỏi cơ sở dữ liệu.
             <span style={{ display: "block", marginTop: "8px", color: "#ff6b6b", fontWeight: 600 }}>
-              ⚠️ Khuyên dùng: Nếu có lỗi Ràng buộc khóa ngoại (Foreign Key constraint), nghĩa là sản phẩm đã có đơn hàng trong quá khứ và không thể xóa cứng. Bạn bắt buộc phải dùng "Ngừng bán".
+⚠️ Khuyên dùng: Nếu có lỗi Ràng buộc khóa ngoại (Foreign Key constraint), nghĩa là sản phẩm đã có đơn hàng trong quá khứ và không thể xóa cứng. Bạn bắt buộc phải dùng &ldquo;Ngừng bán&rdquo;.
             </span>
           </>
         }

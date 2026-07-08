@@ -9,7 +9,9 @@ import { useRouter, usePathname } from "next/navigation";
 import useSWR from "swr";
 import { getReviewsByProductAction } from "@/src/lib/action/review.action";
 
-const fetcher = async ([action, args]: [Function, any]) => {
+type AnyFn = (args: any) => Promise<any> | any;
+
+const fetcher = async ([action, args]: [AnyFn, any]) => {
   const result = await action(args);
   if (!result.success) throw new Error(result.error);
   return result.data;

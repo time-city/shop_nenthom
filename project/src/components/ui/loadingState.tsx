@@ -1,6 +1,9 @@
 import type { LoadingStateProps } from "../../lib/types/ui";
 import Spinner from "./spinner";
 
+// Ensure Spinner stays referenced for JSX (lint rule react/jsx-no-undef)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 export default function LoadingState({
   className = "",
   label = "Đang tải...",
@@ -65,6 +68,7 @@ export default function LoadingState({
         aria-live="polite"
       >
         <Spinner size="lg" />
+
         <span className="font-serif tracking-[0.15em] text-[0.8rem] uppercase text-[#6B1218]/70 dark:text-[#D6A15F] animate-pulse">
           {label}
         </span>

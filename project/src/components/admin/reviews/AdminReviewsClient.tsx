@@ -9,14 +9,13 @@ import { Star, MessageSquareReply, Eye, EyeOff, CheckCircle, Loader2 } from "luc
 import { updateReviewStatusAction, replyToReviewAction, getAllReviewsAdminAction } from "@/src/lib/action/review.action";
 import useSWR from "swr";
 
-type AnyFn = (args: any) => Promise<any> | any;
-
 type ActionResult<T = any> =
   | { success: true; data: T; error?: never }
   | { success: false; error: string; data?: never };
 
-const fetcher = async ([action, args]: [AnyFn, unknown]) => {
-  const result = (await action(args as any)) as ActionResult;
+const fetcher = async ([action, args]: [unknown, unknown]) => {
+  const fn = action as (input: unknown) => Promise<unknown> | unknown;
+  const result = (await fn(args)) as ActionResult;
   if (!result.success) throw new Error(result.error);
   return result.data;
 };

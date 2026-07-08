@@ -69,7 +69,7 @@ export function RadioGroup({ value, onChange, children, className }: MuiMockProp
       {React.Children.map(children, (child: any) => {
         if (!React.isValidElement(child)) return child;
         return React.cloneElement(child, {
-          // @ts-ignore
+          // @ts-expect-error TS: mock component may not expose strongly typed props.value at this point.
           checked: child.props.value === value,
         });
       })}
