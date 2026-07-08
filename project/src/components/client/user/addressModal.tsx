@@ -236,8 +236,8 @@ export default function AddressModal({ isOpen, onClose, onSave, initialData, def
             console.log("🔍 [Match] Chuỗi địa chỉ đã chuẩn hóa (bỏ dấu):", displayNameNorm);
             console.log("🔍 [Match] Các mảnh cắt từ chuỗi địa chỉ:", nameParts);
 
-            let currentProvId = "";
-            let newFormData = { ...formData, address: data.display_name };
+let currentProvId = "";
+            const newFormData = { ...formData, address: data.display_name };
 
             const checkMatch = (loc: Location) => {
               const normName = removeDiacritics(loc.name);
@@ -267,7 +267,7 @@ export default function AddressModal({ isOpen, onClose, onSave, initialData, def
               setDistricts(fetchedDistricts);
               
               // 2. Match District
-              let matchedDist = fetchedDistricts.find(checkMatch);
+const matchedDist = fetchedDistricts.find(checkMatch);
               
               if (matchedDist) {
                 console.log("✅ [MATCHED DISTRICT]:", matchedDist.full_name);

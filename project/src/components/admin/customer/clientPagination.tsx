@@ -14,11 +14,12 @@ export default function ClientPagination({
   if (totalPages <= 1) return null;
 
   const getPages = () => {
-    let startPage = Math.max(1, currentPage - 2);
+let startPage = Math.max(1, currentPage - 2);
     let endPage = Math.min(totalPages, startPage + 4);
 
     if (endPage - startPage < 4) {
       startPage = Math.max(1, endPage - 4);
+      endPage = Math.min(totalPages, startPage + 4);
     }
 
     return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);

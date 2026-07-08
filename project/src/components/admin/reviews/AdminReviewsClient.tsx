@@ -9,8 +9,14 @@ import { Star, MessageSquareReply, Eye, EyeOff, CheckCircle, Loader2 } from "luc
 import { updateReviewStatusAction, replyToReviewAction, getAllReviewsAdminAction } from "@/src/lib/action/review.action";
 import useSWR from "swr";
 
-const fetcher = async ([action, args]: [Function, any]) => {
-  const result = await action(args);
+type AnyFn = (args: any) => Promise<any> | any;
+
+type ActionResult<T = any> =
+  | { success: true; data: T; error?: never }
+  | { success: false; error: string; data?: never };
+
+const fetcher = async ([action, args]: [AnyFn, unknown]) => {
+  const result = (await action(args as any)) as ActionResult;
   if (!result.success) throw new Error(result.error);
   return result.data;
 };
@@ -289,12 +295,16 @@ export default function AdminReviewsClient({
             )}
 
             {(() => {
-              let startPage = Math.max(1, currentPage - 2);
+              const startPage = Math.max(1, currentPage - 2);
               let endPage = Math.min(reviewsData.totalPages, startPage + 4);
-              if (endPage - startPage < 4) {
-                startPage = Math.max(1, endPage - 4);
+              let adjustedStartPage = startPage;
+              if (endPage - adjustedStartPage < 4) {
+                adjustedStartPage = Math.max(1, endPage - 4);
+                endPage = Math.min(reviewsData.totalPages, adjustedStartPage + 4);
               }
-              return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((page) => (
+              
+              return Array.from({ length: endPage - adjustedStartPage + 1 }, (_, i) => adjustedStartPage + i).map((page) => (
+
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
@@ -329,7 +339,7 @@ export default function AdminReviewsClient({
                   <Star key={i} className={`size-3 ${i < activeReview.rating ? "fill-current" : "text-[#6B4E35]/30"}`} />
                 ))}
               </div>
-              <p className="text-sm text-[#2C1810] italic">"{activeReview.content}"</p>
+              <p className="text-sm text-[#2C1810] italic">&ldquo;{activeReview.content}&rdquo;</p>
             </div>
           )}
 
