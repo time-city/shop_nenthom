@@ -7,6 +7,7 @@ import ClientPagination from "@/src/components/admin/customer/clientPagination";
 import type { AdminPaginationMeta } from "@/src/lib/types/admin";
 import Spinner from "@/src/components/ui/spinner";
 import { callAction } from "@/src/lib/utils/callAction";
+import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
 
 interface ClientOrderModalProps {
     user: User | null;
@@ -109,7 +110,8 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                         <p><strong>Số điện thoại:</strong> {user.phone}</p>
                     </div>
 
-                    <div className="overflow-x-auto rounded-lg border border-[#6B4E35]/15 max-h-[350px]">
+                    <div className="rounded-lg border border-[#6B4E35]/15 max-h-[350px] overflow-y-auto">
+                        <TableResponsiveWrapper minWidth={500}>
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-[#6B1218] text-[#F5F0E8] text-xs uppercase font-semibold">
@@ -142,7 +144,7 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                                             key={order.id}
                                             className="border-b border-white/10 text-sm text-[#F5F0E8] hover:bg-white/5 transition-colors"
                                         >
-                                            <td className="px-4 py-3.5 font-bold font-mono text-[#6B1218]">
+                                            <td className="px-4 py-3.5 font-bold font-mono text-[#F5F0E8]">
                                                 {order.id}
                                             </td>
                                             <td className="px-4 py-3.5 whitespace-nowrap">
@@ -176,6 +178,7 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                                 )}
                             </tbody>
                         </table>
+                        </TableResponsiveWrapper>
                     </div>
                     <ClientPagination
                         currentPage={meta.page}

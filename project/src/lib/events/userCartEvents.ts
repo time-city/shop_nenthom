@@ -1,7 +1,6 @@
 import "server-only";
 
-import prisma from "../prisma";
-import { ADMIN_ORDER_EVENT_CHANNEL } from "./adminOrderEvents";
+import { pusherServer } from "../pusher-server";
 
 export type CartProductsRemovedEvent = {
   data: {
@@ -25,10 +24,7 @@ export async function emitCartProductsRemovedToUser(
     event: "CART_PRODUCTS_REMOVED",
   };
 
-  await prisma.$queryRaw`
-    SELECT pg_notify(
-      ${ADMIN_ORDER_EVENT_CHANNEL},
-      ${JSON.stringify(event)}
-    )::text
-  `;
+  // Migrate từ pg_notify sang Pusher — channel user_{userId}  // Tương tự pg_notify cũ nhưng đổi thành pusherServer.trigger
+  console.log(`[Pusher Server] Triggering CART_PRODUCTS_REMOVED on channel user_${userId}`, event);
+  await pusherServer.trigger(`user_${userId}`, "CART_PRODUCTS_REMOVED", event);
 }

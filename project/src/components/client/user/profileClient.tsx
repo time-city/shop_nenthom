@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useState, useCallback } from "react";
+import { type FormEvent, useEffect, useState } from "react";
+import useSWR from "swr";
 import { useToast } from "@/src/components/ui/toastProvider";
 import LoadingState from "@/src/components/ui/loadingState";
 import { logoutUser } from "@/src/lib/action/auth.action";
@@ -93,62 +94,51 @@ export default function ProfilePageContent({
   const [saveError, setSaveError] = useState("");
 
   // Address Book state
-  const [addresses, setAddresses] = useState<any[]>([]);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressFormData | null>(null);
   const [deleteAddressId, setDeleteAddressId] = useState<string | null>(null);
 
-  const loadAddresses = useCallback(async () => {
-    try {
+  const { data: userResponse, mutate: mutateUser } = useSWR<any>(
+    "getCurrentUser",
+    async () => {
+      const data = await callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau.");
+      return data;
+    },
+    { revalidateOnFocus: false, fallbackData: initialUser }
+  );
+
+  const { data: addressesResponse, mutate: mutateAddresses } = useSWR(
+    "getUserAddresses",
+    async () => {
       const res = await getUserAddressesAction();
-      if (res.success && res.data) {
-        setAddresses(res.data);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }, []);
+      return res.data || [];
+    },
+    { revalidateOnFocus: false }
+  );
+
+  const addresses = addressesResponse || [];
 
   useEffect(() => {
-    let cancelled = false;
-    const fetchUser = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await callAction(() => getCurrentUser(), "Không thể tải thông tin tài khoản. Vui lòng thử lại sau.");
-        if (cancelled) return;
-
-        if (data) {
-          const currentStoredUser = useUserStore.getState().user;
-          const userProfile = {
-            id: data.id,
-            address: data.address || currentStoredUser?.address || initialUser?.address || "",
-            city: data.city || currentStoredUser?.city || initialUser?.city || "",
-            zip: data.postal_code || currentStoredUser?.zip || initialUser?.zip || "",
-            email: data.email ?? initialUser?.email ?? "",
-            fullname: data.fullname ?? initialUser?.fullname ?? "",
-            phone: data.phone ?? initialUser?.phone ?? "",
-            role: data.role ?? initialUser?.role ?? "",
-          };
-          setProfile(userProfile);
-          useUserStore.getState().setUser(userProfile);
-          await loadAddresses();
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-    void fetchUser();
-    return () => {
-      cancelled = true;
-    };
-  }, [initialUser, loadAddresses]);
+    if (userResponse && "id" in userResponse) {
+      const currentStoredUser = useUserStore.getState().user;
+      const data = userResponse as any;
+      const userProfile = {
+        id: data.id,
+        address: data.address || currentStoredUser?.address || initialUser?.address || "",
+        city: data.city || currentStoredUser?.city || initialUser?.city || "",
+        zip: data.postal_code || currentStoredUser?.zip || initialUser?.zip || "",
+        email: data.email ?? initialUser?.email ?? "",
+        fullname: data.fullname ?? initialUser?.fullname ?? "",
+        phone: data.phone ?? initialUser?.phone ?? "",
+        role: data.role ?? initialUser?.role ?? "",
+      };
+      setProfile(userProfile);
+      useUserStore.getState().setUser(userProfile);
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
+    }
+  }, [userResponse, initialUser]);
 
   const validateField = (field: keyof Required<ClientProfileUserData>, value: string): string => {
     const trimmed = value.trim();
@@ -278,37 +268,65 @@ export default function ProfilePageContent({
   };
 
   const handleSaveAddress = async (data: AddressFormData) => {
-    if (data.id) {
-      const res = await updateAddressAction(data.id, data);
-      if (res.error) throw new Error(res.error);
-      toast.success("Cập nhật địa chỉ thành công");
-    } else {
-      const res = await createAddressAction(data);
-      if (res.error) throw new Error(res.error);
-      toast.success("Thêm địa chỉ thành công");
+    const previousAddresses = addressesResponse;
+    const isUpdate = !!data.id;
+    
+    mutateAddresses(
+      (current = []) => {
+        if (isUpdate) {
+          return current.map((addr: any) => addr.id === data.id ? { ...addr, ...data } : addr);
+        } else {
+          return [...current, { id: 'temp-id', ...data, is_default: current.length === 0 }];
+        }
+      },
+      false
+    );
+
+    try {
+      if (isUpdate) {
+        const res = await updateAddressAction(data.id!, data);
+        if (res.error) throw new Error(res.error);
+        toast.success("Cập nhật địa chỉ thành công");
+      } else {
+        const res = await createAddressAction(data);
+        if (res.error) throw new Error(res.error);
+        toast.success("Thêm địa chỉ thành công");
+      }
+      mutateAddresses();
+    } catch (err: any) {
+      toast.error(err.message || "Lỗi lưu địa chỉ");
+      mutateAddresses(previousAddresses, false);
     }
-    loadAddresses();
   };
 
   const handleDeleteAddress = async () => {
     if (!deleteAddressId) return;
-    const res = await deleteAddressAction(deleteAddressId);
-    if (res.error) {
-      toast.error(res.error);
-    } else {
+    const previousAddresses = addressesResponse;
+    mutateAddresses((current = []) => current.filter((addr: any) => addr.id !== deleteAddressId), false);
+    setDeleteAddressId(null);
+    try {
+      const res = await deleteAddressAction(deleteAddressId);
+      if (res.error) throw new Error(res.error);
       toast.success("Xóa địa chỉ thành công");
-      setDeleteAddressId(null);
-      loadAddresses();
+      mutateAddresses();
+    } catch (err: any) {
+      toast.error(err.message || "Lỗi xóa địa chỉ");
+      mutateAddresses(previousAddresses, false);
     }
   };
 
   const handleSetDefaultAddress = async (id: string) => {
-    const res = await setDefaultAddressAction(id);
-    if (res.error) {
-      toast.error(res.error);
-    } else {
+    const previousAddresses = addressesResponse;
+    mutateAddresses((current = []) => current.map((addr: any) => ({ ...addr, is_default: addr.id === id })), false);
+    
+    try {
+      const res = await setDefaultAddressAction(id);
+      if (res.error) throw new Error(res.error);
       toast.success("Đã đặt làm địa chỉ mặc định");
-      loadAddresses();
+      mutateAddresses();
+    } catch (err: any) {
+      toast.error(err.message || "Lỗi cập nhật địa chỉ mặc định");
+      mutateAddresses(previousAddresses, false);
     }
   };
 

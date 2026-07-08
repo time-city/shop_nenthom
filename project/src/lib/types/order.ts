@@ -1,8 +1,8 @@
 import type { OrderStatus, PaymentStatus } from "@prisma/client";
 import type { AdminPaymentStatus } from "./admin";
 
-export type AdminOrderResponseStatus = "pending" | "confirmed" | "cancelled";
-export type ClientOrderResponseStatus = "pending" | "confirmed" | "canceled";
+export type AdminOrderResponseStatus = "pending" | "confirmed" | "cancelled" | "cancel_requested";
+export type ClientOrderResponseStatus = "pending" | "processing" | "shipped" | "delivered" | "canceled" | "cancel_requested";
 
 export const orderStatusMap: Record<OrderStatus, AdminOrderResponseStatus> = {
   CANCELLED: "cancelled",
@@ -10,6 +10,7 @@ export const orderStatusMap: Record<OrderStatus, AdminOrderResponseStatus> = {
   PENDING: "pending",
   PROCESSING: "confirmed",
   SHIPPED: "confirmed",
+  CANCEL_REQUESTED: "cancel_requested",
 };
 
 export const paymentStatusMap: Record<PaymentStatus, AdminPaymentStatus> = {
@@ -20,8 +21,10 @@ export const paymentStatusMap: Record<PaymentStatus, AdminPaymentStatus> = {
 
 export const clientOrderStatusMap = {
   CANCELLED: "canceled",
-  DELIVERED: "confirmed",
+  DELIVERED: "delivered",
   PENDING: "pending",
-  PROCESSING: "confirmed",
-  SHIPPED: "confirmed",
+  PROCESSING: "processing",
+  SHIPPED: "shipped",
+  CANCEL_REQUESTED: "cancel_requested",
 } as const satisfies Record<OrderStatus, ClientOrderResponseStatus>;
+

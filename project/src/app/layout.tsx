@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans, Geist_Mono } from "next/font/google";
 import ToastProvider from "../components/ui/toastProvider";
 import StoreProvider from "../components/ui/storeProvider";
+import { SWRProvider } from "@/src/providers/SWRProvider";
 import { getCurrentUser } from "../lib/action/user.action";
 import "./globals.css";
 import { callAction } from "@/src/lib/utils/callAction";
@@ -71,11 +72,13 @@ export default async function RootLayout({
 })();`,
           }}
         />
-       <StoreProvider>
-        <ToastProvider>
-          {children}
-        </ToastProvider>
-      </StoreProvider>
+       <SWRProvider>
+         <StoreProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </StoreProvider>
+       </SWRProvider>
      </body>
    </html>
  );

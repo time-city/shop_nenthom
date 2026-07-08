@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import prisma from "../prisma";
 import { CreateReviewInput, GetReviewsInput, ReplyReviewInput, UpdateReviewStatusInput } from "../validations/review.schema";
+import { emitReviewRepliedToUser } from "../events/userReviewEvents";
 
 export class ReviewService {
   static async createReview(userId: string, data: CreateReviewInput) {
@@ -11,7 +12,7 @@ export class ReviewService {
         rating: data.rating,
         content: data.content,
         images: data.images || [],
-        is_published: false, // Default to pending
+        is_published: true, // Default to published immediately as requested
       },
       include: {
         user: {
@@ -128,12 +129,33 @@ export class ReviewService {
   }
 
   static async replyToReview(data: ReplyReviewInput) {
-    return await prisma.review.update({
+    const review = await prisma.review.update({
       where: { id: data.reviewId },
       data: { 
         admin_reply: data.admin_reply,
         replied_at: new Date()
+      },
+      include: {
+        product: { select: { name: true } },
       }
     });
+
+    try {
+      if (review.user_id && data.admin_reply) {
+        await emitReviewRepliedToUser({
+          reviewId: review.id,
+          productName: review.product?.name || "sản phẩm",
+          productId: review.product_id,
+          reply: data.admin_reply,
+          repliedAt: new Date().toISOString(),
+          userId: review.user_id
+        });
+      }
+    } catch (e) {
+      console.error("[emitReviewRepliedToUser] Failed to emit event", e);
+    }
+
+    return review;
   }
 }
+

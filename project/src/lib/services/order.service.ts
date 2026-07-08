@@ -14,8 +14,13 @@ import {
   emitNewOrderToAdmin,
   emitNewPaymentToAdmin,
   emitOrderUpdatedToAdmin,
+  emitCancelRequestToAdmin,
 } from "../events/adminOrderEvents";
-import { emitOrderCancelledToUser, emitPaymentSuccessToUser } from "../events/userOrderEvents";
+import { 
+  emitOrderCancelledToUser, 
+  emitPaymentSuccessToUser,
+  emitOrderStatusUpdatedToUser 
+} from "../events/userOrderEvents";
 
 
 const shippingFeeCents = 0;
@@ -871,7 +876,7 @@ export const OrderService = {
 
     if (!order) throw new Error("Không tìm thấy đơn hàng phù hợp.");
     if (order.status === OrderStatus.CANCELLED) throw new Error("Đơn hàng đã bị hủy nên không thể cập nhật trạng thái.");
-    if (order.status !== OrderStatus.PENDING) return OrderService.getOrderDetailForAdmin(data.order_number);
+    if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.CANCEL_REQUESTED) return OrderService.getOrderDetailForAdmin(data.order_number);
 
 
     await prisma.$transaction([
@@ -900,6 +905,15 @@ export const OrderService = {
       status: orderStatusMap[data.status] as AdminOrderStatus,
     }).catch((error) => {
       console.error("[emitOrderUpdatedToAdmin] Không thể phát ORDER_UPDATED:", error);
+    });
+
+    emitOrderStatusUpdatedToUser({
+      orderId: order.id,
+      orderNumber: order.order_number,
+      status: clientOrderStatusMap[data.status],
+      updatedAt: new Date().toISOString(),
+    }).catch((error) => {
+      console.error("[emitOrderStatusUpdatedToUser] Không thể phát ORDER_STATUS_UPDATED:", error);
     });
 
     return OrderService.getOrderDetailForAdmin(data.order_number);
@@ -944,10 +958,69 @@ export const OrderService = {
         updatedAt: new Date().toISOString(),
       };
     }
-    if (updatedBy === "user" && order.status !== OrderStatus.PENDING) {
-      throw new Error("Đơn hàng đã được xử lý nên không thể tự hủy. Vui lòng liên hệ shop để được hỗ trợ.");
-    }
 
+    if (updatedBy === "user") {
+      if (order.status === OrderStatus.CANCEL_REQUESTED) {
+        return {
+          emailSent: null,
+          id: order.order_number,
+          message: "Yêu cầu hủy đơn đã được gửi trước đó. Vui lòng chờ admin duyệt.",
+          notificationCreated: false,
+          status: clientOrderStatusMap[OrderStatus.CANCEL_REQUESTED],
+          updatedAt: new Date().toISOString(),
+        };
+      }
+      if (order.status !== OrderStatus.PENDING) {
+        throw new Error("Đơn hàng đã được xử lý nên không thể tự hủy. Vui lòng liên hệ shop để được hỗ trợ.");
+      }
+
+      await prisma.$transaction(async (tx) => {
+        // Cập nhật trạng thái đơn hàng thành CANCEL_REQUESTED
+        await tx.order.update({
+          where: { id: order.id },
+          data: { status: OrderStatus.CANCEL_REQUESTED },
+        });
+        await tx.orderHistoryLog.create({
+          data: {
+            current_status: OrderStatus.CANCEL_REQUESTED,
+            note: `Khách hàng yêu cầu hủy đơn: ${cancellationReason}`,
+            order_id: order.id,
+            previous_status: order.status,
+          },
+        });
+      });
+
+      emitOrderUpdatedToAdmin({
+        order: toAdminOrderRow({
+          ...order,
+          status: OrderStatus.CANCEL_REQUESTED,
+        }),
+        orderId: order.id,
+        orderNumber: order.order_number,
+        status: orderStatusMap[OrderStatus.CANCEL_REQUESTED] as AdminOrderStatus,
+      }).catch((error: unknown) => {
+        console.error("[emitOrderUpdatedToAdmin] Không thể phát ORDER_UPDATED:", error);
+      });
+
+      emitCancelRequestToAdmin({
+        orderId: order.id,
+        orderNumber: order.order_number,
+        customerName: order.shipping_fullname,
+        reason: cancellationReason,
+        requestedAt: new Date().toISOString(),
+      }).catch((error) => {
+        console.error("[emitCancelRequestToAdmin] Không thể phát CANCEL_REQUEST:", error);
+      });
+
+      return {
+        emailSent: false,
+        id: order.order_number,
+        notificationCreated: false,
+        status: clientOrderStatusMap[OrderStatus.CANCEL_REQUESTED],
+        updatedAt: new Date().toISOString(),
+        message: "Đơn hàng của bạn đang được gửi yêu cầu hủy lên admin.",
+      };
+    }
 
     await prisma.$transaction(async (tx) => {
       // Cập nhật trạng thái đơn hàng
@@ -1007,8 +1080,15 @@ export const OrderService = {
           reason: cancellationReason,
           userId: order.user.id,
         });
+
+        await emitOrderStatusUpdatedToUser({
+          orderId: order.id,
+          orderNumber: order.order_number,
+          status: clientOrderStatusMap[OrderStatus.CANCELLED],
+          updatedAt: new Date().toISOString(),
+        });
       } catch (eventError) {
-        console.error("[emitOrderCancelledToUser] Không thể phát ORDER_CANCELLED:", eventError);
+        console.error("[emitOrderCancelledToUser] Không thể phát event:", eventError);
       }
     }
 

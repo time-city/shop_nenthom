@@ -241,7 +241,7 @@ export type AdminTableCellProps = {
 };
 
 /** Trạng thái xử lý đơn hàng trong admin. */
-export type AdminOrderStatus = "pending" | "confirmed" | "cancelled";
+export type AdminOrderStatus = "pending" | "confirmed" | "cancelled" | "cancel_requested";
 
 /** Trạng thái thanh toán của đơn hàng trong admin. */
 export type AdminPaymentStatus = "paid" | "unpaid" | "refunded";
@@ -398,6 +398,16 @@ export type AdminWebSocketMessage =
         subject: string;
         createdAt: string;
       };
+    }
+  | {
+      event: "CANCEL_REQUEST";
+      data: {
+        orderId: string;
+        orderNumber: string;
+        customerName: string;
+        reason: string;
+        requestedAt: string;
+      };
     };
 
 /** Options truyền vào hook useAdminOrderSocket */
@@ -405,5 +415,6 @@ export type UseAdminOrderSocketOptions = {
   onConnected?: (data: { pendingContactCount: number; unreadNotificationCount: number }) => void;
   onNewOrder?: (data: Extract<AdminWebSocketMessage, { event: "NEW_ORDER" }>["data"] & { event?: never }) => void;
   onNewContact?: (data: { contactId: string; name: string; subject: string; createdAt: string }) => void;
+  onCancelRequest?: (data: Extract<AdminWebSocketMessage, { event: "CANCEL_REQUEST" }>["data"]) => void;
 };
 

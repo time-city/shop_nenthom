@@ -72,7 +72,7 @@ export default function CheckoutSummary({
               if (promoError) setPromoError("");
             }}
             style={{ borderColor: promoError ? "#ff6b6b" : undefined }}
-            className="min-w-0 flex-1 rounded-full border-[1.5px] border-[#F5F0E8]/20 bg-black/40 backdrop-blur-sm px-4 py-3 text-sm text-[#F5F0E8] outline-none transition placeholder:text-[#F5F0E8]/45 focus:border-[#D6A15F] focus:ring-4 focus:ring-[#D6A15F]/10"
+            className="min-w-0 flex-1 rounded-full border-[1.5px] border-[#F5F0E8]/20 bg-black/50 px-4 py-3 text-sm text-[#F5F0E8] outline-none transition placeholder:text-[#F5F0E8]/45 focus:border-[#D6A15F] focus:ring-4 focus:ring-[#D6A15F]/10"
           />
           <button
             type="button"

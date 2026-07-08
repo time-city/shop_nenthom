@@ -5,6 +5,7 @@ import Image from "next/image";
 import heroImage from "@/public/assets/image-Photoroom.png";
 import bgImage from "@/public/assets/bg_1.jpg";
 import { useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
 import type { MouseEvent } from "react";
 import type {
   ClientCategoriesSuccessResponseInterface,
@@ -23,10 +24,27 @@ const categoryBgClasses = [
   "bg-[#8B262C]", // Lighter Warm Red
 ];
 
-export default function HomeClient() {
+export default function HomeClient({ initialCategories }: { initialCategories?: any }) {
   const [activeSlide, setActiveSlide] = useState(0);
-  const [categories, setCategories] = useState<ClientProductCategoryInterface[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const { data: categoriesResult, isLoading: isLoadingCategories } = useSWR(
+    'categories',
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - homeClient: Fetching categories from server API...");
+      return await callAction(() => getCategoriesAction(), "Không thể tải danh mục. Vui lòng thử lại sau.");
+    },
+    { fallbackData: initialCategories }
+  );
+
+  useEffect(() => {
+    if (categoriesResult) {
+      console.log(`[Data Source] 🟢 UI UPDATED - homeClient: Displaying categories (from SWR Cache or Network)`);
+    }
+  }, [categoriesResult]);
+
+  const categories = categoriesResult && 'success' in categoriesResult && categoriesResult.success 
+    ? (categoriesResult as ClientCategoriesSuccessResponseInterface).categories 
+    : [];
+
   const categorySlides = useMemo(
     () =>
       categories.map((category, index) => ({
@@ -40,24 +58,6 @@ export default function HomeClient() {
         })),
     [categories],
   );
-
-  useEffect(() => {
-    const loadCategories = async () => {
-      setIsLoadingCategories(true);
-
-      // action-(lấy danh sách category trang chủ)
-      const result = await callAction(() => getCategoriesAction(), "Không thể tải danh mục. Vui lòng thử lại sau.");
-
-      if ("success" in result && result.success) {
-        const response = result as ClientCategoriesSuccessResponseInterface;
-        setCategories(response.categories);
-      }
-
-      setIsLoadingCategories(false);
-    };
-
-    void loadCategories();
-  }, []);
 
   // Autoplay category slider: transition every 4 seconds
   useEffect(() => {

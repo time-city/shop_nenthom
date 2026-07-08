@@ -13,17 +13,24 @@ import type {
   OrderDetail,
 } from "../../../lib/types/client";
 import { callAction } from "@/src/lib/utils/callAction";
+import { OrderTrackingTimeline } from "./orderTrackingTimeline";
 
 const statusLabel: Record<OrderDetail["status"], string> = {
   canceled: "Đã huỷ",
-  confirmed: "Đã xác nhận",
-  pending: "Đang xác nhận",
+  pending: "Đang chờ xác nhận",
+  processing: "Đang xử lý",
+  shipped: "Đang giao hàng",
+  delivered: "Đã giao thành công",
+  cancel_requested: "Chờ duyệt huỷ",
 };
 
 const statusClass: Record<OrderDetail["status"], string> = {
   canceled: "bg-[#2c1810]/10 text-[#6B4C35]",
-  confirmed: "bg-[#45A05C]/15 text-[#1F6B3A]",
   pending: "bg-[#F4E2B7] text-[#8B5E3C]",
+  processing: "bg-[#F4E2B7] text-[#8B5E3C]",
+  shipped: "bg-[#45A05C]/15 text-[#1F6B3A]",
+  delivered: "bg-[#45A05C]/15 text-[#1F6B3A]",
+  cancel_requested: "bg-red-950/40 text-red-400 border border-red-500/20",
 };
 
 const formatPrice = (value: number) =>
@@ -56,24 +63,39 @@ export default function DetailOrder({
 
     const fetchDetail = async () => {
       try {
-        const response = isAdmin
-          ? await callAction(() => getOrderDetailForAdminAction({ order_number: orderNumber }), "Không thể tải chi tiết đơn hàng. Vui lòng thử lại sau.")
-          : await callAction(() => getMyOrderDetailAction(orderNumber), "Không thể tải chi tiết đơn hàng. Vui lòng thử lại sau.");
-        if (!isMounted) return;
+        const result = isAdmin
+          ? await callAction(
+              () => getOrderDetailForAdminAction({ order_number: orderNumber }),
+              "Không thể tải chi tiết đơn hàng (Admin)"
+            )
+          : await callAction(
+              () => getMyOrderDetailAction(orderNumber),
+              "Không thể tải chi tiết đơn hàng"
+            );
 
-        if ("error" in response) {
-          setError(response.error);
-        } else if ("success" in response && "data" in response) {
-          setOrder(response.data as unknown as OrderDetail);
+        if ("error" in result && result.error) {
+          if (isMounted) {
+            setError(result.error);
+            setOrder(null);
+          }
+          return;
         }
-      } catch (err) {
+
+        if ("success" in result && result.success && result.data) {
+          if (isMounted) {
+            setOrder(result.data as OrderDetail);
+          }
+        } else {
+          if (isMounted) {
+            setError("Không lấy được dữ liệu chi tiết.");
+          }
+        }
+      } catch (err: any) {
         if (isMounted) {
-          setError(err instanceof Error ? err.message : String(err));
+          setError(err.message || "Lỗi tải chi tiết đơn hàng");
         }
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -91,47 +113,53 @@ export default function DetailOrder({
   };
 
   const handleCancelOrder = async () => {
+    setCancelError("");
     if (!order || isCancelling) return;
     if (!cancelReason.trim()) {
-      setCancelError("Vui lòng nhập lý do huỷ đơn");
+      setCancelError("Vui lòng nhập lý do huỷ");
       return;
     }
 
     setIsCancelling(true);
-    setCancelError("");
-
     try {
       const result = await callAction(() => cancelMyOrderAction({
         order_id: order.id,
         reason: cancelReason.trim(),
-      }), "Không thể hủy đơn hàng. Vui lòng thử lại sau.");
+      }), "Không thể hủy đơn hàng.");
 
       if ("error" in result && result.error) {
         setCancelError(result.error);
         return;
       }
-
-      setOrder((currentOrder) =>
-        currentOrder ? { ...currentOrder, status: "canceled" } : currentOrder,
-      );
-      setShowCancelForm(false);
-      setCancelReason("");
-      onCancelSuccess?.();
+      if ("success" in result && result.success) {
+        onCancelSuccess?.();
+        onClose();
+      }
+    } catch (err: any) {
+      setCancelError(err.message || "Có lỗi xảy ra khi hủy.");
     } finally {
       setIsCancelling(false);
     }
   };
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [onClose]);
+
   return (
     <div
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-[#2C1810]/60 p-4 backdrop-blur-sm transition-opacity"
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm transition-opacity"
       role="dialog"
       aria-modal="true"
     >
-      <div className="relative flex max-h-[90vh] w-full max-w-[650px] flex-col overflow-hidden rounded-2xl bg-[#F8F0E4] text-[#2C1810] shadow-[0_24px_54px_rgba(44,24,16,0.22)] transition-all animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative flex max-h-[90vh] w-full max-w-[650px] flex-col overflow-hidden rounded-3xl bg-[#F5F0E8]/5 backdrop-blur-md border border-[#F5F0E8]/10 text-[#F5F0E8] shadow-[0_24px_54px_rgba(0,0,0,0.6)] transition-all animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#6B4C35]/15 bg-[#6B1218] px-6 py-4 text-[#F5F0E8]">
+        <div className="flex items-center justify-between border-b border-[#F5F0E8]/10 bg-[#6B1218] px-6 py-4 text-[#F5F0E8]">
           <div>
             <h3 className="font-serif text-lg font-bold">Chi Tiết Đơn Hàng</h3>
             <p className="text-xs text-[#F5F0E8]/70 mt-0.5">Mã đơn: {orderNumber}</p>
@@ -139,7 +167,7 @@ export default function DetailOrder({
           <button
             onClick={onClose}
             type="button"
-            className="rounded-full p-1.5 text-[#F5F0E8]/70 hover:bg-[#F5F0E8]/10 hover:text-[#F5F0E8] transition"
+            className="rounded-full p-1.5 text-[#F5F0E8]/70 hover:bg-[#F5F0E8]/10 hover:text-[#F5F0E8] transition active:scale-95"
             aria-label="Đóng"
           >
             <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,26 +183,34 @@ export default function DetailOrder({
               <LoadingState label="Đang tải chi tiết đơn hàng..." className="border-0 bg-transparent shadow-none" />
             </div>
           ) : error ? (
-            <div className="text-center py-12 text-[#6B1218] font-medium">{error}</div>
+            <div className="text-center py-12 text-[#ff6b6b] font-medium">{error}</div>
           ) : order ? (
             <>
+              {/* Timeline Tracking */}
+              {!isAdmin && (
+                <OrderTrackingTimeline 
+                  orderId={order.id} 
+                  initialStatus={order.status} 
+                />
+              )}
+
               {/* Order Info & Status */}
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-xl border border-[#6B4C35]/10 bg-white p-4">
-                  <div className="text-[0.7rem] uppercase tracking-wider text-[#6B4C35]/60 mb-2 font-bold">Trạng thái</div>
+                <div className="rounded-2xl border border-[#F5F0E8]/10 bg-black/35 p-4 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+                  <div className="text-[0.7rem] uppercase tracking-wider text-[#F5F0E8]/60 mb-2 font-bold">Trạng thái</div>
                   <div className="flex items-center gap-3">
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass[order.status]}`}>
                       {statusLabel[order.status]}
                     </span>
-                    <span className="text-xs text-[#6B4C35]/60 font-light">Ngày đặt: {order.date}</span>
+                    <span className="text-xs text-[#F5F0E8]/60 font-light">Ngày đặt: {order.date}</span>
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-[#6B4C35]/10 bg-white p-4">
-                  <div className="text-[0.7rem] uppercase tracking-wider text-[#6B4C35]/60 mb-2 font-bold">Thanh toán</div>
+                <div className="rounded-2xl border border-[#F5F0E8]/10 bg-black/35 p-4 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+                  <div className="text-[0.7rem] uppercase tracking-wider text-[#F5F0E8]/60 mb-2 font-bold">Thanh toán</div>
                   <div className="text-sm font-semibold">
                     {order.paymentMethod === "cod" ? "COD (Khi nhận hàng)" : "Chuyển khoản"} -{" "}
-                    <span className={order.paymentStatus === "paid" ? "text-[#45A05C]" : "text-[#6B1218]"}>
+                    <span className={order.paymentStatus === "paid" ? "text-green-400" : "text-orange-400"}>
                       {order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
                     </span>
                   </div>
@@ -182,24 +218,24 @@ export default function DetailOrder({
               </div>
 
               {/* Recipient / Shipping Info */}
-              <div className="rounded-xl border border-[#6B4C35]/10 bg-white p-5 space-y-3">
-                <h4 className="font-serif font-bold text-[#6B1218] border-b border-[#6B4C35]/10 pb-2 text-sm uppercase tracking-wider">
+              <div className="rounded-2xl border border-[#F5F0E8]/10 bg-black/35 p-5 space-y-3 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+                <h4 className="font-serif font-bold text-[#E5C07B] border-b border-[#F5F0E8]/10 pb-2 text-sm uppercase tracking-wider">
                   Thông tin giao nhận
                 </h4>
                 <div className="grid gap-2 text-sm">
                   <div>
-                    <span className="text-[#6B4C35]/60 font-medium mr-1">Người nhận:</span>{" "}
+                    <span className="text-[#F5F0E8]/60 font-medium mr-1">Người nhận:</span>{" "}
                     <span className="font-semibold">{order.shippingFullname}</span>
                   </div>
                   <div>
-                    <span className="text-[#6B4C35]/60 font-medium mr-1">Số điện thoại:</span> {order.phone}
+                    <span className="text-[#F5F0E8]/60 font-medium mr-1">Số điện thoại:</span> {order.phone}
                   </div>
                   <div>
-                    <span className="text-[#6B4C35]/60 font-medium mr-1">Địa chỉ:</span> {order.shippingAddress}, {order.shippingCity}
+                    <span className="text-[#F5F0E8]/60 font-medium mr-1">Địa chỉ:</span> {order.shippingAddress}, {order.shippingCity}
                   </div>
                   {order.shippingNote && (
-                    <div className="mt-2 rounded-lg bg-[#F8F0E4] p-3 text-xs text-[#6B4C35] italic border border-[#6B4C35]/5">
-                      <span className="font-semibold block not-italic text-[#6B4C35]/80 mb-1">Ghi chú giao hàng:</span>
+                    <div className="mt-2 rounded-xl bg-[#6B1218]/20 p-3 text-xs text-[#F5F0E8]/80 italic border border-[#F5F0E8]/10">
+                      <span className="font-semibold block not-italic text-[#F5F0E8]/70 mb-1">Ghi chú giao hàng:</span>
                       &quot;{order.shippingNote}&quot;
                     </div>
                   )}
@@ -207,20 +243,20 @@ export default function DetailOrder({
               </div>
 
               {/* Items List */}
-              <div className="rounded-xl border border-[#6B4C35]/10 bg-white p-5 space-y-4">
-                <h4 className="font-serif font-bold text-[#6B1218] border-b border-[#6B4C35]/10 pb-2 text-sm uppercase tracking-wider">
+              <div className="rounded-2xl border border-[#F5F0E8]/10 bg-black/35 p-5 space-y-4 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+                <h4 className="font-serif font-bold text-[#E5C07B] border-b border-[#F5F0E8]/10 pb-2 text-sm uppercase tracking-wider">
                   Sản phẩm đã đặt
                 </h4>
-                <div className="divide-y divide-[#6B4C35]/10">
+                <div className="divide-y divide-[#F5F0E8]/10">
                   {order.items.map((item, idx) => (
                     <div key={idx} className="py-3 first:pt-0 last:pb-0 flex items-start justify-between gap-4">
                       <div>
-                        <h5 className="font-semibold text-sm text-[#2C1810]">{item.name}</h5>
-                        {item.detail && <p className="text-xs text-[#6B4C35]/70 font-light mt-1">{item.detail}</p>}
+                        <h5 className="font-semibold text-sm text-[#F5F0E8]">{item.name}</h5>
+                        {item.detail && <p className="text-xs text-[#F5F0E8]/60 font-light mt-1">{item.detail}</p>}
                         {item.toppings && item.toppings.length > 0 && (
                           <div className="mt-1.5 flex flex-wrap gap-1">
                             {item.toppings.map((top, tIdx) => (
-                              <span key={tIdx} className="rounded bg-[#6B1218]/5 px-1.5 py-0.5 text-[0.65rem] text-[#6B1218] border border-[#6B1218]/10">
+                              <span key={tIdx} className="rounded bg-[#6B1218]/25 px-1.5 py-0.5 text-[0.65rem] text-[#E5C07B] border border-[#E5C07B]/10">
                                 + {top}
                               </span>
                             ))}
@@ -228,8 +264,8 @@ export default function DetailOrder({
                         )}
                       </div>
                       <div className="text-right text-sm">
-                        <span className="font-sans font-bold text-sm text-[#6B1218] mr-2">x{item.quantity}</span>
-                        <span className="font-sans font-semibold text-[#6B1218] text-[0.95rem]">{formatPrice(item.price)}</span>
+                        <span className="font-sans font-bold text-sm text-[#E5C07B] mr-2">x{item.quantity}</span>
+                        <span className="font-sans font-semibold text-[#E5C07B] text-[0.95rem]">{formatPrice(item.price)}</span>
                       </div>
                     </div>
                   ))}
@@ -237,22 +273,22 @@ export default function DetailOrder({
               </div>
 
               {/* Prices breakdown */}
-              <div className="rounded-xl border border-[#6B4C35]/10 bg-white p-5 space-y-3">
+              <div className="rounded-2xl border border-[#F5F0E8]/10 bg-black/35 p-5 space-y-3 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#6B4C35]/70 font-light">Tạm tính:</span>
-                  <span className="font-medium">{formatPrice(order.subtotal)}</span>
+                  <span className="text-[#F5F0E8]/60 font-light">Tạm tính:</span>
+                  <span className="font-medium text-[#F5F0E8]">{formatPrice(order.subtotal)}</span>
                 </div>
                 {order.discount > 0 && (
-                  <div className="flex justify-between text-sm text-[#6B1218]">
+                  <div className="flex justify-between text-sm text-[#E5C07B]">
                     <span className="font-light">Giảm giá {order.discountCode ? `(${order.discountCode})` : ""}:</span>
                     <span className="font-medium">-{formatPrice(order.discount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#6B4C35]/70 font-light">Phí giao hàng:</span>
-                  <span className="font-medium">{formatPrice(order.shipping)}</span>
+                  <span className="text-[#F5F0E8]/60 font-light">Phí giao hàng:</span>
+                  <span className="font-medium text-[#F5F0E8]">{formatPrice(order.shipping)}</span>
                 </div>
-                <div className="flex justify-between border-t border-[#6B4C35]/10 pt-3 text-[1.05rem] font-bold text-[#6B1218]">
+                <div className="flex justify-between border-t border-[#F5F0E8]/10 pt-3 text-[1.05rem] font-bold text-[#E5C07B]">
                   <span className="font-sans">Tổng cộng:</span>
                   <span className="font-sans text-[1.15rem]">{formatPrice(order.total)}</span>
                 </div>
@@ -260,18 +296,18 @@ export default function DetailOrder({
 
               {/* Timeline Logs */}
               {order.historyLogs && order.historyLogs.length > 0 && (
-                <div className="rounded-xl border border-[#6B4C35]/10 bg-white p-5 space-y-4">
-                  <h4 className="font-serif font-bold text-[#6B1218] border-b border-[#6B4C35]/10 pb-2 text-sm uppercase tracking-wider">
+                <div className="rounded-2xl border border-[#F5F0E8]/10 bg-black/35 p-5 space-y-4 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+                  <h4 className="font-serif font-bold text-[#E5C07B] border-b border-[#F5F0E8]/10 pb-2 text-sm uppercase tracking-wider">
                     Lịch sử đơn hàng
                   </h4>
-                  <div className="relative border-l border-[#6B1218]/30 pl-4 ml-2 space-y-4">
+                  <div className="relative border-l border-[#F5F0E8]/20 pl-4 ml-2 space-y-4">
                     {order.historyLogs.map((log) => (
                       <div key={log.id} className="relative text-xs">
-                        <span className="absolute -left-[21px] mt-1 size-2 rounded-full bg-[#6B1218] border border-white" />
-                        <div className="font-bold text-[#6B1218]">
+                        <span className="absolute -left-[21px] mt-1 size-2 rounded-full bg-[#10B981] border border-[#F5F0E8]/10" />
+                        <div className="font-bold text-[#F5F0E8]/85">
                           {new Date(log.createdAt).toLocaleString("vi-VN")}
                         </div>
-                        <div className="text-[#6B4C35] font-light mt-0.5">{log.note || "Cập nhật trạng thái"}</div>
+                        <div className="text-[#F5F0E8]/60 font-light mt-0.5">{log.note || "Cập nhật trạng thái"}</div>
                       </div>
                     ))}
                   </div>
@@ -279,12 +315,12 @@ export default function DetailOrder({
               )}
 
               {!isAdmin && order.status === "pending" ? (
-                <div className="rounded-xl border border-[#6B1218]/15 bg-white p-5">
+                <div className="rounded-2xl border border-[#F5F0E8]/10 bg-black/35 p-5 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
                   {showCancelForm ? (
                     <div className="space-y-3">
                       <label
                         htmlFor="customer-cancel-reason"
-                        className="block text-xs font-semibold uppercase tracking-wider text-[#6B4C35]"
+                        className="block text-xs font-semibold uppercase tracking-wider text-[#F5F0E8]/65"
                       >
                         Lý do huỷ đơn
                       </label>
@@ -296,11 +332,11 @@ export default function DetailOrder({
                           if (cancelError) setCancelError("");
                         }}
                         rows={3}
-                        className="w-full rounded-lg border border-[#6B4C35]/25 bg-[#F8F0E4] px-3 py-2 text-sm outline-none focus:border-[#6B1218]"
+                        className="w-full rounded-xl border border-[#F5F0E8]/15 bg-black/45 px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#D6A15F]"
                         placeholder="Nhập lý do bạn muốn huỷ đơn..."
                       />
                       {cancelError ? (
-                        <p className="text-xs font-medium text-[#6B1218]">
+                        <p className="text-xs font-medium text-[#ff6b6b]">
                           {cancelError}
                         </p>
                       ) : null}
@@ -312,7 +348,7 @@ export default function DetailOrder({
                             setCancelError("");
                           }}
                           disabled={isCancelling}
-                          className="rounded-full border border-[#6B4C35]/25 px-4 py-2 text-xs font-semibold text-[#6B4C35]"
+                          className="rounded-xl border border-[#F5F0E8]/15 px-4 py-2 text-xs font-semibold text-[#F5F0E8] hover:bg-white/5 transition"
                         >
                           Quay lại
                         </button>
@@ -320,7 +356,7 @@ export default function DetailOrder({
                           type="button"
                           onClick={handleCancelOrder}
                           disabled={isCancelling}
-                          className="rounded-full bg-[#6B1218] px-4 py-2 text-xs font-semibold text-[#F5F0E8] disabled:opacity-60"
+                          className="rounded-xl bg-[#6B1218] px-4 py-2 text-xs font-semibold text-[#F5F0E8] hover:bg-[#8A1119] transition active:scale-[0.98] disabled:opacity-60"
                         >
                           {isCancelling ? "Đang huỷ..." : "Xác nhận huỷ"}
                         </button>
@@ -330,7 +366,7 @@ export default function DetailOrder({
                     <button
                       type="button"
                       onClick={() => setShowCancelForm(true)}
-                      className="rounded-full border border-[#6B1218] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#6B1218] transition hover:bg-[#6B1218] hover:text-[#F5F0E8]"
+                      className="rounded-xl border border-red-500/40 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-red-400 hover:bg-red-500/10 transition active:scale-[0.98]"
                     >
                       Huỷ đơn hàng
                     </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
 import { useToast } from "@/src/components/ui/toastProvider";
 import ModalSupport from "@/src/components/admin/support/modalSupport";
 import LoadingState from "@/src/components/ui/loadingState";
@@ -67,18 +68,14 @@ export default function SupportClient() {
   const { setUnreadCount, decrementUnread } = useSupportStore();
   const [activeFilter, setActiveFilter] = useState<AdminSupportFilter>("all");
   const [contacts, setContacts] = useState<AdminSupportMessage[]>([]);
-  const [isLoadingContacts, setIsLoadingContacts] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isMarkingReplied, setIsMarkingReplied] = useState(false);
   const [selectedContact, setSelectedContact] =
     useState<AdminSupportMessage | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadContacts = async () => {
-      setIsLoadingContacts(true);
-      setError(null);
-
+  const { data: fetchResult, isLoading: isSwrLoading, error: swrError, mutate: mutateContacts } = useSWR(
+    ['admin-contacts', activeFilter],
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - supportClient: Fetching contacts...");
       const result = await callAction(() => getContactsAction({
         limit: 100,
         page: 1,
@@ -86,37 +83,35 @@ export default function SupportClient() {
           ? { status: filterStatusMap[activeFilter] }
           : {}),
       }), "Không thể tải danh sách liên hệ. Vui lòng thử lại sau.");
-      if (cancelled) return;
-
+      
       if ("error" in result && result.error) {
-        const friendlyErr = getFriendlyResponseError(result.error);
-        setError(friendlyErr);
-        toast.error(friendlyErr);
-        setContacts([]);
-        setIsLoadingContacts(false);
-        return;
+        throw new Error(getFriendlyResponseError(result.error));
       }
+      return result;
+    }
+  );
 
-      if ("success" in result && result.success) {
-        const contactResult = result as AdminContactsSuccessResponseInterface;
-        setError(null);
-        const normalized = contactResult.data.map(normalizeContact);
-        setContacts(normalized);
-        // Sync số unread thực từ DB vào store — chỉ khi lấy all/unread
-        if (activeFilter === "all" || activeFilter === "unread") {
-          const realUnread = normalized.filter((c) => c.status === "unread").length;
-          setUnreadCount(realUnread);
-        }
+  useEffect(() => {
+    if (swrError) {
+      const friendlyErr = swrError instanceof Error ? swrError.message : String(swrError);
+      setError(friendlyErr);
+      toast.error(friendlyErr);
+      setContacts([]);
+    } else if (fetchResult && "success" in fetchResult && fetchResult.success) {
+      console.log("[Data Source] 🟢 UI UPDATED - supportClient: Displaying contacts (from SWR Cache or Network)");
+      const contactResult = fetchResult as AdminContactsSuccessResponseInterface;
+      setError(null);
+      const normalized = contactResult.data.map(normalizeContact);
+      setContacts(normalized);
+      // Sync số unread thực từ DB vào store — chỉ khi lấy all/unread
+      if (activeFilter === "all" || activeFilter === "unread") {
+        const realUnread = normalized.filter((c) => c.status === "unread").length;
+        setUnreadCount(realUnread);
       }
+    }
+  }, [fetchResult, swrError, activeFilter, setUnreadCount, toast]);
 
-      setIsLoadingContacts(false);
-    };
-
-    void loadContacts();
-    return () => {
-      cancelled = true;
-    };
-  }, [activeFilter, setUnreadCount, toast]);
+  const isLoadingContacts = isSwrLoading && contacts.length === 0;
 
   const filteredContacts = useMemo(() => {
     if (activeFilter === "all") return contacts;

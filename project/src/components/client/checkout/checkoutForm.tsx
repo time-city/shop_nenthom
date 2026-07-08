@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { getCurrentUser } from "../../../lib/action/user.action";
+import { getUserAddressesAction } from "@/src/lib/action/address.action";
 import { useUserStore } from "@/src/store/useUserStore";
 import type { FullFormValues } from "@/src/interface/clientInterface";
 import { PROVINCE_POSTAL_CODE_MAP } from "@/src/lib/utils/provincePostalCodes";
@@ -30,6 +31,9 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
   const [formValues, setFormValues] = useState<FullFormValues>(initialCheckoutFormValues);
   const [errors, setErrors] = useState<Partial<Record<keyof FullFormValues, string>>>({});
   const [hasSession, setHasSession] = useState(true);
+  
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | "custom">("custom");
 
   useEffect(() => {
     let isMounted = true;
@@ -42,20 +46,44 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
 
       if (user) {
         setHasSession(true);
-        // Đọc địa chỉ từ Zustand store (thay vì localStorage)
-        const storedAddress = storedUser?.address ?? "";
-        const storedCity = storedUser?.city ?? "";
-        const storedZip = storedUser?.zip ?? "";
+        
+        // Lấy danh sách địa chỉ đã lưu
+        const addressesResult = await callAction(() => getUserAddressesAction(), "Không thể tải danh sách địa chỉ.");
+        let addresses: any[] = [];
+        if (addressesResult && "success" in addressesResult && addressesResult.success && addressesResult.data) {
+          addresses = addressesResult.data;
+          setSavedAddresses(addresses);
+        }
 
-        setFormValues((currentValues) => ({
-          ...currentValues,
-          email: currentValues.email || user.email || "",
-          fullname: currentValues.fullname || user.fullname || "",
-          phone: currentValues.phone || user.phone || "",
-          address: currentValues.address || user.address || storedAddress,
-          city: currentValues.city || user.city || storedCity,
-          zip: currentValues.zip || storedZip,
-        }));
+        const defaultAddress = addresses.find(a => a.is_default) || addresses[0];
+
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress.id);
+          setFormValues((currentValues) => ({
+            ...currentValues,
+            email: currentValues.email || user.email || "",
+            fullname: defaultAddress.fullname,
+            phone: defaultAddress.phone,
+            address: `${defaultAddress.address}, ${defaultAddress.ward}, ${defaultAddress.district}`,
+            city: defaultAddress.city,
+            zip: defaultAddress.postal_code || PROVINCE_POSTAL_CODE_MAP[defaultAddress.city] || currentValues.zip,
+          }));
+        } else {
+          // Đọc địa chỉ từ Zustand store (thay vì localStorage)
+          const storedAddress = storedUser?.address ?? "";
+          const storedCity = storedUser?.city ?? "";
+          const storedZip = storedUser?.zip ?? "";
+
+          setFormValues((currentValues) => ({
+            ...currentValues,
+            email: currentValues.email || user.email || "",
+            fullname: currentValues.fullname || user.fullname || "",
+            phone: currentValues.phone || user.phone || "",
+            address: currentValues.address || user.address || storedAddress,
+            city: currentValues.city || user.city || storedCity,
+            zip: currentValues.zip || storedZip,
+          }));
+        }
       } else {
         setHasSession(false);
       }
@@ -136,7 +164,45 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
     return `rounded-xl border-[1.5px] ${hasError
         ? "border-[#ff6b6b] focus:ring-[#ff6b6b]/20"
         : "border-[#F5F0E8]/20 focus:border-[#D6A15F] focus:ring-[#D6A15F]/20"
-      } bg-black/40 px-4 py-3 text-sm text-[#F5F0E8] outline-none transition placeholder:text-[#F5F0E8]/35 focus:ring-4 backdrop-blur-sm`;
+      } bg-black/50 px-4 py-3 text-sm text-[#F5F0E8] outline-none transition placeholder:text-[#F5F0E8]/45 focus:ring-4`;
+  };
+
+  const handleSelectAddress = (id: string | "custom") => {
+    setSelectedAddressId(id);
+    if (id !== "custom") {
+      const selected = savedAddresses.find(a => a.id === id);
+      if (selected) {
+        setFormValues((prev) => ({
+          ...prev,
+          fullname: selected.fullname,
+          phone: selected.phone,
+          address: `${selected.address}, ${selected.ward}, ${selected.district}`,
+          city: selected.city,
+          zip: selected.postal_code || PROVINCE_POSTAL_CODE_MAP[selected.city] || prev.zip,
+        }));
+        
+        // Xóa lỗi nếu có khi chọn địa chỉ có sẵn
+        setErrors((prevErrors) => {
+          const nextErrors = { ...prevErrors };
+          delete nextErrors.fullname;
+          delete nextErrors.phone;
+          delete nextErrors.address;
+          delete nextErrors.city;
+          delete nextErrors.zip;
+          return nextErrors;
+        });
+      }
+    } else {
+      // Xóa form để người dùng tự nhập
+      setFormValues((prev) => ({
+        ...prev,
+        fullname: storedUser?.fullname || prev.fullname,
+        phone: storedUser?.phone || prev.phone,
+        address: "",
+        city: "",
+        zip: "",
+      }));
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -248,7 +314,71 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
           <h2 className="relative mb-6 pb-4 font-serif text-[1.25rem] font-bold text-[#F5F0E8] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-[#D6A15F]">
             Địa Chỉ Giao Hàng
           </h2>
+          
+          {savedAddresses.length > 0 && (
+            <div className="mb-6 grid gap-4">
+              {savedAddresses.map((address) => (
+                <label
+                  key={address.id}
+                  className={`relative flex cursor-pointer items-start gap-4 rounded-xl border-[1.5px] p-4 transition ${
+                    selectedAddressId === address.id
+                      ? "border-[#D6A15F] bg-[#D6A15F]/15"
+                      : "border-[#F5F0E8]/20 bg-black/30 hover:border-[#F5F0E8]/40"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="addressSelection"
+                    value={address.id}
+                    checked={selectedAddressId === address.id}
+                    onChange={() => handleSelectAddress(address.id)}
+                    className="mt-1 sr-only"
+                  />
+                  <div className={`mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${selectedAddressId === address.id ? 'border-[#D6A15F]' : 'border-[#F5F0E8]/40'}`}>
+                    {selectedAddressId === address.id && <div className="h-2 w-2 rounded-full bg-[#D6A15F]" />}
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium text-[#F5F0E8]">{address.fullname}</span>
+                      <span className="text-[#F5F0E8]/50">|</span>
+                      <span className="text-[#F5F0E8]/80">{address.phone}</span>
+                      {address.is_default && (
+                        <span className="rounded bg-[#D6A15F]/20 px-2 py-0.5 text-[0.65rem] uppercase tracking-wider text-[#D6A15F]">Mặc định</span>
+                      )}
+                    </div>
+                    <p className="mt-1.5 text-[0.85rem] leading-relaxed text-[#F5F0E8]/90">
+                      {address.address}, {address.ward}, {address.district}, {address.city}
+                    </p>
+                  </div>
+                </label>
+              ))}
+
+              <label
+                className={`relative flex cursor-pointer items-center gap-4 rounded-xl border-[1.5px] p-4 transition ${
+                  selectedAddressId === "custom"
+                    ? "border-[#D6A15F] bg-[#D6A15F]/15"
+                    : "border-[#F5F0E8]/20 bg-black/30 hover:border-[#F5F0E8]/40"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="addressSelection"
+                  value="custom"
+                  checked={selectedAddressId === "custom"}
+                  onChange={() => handleSelectAddress("custom")}
+                  className="sr-only"
+                />
+                <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${selectedAddressId === "custom" ? 'border-[#D6A15F]' : 'border-[#F5F0E8]/40'}`}>
+                  {selectedAddressId === "custom" && <div className="h-2 w-2 rounded-full bg-[#D6A15F]" />}
+                </div>
+                <span className="font-medium text-[#F5F0E8]">Giao đến địa chỉ khác</span>
+              </label>
+            </div>
+          )}
+
           <div className="grid gap-5 md:grid-cols-2">
+            {selectedAddressId === "custom" && (
+              <>
             <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70 md:col-span-2">
               Địa Chỉ
               <input
@@ -299,6 +429,8 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
                 className={`${getInputClass("zip")} cursor-not-allowed bg-black/20 text-[#F5F0E8]/50`}
               />
             </label>
+              </>
+            )}
             <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70 md:col-span-2">
               Ghi Chú Đơn Hàng (Tùy Chọn)
               <textarea
@@ -318,7 +450,7 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
             <label
-              className={`relative cursor-pointer rounded-xl border-[1.5px] px-5 py-4 text-center text-sm transition backdrop-blur-sm ${payment === "cod"
+              className={`relative cursor-pointer rounded-xl border-[1.5px] px-5 py-4 text-center text-sm transition ${payment === "cod"
                   ? "border-[#D6A15F] bg-[#D6A15F]/20 text-[#D6A15F]"
                   : "border-[#F5F0E8]/20 bg-black/40 text-[#F5F0E8]"
                 }`}
@@ -334,7 +466,7 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
               Thanh Toán Khi Nhận Hàng
             </label>
             <label
-              className={`relative cursor-pointer rounded-xl border-[1.5px] px-5 py-4 text-center text-sm transition backdrop-blur-sm ${payment === "bank"
+              className={`relative cursor-pointer rounded-xl border-[1.5px] px-5 py-4 text-center text-sm transition ${payment === "bank"
                   ? "border-[#D6A15F] bg-[#D6A15F]/20 text-[#D6A15F]"
                   : "border-[#F5F0E8]/20 bg-black/40 text-[#F5F0E8]"
                 }`}
@@ -352,7 +484,7 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
           </div>
 
           {payment === "bank" ? (
-            <div className="mt-5 rounded-xl bg-black/40 border border-[#F5F0E8]/10 p-4 text-sm leading-7 text-[#F5F0E8]/80 backdrop-blur-sm">
+            <div className="mt-5 rounded-xl bg-black/50 border border-[#F5F0E8]/10 p-4 text-sm leading-7 text-[#F5F0E8]/85">
               <p>
                 <strong className="text-[#F5F0E8]">Ngân hàng:</strong> Vietcombank
               </p>

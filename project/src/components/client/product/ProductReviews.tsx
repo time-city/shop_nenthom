@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useOptimistic, useTransition, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Star, StarHalf, MessageCircle, PenLine, X, ImageIcon, Loader2 } from "lucide-react";
 import { createReviewAction } from "@/src/lib/action/review.action";
 import { useToast } from "@/src/components/ui/toastProvider";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
+import useSWR from "swr";
+import { getReviewsByProductAction } from "@/src/lib/action/review.action";
+
+const fetcher = async ([action, args]: [Function, any]) => {
+  const result = await action(args);
+  if (!result.success) throw new Error(result.error);
+  return result.data;
+};
 
 export default function ProductReviews({ 
   productId, 
@@ -19,23 +27,25 @@ export default function ProductReviews({
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoginPromptModalOpen, setIsLoginPromptModalOpen] = useState(false);
-  const [reviews, setReviews] = useState(initialReviews?.items || []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Optimistic UI for immediate feedback
-  const [optimisticReviews, addOptimisticReview] = useOptimistic(
-    reviews,
-    (state, newReview: any) => [newReview, ...state]
+  const { data: fetchResult, mutate: mutateReviews } = useSWR(
+    [getReviewsByProductAction, { productId, limit: 50 }],
+    fetcher,
+    { fallbackData: initialReviews, revalidateOnFocus: false }
   );
 
+  const reviewsData = fetchResult || initialReviews;
+  const reviews = reviewsData?.items || [];
+  
   const [currentPage, setCurrentPage] = useState(1);
   const reviewsPerPage = 4;
   
-  const totalPages = Math.ceil(optimisticReviews.length / reviewsPerPage);
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
   
-  const currentReviews = optimisticReviews.slice(
+  const currentReviews = reviews.slice(
     (currentPage - 1) * reviewsPerPage,
     currentPage * reviewsPerPage
   );
@@ -47,21 +57,25 @@ export default function ProductReviews({
   }, [reviews]);
 
   const handleReviewSubmit = async (formData: { rating: number, content: string, images: string[] }) => {
-    // Generate an optimistic review
-    const optimisticData = {
-      id: Math.random().toString(),
+    setIsSubmitting(true);
+    // Add pending review to state immediately for optimistic feedback
+    const pendingReview = {
+      id: "pending-" + Math.random().toString(36).substring(2, 9),
       rating: formData.rating,
       content: formData.content,
       images: formData.images,
       created_at: new Date().toISOString(),
-      user: { fullname: "Bạn (Đang gửi...)" },
-      is_optimistic: true,
+      user: { fullname: "Bạn (Đã gửi)" },
+      is_optimistic: false, // Set to false so it looks exactly like a normal review
       admin_reply: null
     };
 
-    startTransition(() => {
-      addOptimisticReview(optimisticData);
-    });
+    const previousData = fetchResult;
+    mutateReviews((current: any) => ({
+      ...current,
+      items: [pendingReview, ...(current?.items || [])],
+      total: (current?.total || 0) + 1
+    }), false);
 
     try {
       const result = await createReviewAction({
@@ -71,22 +85,28 @@ export default function ProductReviews({
         images: formData.images
       });
 
-      if (result.success) {
+      if (result.success && result.data) {
         toast.success({
           title: "Gửi đánh giá thành công",
-          message: "Đánh giá của bạn đang chờ quản trị viên duyệt."
+          message: "Cảm ơn bạn đã đánh giá sản phẩm."
         });
+        setIsModalOpen(false);
+        mutateReviews();
       } else {
         toast.error({
           title: "Lỗi",
           message: result.error || "Không thể gửi đánh giá."
         });
+        mutateReviews(previousData, false);
       }
     } catch (err) {
       toast.error({
         title: "Lỗi",
         message: "Đã xảy ra lỗi không xác định."
       });
+      mutateReviews(previousData, false);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -128,7 +148,7 @@ export default function ProductReviews({
               <span className="text-lg font-medium text-[#D6A15F] leading-none">{averageRating}</span>
               <span className="text-[#F5F0E8]/50 text-xs ml-1 self-end mb-[1px]">/ 5.0</span>
             </div>
-            <span className="text-[#F5F0E8]/50 text-sm tracking-wide">Dựa trên <span className="font-medium text-[#F5F0E8]">{initialReviews?.total || 0}</span> phản hồi</span>
+            <span className="text-[#F5F0E8]/50 text-sm tracking-wide">Dựa trên <span className="font-medium text-[#F5F0E8]">{reviewsData?.total || 0}</span> phản hồi</span>
           </div>
         </div>
         
@@ -148,7 +168,7 @@ export default function ProductReviews({
         </button>
       </div>
 
-      {optimisticReviews.length === 0 ? (
+      {reviews.length === 0 ? (
         <div className="text-center py-16 px-4 bg-black/10 backdrop-blur-md rounded-2xl border border-[#F5F0E8]/5">
           <MessageCircle className="size-12 mx-auto text-[#F5F0E8]/20 mb-4" />
           <p className="text-[#F5F0E8]/60 font-light text-lg">Chưa có đánh giá nào cho sản phẩm này.</p>

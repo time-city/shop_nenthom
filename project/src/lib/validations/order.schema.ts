@@ -27,7 +27,7 @@ export const getListOrdersSchema = z.object({
   search: z.string().trim().optional(),
   search_keyword: z.string().trim().optional(),
   start_date: z.coerce.date().optional(),
-  status: z.enum(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']).optional(),
+  status: z.enum(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'CANCEL_REQUESTED']).optional(),
 }).refine(
   ({ end_date, start_date }) =>
     !end_date || !start_date || start_date <= end_date,

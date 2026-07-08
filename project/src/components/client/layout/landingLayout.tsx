@@ -13,9 +13,10 @@ import AosProvider from "../../ui/aosProvider";
 
 interface LandingLayoutProps {
   searchParams?: CollectionPageProps["searchParams"];
+  initialCategories?: any;
 }
 
-export default function LandingLayout({ searchParams }: LandingLayoutProps) {
+export default function LandingLayout({ searchParams, initialCategories }: LandingLayoutProps) {
   return (
     <>
       <AosProvider />
@@ -25,7 +26,7 @@ export default function LandingLayout({ searchParams }: LandingLayoutProps) {
         <main className="flex flex-1 flex-col bg-[#F8F0E4]">
           {/* 1. Trang chủ (Hero + Banner) */}
           <section id="home" className="scroll-mt-20">
-            <HomePage />
+            <HomePage initialCategories={initialCategories} />
           </section>
 
           <div

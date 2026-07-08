@@ -40,6 +40,7 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+  CANCEL_REQUESTED
 
   @@schema("public")
 }
@@ -100,6 +101,7 @@ model User {
   history_logs       OrderHistoryLog[] @relation("AdminLogs")
   notifications      Notification[]
   reviews            Review[]
+  push_subscriptions PushSubscription[]
 
   @@index([role, created_at])
   @@map("users")
@@ -138,6 +140,23 @@ model Contact {
   @@map("contacts")
   @@schema("public")
 }
+
+model PushSubscription {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("push_subscriptions")
+  @@schema("public")
+}
+
 
 // ==========================================
 // 2. NHÓM QUẢN LÝ SẢN PHẨM & TÙY CHỈNH NẾN

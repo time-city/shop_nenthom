@@ -20,6 +20,7 @@ interface Props {
 
 const nextStatusLabels: Record<string, string> = {
   pending: "Đã xác nhận",
+  cancel_requested: "Đã xác nhận (Bác bỏ yêu cầu huỷ)",
 };
 
 export default function ModalOrderAction({
@@ -107,8 +108,8 @@ export default function ModalOrderAction({
               ) : (
                 <>
                   Bạn có chắc muốn chuyển trạng thái đơn hàng{" "}
-                  <strong style={{ color: "#6B1218" }}>{orderId}</strong> sang{" "}
-                  <strong style={{ color: "#2E5A44" }}>{nextStatusLabel}</strong>?
+                  <strong style={{ color: "#E5C07B" }}>{orderId}</strong> sang{" "}
+                  <strong style={{ color: "#4ade80" }}>{nextStatusLabel}</strong>?
                 </>
               )}
             </Typography>

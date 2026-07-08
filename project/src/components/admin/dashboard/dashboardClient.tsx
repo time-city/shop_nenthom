@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, useRef } from "react";
+import useSWR from "swr";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import LoadingState from "@/src/components/ui/loadingState";
 
@@ -88,48 +89,39 @@ export default function DashboardClient() {
   const [statsData, setStatsData] = useState<DashboardStatsData | null>(null);
   const [topProducts, setTopProducts] = useState<DashboardTopProduct[]>([]);
   const [latestOrders, setLatestOrders] = useState<DashboardLatestOrder[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: fetchResult, isLoading: isSwrLoading, error: swrError } = useSWR(
+    ['admin-dashboard', activeChip],
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - dashboardClient: Fetching overview...");
+      const result = await Promise.race([
+        callAction(() => getDashboardOverviewAction({ period: activeChip }), "Không thể tải dữ liệu tổng quan. Vui lòng thử lại sau."),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Kết nối quá hạn, vui lòng tải lại trang hoặc thử lại.")), 10000))
+      ]) as Awaited<ReturnType<typeof getDashboardOverviewAction>>;
+      
+      if ("error" in result && result.error) {
+        throw new Error(getFriendlyResponseError(result.error));
+      }
+      return result;
+    }
+  );
 
   useEffect(() => {
-    let cancelled = false;
-    const fetchStats = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const result = await Promise.race([
-          callAction(() => getDashboardOverviewAction({ period: activeChip }), "Không thể tải dữ liệu tổng quan. Vui lòng thử lại sau."),
-          new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Kết nối quá hạn, vui lòng tải lại trang hoặc thử lại.")), 10000))
-        ]) as Awaited<ReturnType<typeof getDashboardOverviewAction>>;
-        if (cancelled) return;
-        if ("error" in result && result.error) {
-          setError(getFriendlyResponseError(result.error));
-        } else if ("success" in result && result.success && result.data) {
-          const overview = result.data;
-          setStatsData({
-            revenue: overview.stats.revenueCents,
-            ordersCount: overview.stats.orderCount,
-            customersCount: overview.stats.customerCount,
-            productsSoldCount: overview.stats.soldProductCount,
-          });
-          setTopProducts(overview.topProducts || []);
-          setLatestOrders(overview.latestOrders || []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-    void fetchStats();
-    return () => {
-      cancelled = true;
-    };
-  }, [activeChip]);
+    if (fetchResult && "success" in fetchResult && fetchResult.success && fetchResult.data) {
+      console.log("[Data Source] 🟢 UI UPDATED - dashboardClient: Displaying overview data (from SWR Cache or Network)");
+      const overview = fetchResult.data;
+      setStatsData({
+        revenue: overview.stats.revenueCents,
+        ordersCount: overview.stats.orderCount,
+        customersCount: overview.stats.customerCount,
+        productsSoldCount: overview.stats.soldProductCount,
+      });
+      setTopProducts(overview.topProducts || []);
+      setLatestOrders(overview.latestOrders || []);
+    }
+  }, [fetchResult]);
+
+  const isLoading = isSwrLoading && !statsData;
+  const error = swrError ? (swrError instanceof Error ? swrError.message : String(swrError)) : null;
 
   const stats = useMemo(() => {
     return [

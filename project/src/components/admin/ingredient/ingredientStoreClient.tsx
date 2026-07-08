@@ -9,6 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
 import { useToast } from "@/src/components/ui/toastProvider";
 import dynamic from "next/dynamic";
 import ModalDeleteConfirm from "@/src/components/admin/common/modalDeleteConfirm";
@@ -144,7 +145,7 @@ export default function IngredientStoreClient() {
   const [deleteTarget, setDeleteTarget] =
     useState<AdminIngredientEditTarget | null>(null);
   const [isDeletingIngredient, setIsDeletingIngredient] = useState(false);
-  const [isLoadingOptions, setIsLoadingOptions] = useState(true);
+
   const [error, setError] = useState<string | null>(null);
   const [scents, setScents] = useState<AdminIngredientItem[]>([]);
   const [colors, setColors] = useState<AdminIngredientItem[]>([]);
@@ -172,42 +173,36 @@ export default function IngredientStoreClient() {
     type: packagings.length,
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadOptions = async () => {
-      setIsLoadingOptions(true);
-      setError(null);
-
-      // action-(lấy danh sách nguyên liệu)
+  const { data: fetchResult, isLoading: isSwrLoading, error: swrError, mutate: mutateOptions } = useSWR(
+    ['admin-customization-options'],
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - ingredientStoreClient: Fetching ingredients...");
       const result = await callAction(() => getCustomizationOptionsAction(), "Không thể tải tùy chọn tùy chỉnh. Vui lòng thử lại sau.");
-      if (cancelled) return;
-
       if ("error" in result && result.error) {
-        const friendlyErr = getFriendlyResponseError(result.error);
-        setError(friendlyErr);
-        toast.error(friendlyErr);
-        setIsLoadingOptions(false);
-        return;
+        throw new Error(getFriendlyResponseError(result.error));
       }
+      return result;
+    }
+  );
 
-      if ("success" in result && result.success) {
-        const optionsResult = result as AdminCustomizationOptionsSuccessResponseInterface;
-        setError(null);
-        setScents(optionsResult.data.scents.map(mapOptionToIngredientItem));
-        setColors(optionsResult.data.colors.map(mapOptionToIngredientItem));
-        setSizes(optionsResult.data.sizes.map(mapOptionToIngredientItem));
-        setToppings(optionsResult.data.toppings.map(mapOptionToIngredientItem));
-        setPackagings(optionsResult.data.packagings.map(mapOptionToIngredientItem));
-      }
+  useEffect(() => {
+    if (swrError) {
+      const friendlyErr = swrError instanceof Error ? swrError.message : String(swrError);
+      setError(friendlyErr);
+      toast.error(friendlyErr);
+    } else if (fetchResult && "success" in fetchResult && fetchResult.success) {
+      console.log("[Data Source] 🟢 UI UPDATED - ingredientStoreClient: Displaying ingredients (from SWR Cache or Network)");
+      const optionsResult = fetchResult as AdminCustomizationOptionsSuccessResponseInterface;
+      setError(null);
+      setScents(optionsResult.data.scents.map(mapOptionToIngredientItem));
+      setColors(optionsResult.data.colors.map(mapOptionToIngredientItem));
+      setSizes(optionsResult.data.sizes.map(mapOptionToIngredientItem));
+      setToppings(optionsResult.data.toppings.map(mapOptionToIngredientItem));
+      setPackagings(optionsResult.data.packagings.map(mapOptionToIngredientItem));
+    }
+  }, [fetchResult, swrError, toast]);
 
-      setIsLoadingOptions(false);
-    };
-
-    void loadOptions();
-    return () => {
-      cancelled = true;
-    };
-  }, [toast]);
+  const isLoadingOptions = isSwrLoading && scents.length === 0 && colors.length === 0;
 
   const openEditModal = (type: AdminIngredientType, item: AdminIngredientItem) => {
     setEditTarget({ item, type });
@@ -546,7 +541,7 @@ export default function IngredientStoreClient() {
                   className={`relative flex shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors after:absolute after:bottom-[-2px] after:left-0 after:h-0.5 after:w-full after:origin-center after:scale-x-0 after:bg-[#D6A15F] after:transition-transform ${
                     active
                       ? "text-[#D6A15F] after:scale-x-100"
-                      : "text-white/60 hover:text-white"
+                      : "text-[#6B4E35]/70 hover:text-[#6B4E35]"
                   }`}
                   type="button"
                   role="tab"
@@ -561,7 +556,7 @@ export default function IngredientStoreClient() {
           </div>
 
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-sm text-white/60">
+            <span className="text-sm text-[#6B4E35]/70">
               {counts[activeTab]} mục trong {activeConfig.label.toLowerCase()}
             </span>
             <button
@@ -685,7 +680,7 @@ function TableShell({
 
 function TableCell({ children }: AdminTableCellProps) {
   return (
-    <td className="border-t border-[#F5F0E8]/10 px-5 py-4 text-sm text-[#F5F0E8]">
+    <td className="border-t border-[#6B4E35]/10 px-5 py-4 text-sm text-[#2C1810]">
       {children}
     </td>
   );
@@ -695,7 +690,7 @@ function ScentTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Tên mùi hương", "Giá cộng thêm", ""]}>
       {items.map((item, index) => (
-        <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
+        <tr key={item.id} className="transition">
           <TableCell>{index + 1}</TableCell>
           <TableCell>
             <span className="font-bold">{item.name}</span>
@@ -719,7 +714,7 @@ function ColorTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Màu sắc", "Tên màu", "Mã hex", "Giá cộng thêm", ""]}>
       {items.map((item, index) => (
-        <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
+        <tr key={item.id} className="transition">
           <TableCell>{index + 1}</TableCell>
           <TableCell>
             <span
@@ -750,7 +745,7 @@ function SizeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Kích thước", "Giá cộng thêm", ""]}>
       {items.map((item, index) => (
-        <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
+        <tr key={item.id} className="transition">
           <TableCell>{index + 1}</TableCell>
           <TableCell>
             <span className="font-bold">{item.name}</span>
@@ -774,7 +769,7 @@ function ToppingTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Tên topping", "Giá cộng thêm", "Trạng thái", ""]}>
       {items.map((item, index) => (
-        <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
+        <tr key={item.id} className="transition">
           <TableCell>{index + 1}</TableCell>
           <TableCell>
             <span className="font-bold">{item.name}</span>
@@ -786,8 +781,8 @@ function ToppingTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
             <span
               className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                 item.in_stock === false
-                  ? "bg-[#B91C1C]/10 text-[#B91C1C]"
-                  : "bg-[#15803D]/10 text-[#15803D]"
+                  ? "bg-red-100 text-red-600"
+                  : "bg-green-100 text-green-700"
               }`}
             >
               {item.in_stock === false ? "Hết hàng" : "Còn hàng"}
@@ -809,7 +804,7 @@ function TypeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
   return (
     <TableShell headers={["#", "Bao bì", "Giá cộng thêm", ""]}>
       {items.map((item, index) => (
-        <tr key={item.id} className="transition hover:bg-[#6B1218]/[0.025]">
+        <tr key={item.id} className="transition">
           <TableCell>{index + 1}</TableCell>
           <TableCell>
             <span className="font-bold">{item.name}</span>

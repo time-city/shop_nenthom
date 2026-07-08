@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import CardProduct from "@/src/components/client/product/cardProduct";
 import LoadingState from "@/src/components/ui/loadingState";
 import { getProductsAction } from "@/src/lib/action/product.action";
@@ -34,33 +35,33 @@ const getAvatarImage = (images: unknown) => {
 };
 
 export default function CartSuggestedProducts() {
-  const [products, setProducts] = useState<ClientProductItemInterface[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchProducts = async () => {
-      setIsLoading(true);
+  const { data: fetchResult, isLoading: isSwrLoading, error: swrError } = useSWR(
+    ['suggested-products'],
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - cartSuggestedProducts: Fetching suggested products...");
       const result = await callAction(
         () => getProductsAction({ limit: 4 }),
         "Không thể tải sản phẩm bán chạy."
       );
-
-      if (!cancelled) {
-        if ("success" in result && result.success) {
-          setProducts(result.data.slice(0, 4));
-        }
-        setIsLoading(false);
+      if ("error" in result && result.error) {
+        throw new Error(String(result.error));
       }
-    };
+      return result;
+    }
+  );
 
-    void fetchProducts();
+  let products: ClientProductItemInterface[] = [];
+  if (fetchResult && "success" in fetchResult && fetchResult.success) {
+    products = fetchResult.data.slice(0, 4);
+  }
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  useEffect(() => {
+    if (fetchResult && "success" in fetchResult && fetchResult.success) {
+      console.log("[Data Source] 🟢 UI UPDATED - cartSuggestedProducts: Displaying suggested products (from SWR Cache or Network)");
+    }
+  }, [fetchResult]);
+
+  const isLoading = isSwrLoading;
 
   if (isLoading) {
     return (

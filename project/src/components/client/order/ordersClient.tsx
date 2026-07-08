@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import useSWR from "swr";
 import type {
   ClientOrdersMeta,
   ClientOrderRecord,
@@ -16,14 +17,20 @@ import { callAction } from "@/src/lib/utils/callAction";
 
 const statusLabel: Record<ClientOrderRecord["status"], string> = {
   canceled: "Đã huỷ",
-  confirmed: "Đã xác nhận",
-  pending: "Đang xác nhận",
+  pending: "Đang chờ xác nhận",
+  processing: "Đang xử lý",
+  shipped: "Đang giao",
+  delivered: "Đã giao thành công",
+  cancel_requested: "Chờ duyệt huỷ",
 };
 
 const statusClass: Record<ClientOrderRecord["status"], string> = {
-  canceled: "bg-[#2c1810]/10 text-[#6B4C35]",
-  confirmed: "bg-[#45A05C]/15 text-[#1F6B3A]",
-  pending: "bg-[#F4E2B7] text-[#8B5E3C]",
+  canceled: "bg-red-500/15 text-red-300 border border-red-400/25",
+  pending: "bg-amber-500/20 text-amber-300 border border-amber-400/30",
+  processing: "bg-amber-500/20 text-amber-300 border border-amber-400/30",
+  shipped: "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30",
+  delivered: "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30",
+  cancel_requested: "bg-red-900/40 text-red-300 border border-red-400/30",
 };
 
 const pageSize = 10;
@@ -44,49 +51,34 @@ const formatPrice = (value: number) =>
 export default function OrdersClient({ initialUser }: OrdersContentProps) {
   void initialUser;
   const setOrderCount = useCartStore((state) => state.setOrderCount);
-  const [orders, setOrders] = useState<ClientOrderRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedOrderNumber, setSelectedOrderNumber] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [meta, setMeta] = useState<ClientOrdersMeta>(initialMeta);
+  const { data: response, error: swrError, isLoading, mutate } = useSWR(
+    ['my-orders', currentPage],
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - ordersClient: Fetching orders from server API...");
+      return await callAction(() => getMyOrdersAction({
+        limit: pageSize,
+        page: currentPage,
+      }), "Không thể tải đơn hàng của bạn. Vui lòng thử lại sau.");
+    }
+  );
 
   useEffect(() => {
-    let cancelled = false;
+    if (response && "data" in response) {
+      console.log(`[Data Source] 🟢 UI UPDATED - ordersClient: Displaying ${(response.data as ClientOrderRecord[])?.length || 0} orders (from SWR Cache or Network)`);
+    }
+  }, [response]);
 
-    const fetchOrders = async () => {
-      try {
-        const response = await callAction(() => getMyOrdersAction({
-          limit: pageSize,
-          page: currentPage,
-        }), "Không thể tải đơn hàng của bạn. Vui lòng thử lại sau.");
-        if (cancelled) return;
+  const orders = response && "success" in response && response.success && "data" in response ? (response.data as ClientOrderRecord[]) : [];
+  const meta = response && "success" in response && response.success && "meta" in response ? response.meta : initialMeta;
+  const displayError = swrError ? (swrError instanceof Error ? swrError.message : String(swrError)) : (response && "error" in response ? response.error : null);
 
-        if ("error" in response && response.error) {
-          setError(response.error);
-        } else if (response.success && response.data) {
-          const fetchedOrders = response.data as ClientOrderRecord[];
-          setOrders(fetchedOrders);
-          setMeta(response.meta);
-          setOrderCount(response.meta.total);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void fetchOrders();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [currentPage, setOrderCount]);
+  useEffect(() => {
+    if (meta.total > 0) {
+      setOrderCount(meta.total);
+    }
+  }, [meta.total, setOrderCount]);
 
   return (
     <main 
@@ -105,9 +97,9 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
             <div className="flex flex-col items-center justify-center gap-4 rounded-3xl bg-[#F5F0E8]/5 backdrop-blur-md border border-[#F5F0E8]/10 px-4 py-8 sm:py-12 text-center shadow-[0_16px_36px_rgba(0,0,0,0.5)]">
               <LoadingState type="default" label="Đang tải lịch sử đơn hàng..." className="border-0 bg-transparent shadow-none" />
             </div>
-          ) : error ? (
+          ) : displayError ? (
             <div className="flex flex-col items-center gap-4 rounded-3xl bg-[#F5F0E8]/5 backdrop-blur-md border border-[#F5F0E8]/10 px-4 py-12 text-center shadow-[0_16px_36px_rgba(0,0,0,0.5)]">
-              <div className="text-xl text-red-400 font-medium">{error}</div>
+              <div className="text-xl text-red-400 font-medium">{displayError}</div>
             </div>
           ) : orders.length > 0 ? (
             <div className="flex flex-col gap-4">
@@ -118,13 +110,13 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
                 >
                   <div className="flex flex-col gap-3 border-b border-[#F5F0E8]/10 pb-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <div className="font-medium text-[#F5F0E8]">{order.id}</div>
-                      <div className="mt-1 text-[0.85rem] font-light text-[#F5F0E8]/60">
+                      <div className="font-bold text-[#F5F0E8] tracking-wide text-sm">{order.id}</div>
+                      <div className="mt-1 text-[0.82rem] font-light text-[#F5F0E8]/55">
                         {order.date}
                       </div>
                     </div>
                     <span
-                      className={`w-fit rounded-full px-3 py-1.5 text-[0.75rem] font-medium ${statusClass[order.status]}`}
+                      className={`w-fit rounded-full px-3.5 py-1.5 text-[0.76rem] font-semibold tracking-wide ${statusClass[order.status]}`}
                     >
                       {statusLabel[order.status]}
                     </span>
@@ -192,23 +184,18 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
           )}
         </section>
 
-        {selectedOrderNumber && (
-          <DetailOrder
-            orderNumber={selectedOrderNumber}
-            onClose={() => setSelectedOrderNumber(null)}
-            onCancelSuccess={() => {
-              setOrders((currentOrders) =>
-                currentOrders.map((order) =>
-                  order.id === selectedOrderNumber
-                    ? { ...order, status: "canceled" }
-                    : order,
-                ),
-              );
-              setSelectedOrderNumber(null);
-            }}
-          />
-        )}
       </div>
+
+      {selectedOrderNumber && (
+        <DetailOrder
+          orderNumber={selectedOrderNumber}
+          onClose={() => setSelectedOrderNumber(null)}
+          onCancelSuccess={() => {
+            void mutate();
+            setSelectedOrderNumber(null);
+          }}
+        />
+      )}
     </main>
   );
 }

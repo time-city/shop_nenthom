@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useMemo, useState, useOptimistic, useTransition } from "react";
+import { useMemo, useState, useOptimistic, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import CardProduct from "@/src/components/client/product/cardProduct";
@@ -73,9 +73,46 @@ export default function DetailCardProduct({
   const router = useRouter();
   const { incrementCartCount, decrementCartCount } = useCartStore();
   const [open, setOpen] = useState(true);
- const [selectedImageIndex, setSelectedImageIndex] = useState(0);
- const [cartError, setCartError] = useState("");
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [cartError, setCartError] = useState("");
   const [quantity, setQuantity] = useState<number | "">(1);
+  const [startX, setStartX] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (startX === null) return;
+    const endX = e.changedTouches[0].clientX;
+    const diffX = startX - endX;
+    if (diffX > 40) {
+      setSelectedImageIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1));
+    } else if (diffX < -40) {
+      setSelectedImageIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1));
+    }
+    setStartX(null);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setStartX(e.clientX);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (startX === null) return;
+    const endX = e.clientX;
+    const diffX = startX - endX;
+    if (diffX > 40) {
+      setSelectedImageIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1));
+    } else if (diffX < -40) {
+      setSelectedImageIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1));
+    }
+    setStartX(null);
+  };
+
+  const handleMouseLeave = () => {
+    setStartX(null);
+  };
   const [activeTab, setActiveTab] = useState<"description" | "ingredients" | "usage">(
     "description",
   );
@@ -95,6 +132,9 @@ export default function DetailCardProduct({
     (state, update: boolean) => update
   );
 
+  useEffect(() => {
+    console.log(`[Data Source] 🟢 UI UPDATED - detailCardProduct: Displaying product ${product.id} (from SSR or Next.js Router Cache)`);
+  }, [product.id]);
 
   const productImages = getProductImages(product.images);
   const image = productImages[selectedImageIndex] ?? productImages[0] ?? "";
@@ -168,11 +208,10 @@ export default function DetailCardProduct({
   };
 
   const tabsBlock = (className?: string) => (
-    <div className={`mt-6 border-t p-4 sm:p-5 ${
-      isModal 
-        ? "rounded-2xl bg-[#F2E8D9] border-[#6B4C35]/15 shadow-[0_10px_24px_rgba(44,24,16,0.06)]" 
+    <div className={`mt-6 border-t p-4 sm:p-5 ${isModal
+        ? "rounded-2xl bg-[#F2E8D9] border-[#6B4C35]/15 shadow-[0_10px_24px_rgba(44,24,16,0.06)]"
         : "bg-transparent border-[#F5F0E8]/20 shadow-none"
-    } ${className || ""}`}>
+      } ${className || ""}`}>
       <div className={`mb-4 flex flex-wrap gap-4 border-b pb-3 ${isModal ? "border-[#6B4C35]/15" : "border-[#F5F0E8]/20"}`}>
         {[
           { id: "description", label: "Mô tả" },
@@ -186,8 +225,8 @@ export default function DetailCardProduct({
               setActiveTab(tab.id as "description" | "ingredients" | "usage")
             }
             className={`relative py-1 text-sm transition active:scale-95 ${activeTab === tab.id
-                ? (isModal ? "font-medium text-[#6B1218] after:absolute after:-bottom-[13px] after:left-0 after:h-0.5 after:w-full after:bg-[#6B1218] after:content-['']" : "font-medium text-[#F5F0E8] after:absolute after:-bottom-[13px] after:left-0 after:h-0.5 after:w-full after:bg-[#F5F0E8] after:content-['']")
-                : (isModal ? "text-[#6B4C35] hover:text-[#6B1218]" : "text-[#F5F0E8]/60 hover:text-[#F5F0E8]")
+              ? (isModal ? "font-medium text-[#6B1218] after:absolute after:-bottom-[13px] after:left-0 after:h-0.5 after:w-full after:bg-[#6B1218] after:content-['']" : "font-medium text-[#F5F0E8] after:absolute after:-bottom-[13px] after:left-0 after:h-0.5 after:w-full after:bg-[#F5F0E8] after:content-['']")
+              : (isModal ? "text-[#6B4C35] hover:text-[#6B1218]" : "text-[#F5F0E8]/60 hover:text-[#F5F0E8]")
               }`}
           >
             {tab.label}
@@ -196,7 +235,8 @@ export default function DetailCardProduct({
       </div>
 
       <div className={`h-24 overflow-y-auto text-sm font-light leading-6 pr-1 ${isModal ? "text-[#2C1810]" : "text-[#F5F0E8]/90"}`}>
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
           @keyframes tabFadeIn {
             from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
@@ -254,11 +294,10 @@ export default function DetailCardProduct({
   );
 
   const innerContent = (
-    <div className={`${
-      isModal 
-        ? "text-[#2C1810] rounded-2xl bg-[#F8F0E4] p-4 shadow-[0_26px_80px_rgba(30,6,8,0.42)] sm:p-5 lg:p-6" 
+    <div className={`${isModal
+        ? "text-[#2C1810] rounded-2xl bg-[#F8F0E4] p-4 shadow-[0_26px_80px_rgba(30,6,8,0.42)] sm:p-5 lg:p-6"
         : "text-[#F5F0E8] p-6 sm:p-8 lg:p-10 rounded-[2rem] bg-black/20 backdrop-blur-xl border border-[#F5F0E8]/10 shadow-[0_30px_100px_rgba(0,0,0,0.4)]"
-    }`}>
+      }`}>
       <button
         type="button"
         onClick={handleClose}
@@ -267,19 +306,26 @@ export default function DetailCardProduct({
         <span className="inline-block transition-transform duration-200 group-hover:-translate-x-1">←</span> Quay lại
       </button>
 
-      <div className={`grid gap-6 ${
-        isModal 
-          ? "lg:grid-cols-2 lg:gap-10 rounded-2xl bg-[#F8F0E4]" 
+      <div className={`grid gap-6 ${isModal
+          ? "lg:grid-cols-2 lg:gap-10 rounded-2xl bg-[#F8F0E4]"
           : "lg:grid-cols-[1.1fr_0.9fr] lg:gap-12"
-      }`}>
+        }`}>
         <div className="product-visual">
-          <div className="relative group flex aspect-[4/5] lg:aspect-square lg:h-[340px] items-center justify-center rounded-2xl p-4 border border-[#2C1810]/5 shadow-[0_20px_50px_rgba(44,24,16,0.06)] overflow-hidden mx-auto w-full">
+          <div
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            className="relative group flex aspect-[4/5] lg:aspect-square lg:h-[340px] items-center justify-center rounded-2xl p-4 border border-[#2C1810]/5 shadow-[0_20px_50px_rgba(44,24,16,0.06)] overflow-hidden mx-auto w-full select-none cursor-grab active:cursor-grabbing"
+          >
             {image ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={image}
                 alt={product.name}
-                className="max-h-full max-w-full rounded-xl object-contain transition duration-700 ease-out hover:scale-105"
+                draggable={false}
+                className="max-h-full max-w-full rounded-xl object-contain transition duration-700 ease-out hover:scale-105 pointer-events-none"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-[#FAF6F0]">
@@ -292,7 +338,7 @@ export default function DetailCardProduct({
                 </div>
               </div>
             )}
-            
+
             {productImages.length > 1 && (
               <>
                 <button
@@ -301,7 +347,7 @@ export default function DetailCardProduct({
                   className="absolute left-2 top-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full bg-white/70 text-[#2C1810] opacity-0 shadow-sm transition hover:bg-white group-hover:opacity-100 backdrop-blur-md hover:scale-110"
                   aria-label="Ảnh trước"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                 </button>
                 <button
                   type="button"
@@ -309,49 +355,34 @@ export default function DetailCardProduct({
                   className="absolute right-2 top-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full bg-white/70 text-[#2C1810] opacity-0 shadow-sm transition hover:bg-white group-hover:opacity-100 backdrop-blur-md hover:scale-110"
                   aria-label="Ảnh sau"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                 </button>
               </>
             )}
           </div>
 
           {productImages.length > 1 ? (
-            <div
-              className="mt-3 grid grid-cols-4 sm:grid-cols-5 gap-2"
-              aria-label="Danh sách ảnh sản phẩm"
-            >
-              {productImages.map((thumbnail, index) => {
-                const isSelected = index === selectedImageIndex;
+            <div className="mt-4 flex items-center justify-center gap-3">
 
-                return (
-                  <button
-                    key={`${thumbnail}-${index}`}
-                    type="button"
-                    onClick={() => setSelectedImageIndex(index)}
-                    aria-label={
-                      index === 0
-                        ? "Xem ảnh đại diện"
-                        : `Xem ảnh phụ ${index}`
-                    }
-                    aria-pressed={isSelected}
-                    className={`relative aspect-square overflow-hidden rounded-xl border-2 bg-white p-1 transition ${isSelected
-                        ? (isModal ? "border-[#6B1218] shadow-[0_8px_20px_rgba(107,18,24,0.2)]" : "border-[#F5F0E8] shadow-[0_8px_20px_rgba(245,240,232,0.3)]")
-                        : (isModal ? "border-[#2C1810]/10 hover:border-[#6B1218]/55" : "border-transparent hover:border-[#F5F0E8]/50")
-                      }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={getCloudinaryThumbnailUrl(thumbnail)}
-                      alt={
-                        index === 0
-                          ? `${product.name} - ảnh đại diện`
-                          : `${product.name} - ảnh phụ ${index}`
-                      }
-                      className="h-full w-full rounded-lg object-cover"
+              <div className="flex gap-2 items-center">
+                {productImages.map((_, index) => {
+                  const isSelected = index === selectedImageIndex;
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className="w-2 h-2 rounded-full cursor-pointer transition-all duration-200"
+                      style={{
+                        background: isSelected
+                          ? (isModal ? "#6B1218" : "#F5F0E8")
+                          : (isModal ? "rgba(107, 76, 53, 0.25)" : "rgba(245, 240, 232, 0.25)"),
+                        transform: isSelected ? "scale(1.2)" : "scale(1)",
+                      }}
                     />
-                  </button>
-                );
-              })}
+                  );
+                })}
+              </div>
+
             </div>
           ) : null}
 
@@ -492,7 +523,7 @@ export default function DetailCardProduct({
 
   if (!isModal) {
     return (
-      <main 
+      <main
         className="-mt-20 pt-20 min-h-dvh text-[#2C1810] relative"
         style={{
           backgroundImage: "url('/option_background.jpg')",
@@ -505,23 +536,23 @@ export default function DetailCardProduct({
           {innerContent}
 
           {/* Reviews Section */}
-          <ProductReviews 
-            productId={product.id} 
-            initialReviews={initialReviews} 
-            isAuthenticated={isAuthenticated} 
+          <ProductReviews
+            productId={product.id}
+            initialReviews={initialReviews}
+            isAuthenticated={isAuthenticated}
           />
 
           {similarProducts && similarProducts.length > 0 && (
             <div className="mt-12 sm:mt-16 p-8 sm:p-10 lg:p-12 rounded-[2rem] bg-black/20 backdrop-blur-xl border border-[#F5F0E8]/10 shadow-[0_30px_100px_rgba(0,0,0,0.4)] relative overflow-hidden">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-[#F5F0E8]/20 to-transparent"></div>
-              
+
               <div className="text-center mb-10 sm:mb-12">
                 <h3 className="font-serif text-2xl font-light text-[#F5F0E8] sm:text-3xl tracking-wide">
                   Có thể bạn sẽ thích
                 </h3>
                 <div className="mx-auto mt-4 h-[1px] w-12 bg-[#D6A15F]/50"></div>
               </div>
-              
+
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                 {similarProducts.map((p) => (
                   <CardProduct
@@ -576,8 +607,8 @@ function DetailOptionGroup({
               type="button"
               onClick={() => onSelect(option)}
               className={`rounded-lg border px-4 py-3 text-sm transition active:scale-95 ${active
-                  ? (isModal ? "border-[#6B1218] bg-[#6B1218] text-[#F5F0E8]" : "border-[#F5F0E8] bg-[#F5F0E8] text-[#2C1810]")
-                  : (isModal ? "border-[#6B4C35]/30 bg-[#F8F0E4] text-[#2C1810] hover:border-[#6B1218] hover:text-[#6B1218]" : "border-[#F5F0E8]/30 bg-transparent text-[#F5F0E8] hover:border-[#F5F0E8] hover:bg-[#F5F0E8]/10")
+                ? (isModal ? "border-[#6B1218] bg-[#6B1218] text-[#F5F0E8]" : "border-[#F5F0E8] bg-[#F5F0E8] text-[#2C1810]")
+                : (isModal ? "border-[#6B4C35]/30 bg-[#F8F0E4] text-[#2C1810] hover:border-[#6B1218] hover:text-[#6B1218]" : "border-[#F5F0E8]/30 bg-transparent text-[#F5F0E8] hover:border-[#F5F0E8] hover:bg-[#F5F0E8]/10")
                 }`}
             >
               {renderLabel ? renderLabel(option) : option.name}

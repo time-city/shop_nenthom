@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import useSWR from "swr";
 import type {
   AdminOrder,
   AdminOrderStatus,
@@ -22,6 +23,7 @@ const statusLabels: Record<AdminOrderStatus, string> = {
   cancelled: "Đã huỷ",
   confirmed: "Đã xác nhận",
   pending: "Đang xác nhận",
+  cancel_requested: "Yêu cầu huỷ",
 };
 
 const paymentLabels: Record<AdminPaymentStatus, string> = {
@@ -57,7 +59,7 @@ type Props = {
 export default function OrdersManagementClient({ orders: initialOrders }: Props) {
   const router = useRouter();
   const [orders, setOrders] = useState<AdminOrder[]>(initialOrders || []);
-  const [isLoading, setIsLoading] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<AdminOrderStatus | "">("");
@@ -76,34 +78,31 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
       isMountedRef.current = false;
     };
   }, []);
-
-  const loadOrders = useCallback(async (options: { silent?: boolean } = {}) => {
-    if (!options.silent) {
-      setIsLoading(true);
-    }
-    setError(null);
-
-    try {
+  const { data: fetchResult, isLoading: isSwrLoading, error: swrError, mutate: mutateOrders } = useSWR(
+    ['admin-orders'],
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - ordersManagementClient: Fetching orders...");
       const result = await callAction(() => getOrdersAction({ limit: 100 }), "Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.");
-      if (!isMountedRef.current) return;
-
       if ("error" in result && result.error) {
-        setError(getFriendlyResponseError(result.error));
-        return;
+        throw new Error(getFriendlyResponseError(result.error));
       }
-
-      if ("success" in result && result.success) {
-        setOrders((result.data || []) as AdminOrder[]);
-      }
-    } catch (err) {
-      if (!isMountedRef.current) return;
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      if (isMountedRef.current && !options.silent) {
-        setIsLoading(false);
-      }
+      return result;
     }
-  }, []);
+  );
+
+  useEffect(() => {
+    if (swrError) {
+      const friendlyErr = swrError instanceof Error ? swrError.message : String(swrError);
+      setError(friendlyErr);
+      setOrders([]);
+    } else if (fetchResult && "success" in fetchResult && fetchResult.success) {
+      console.log("[Data Source] 🟢 UI UPDATED - ordersManagementClient: Displaying orders (from SWR Cache or Network)");
+      setOrders((fetchResult.data || []) as AdminOrder[]);
+      setError(null);
+    }
+  }, [fetchResult, swrError]);
+
+  const isLoading = isSwrLoading && orders.length === 0;
 
   const handleOpenConfirm = (orderId: string, currentStatus: AdminOrderStatus) => {
     setSelectedOrderId(orderId);
@@ -132,23 +131,23 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
     setIsActionSubmitting(true);
     try {
       if (modalType === "confirm") {
-        if (selectedOrderStatus !== "pending") return;
+        if (selectedOrderStatus !== "pending" && selectedOrderStatus !== "cancel_requested") return;
+
+        const noteText = selectedOrderStatus === "cancel_requested"
+          ? "Admin bác bỏ yêu cầu hủy và xác nhận đơn hàng"
+          : "Admin đã xác nhận đơn hàng";
 
         const result = await callAction(() => updateOrderStatusAction({
           order_number: selectedOrderId,
           status: "PROCESSING",
-          note: "Admin đã xác nhận đơn hàng",
+          note: noteText,
         }), "Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại sau.");
 
         if ("error" in result && result.error) {
           toast.error(getFriendlyResponseError(result.error));
         } else if ("success" in result && result.success) {
-          toast.success("Cập nhật trạng thái đơn hàng thành công");
-          setOrders((prev) =>
-            prev.map((o) =>
-              o.id === selectedOrderId ? { ...o, status: "confirmed" } : o
-            )
-          );
+          toast.success("Đã xác nhận đơn hàng");
+          await mutateOrders();
           setModalOpen(false);
         }
       } else if (modalType === "cancel") {
@@ -167,16 +166,11 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
           const msg = cancelResult.data?.message ?? "Đã hủy đơn hàng thành công";
           toast.success(msg);
 
-          // Cảnh báo thêm nếu gửi email thất bại
           if (cancelResult.data?.emailSent === false) {
             toast.warning("Lưu ý: Không gửi được email thông báo cho khách hàng. Vui lòng liên hệ khách trực tiếp.");
           }
 
-          setOrders((prev) =>
-            prev.map((o) =>
-              o.id === selectedOrderId ? { ...o, status: "cancelled" } : o
-            )
-          );
+          await mutateOrders();
           setModalOpen(false);
         }
       }
@@ -192,24 +186,24 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
       return;
     }
     const timeoutId = window.setTimeout(() => {
-      void loadOrders();
+      void mutateOrders();
     }, 0);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [initialOrders, loadOrders]);
+  }, [initialOrders, mutateOrders]);
 
   useEffect(() => {
     const handleNewOrder = () => {
-      void loadOrders({ silent: true });
+      void mutateOrders();
     };
 
     window.addEventListener("admin-socket-new-order", handleNewOrder);
     return () => {
       window.removeEventListener("admin-socket-new-order", handleNewOrder);
     };
-  }, [loadOrders]);
+  }, [mutateOrders]);
 
   const filteredOrders = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -273,6 +267,7 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
                   { label: "Tất cả trạng thái", value: "" },
                   { label: "Đang xác nhận", value: "pending" },
                   { label: "Đã xác nhận", value: "confirmed" },
+                  { label: "Yêu cầu huỷ", value: "cancel_requested" },
                   { label: "Đã huỷ", value: "cancelled" }
                 ]}
               />
@@ -302,7 +297,7 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
                     {!isLoading && !error && filteredOrders.map((order) => (
                       <tr
                         key={order.id}
-                        className="cursor-pointer transition hover:bg-[#6B1218]/[0.03]"
+                        className="cursor-pointer transition"
                         onClick={() => router.push(`/admin/ordersManagement/${order.id}`)}
                       >
                         <td>
@@ -333,11 +328,11 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
                         <td onClick={(e) => e.stopPropagation()}>
                           {order.status !== "cancelled" ? (
                             <div className="flex items-center gap-2 flex-nowrap">
-                              {order.status === "pending" ? (
+                              {order.status === "pending" || order.status === "cancel_requested" ? (
                                 <button
                                   type="button"
                                   className="orders-action-btn-confirm"
-                                  title="Xác nhận đơn hàng"
+                                  title={order.status === "cancel_requested" ? "Bác bỏ yêu cầu huỷ" : "Xác nhận đơn hàng"}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleOpenConfirm(order.id, order.status);
@@ -360,7 +355,7 @@ export default function OrdersManagementClient({ orders: initialOrders }: Props)
                               <button
                                 type="button"
                                 className="orders-action-btn-cancel"
-                                title="Hủy đơn hàng"
+                                title={order.status === "cancel_requested" ? "Duyệt yêu cầu huỷ đơn" : "Hủy đơn hàng"}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleOpenCancel(order.id);

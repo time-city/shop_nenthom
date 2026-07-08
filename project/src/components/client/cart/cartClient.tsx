@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import useSWR from "swr";
 import { useToast } from "@/src/components/ui/toastProvider";
 import {
   getFriendlyResponseError,
@@ -72,7 +73,6 @@ export default function CartClient() {
   const incrementOrderCount = useCartStore((state) => state.incrementOrderCount);
   const [cart, setCart] = useState<ClientCartItem[]>([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [isLoadingCart, setIsLoadingCart] = useState(true);
   const [isMutatingCart, setIsMutatingCart] = useState(false);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [step, setStep] = useState<CartPageStep>("cart");
@@ -100,6 +100,41 @@ export default function CartClient() {
     [selectedCart],
   );
 
+  const { data: cartResult, isLoading: isLoadingCart, error: swrError, mutate: mutateCart } = useSWR(
+    ['client-cart'],
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - cartClient: Fetching cart data...");
+      return await callAction(() => getOrCreateCartAction(), "Không thể tải giỏ hàng. Vui lòng thử lại sau.");
+    }
+  );
+
+  useEffect(() => {
+    if (swrError) {
+      const friendlyErr = swrError instanceof Error ? swrError.message : String(swrError);
+      setError(friendlyErr);
+      toast.error(friendlyErr);
+      setCart([]);
+    } else if (cartResult && 'error' in cartResult && cartResult.error) {
+      const friendlyErr = getFriendlyResponseError(cartResult.error);
+      setError(friendlyErr);
+      toast.error(friendlyErr);
+      setCart([]);
+    }
+  }, [swrError, cartResult, toast]);
+
+  useEffect(() => {
+    if (cartResult && 'success' in cartResult && cartResult.success) {
+      console.log("[Data Source] 🟢 UI UPDATED - cartClient: Displaying cart data (from SWR Cache or Network)");
+      const cartResultData = cartResult as unknown as ClientCartActionSuccessResponseInterface;
+      const mappedCart = cartResultData.cart.items.map(mapCartItem);
+      setCart(mappedCart);
+      setCartCount(mappedCart.length);
+      setSelectedItemIds((prev) => 
+        prev.length === 0 ? mappedCart.flatMap((item) => (item.itemId ? [item.itemId] : [])) : prev
+      );
+    }
+  }, [cartResult, setCartCount]);
+
   // Reset applied discount when subtotal changes to avoid out-of-sync discounts
   useEffect(() => {
     if (!isLoadingCart && appliedDiscount && subtotal !== appliedDiscount.subtotal_cents) {
@@ -107,47 +142,7 @@ export default function CartClient() {
     }
   }, [subtotal, appliedDiscount, isLoadingCart, setAppliedDiscount]);
 
-  const loadCart = useCallback(async (cancelled: { value: boolean }) => {
-    setIsLoadingCart(true);
-    setError(null);
 
-    // action-(lấy giỏ hàng)
-    const result = await callAction(() => getOrCreateCartAction(), "Không thể tải giỏ hàng. Vui lòng thử lại sau.");
-    if (cancelled.value) return;
-
-    if ("error" in result && result.error) {
-      const friendlyErr = getFriendlyResponseError(result.error);
-      setError(friendlyErr);
-      toast.error(friendlyErr);
-      setCart([]);
-      setIsLoadingCart(false);
-      return;
-    }
-
-    if ("success" in result && result.success) {
-      const cartResult = result as unknown as ClientCartActionSuccessResponseInterface;
-      const mappedCart = cartResult.cart.items.map(mapCartItem);
-      setCart(mappedCart);
-      // Cập nhật badge số lượng trên header
-      setCartCount(mappedCart.length);
-      setSelectedItemIds(
-        mappedCart.flatMap((item) => (item.itemId ? [item.itemId] : [])),
-      );
-    }
-
-    setIsLoadingCart(false);
-  }, [toast, setCartCount]);
-
-  useEffect(() => {
-    const cancelled = { value: false };
-    setTimeout(() => {
-      void loadCart(cancelled);
-    }, 0);
-
-    return () => {
-      cancelled.value = true;
-    };
-  }, [loadCart]);
 
   useEffect(() => {
     const pendingUpdates = pendingUpdatesRef.current;
@@ -196,13 +191,11 @@ export default function CartClient() {
         }), "Không thể cập nhật sản phẩm trong giỏ hàng. Vui lòng thử lại sau.");
 
         if ("error" in result && result.error) {
-          const cancelled = { value: false };
-          await loadCart(cancelled);
+          await mutateCart();
           toast.error(getFriendlyResponseError(result.error));
         }
       } catch (err) {
-        const cancelled = { value: false };
-        await loadCart(cancelled);
+        await mutateCart();
         toast.error(err instanceof Error ? err.message : "Cập nhật giỏ hàng thất bại");
       } finally {
         setIsMutatingCart(false);
@@ -517,8 +510,7 @@ export default function CartClient() {
               <button
                 type="button"
                 onClick={() => {
-                  const cancelled = { value: false };
-                  void loadCart(cancelled);
+                  void mutateCart();
                 }}
                 className="inline-flex rounded-full bg-gradient-to-r from-[#D6A15F] to-[#E5C07B] px-8 py-3 text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#2C1810] shadow-[0_10px_24px_rgba(214,161,95,0.3)] transition hover:-translate-y-0.5"
               >

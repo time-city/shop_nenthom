@@ -31,7 +31,7 @@ export default function ClientPagination({
       {currentPage > 1 && (
         <button
           onClick={() => onChange(1)}
-          className="px-3 py-1.5 h-9 flex items-center justify-center rounded-lg border border-white/20 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-all duration-200"
+          className="px-3 py-1.5 h-9 flex items-center justify-center rounded-lg border border-[#6B4E35]/20 text-sm font-medium text-[#6B4E35] hover:bg-[#F5F0E8] hover:border-[#6B4E35]/35 disabled:opacity-50 disabled:pointer-events-none transition-all duration-200"
           type="button"
         >
           « Trang đầu
@@ -45,7 +45,7 @@ export default function ClientPagination({
           className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-semibold transition-all duration-200 ${
             currentPage === page
               ? "bg-[#6B1218] text-[#F5F0E8]"
-              : "border border-white/20 text-white/70 hover:bg-white/10 hover:text-white"
+              : "border border-[#6B4E35]/20 text-[#6B4E35] hover:bg-[#F5F0E8] hover:border-[#6B4E35]/35"
           }`}
           type="button"
         >
@@ -56,7 +56,7 @@ export default function ClientPagination({
       {currentPage < totalPages && (
         <button
           onClick={() => onChange(totalPages)}
-          className="px-3 py-1.5 h-9 flex items-center justify-center rounded-lg border border-white/20 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-all duration-200"
+          className="px-3 py-1.5 h-9 flex items-center justify-center rounded-lg border border-[#6B4E35]/20 text-sm font-medium text-[#6B4E35] hover:bg-[#F5F0E8] hover:border-[#6B4E35]/35 disabled:opacity-50 disabled:pointer-events-none transition-all duration-200"
           type="button"
         >
           Trang cuối »

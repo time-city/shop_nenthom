@@ -4,6 +4,7 @@ import { requireAdmin } from "../requireAdmin"
 import { CategoryService } from "../services/category.service"
 import { createCategorySchema, updateCategorySchema, deleteCategorySchema } from "../validations/category.schema"
 import { getPublicErrorMessage } from "../utils/publicError"
+import prisma from "../prisma"
 
 export async function getCategoriesAction() {
     try {
@@ -79,5 +80,67 @@ export async function getCategoryDeleteImpactAction(params: unknown) {
         return { success: true, data: impact }
     } catch (err) {
         return { error: getPublicErrorMessage(err, "Chưa thể kiểm tra danh mục. Vui lòng thử lại.") }
+    }
+}
+
+export async function bulkDeleteCategoryAction(params: unknown) {
+    const authError = await requireAdmin()
+    if ("error" in authError) return authError
+
+    if (!params || typeof params !== 'object' || !('ids' in params) || !Array.isArray((params as any).ids)) {
+        return { error: "Danh sách danh mục không hợp lý" }
+    }
+
+    const ids = (params as any).ids as number[]
+    if (ids.length === 0) return { error: "Vui lòng chọn danh mục để xóa" }
+
+    try {
+        let totalStoppedProducts = 0;
+        let deletedCount = 0;
+
+        for (const id of ids) {
+            try {
+                const category = await CategoryService.deleteCategory(id);
+                totalStoppedProducts += category.stoppedProductCount;
+                deletedCount++;
+            } catch (err) {
+                console.error(`[bulkDeleteCategoryAction] Error deleting category ${id}:`, err);
+            }
+        }
+
+        return {
+            success: true,
+            deletedCount,
+            totalStoppedProducts,
+            message: totalStoppedProducts > 0
+                ? `Đã xóa ${deletedCount} danh mục và ngừng bán ${totalStoppedProducts} sản phẩm liên quan.`
+                : `Đã xóa ${deletedCount} danh mục.`,
+        };
+    } catch (err) {
+        return { error: getPublicErrorMessage(err, "Chưa thể xóa các danh mục. Vui lòng thử lại.") }
+    }
+}
+
+export async function getBulkCategoryDeleteImpactAction(params: unknown) {
+    const authError = await requireAdmin()
+    if ("error" in authError) return authError
+
+    if (!params || typeof params !== 'object' || !('ids' in params) || !Array.isArray((params as any).ids)) {
+        return { error: "Danh sách danh mục không hợp lý" }
+    }
+
+    const ids = (params as any).ids as number[]
+    if (ids.length === 0) return { success: true, data: { productCount: 0 } }
+
+    try {
+        const productCount = await prisma.product.count({
+            where: {
+                category_id: { in: ids },
+                is_active: true
+            }
+        });
+        return { success: true, data: { productCount } };
+    } catch (err) {
+        return { error: getPublicErrorMessage(err, "Chưa thể kiểm tra tác động. Vui lòng thử lại.") }
     }
 }

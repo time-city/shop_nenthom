@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
 import { useToast } from "@/src/components/ui/toastProvider";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import ClientSearchBar from "@/src/components/admin/customer/clientSearchBar";
@@ -36,29 +37,31 @@ export default function ClientManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [meta, setMeta] = useState<AdminPaginationMeta>(initialMeta);
 
+  const { data: fetchResult, isLoading: isSwrLoading, error: swrError, mutate: mutateUsers } = useSWR(
+    ['admin-users', currentPage],
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - clientManagement: Fetching customers...");
+      const result = await callAction(() => getAllUsersAction({
+        limit: itemsPerPage,
+        page: currentPage,
+      }), "Không thể tải danh sách khách hàng. Vui lòng thử lại sau.");
+      if ("error" in result && result.error) {
+        throw new Error(getFriendlyResponseError(result.error));
+      }
+      return result;
+    }
+  );
+
   useEffect(() => {
-    let cancelled = false;
-    const loadUsers = async () => {
-      try {
-        const result = await callAction(() => getAllUsersAction({
-          limit: itemsPerPage,
-          page: currentPage,
-        }), "Không thể tải danh sách khách hàng. Vui lòng thử lại sau.");
-        if (cancelled) return;
-        if ("error" in result && result.error) {
-          const friendlyErr = getFriendlyResponseError(result.error);
-          toast.error(friendlyErr);
-        } else if ("success" in result && result.success) {
-          setUsers(result.data as User[]);
-          setMeta(result.meta);
-        }
-      } catch {}
-    };
-    void loadUsers();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentPage, toast]);
+    if (swrError) {
+      const friendlyErr = swrError instanceof Error ? swrError.message : String(swrError);
+      toast.error(friendlyErr);
+    } else if (fetchResult && "success" in fetchResult && fetchResult.success) {
+      console.log("[Data Source] 🟢 UI UPDATED - clientManagement: Displaying customers (from SWR Cache or Network)");
+      setUsers(fetchResult.data as User[]);
+      setMeta(fetchResult.meta);
+    }
+  }, [fetchResult, swrError, toast]);
 
   // Filter users based on query
   const filteredUsers = useMemo(() => {
@@ -108,7 +111,7 @@ export default function ClientManagement() {
                   setCurrentPage(1);
                 }}
               />
-              <span className="text-sm font-medium text-white/60">
+              <span className="text-sm font-medium text-[#6B4E35]/70">
                 {searchQuery
                   ? `Kết quả trang này: ${filteredUsers.length} / ${meta.total}`
                   : `Tổng số: ${meta.total} khách hàng`}

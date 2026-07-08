@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { logoutUser } from "../../../lib/action/auth.action";
 import { useCartStore } from "@/src/store/useCartStore";
 import { useUserStore } from "@/src/store/useUserStore";
+import { useUIStore } from "@/src/store/useUIStore";
 import { useSupportStore } from "@/src/store/useSupportStore";
 import { callAction } from "@/src/lib/utils/callAction";
 
@@ -13,7 +14,8 @@ interface MobileMenuProps {
 }
 
 export default function MobileMenu({ links, currentUser }: MobileMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const isOpen = useUIStore((state) => state.isMobileMenuOpen);
+  const setIsOpen = useUIStore((state) => state.setMobileMenuOpen);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -67,7 +69,7 @@ export default function MobileMenu({ links, currentUser }: MobileMenuProps) {
     <div className="flex md:hidden">
       <button
         ref={buttonRef}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => setIsOpen(!isOpen)}
         className="flex size-8 md:size-10 items-center justify-center rounded-full border border-[#f5f0e8]/20 text-[#f5f0e8] transition-all duration-200 hover:border-[#f5f0e8]/40"
         type="button"
         aria-label={isOpen ? "Đóng menu" : "Mở menu"}

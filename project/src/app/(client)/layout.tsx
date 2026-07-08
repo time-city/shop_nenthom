@@ -4,6 +4,7 @@ import Intro from "../../components/ui/intro";
 import AosProvider from "../../components/ui/aosProvider";
 
 import MainWrapper from "@/src/components/client/layout/mainWrapper";
+import { PushNotificationPrompt } from "@/src/components/client/user/pushNotificationPrompt";
 
 export default function ClientLayout({
   children,
@@ -17,6 +18,7 @@ export default function ClientLayout({
       <Header />
       <MainWrapper>{children}</MainWrapper>
       <Footer />
+      <PushNotificationPrompt />
     </>
   );
 }

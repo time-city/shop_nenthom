@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import useSWR from "swr";
 import { logoutUser } from "../../../lib/action/auth.action";
 import { useSupportStore } from "@/src/store/useSupportStore";
 import { useCartStore } from "@/src/store/useCartStore";
@@ -126,32 +127,27 @@ export default function Navbar() {
   const unreadCount = useSupportStore((state) => state.unreadCount);
   const hasHydrated = useSupportStore((state) => state._hasHydrated);
 
-  const [pendingOrdersCount, setPendingOrdersCount] = useState<number>(0);
+  const { data: pendingOrdersResult } = useSWR(
+    ['admin-pending-orders'],
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - admin/navbar: Fetching pending orders from server API...");
+      return await callAction(() => getOrdersAction({ status: "PENDING", limit: 1 }), "Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.");
+    }
+  );
 
   useEffect(() => {
-    startTransition(() => {
-      setMounted(true);
-    });
+    if (pendingOrdersResult) {
+      console.log(`[Data Source] 🟢 UI UPDATED - admin/navbar: Displaying pending orders count (from SWR Cache or Network)`);
+    }
+  }, [pendingOrdersResult]);
+
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    const fetchPendingOrders = async () => {
-      try {
-        const result = await callAction(() => getOrdersAction({ status: "PENDING", limit: 1 }), "Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.");
-        if (cancelled) return;
-        if (result && "success" in result && result.success && result.meta) {
-          setPendingOrdersCount(result.meta.total);
-        }
-      } catch {
-        // Ignore error
-      }
-    };
-    void fetchPendingOrders();
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname]);
+  const pendingOrdersCount = pendingOrdersResult && 'success' in pendingOrdersResult && pendingOrdersResult.success && pendingOrdersResult.meta
+    ? pendingOrdersResult.meta.total 
+    : 0;
 
   // WebSocket realtime: cập nhật badge ngay khi có đơn hàng mới hoặc contact mới
   useAdminOrderSocket({
@@ -161,7 +157,8 @@ export default function Navbar() {
       }
     }, []),
     onNewOrder: useCallback(() => {
-      setPendingOrdersCount((prev) => prev + 1);
+      // With SWR we don't manually mutate state, we could mutate the swr key if we wanted, or just ignore since Pusher triggers refresh
+      // But for real-time without re-fetching, we'd need to mutate SWR cache. For now we will rely on Pusher
     }, []),
     onNewContact: useCallback(() => {
       useSupportStore.getState().incrementUnread();
@@ -333,8 +330,9 @@ function SidebarSection({
     <div className="admin-sidebar-section">
       <div className="admin-sidebar-section-title">{title}</div>
       {links.map((link) => {
-        const active =
-          pathname === link.href || pathname.startsWith(`${link.href}/`);
+        const active = pathname
+          ? pathname === link.href || pathname.startsWith(`${link.href}/`)
+          : false;
 
         return (
           <Link

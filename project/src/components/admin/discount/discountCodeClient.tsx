@@ -2,6 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { startTransition, useCallback, useEffect, useState } from "react";
+import useSWR from "swr";
 import { useToast } from "@/src/components/ui/toastProvider";
 import dynamic from "next/dynamic";
 import ModalDeleteProduct from "@/src/components/admin/product/modalDeleteProduct";
@@ -40,42 +41,34 @@ export default function DiscountCodeClient() {
   const [disableDiscount, setDisableDiscount] = useState<AdminDiscountItem | null>(null);
   const [isDisabling, setIsDisabling] = useState(false);
   const [discounts, setDiscounts] = useState<AdminDiscountItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const { data: fetchResult, isLoading: isSwrLoading, error: swrError, mutate: mutateDiscounts } = useSWR(
+    ['admin-discounts'],
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - discountCodeClient: Fetching discounts...");
+      const result = await callAction(() => getDiscountsAction({ limit: 100, page: 1 }), "Không thể tải danh sách mã giảm giá. Vui lòng thử lại sau.");
+      if ("error" in result && result.error) {
+        throw new Error(getFriendlyResponseError(result.error));
+      }
+      return result;
+    }
+  );
 
-  const loadDiscounts = useCallback(async (cancelledRef?: { current: boolean }) => {
-    setIsLoading(true);
-
-    const result = await callAction(() => getDiscountsAction({ limit: 100, page: 1 }), "Không thể tải danh sách mã giảm giá. Vui lòng thử lại sau.");
-    if (cancelledRef?.current) return;
-
-    if ("error" in result && result.error) {
-      const friendlyErr = getFriendlyResponseError(result.error);
+  useEffect(() => {
+    if (swrError) {
+      const friendlyErr = swrError instanceof Error ? swrError.message : String(swrError);
       setError(friendlyErr);
       toast.error(friendlyErr);
       setDiscounts([]);
-      setIsLoading(false);
-      return;
-    }
-
-    if ("success" in result && result.success) {
-      const response = result as unknown as AdminDiscountsSuccessResponse;
+    } else if (fetchResult && "success" in fetchResult && fetchResult.success) {
+      console.log("[Data Source] 🟢 UI UPDATED - discountCodeClient: Displaying discounts (from SWR Cache or Network)");
+      const response = fetchResult as unknown as AdminDiscountsSuccessResponse;
       setError("");
       setDiscounts(response.data);
     }
+  }, [fetchResult, swrError, toast]);
 
-    setIsLoading(false);
-  }, [toast]);
-
-  useEffect(() => {
-    const cancelled = { current: false };
-    startTransition(() => {
-      void loadDiscounts(cancelled);
-    });
-    return () => {
-      cancelled.current = true;
-    };
-  }, [loadDiscounts]);
+  const isLoading = isSwrLoading && discounts.length === 0;
 
   const handleDisable = async () => {
     if (!disableDiscount) return;
@@ -92,7 +85,7 @@ export default function DiscountCodeClient() {
     if ("success" in result && result.success) {
       toast.success("Đã vô hiệu hóa mã giảm giá");
       setDisableDiscount(null);
-      await loadDiscounts();
+      await mutateDiscounts();
     }
 
     setIsDisabling(false);
@@ -141,7 +134,7 @@ export default function DiscountCodeClient() {
                     {!isLoading && !error && discounts.map((discount) => (
                       <tr
                         key={discount.id}
-                        className="transition hover:bg-[#6B1218]/[0.03]"
+                        className="transition"
                       >
                         <td>
                           <span className="rounded-md bg-[#F2E8D9] px-2.5 py-1 font-mono text-sm font-bold tracking-wider text-[#6B1218]">
@@ -264,14 +257,14 @@ export default function DiscountCodeClient() {
       <ModalDiscount
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSave={loadDiscounts}
+        onSave={() => { mutateDiscounts(); }}
       />
 
       <ModalEditDiscount
         open={Boolean(editDiscount)}
         discount={editDiscount}
         onClose={() => setEditDiscount(null)}
-        onSave={loadDiscounts}
+        onSave={() => { mutateDiscounts(); }}
       />
 
       <ModalDeleteProduct

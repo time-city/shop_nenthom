@@ -25,6 +25,12 @@ export default function CartBadge() {
     void fetchCartCount();
   }, [fetchCartCount]);
 
+  useEffect(() => {
+    if (hasHydrated) {
+      console.log(`[Data Source] 🟢 UI UPDATED - cartBadge: Displaying cart count from Zustand LocalStorage state`);
+    }
+  }, [hasHydrated]);
+
   // Chưa mount (SSR) hoặc store chưa hydrate → không render để tránh flash
   if (!mounted || !hasHydrated || cartCount <= 0) return null;
 

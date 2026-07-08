@@ -1,4 +1,5 @@
 import LandingLayout from "@/src/components/client/layout/landingLayout";
+import { getCategoriesAction } from "@/src/lib/action/category.action";
 import { getCurrentUser } from "../lib/action/user.action";
 import { redirect } from "next/navigation";
 import type { CollectionPageProps } from "../lib/types/client";
@@ -12,5 +13,8 @@ export default async function Home({ searchParams }: CollectionPageProps) {
     redirect("/admin/dashboard");
   }
 
-  return <LandingLayout searchParams={searchParams} />;
+  const categoriesResponse = await callAction(() => getCategoriesAction(), "Không thể tải danh mục. Vui lòng thử lại sau.");
+  const initialCategories = categoriesResponse && "success" in categoriesResponse && categoriesResponse.success ? categoriesResponse : undefined;
+
+  return <LandingLayout searchParams={searchParams} initialCategories={initialCategories as any} />;
 }

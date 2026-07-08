@@ -18,14 +18,20 @@ const defaultUser: Required<ClientOrderUserData> = {
 
 const statusLabel: Record<ClientOrderRecord["status"], string> = {
   canceled: "Đã hủy",
-  pending: "Đang xử lý",
-  confirmed: "Đang giao",
+  pending: "Đang chờ xác nhận",
+  processing: "Đang xử lý",
+  shipped: "Đang giao",
+  delivered: "Đã giao thành công",
+  cancel_requested: "Chờ duyệt hủy",
 };
 
 const statusClass: Record<ClientOrderRecord["status"], string> = {
   canceled: "bg-[#2c1810]/10 text-[#6B4C35]",
   pending: "bg-[#F4E2B7] text-[#8B5E3C]",
-  confirmed: "bg-[#45A05C]/15 text-[#1F6B3A]",
+  processing: "bg-[#F4E2B7] text-[#8B5E3C]",
+  shipped: "bg-[#45A05C]/15 text-[#1F6B3A]",
+  delivered: "bg-[#45A05C]/15 text-[#1F6B3A]",
+  cancel_requested: "bg-red-950/40 text-red-400 border border-red-500/20",
 };
 
 

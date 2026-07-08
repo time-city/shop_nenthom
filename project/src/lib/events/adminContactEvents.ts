@@ -2,7 +2,7 @@ import "server-only";
 
 import { ContactStatus, NotificationType, Role, UserStatus } from "@prisma/client";
 import prisma from "../prisma";
-import { ADMIN_ORDER_EVENT_CHANNEL } from "./adminOrderEvents";
+import { pusherServer } from "../pusher-server";
 
 export type NewContactAdminPayload = {
   contactId: string;
@@ -72,12 +72,9 @@ export async function emitNewContactToAdmin(
     event: "NEW_CONTACT",
   };
 
-  await prisma.$queryRaw`
-    SELECT pg_notify(
-      ${ADMIN_ORDER_EVENT_CHANNEL},
-      ${JSON.stringify(event)}
-    )::text
-  `;
+  // Migrate từ pg_notify sang Pusher
+  console.log(`[Pusher Server] Triggering NEW_CONTACT on channel admin_orders`, event);
+  await pusherServer.trigger("admin_orders", "NEW_CONTACT", event);
 
   return event;
 }

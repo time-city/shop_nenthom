@@ -128,7 +128,7 @@ export type ClientOrderUserData = {
 
 
 /** Trạng thái đơn hàng phía client. */
-export type ClientOrderStatus = "pending" | "confirmed" | "canceled";
+export type ClientOrderStatus = "pending" | "processing" | "shipped" | "delivered" | "canceled" | "cancel_requested";
 
 
 /** Item trong một đơn hàng phía client. */
@@ -430,6 +430,7 @@ export type Order = {
   subtotal: number;
   total: number;
   zip?: string;
+  paymentStatus?: string;
 };
 
 /** Dữ liệu sản phẩm ngừng bán được gửi từ WebSocket của user */
@@ -458,14 +459,18 @@ export type OrderCancelledData = {
 export type UserNotificationWebSocketMessage =
   | { event: "CONNECTED"; data: { userId: string } }
   | { event: "CART_PRODUCTS_REMOVED"; data: CartProductsRemovedData }
-  | { event: "ORDER_CANCELLED"; data: OrderCancelledData };
+  | { event: "ORDER_CANCELLED"; data: OrderCancelledData }
+  | { event: "REVIEW_REPLIED"; data: any };
 
 /** Options truyền vào hook useUserNotificationSocket */
 export type UseUserNotificationSocketOptions = {
+  userId?: string | null;
   onConnected?: (data: { userId: string }) => void;
   onCartProductsRemoved?: (data: CartProductsRemovedData) => void;
   onOrderCancelled?: (data: OrderCancelledData) => void;
+  onReviewReplied?: (data: any) => void;
 };
+
 
 /** Thông báo hiển thị phía User */
 export type UserNotification = {

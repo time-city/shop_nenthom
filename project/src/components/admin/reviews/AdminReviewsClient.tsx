@@ -1,14 +1,23 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CustomSelect from "@/src/components/admin/common/CustomSelect";
 import type { SelectOption } from "@/src/components/admin/common/CustomSelect";
 import Image from "next/image";
-import { Star, MessageSquareReply, Eye, EyeOff, Trash2, CheckCircle, Loader2 } from "lucide-react";
-import { updateReviewStatusAction, deleteReviewAction, replyToReviewAction } from "@/src/lib/action/review.action";
+import { Star, MessageSquareReply, Eye, EyeOff, CheckCircle, Loader2 } from "lucide-react";
+import { updateReviewStatusAction, replyToReviewAction, getAllReviewsAdminAction } from "@/src/lib/action/review.action";
+import useSWR from "swr";
+
+const fetcher = async ([action, args]: [Function, any]) => {
+  const result = await action(args);
+  if (!result.success) throw new Error(result.error);
+  return result.data;
+};
 import { useToast } from "@/src/components/ui/toastProvider";
 import Modal from "@/src/components/ui/modal";
+import AdminHeader from "@/src/components/admin/layout/adminHeader";
+import TableResponsiveWrapper from "@/src/components/admin/common/tableResponsiveWrapper";
 
 export default function AdminReviewsClient({ 
   initialData, 
@@ -28,6 +37,23 @@ export default function AdminReviewsClient({
   const [activeReview, setActiveReview] = useState<any>(null);
   const [replyContent, setReplyContent] = useState("");
 
+  const { data: fetchResult, mutate: mutateReviews } = useSWR(
+    [getAllReviewsAdminAction, { page: currentPage, limit: 6, status: currentStatus, rating: currentRating }],
+    async ([action, args]) => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - AdminReviewsClient: Fetching reviews...");
+      return fetcher([action, args]);
+    },
+    { fallbackData: initialData, revalidateOnFocus: false }
+  );
+
+  useEffect(() => {
+    if (fetchResult) {
+      console.log("[Data Source] 🟢 UI UPDATED - AdminReviewsClient: Displaying reviews (from SWR Cache or Network)");
+    }
+  }, [fetchResult]);
+
+  const reviewsData = fetchResult || initialData;
+
   const handleFilterChange = (key: string, value: string) => {
     const params = new URLSearchParams(window.location.search);
     if (value && value !== 'all') {
@@ -46,30 +72,32 @@ export default function AdminReviewsClient({
   };
 
   const handleToggleStatus = async (reviewId: string, currentStatus: boolean) => {
+    const previousData = fetchResult;
+    mutateReviews(
+      (current: any) => {
+        if (!current) return current;
+        return {
+          ...current,
+          items: current.items.map((r: any) => 
+            r.id === reviewId ? { ...r, is_published: !currentStatus } : r
+          )
+        };
+      },
+      false
+    );
+
     startTransition(async () => {
       const result = await updateReviewStatusAction({ reviewId, is_published: !currentStatus });
       if (result.success) {
         toast.success({ title: "Thành công", message: "Đã cập nhật trạng thái hiển thị." });
-        router.refresh();
+        mutateReviews();
       } else {
         toast.error({ title: "Lỗi", message: result.error || "Không thể cập nhật." });
+        mutateReviews(previousData, false);
       }
     });
   };
 
-  const handleDelete = async (reviewId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa đánh giá này vĩnh viễn?")) return;
-    
-    startTransition(async () => {
-      const result = await deleteReviewAction(reviewId);
-      if (result.success) {
-        toast.success({ title: "Thành công", message: "Đã xóa đánh giá." });
-        router.refresh();
-      } else {
-        toast.error({ title: "Lỗi", message: result.error || "Không thể xóa." });
-      }
-    });
-  };
 
   const handleOpenReply = (review: any) => {
     setActiveReview(review);
@@ -81,124 +109,146 @@ export default function AdminReviewsClient({
     e.preventDefault();
     if (!activeReview || !replyContent.trim()) return;
 
+    const previousData = fetchResult;
+    mutateReviews(
+      (current: any) => {
+        if (!current) return current;
+        return {
+          ...current,
+          items: current.items.map((r: any) => 
+            r.id === activeReview.id ? { ...r, admin_reply: replyContent } : r
+          )
+        };
+      },
+      false
+    );
+
     startTransition(async () => {
       const result = await replyToReviewAction({ reviewId: activeReview.id, admin_reply: replyContent });
       if (result.success) {
         toast.success({ title: "Thành công", message: "Đã gửi phản hồi." });
         setReplyModalOpen(false);
         setActiveReview(null);
-        router.refresh();
+        mutateReviews();
       } else {
         toast.error({ title: "Lỗi", message: result.error || "Không thể phản hồi." });
+        mutateReviews(previousData, false);
       }
     });
   };
 
   return (
-    <div className="space-y-6">
-      <div className="dashboard-card p-6 flex justify-between items-center relative z-20">
-        <h1 className="dashboard-page-title">Quản lý Đánh giá</h1>
-        <div className="flex gap-4">
-          <CustomSelect 
-            value={currentStatus} 
-            onChange={(val) => handleFilterChange('status', val)}
-            options={[
-              { label: "Tất cả trạng thái", value: "all" },
-              { label: "Chờ duyệt", value: "pending" },
-              { label: "Đã hiển thị", value: "published" }
-            ]}
-          />
+    <>
+      <AdminHeader
+        title="Quản lý Đánh giá"
+        subtitle="Quản lý và phản hồi đánh giá của khách hàng"
+      />
+      <div className="dashboard-page-content space-y-6">
+        <section className="dashboard-card relative z-20">
+          <div className="dashboard-card-body flex justify-end">
+            <div className="flex gap-4">
+              <CustomSelect 
+                value={currentStatus} 
+                onChange={(val) => handleFilterChange('status', val)}
+                options={[
+                  { label: "Tất cả trạng thái", value: "all" },
+                  { label: "Chờ duyệt", value: "pending" },
+                  { label: "Đã hiển thị", value: "published" }
+                ]}
+              />
 
-          <CustomSelect 
-            value={currentRating ? currentRating.toString() : 'all'} 
-            onChange={(val) => handleFilterChange('rating', val)}
-            options={[
-              { label: "Tất cả số sao", value: "all" },
-              { label: "5 Sao", value: "5" },
-              { label: "4 Sao", value: "4" },
-              { label: "3 Sao", value: "3" },
-              { label: "2 Sao", value: "2" },
-              { label: "1 Sao", value: "1" }
-            ]}
-          />
-        </div>
-      </div>
+              <CustomSelect 
+                value={currentRating ? currentRating.toString() : 'all'} 
+                onChange={(val) => handleFilterChange('rating', val)}
+                options={[
+                  { label: "Tất cả số sao", value: "all" },
+                  { label: "5 Sao", value: "5" },
+                  { label: "4 Sao", value: "4" },
+                  { label: "3 Sao", value: "3" },
+                  { label: "2 Sao", value: "2" },
+                  { label: "1 Sao", value: "1" }
+                ]}
+              />
+            </div>
+          </div>
+        </section>
 
       <div className="dashboard-card overflow-hidden no-padding">
         <div className="dashboard-table-wrapper">
+          <TableResponsiveWrapper minWidth={900}>
           <table className="dashboard-admin-table">
             <thead>
               <tr>
-                <th className="px-6 py-4">Khách hàng / Ngày</th>
-                <th className="px-6 py-4">Sản phẩm</th>
-                <th className="px-6 py-4">Đánh giá</th>
-                <th className="px-6 py-4">Hình ảnh</th>
-                <th className="px-6 py-4">Trạng thái</th>
-                <th className="px-6 py-4 text-right">Thao tác</th>
+                <th>Khách hàng / Ngày</th>
+                <th>Sản phẩm</th>
+                <th>Đánh giá</th>
+                <th>Hình ảnh</th>
+                <th>Trạng thái</th>
+                <th className="text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody>
-              {initialData.items.length === 0 ? (
+              {reviewsData.items.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center">Không có đánh giá nào phù hợp.</td>
                 </tr>
               ) : (
-                initialData.items.map((review: any) => (
-                  <tr key={review.id} className="hover:bg-black/20 transition">
+                reviewsData.items.map((review: any) => (
+                  <tr key={review.id} className="transition">
                     <td>
-                      <p className="font-semibold text-[#F5F0E8]">{review.user?.fullname || review.user?.email}</p>
-                      <p className="text-xs text-[#F5F0E8]/60 mt-1">{new Date(review.created_at).toLocaleDateString('vi-VN')}</p>
+                      <p className="font-semibold text-[#2C1810]">{review.user?.fullname || review.user?.email}</p>
+                      <p className="text-xs text-[#6B4E35] mt-1">{new Date(review.created_at).toLocaleDateString('vi-VN')}</p>
                     </td>
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-md overflow-hidden bg-gray-100 relative shrink-0">
+                        <div className="size-10 rounded-md overflow-hidden bg-[#6B4E35]/20 relative shrink-0">
                           {review.product.images?.[0] ? (
                             <Image src={review.product.images[0]} alt="prod" fill className="object-cover" />
                           ) : (
-                            <div className="w-full h-full bg-gray-200"></div>
+                            <div className="w-full h-full bg-[#6B4E35]/10"></div>
                           )}
                         </div>
-                        <span className="font-medium text-gray-700 line-clamp-2 max-w-[200px]">{review.product.name}</span>
+                        <span className="font-medium text-[#2C1810] line-clamp-2 max-w-[200px]">{review.product.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td>
                       <div className="flex items-center gap-1 mb-1 text-[#D6A15F]">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`size-3 ${i < review.rating ? "fill-current" : "text-gray-300"}`} />
+                          <Star key={i} className={`size-3 ${i < review.rating ? "fill-current" : "text-[#6B4E35]/30"}`} />
                         ))}
                       </div>
-                      <p className="text-gray-600 line-clamp-3 max-w-[250px]">{review.content}</p>
+                      <p className="text-[#6B4E35] line-clamp-3 max-w-[250px]">{review.content}</p>
                       {review.admin_reply && (
-                        <div className="mt-2 bg-blue-50 text-blue-800 text-xs p-2 rounded border border-blue-100 line-clamp-2">
+                        <div className="mt-2 bg-[#D6A15F]/10 text-[#8B6030] text-xs p-2 rounded border border-[#D6A15F]/30 line-clamp-2">
                           <span className="font-semibold">Đã TL:</span> {review.admin_reply}
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td>
                       {review.images && review.images.length > 0 ? (
                         <div className="flex gap-1">
                           {review.images.map((img: string, i: number) => (
-                            <a key={i} href={img} target="_blank" rel="noreferrer" className="relative size-10 rounded border overflow-hidden hover:opacity-80 transition">
+                            <a key={i} href={img} target="_blank" rel="noreferrer" className="relative size-10 rounded border border-[#6B4E35]/20 overflow-hidden hover:opacity-80 transition">
                               <Image src={img} alt="fb" fill className="object-cover" />
                             </a>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-gray-400 italic">Không có</span>
+                        <span className="text-[#6B4E35]/60 italic">Không có</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td>
                       {review.is_published ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span className="dashboard-status completed">
                           <CheckCircle className="size-3" /> Hiển thị
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        <span className="dashboard-status pending">
                           <Loader2 className="size-3" /> Chờ duyệt
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="text-right">
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => handleToggleStatus(review.id, review.is_published)}
@@ -216,14 +266,6 @@ export default function AdminReviewsClient({
                         >
                           <MessageSquareReply className="size-4" />
                         </button>
-                        <button
-                          onClick={() => handleDelete(review.id)}
-                          disabled={isPending}
-                          className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition"
-                          title="Xóa đánh giá"
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -231,15 +273,16 @@ export default function AdminReviewsClient({
               )}
             </tbody>
           </table>
+          </TableResponsiveWrapper>
         </div>
 
         {/* Pagination */}
-        {initialData.totalPages > 1 && (
-          <div className="p-4 border-t border-gray-100 flex justify-center gap-2">
+        {reviewsData.totalPages > 1 && (
+          <div className="p-4 border-t border-[#6B4E35]/15 flex justify-center gap-2">
             {currentPage > 1 && (
               <button
                 onClick={() => handlePageChange(1)}
-                className="px-3 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition bg-gray-100 text-gray-600 hover:bg-gray-200"
+                className="px-3 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition bg-[#F5F0E8] text-[#6B4E35] hover:bg-[#EDE5D8] border border-[#6B4E35]/20"
               >
                 « Trang đầu
               </button>
@@ -247,7 +290,7 @@ export default function AdminReviewsClient({
 
             {(() => {
               let startPage = Math.max(1, currentPage - 2);
-              let endPage = Math.min(initialData.totalPages, startPage + 4);
+              let endPage = Math.min(reviewsData.totalPages, startPage + 4);
               if (endPage - startPage < 4) {
                 startPage = Math.max(1, endPage - 4);
               }
@@ -255,17 +298,17 @@ export default function AdminReviewsClient({
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
-                  className={`size-8 rounded-lg text-sm font-medium transition ${currentPage === page ? "bg-[#6B1218] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                  className={`size-8 rounded-lg text-sm font-medium transition ${currentPage === page ? "bg-[#6B1218] text-white" : "bg-[#F5F0E8] text-[#6B4E35] hover:bg-[#EDE5D8] border border-[#6B4E35]/20"}`}
                 >
                   {page}
                 </button>
               ));
             })()}
 
-            {currentPage < initialData.totalPages && (
+            {currentPage < reviewsData.totalPages && (
               <button
-                onClick={() => handlePageChange(initialData.totalPages)}
-                className="px-3 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition bg-gray-100 text-gray-600 hover:bg-gray-200"
+                onClick={() => handlePageChange(reviewsData.totalPages)}
+                className="px-3 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition bg-[#F5F0E8] text-[#6B4E35] hover:bg-[#EDE5D8] border border-[#6B4E35]/20"
               >
                 Trang cuối »
               </button>
@@ -277,26 +320,26 @@ export default function AdminReviewsClient({
       {/* Reply Modal */}
       <Modal isOpen={replyModalOpen} onClose={() => setReplyModalOpen(false)}>
         <div className="p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Phản hồi khách hàng</h2>
+          <h2 className="text-xl font-bold text-[#2C1810] mb-4">Phản hồi khách hàng</h2>
           {activeReview && (
-            <div className="mb-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-              <p className="text-sm text-gray-600 mb-1 font-medium">{activeReview.user?.fullname}</p>
+            <div className="mb-4 bg-[#F5F0E8]/60 p-4 rounded-xl border border-[#6B4E35]/20">
+              <p className="text-sm text-[#2C1810]/70 mb-1 font-medium">{activeReview.user?.fullname}</p>
               <div className="flex items-center gap-1 mb-2 text-[#D6A15F]">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className={`size-3 ${i < activeReview.rating ? "fill-current" : "text-gray-300"}`} />
+                  <Star key={i} className={`size-3 ${i < activeReview.rating ? "fill-current" : "text-[#6B4E35]/30"}`} />
                 ))}
               </div>
-              <p className="text-sm text-gray-800 italic">"{activeReview.content}"</p>
+              <p className="text-sm text-[#2C1810] italic">"{activeReview.content}"</p>
             </div>
           )}
 
           <form onSubmit={submitReply}>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Nội dung phản hồi (sẽ hiển thị công khai)</label>
+              <label className="block text-sm font-medium text-[#2C1810]/80 mb-2">Nội dung phản hồi (sẽ hiển thị công khai)</label>
               <textarea
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-[#6B1218] focus:border-[#6B1218] h-32 resize-none"
+                className="w-full border border-[#6B4E35]/30 rounded-lg p-3 text-sm focus:ring-[#6B1218] focus:border-[#6B1218] h-32 resize-none bg-[#F5F0E8]/50 text-[#2C1810]"
                 placeholder="Cảm ơn bạn đã tin dùng sản phẩm của ChamCham..."
                 required
               />
@@ -305,7 +348,7 @@ export default function AdminReviewsClient({
               <button
                 type="button"
                 onClick={() => setReplyModalOpen(false)}
-                className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition font-medium"
+                className="px-4 py-2 text-[#6B4E35] bg-[#F5F0E8] rounded-lg hover:bg-[#E8DDD0] transition font-medium border border-[#6B4E35]/20"
               >
                 Hủy
               </button>
@@ -321,6 +364,7 @@ export default function AdminReviewsClient({
           </form>
         </div>
       </Modal>
-    </div>
+      </div>
+    </>
   );
 }

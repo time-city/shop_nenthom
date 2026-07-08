@@ -111,8 +111,36 @@ export default function NotificationUser() {
     }
   }, []);
 
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    void loadNotifications();
+
+    const fetchUserId = async () => {
+      try {
+        const user = await callAction(() => import("@/src/lib/action/user.action").then(m => m.getCurrentUser()), "Error fetching user");
+        if (user && "id" in user) {
+          setUserId(user.id);
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    void fetchUserId();
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closePanel();
+    };
+
+    if (isNotificationOpen) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [isNotificationOpen, closePanel, loadNotifications]);
+
   // WebSocket realtime: khi có CART_PRODUCTS_REMOVED thì reload notifications và giỏ hàng
   useUserNotificationSocket({
+    userId,
     onConnected: useCallback(() => {
       void loadNotifications({ silent: true });
     }, [loadNotifications]),

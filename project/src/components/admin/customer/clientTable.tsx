@@ -80,12 +80,12 @@ export default function ClientTable({
               optimisticUsers.map((user) => (
                 <tr
                   key={user.id}
-                  className="hover:bg-black/20 transition-colors"
+                  className="transition-colors"
                 >
-                  <td className="font-bold text-[#F5F0E8]">{user.name}</td>
+                  <td className="font-bold text-[#2C1810]">{user.name}</td>
                   <td>
-                    <div className="text-xs font-semibold text-[#F5F0E8]">{user.email}</div>
-                    <div className="text-xs text-[#F5F0E8]/60">{user.phone}</div>
+                    <div className="text-xs font-semibold text-[#2C1810]">{user.email}</div>
+                    <div className="text-xs text-[#6B4E35]">{user.phone}</div>
                   </td>
                   <td>{user.createdAt}</td>
                   <td>
@@ -95,7 +95,7 @@ export default function ClientTable({
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => onViewOrders(user)}
-                        className="p-2 text-xs font-semibold rounded bg-[rgba(248,240,228,0.05)] text-[#D6A15F] border border-[#D6A15F]/30 hover:bg-[#D6A15F]/10 transition-all duration-200"
+                        className="p-2 text-xs font-semibold rounded bg-[#F5F0E8] text-[#6B4E35] border border-[#6B4E35]/25 hover:bg-[#EDE5D8] transition-all duration-200"
                         type="button"
                         title="Xem đơn hàng"
                       >
@@ -105,8 +105,8 @@ export default function ClientTable({
                         onClick={() => handleToggleStatus(user.id)}
                         className={`p-2 text-xs font-semibold rounded border transition-all duration-200 flex items-center justify-center ${
                           user.isActive
-                            ? "bg-[rgba(248,240,228,0.05)] text-red-400 border-red-400/30 hover:bg-red-400/10"
-                            : "bg-[rgba(248,240,228,0.05)] text-green-400 border-green-400/30 hover:bg-green-400/10"
+                            ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                            : "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
                         }`}
                         type="button"
                         title={user.isActive ? "Khóa tài khoản" : "Kích hoạt tài khoản"}
@@ -123,7 +123,7 @@ export default function ClientTable({
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-white/60 text-sm">
+                <td colSpan={5} className="px-6 py-12 text-center text-[#6B4E35]/60 text-sm">
                   Không tìm thấy khách hàng nào phù hợp.
                 </td>
               </tr>

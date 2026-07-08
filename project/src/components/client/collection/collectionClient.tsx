@@ -12,6 +12,7 @@ import { getProductsAction } from "@/src/lib/action/product.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import { useSearchParams } from "next/navigation";
 import { callAction } from "@/src/lib/utils/callAction";
+import useSWR from "swr";
 
 interface CollectionClientProps {
   scents: ClientProductOptionItemInterface[];
@@ -99,9 +100,6 @@ function CollectionClientInner({
   const search = searchParams.get("q") || "";
   const page = Number(searchParams.get("page") || "1");
 
-  const [allProducts, setAllProducts] = useState<ClientProductItemInterface[]>(initialProducts);
-  const [productScentMap, setProductScentMap] = useState<Record<number, string[]>>({});
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(initialError);
   const [selectedFilter, setSelectedFilter] = useState({
     scentId,
@@ -116,54 +114,51 @@ function CollectionClientInner({
     }, 0);
   }, [scentId, priceRange, search, page]);
 
-  useEffect(() => {
-    let active = true;
-
-    const loadAllData = async () => {
-      setIsLoading(true);
-      setError("");
-
-      try {
-        const result = await callAction(() => getProductsAction({ limit: 100 }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
-        if (!active) return;
-
-        if ("error" in result && result.error) {
-          setError(getFriendlyResponseError(result.error));
-        } else if ("success" in result && result.success) {
-          const productResult = result as ClientProductsSuccessResponseInterface;
-          const allProd = productResult.data.filter(
-            (product) => product.is_custom !== true,
-          );
-          setAllProducts(allProd);
-        }
-
-        const mappings: Record<number, string[]> = {};
-        await Promise.all(
-          scents.map(async (scent) => {
-            const res = await callAction(() => getProductsAction({ limit: 100, scentId: scent.id }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
-            if (res && "success" in res && res.success) {
-              mappings[scent.id] = res.data.map((p) => p.id);
-            }
-          })
+  const { data: fetchResult, isLoading: isSwrLoading, error: swrError } = useSWR(
+    ['collection-all-data'],
+    async () => {
+      console.log("[Data Source] 🟡 NETWORK QUERY - collectionClient: Fetching all products and scents from server API...");
+      const result = await callAction(() => getProductsAction({ limit: 100 }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
+      
+      let allProd: ClientProductItemInterface[] = [];
+      if (result && "success" in result && result.success) {
+        const productResult = result as ClientProductsSuccessResponseInterface;
+        allProd = productResult.data.filter(
+          (product) => product.is_custom !== true,
         );
-        if (!active) return;
-        setProductScentMap(mappings);
-      } catch (err) {
-        if (active) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        if (active) {
-          setIsLoading(false);
-        }
+      } else if (result && "error" in result && result.error) {
+        throw new Error(getFriendlyResponseError(result.error));
       }
-    };
 
-    void loadAllData();
-    return () => {
-      active = false;
-    };
-  }, [scents]);
+      const mappings: Record<number, string[]> = {};
+      await Promise.all(
+        scents.map(async (scent) => {
+          const res = await callAction(() => getProductsAction({ limit: 100, scentId: scent.id }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
+          if (res && "success" in res && res.success) {
+            mappings[scent.id] = res.data.map((p) => p.id);
+          }
+        })
+      );
+      
+      return { allProd, mappings };
+    }
+  );
+
+  const allProducts = fetchResult?.allProd ?? initialProducts;
+  const productScentMap = fetchResult?.mappings ?? {};
+  const isLoading = isSwrLoading;
+
+  useEffect(() => {
+    if (swrError) {
+      setError(swrError instanceof Error ? swrError.message : String(swrError));
+    }
+  }, [swrError]);
+
+  useEffect(() => {
+    if (fetchResult) {
+      console.log(`[Data Source] 🟢 UI UPDATED - collectionClient: Displaying ${fetchResult.allProd.length} products (from SWR Cache or Network)`);
+    }
+  }, [fetchResult]);
 
   const filteredProducts = useMemo(() => {
     return allProducts.filter((product) => {

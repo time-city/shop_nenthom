@@ -3,6 +3,7 @@ import "server-only";
 import { NotificationType, OrderStatus, Role, UserStatus } from "@prisma/client";
 import type { AdminOrder, AdminOrderStatus } from "../types/admin";
 import prisma from "../prisma";
+import { pusherServer } from "../pusher-server";
 
 export const ADMIN_ORDER_EVENT_CHANNEL =
   process.env.ADMIN_ORDER_EVENT_CHANNEL ?? "admin_order_events";
@@ -102,12 +103,8 @@ export async function emitNewOrderToAdmin(
     event: "NEW_ORDER",
   };
 
-  await prisma.$queryRaw`
-    SELECT pg_notify(
-      ${ADMIN_ORDER_EVENT_CHANNEL},
-      ${JSON.stringify(event)}
-    )::text
-  `;
+  console.log(`[Pusher Server] Triggering NEW_ORDER on channel admin_orders`, event);
+  await pusherServer.trigger("admin_orders", "NEW_ORDER", event);
 
   return event;
 }
@@ -118,12 +115,8 @@ export async function emitNewPaymentToAdmin(input: NewPaymentAdminPayload) {
     event: "NEW_PAYMENT",
   };
 
-  await prisma.$queryRaw`
-    SELECT pg_notify(
-      ${ADMIN_ORDER_EVENT_CHANNEL},
-      ${JSON.stringify(event)}
-    )::text
-  `;
+  console.log(`[Pusher Server] Triggering NEW_PAYMENT on channel admin_orders`, event);
+  await pusherServer.trigger("admin_orders", "NEW_PAYMENT", event);
 
   return event;
 }
@@ -134,12 +127,35 @@ export async function emitOrderUpdatedToAdmin(input: OrderUpdatedAdminPayload) {
     event: "ORDER_UPDATED",
   };
 
-  await prisma.$queryRaw`
-    SELECT pg_notify(
-      ${ADMIN_ORDER_EVENT_CHANNEL},
-      ${JSON.stringify(event)}
-    )::text
-  `;
+  console.log(`[Pusher Server] Triggering ORDER_UPDATED on channel admin_orders`, event);
+  await pusherServer.trigger("admin_orders", "ORDER_UPDATED", event);
+
+  return event;
+}
+
+export type CancelRequestAdminPayload = {
+  orderId: string;
+  orderNumber: string;
+  customerName: string;
+  reason: string;
+  requestedAt: string;
+};
+
+export type CancelRequestAdminEvent = {
+  data: CancelRequestAdminPayload;
+  event: "CANCEL_REQUEST";
+};
+
+export async function emitCancelRequestToAdmin(
+  input: CancelRequestAdminPayload,
+) {
+  const event: CancelRequestAdminEvent = {
+    data: input,
+    event: "CANCEL_REQUEST",
+  };
+
+  console.log(`[Pusher Server] Triggering CANCEL_REQUEST on channel admin_orders`, event);
+  await pusherServer.trigger("admin_orders", "CANCEL_REQUEST", event);
 
   return event;
 }

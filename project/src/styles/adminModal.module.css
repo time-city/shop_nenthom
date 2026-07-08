@@ -6,10 +6,12 @@
   max-height: 88vh;
   overflow-y: auto;
   transform: translate(-50%, -50%);
-  border: 1px solid rgba(107, 78, 53, 0.14);
-  border-radius: 16px;
-  background: #f8f0e4;
-  box-shadow: 0 16px 48px rgba(44, 24, 16, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20px !important;
+  background: #18120e !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45) !important;
   outline: none;
 }
 
@@ -58,7 +60,7 @@
 }
 
 .title {
-  color: #2c1810;
+  color: #F5F0E8 !important;
   font-family: var(--admin-font-display);
   font-size: 1.25rem;
   font-weight: 700;
@@ -66,7 +68,7 @@
 }
 
 .deleteTitle {
-  color: #2c1810;
+  color: #F5F0E8 !important;
   font-family: var(--admin-font-display);
   font-size: 1.35rem;
   font-weight: 700;
@@ -75,14 +77,14 @@
 
 .description {
   margin-top: 8px;
-  color: #6b4c35;
+  color: rgba(245, 240, 232, 0.7) !important;
   font-family: var(--admin-font-body);
   font-size: 0.9rem;
   line-height: 1.65;
 }
 
 .highlight {
-  color: #6b1218;
+  color: #E5C07B !important;
   font-weight: 700;
 }
 
@@ -91,17 +93,17 @@
   min-width: 34px !important;
   height: 34px !important;
   border-radius: 8px !important;
-  color: #6b4c35 !important;
+  color: rgba(245, 240, 232, 0.6) !important;
   font-size: 1.25rem !important;
 }
 
 .closeButton:hover {
-  color: #b91c1c !important;
-  background: rgba(185, 28, 28, 0.08) !important;
+  color: #ff6b6b !important;
+  background: rgba(255, 107, 107, 0.08) !important;
 }
 
 .divider {
-  border-color: rgba(107, 78, 53, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .form {
@@ -194,40 +196,38 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 2px dashed rgba(107, 78, 53, 0.2);
-  border-radius: 12px;
-  background: rgba(107, 78, 53, 0.025);
+  border: 2px dashed rgba(255, 255, 255, 0.15) !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.01) !important;
   padding: 20px 24px;
-  color: #6b4c35;
+  color: rgba(245, 240, 232, 0.7);
   text-align: center;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+  transition: all 0.2s ease !important;
 }
 
 .uploadArea:hover {
-  border-color: #6b1218;
-  background: rgba(107, 18, 24, 0.08);
+  border-color: #E5C07B !important;
+  background: rgba(255, 255, 255, 0.04) !important;
 }
 
 .uploadIcon {
-  color: #6b1218;
+  color: #E5C07B !important;
 }
 
 .uploadText {
   margin-top: 8px;
-  color: #6b4c35;
+  color: rgba(245, 240, 232, 0.7) !important;
   font-size: 0.875rem;
 }
 
 .uploadText strong {
-  color: #6b1218;
+  color: #E5C07B !important;
   font-weight: 700;
 }
 
 .uploadHint {
   margin-top: 4px;
-  color: rgba(107, 76, 53, 0.85);
+  color: rgba(245, 240, 232, 0.45) !important;
   font-size: 0.75rem;
 }
 
@@ -307,7 +307,7 @@
 }
 
 .switchText {
-  color: #2c1810;
+  color: #F5F0E8 !important;
   font-size: 0.875rem;
 }
 
@@ -349,46 +349,52 @@
 }
 
 .ghostButton {
-  border-radius: 8px !important;
-  color: #6b4c35 !important;
+  border-radius: 9999px !important;
+  color: rgba(245, 240, 232, 0.7) !important;
   font-family: var(--admin-font-body) !important;
+  font-size: 0.85rem !important;
   font-weight: 600 !important;
-  padding: 8px 20px !important;
+  padding: 6px 16px !important;
+  transition: all 0.2s ease !important;
 }
 
 .ghostButton:hover {
-  color: #2c1810 !important;
-  background: rgba(107, 78, 53, 0.06) !important;
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.06) !important;
 }
 
 .primaryButton {
-  border-radius: 8px !important;
+  border-radius: 9999px !important;
   background: #6b1218 !important;
-  box-shadow: 0 8px 18px rgba(107, 18, 24, 0.18) !important;
+  box-shadow: 0 4px 12px rgba(107, 18, 24, 0.25) !important;
   color: #f5f0e8 !important;
   font-family: var(--admin-font-body) !important;
+  font-size: 0.85rem !important;
   font-weight: 700 !important;
-  padding: 8px 20px !important;
+  padding: 6px 16px !important;
+  transition: all 0.2s ease !important;
 }
 
 .primaryButton:hover {
-  background: #4a0c10 !important;
-  box-shadow: 0 12px 24px rgba(107, 18, 24, 0.25) !important;
+  background: #80161d !important;
+  box-shadow: 0 6px 20px rgba(107, 18, 24, 0.35) !important;
+  transform: translateY(-1px);
 }
 
 .dangerButton {
-  border-radius: 8px !important;
+  border-radius: 9999px !important;
   background: #b91c1c !important;
-  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.18) !important;
+  box-shadow: 0 6px 15px rgba(185, 28, 28, 0.15) !important;
   color: #fff !important;
   font-family: var(--admin-font-body) !important;
+  font-size: 0.85rem !important;
   font-weight: 700 !important;
-  padding: 8px 20px !important;
+  padding: 6px 16px !important;
 }
 
 .dangerButton:hover {
   background: #4a0c10 !important;
-  box-shadow: 0 12px 24px rgba(185, 28, 28, 0.25) !important;
+  box-shadow: 0 10px 20px rgba(185, 28, 28, 0.22) !important;
 }
 
 .deleteBody {

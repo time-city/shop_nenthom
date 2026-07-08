@@ -539,5 +539,83 @@ export const ProductService = {
             productId: product.id,
             productName: product.name,
         };
+    },
+
+    async hardDeleteProduct(id: string) {
+        try {
+            const orderItemCount = await prisma.orderItem.count({
+                where: { product_id: id },
+            });
+            if (orderItemCount > 0) {
+                throw new Error("Không thể xóa vĩnh viễn sản phẩm này vì đã có lịch sử đơn hàng. Hãy chọn 'Ngừng bán' để ẩn sản phẩm an toàn.");
+            }
+
+            await prisma.cartItem.deleteMany({
+                where: { product_id: id },
+            });
+
+            const deleted = await prisma.product.delete({
+                where: { id },
+                select: { id: true, name: true },
+            });
+
+            return deleted;
+        } catch (error) {
+            if (error instanceof Error) throw error;
+            throw new Error("Không thể xóa vĩnh viễn sản phẩm. Vui lòng thử lại sau.");
+        }
+    },
+
+    async bulkDeactivateProducts(ids: string[]) {
+        try {
+            const [updated, removedCartItems] = await Promise.all([
+                prisma.product.updateMany({
+                    where: { id: { in: ids } },
+                    data: { is_active: false },
+                }),
+                prisma.cartItem.deleteMany({
+                    where: { product_id: { in: ids } },
+                }),
+            ]);
+            return {
+                count: updated.count,
+                removedCartItemCount: removedCartItems.count,
+            };
+        } catch (error) {
+            throw new Error("Không thể ngừng bán hàng loạt sản phẩm. Vui lòng thử lại sau.");
+        }
+    },
+
+    async bulkHardDeleteProducts(ids: string[]) {
+        try {
+            const orderItems = await prisma.orderItem.findMany({
+                where: { product_id: { in: ids } },
+                select: { product_id: true, product: { select: { name: true } } },
+            });
+
+            if (orderItems.length > 0) {
+                const uniqueNames = Array.from(
+                    new Set(orderItems.map((item) => item.product?.name).filter(Boolean))
+                );
+                throw new Error(
+                    `Không thể xóa vĩnh viễn các sản phẩm: ${uniqueNames.join(", ")} vì đã có lịch sử đơn hàng. Vui lòng chọn 'Ngừng bán' để ẩn chúng.`
+                );
+            }
+
+            await prisma.cartItem.deleteMany({
+                where: { product_id: { in: ids } },
+            });
+
+            const deleted = await prisma.product.deleteMany({
+                where: { id: { in: ids } },
+            });
+
+            return {
+                count: deleted.count,
+            };
+        } catch (error) {
+            if (error instanceof Error) throw error;
+            throw new Error("Không thể xóa vĩnh viễn hàng loạt sản phẩm. Vui lòng thử lại sau.");
+        }
     }
-}
+};

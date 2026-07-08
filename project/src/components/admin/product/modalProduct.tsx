@@ -59,6 +59,7 @@ export default function ModalProduct({
   const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
   const [subImageUrls, setSubImageUrls] = useState<string[]>([]);
   const [isUploadingSubImages, setIsUploadingSubImages] = useState<boolean>(false);
+  const [subImageActiveIndex, setSubImageActiveIndex] = useState(0);
 
   // CHANGED: Reset avatar and sub images states on open
   useEffect(() => {
@@ -68,6 +69,7 @@ export default function ModalProduct({
       setFormValues(initialProductFormValues);
       setAvatarUrl("");
       setSubImageUrls([]);
+      setSubImageActiveIndex(0);
       setIsSubmitting(false);
       setErrors({});
       if (propCategories && propCategories.length > 0) {
@@ -143,9 +145,10 @@ export default function ModalProduct({
     try {
       const url = await uploadToCloudinary(file);
       setAvatarUrl(url);
-    } catch {
-      toast.error("Tải ảnh đại diện thất bại");
-      setErrors((prev) => ({ ...prev, avatar: "Upload thất bại" }));
+    } catch (err: any) {
+      const msg = err?.message || "Tải ảnh đại diện thất bại";
+      toast.error(msg);
+      setErrors((prev) => ({ ...prev, avatar: msg }));
     } finally {
       setIsUploadingAvatar(false);
       event.target.value = "";
@@ -161,10 +164,10 @@ export default function ModalProduct({
 
     const fileList = Array.from(files);
 
-    if (fileList.length > 3) {
+    if (subImageUrls.length + fileList.length > 10) {
       setErrors((prev) => ({
         ...prev,
-        sub_images: "Chỉ được chọn tối đa 3 ảnh phụ",
+        sub_images: `Không thể chọn quá 10 ảnh phụ (Đang có: ${subImageUrls.length}, chọn thêm: ${fileList.length})`,
       }));
       event.target.value = "";
       return;
@@ -177,7 +180,7 @@ export default function ModalProduct({
         return;
       }
       if (file.size > MAX_IMAGE_SIZE_BYTES) {
-        setErrors((prev) => ({ ...prev, sub_images: "Ảnh phụ tối đa 5MB" }));
+        setErrors((prev) => ({ ...prev, sub_images: "Mỗi ảnh phụ tối đa 5MB" }));
         event.target.value = "";
         return;
       }
@@ -189,10 +192,11 @@ export default function ModalProduct({
     try {
       const uploadPromises = fileList.map((file) => uploadToCloudinary(file));
       const urls = await Promise.all(uploadPromises);
-      setSubImageUrls(urls);
-    } catch {
-      toast.error("Tải ảnh phụ thất bại");
-      setErrors((prev) => ({ ...prev, sub_images: "Upload thất bại" }));
+      setSubImageUrls((prev) => [...prev, ...urls]);
+    } catch (err: any) {
+      const msg = err?.message || "Tải ảnh phụ thất bại";
+      toast.error(msg);
+      setErrors((prev) => ({ ...prev, sub_images: msg }));
     } finally {
       setIsUploadingSubImages(false);
       event.target.value = "";
@@ -211,9 +215,29 @@ export default function ModalProduct({
   ) => {
     event.preventDefault();
     event.stopPropagation();
-    setSubImageUrls((currentImages) =>
-      currentImages.filter((_, index) => index !== imageIndex),
-    );
+    setSubImageUrls((currentImages) => {
+      const newUrls = currentImages.filter((_, index) => index !== imageIndex);
+      setSubImageActiveIndex((currentActive) => {
+        if (newUrls.length === 0) return 0;
+        if (currentActive >= newUrls.length) {
+          return newUrls.length - 1;
+        }
+        return currentActive;
+      });
+      return newUrls;
+    });
+  };
+
+  const handlePrevSubImage = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSubImageActiveIndex((prev) => (prev > 0 ? prev - 1 : subImageUrls.length - 1));
+  };
+
+  const handleNextSubImage = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSubImageActiveIndex((prev) => (prev < subImageUrls.length - 1 ? prev + 1 : 0));
   };
 
   const handleSave = async () => {
@@ -371,77 +395,75 @@ export default function ModalProduct({
             </FormControl>
           </Box>
 
-          <TextField
-            label="Giá (VND)"
-            placeholder="Ví dụ: 180000"
-            type="number"
-            value={formValues.base_price_cents}
-            onChange={(event) =>
-              updateField("base_price_cents", event.target.value)
-            }
-            fullWidth
-            className={styles.field}
-            error={Boolean(errors.base_price_cents)}
-            helperText={errors.base_price_cents}
-          />
+          <Box className={styles.twoColumnGrid}>
+            <TextField
+              label="Giá (VND)"
+              placeholder="Ví dụ: 180000"
+              type="number"
+              value={formValues.base_price_cents}
+              onChange={(event) =>
+                updateField("base_price_cents", event.target.value)
+              }
+              fullWidth
+              className={styles.field}
+              error={Boolean(errors.base_price_cents)}
+              helperText={errors.base_price_cents}
+            />
 
-          <TextField
-            label="Mô tả"
-            placeholder="Mô tả chi tiết về sản phẩm..."
-            multiline
-            minRows={3}
-            value={formValues.description}
-            onChange={(event) => updateField("description", event.target.value)}
-            fullWidth
-            className={styles.field}
-          />
+            <TextField
+              label="Mô tả"
+              placeholder="Mô tả chi tiết về sản phẩm..."
+              multiline
+              minRows={2}
+              value={formValues.description}
+              onChange={(event) => updateField("description", event.target.value)}
+              fullWidth
+              className={styles.field}
+            />
+          </Box>
 
-          <TextField
-            label="Thành phần"
-            placeholder="Liệt kê các thành phần chính của sản phẩm..."
-            multiline
-            minRows={3}
-            value={formValues.ingredients}
-            onChange={(event) => updateField("ingredients", event.target.value)}
-            fullWidth
-            className={styles.field}
-          />
+          <Box className={styles.twoColumnGrid}>
+            <TextField
+              label="Thành phần"
+              placeholder="Liệt kê các thành phần chính của sản phẩm..."
+              multiline
+              minRows={2}
+              value={formValues.ingredients}
+              onChange={(event) => updateField("ingredients", event.target.value)}
+              fullWidth
+              className={styles.field}
+            />
 
-          <TextField
-            label="Cách sử dụng"
-            placeholder="Hướng dẫn sử dụng sản phẩm..."
-            multiline
-            minRows={3}
-            value={formValues.usage_instructions}
-            onChange={(event) => updateField("usage_instructions", event.target.value)}
-            fullWidth
-            className={styles.field}
-          />
+            <TextField
+              label="Cách sử dụng"
+              placeholder="Hướng dẫn sử dụng sản phẩm..."
+              multiline
+              minRows={2}
+              value={formValues.usage_instructions}
+              onChange={(event) => updateField("usage_instructions", event.target.value)}
+              fullWidth
+              className={styles.field}
+            />
+          </Box>
 
-          {/* CHANGED: Render avatar upload field */}
-          <Box>
-            <Typography
-              component="label"
-              htmlFor="product-avatar-upload"
-              className={styles.sectionLabel}
-            >
-              Ảnh đại diện (Avatar)
-            </Typography>
-            <label
-              htmlFor="product-avatar-upload"
-              className={styles.uploadArea}
-              style={{ borderColor: errors.avatar ? "#6B1218" : undefined }}
-            >
-              {isUploadingAvatar ? (
-                <span className={styles.uploadText}>Đang tải ảnh đại diện...</span>
-              ) : avatarUrl ? (
-                <>
-                  <Box className={styles.imagePreviewWrapper}>
+          <Box className={styles.twoColumnGrid}>
+            <Box>
+              <Typography
+                component="label"
+                htmlFor="product-avatar-upload"
+                className={styles.sectionLabel}
+                style={{ fontSize: "0.75rem", marginBottom: "4px" }}
+              >
+                Ảnh đại diện (Avatar)
+              </Typography>
+              <Box className="flex items-center gap-3 mt-1">
+                {avatarUrl && (
+                  <Box className={styles.imagePreviewWrapper} style={{ marginBottom: 0 }}>
                     <Box
                       component="img"
                       src={avatarUrl}
                       alt="Ảnh đại diện"
-                      className="h-32 w-32 rounded-xl object-cover shadow-[0_14px_34px_rgba(44,24,16,0.16)]"
+                      className="h-16 w-16 rounded-xl object-cover shadow-[0_4px_12px_rgba(44,24,16,0.12)] border border-white/10"
                     />
                     <button
                       type="button"
@@ -453,105 +475,157 @@ export default function ModalProduct({
                       ×
                     </button>
                   </Box>
-                  <span className={styles.uploadHint}>
-                    Bấm để chọn ảnh khác
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className={styles.uploadIcon}>📷</span>
-                  <span className={styles.uploadText}>
-                    Chọn ảnh đại diện cho sản phẩm
-                  </span>
-                  <span className={styles.uploadHint}>PNG, JPG tối đa 5MB</span>
-                </>
+                )}
+                <label
+                  htmlFor="product-avatar-upload"
+                  className={styles.uploadArea}
+                  style={{
+                    borderColor: errors.avatar ? "#6B1218" : undefined,
+                    flex: 1,
+                    minHeight: "64px",
+                    padding: "6px",
+                    cursor: (isSubmitting || isUploadingAvatar || isUploadingSubImages) ? "not-allowed" : "pointer",
+                    opacity: (isSubmitting || isUploadingAvatar || isUploadingSubImages) ? 0.6 : 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {isUploadingAvatar ? (
+                    <span className={styles.uploadText} style={{ fontSize: "0.75rem" }}>Đang tải...</span>
+                  ) : (
+                    <>
+                      <span className={styles.uploadIcon} style={{ fontSize: "1rem" }}>📷</span>
+                      <span className={styles.uploadText} style={{ fontSize: "0.72rem" }}>
+                        {avatarUrl ? "Đổi ảnh đại diện" : "Chọn ảnh đại diện"}
+                      </span>
+                    </>
+                  )}
+                  <input
+                    id="product-avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleAvatarChange}
+                    disabled={isSubmitting || isUploadingAvatar || isUploadingSubImages}
+                  />
+                </label>
+              </Box>
+              {errors.avatar && (
+                <p style={{ color: "#ff6b6b", fontSize: 11, marginTop: 2 }}>
+                  {errors.avatar}
+                </p>
               )}
-              <input
-                id="product-avatar-upload"
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={handleAvatarChange}
-                disabled={isSubmitting || isUploadingAvatar}
-              />
-            </label>
-            {errors.avatar && (
-              <p style={{ color: "#6B1218", fontSize: 12, marginTop: 4 }}>
-                {errors.avatar}
-              </p>
-            )}
-          </Box>
+            </Box>
 
-          {/* CHANGED: Render sub-images fields in a single box */}
-          <Box>
-            <Typography
-              component="label"
-              htmlFor="product-sub-images-upload"
-              className={styles.sectionLabel}
-            >
-              Ảnh phụ (Chọn tối đa 3 ảnh)
-            </Typography>
-            <label
-              htmlFor="product-sub-images-upload"
-              className={styles.uploadArea}
-              style={{ borderColor: errors.sub_images ? "#6B1218" : undefined }}
-            >
-              {isUploadingSubImages ? (
-                <span className={styles.uploadText}>Đang tải ảnh phụ...</span>
-              ) : subImageUrls.length > 0 ? (
-                <>
-                  <Box className={styles.subImagesPreview}>
-                    {subImageUrls.map((url, idx) => (
-                      <Box key={`${url}-${idx}`} className={styles.imagePreviewWrapper}>
-                        <Box
-                          component="img"
-                          src={url}
-                          alt={`Ảnh phụ ${idx + 1}`}
-                          className="h-20 w-20 rounded-xl object-cover shadow-[0_8px_20px_rgba(44,24,16,0.12)]"
-                        />
+            <Box>
+              <Typography
+                component="label"
+                htmlFor="product-sub-images-upload"
+                className={styles.sectionLabel}
+                style={{ fontSize: "0.75rem", marginBottom: "4px" }}
+              >
+                Ảnh phụ ({subImageUrls.length}/10)
+              </Typography>
+              <Box className="flex flex-col gap-2 mt-1">
+                {subImageUrls.length > 0 && (
+                  <Box className="flex flex-col items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/5" style={{ minHeight: "115px" }}>
+                    <Box className={styles.imagePreviewWrapper} style={{ marginBottom: 0 }}>
+                      <Box
+                        component="img"
+                        src={subImageUrls[subImageActiveIndex]}
+                        alt={`Ảnh phụ ${subImageActiveIndex + 1}`}
+                        className="h-16 w-16 rounded-xl object-cover shadow-[0_4px_12px_rgba(44,24,16,0.12)] border border-white/10"
+                      />
+                      <button
+                        type="button"
+                        className={styles.removeImageButton}
+                        onClick={(event) =>
+                          handleRemoveSubImage(event, subImageActiveIndex)
+                        }
+                        aria-label={`Xóa ảnh phụ ${subImageActiveIndex + 1}`}
+                        title="Xóa ảnh"
+                      >
+                        ×
+                      </button>
+                    </Box>
+
+                    {subImageUrls.length > 1 && (
+                      <Box className="flex items-center gap-3">
                         <button
                           type="button"
-                          className={styles.removeImageButton}
-                          onClick={(event) => handleRemoveSubImage(event, idx)}
-                          aria-label={`Xóa ảnh phụ ${idx + 1}`}
-                          title="Xóa ảnh"
+                          onClick={handlePrevSubImage}
+                          className="text-[#E5C07B] hover:text-white transition text-xs font-bold px-1"
+                          style={{ background: "none", border: "none", cursor: "pointer" }}
                         >
-                          ×
+                          &larr; Prev
+                        </button>
+                        <Box className="flex gap-1 items-center">
+                          {subImageUrls.map((_, idx) => (
+                            <Box
+                              key={idx}
+                              onClick={() => setSubImageActiveIndex(idx)}
+                              className="w-1.5 h-1.5 rounded-full cursor-pointer transition-all duration-200"
+                              style={{
+                                background: idx === subImageActiveIndex ? "#E5C07B" : "rgba(255,255,255,0.25)",
+                                transform: idx === subImageActiveIndex ? "scale(1.2)" : "scale(1)",
+                              }}
+                            />
+                          ))}
+                        </Box>
+                        <button
+                          type="button"
+                          onClick={handleNextSubImage}
+                          className="text-[#E5C07B] hover:text-white transition text-xs font-bold px-1"
+                          style={{ background: "none", border: "none", cursor: "pointer" }}
+                        >
+                          Next &rarr;
                         </button>
                       </Box>
-                    ))}
+                    )}
                   </Box>
-                  <span className={styles.uploadText}>
-                    Đã chọn <strong>{subImageUrls.length} ảnh phụ</strong>
-                  </span>
-                  <span className={styles.uploadHint}>
-                    Bấm để chọn lại các ảnh phụ khác (tối đa 3)
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className={styles.uploadIcon}>📷</span>
-                  <span className={styles.uploadText}>
-                    Chọn các ảnh phụ (chọn tối đa 3 ảnh cùng lúc)
-                  </span>
-                  <span className={styles.uploadHint}>PNG, JPG tối đa 5MB</span>
-                </>
+                )}
+                {subImageUrls.length < 10 && (
+                  <label
+                    htmlFor="product-sub-images-upload"
+                    className={styles.uploadArea}
+                    style={{
+                      borderColor: errors.sub_images ? "#6B1218" : undefined,
+                      padding: "6px",
+                      minHeight: "80px",
+                      cursor: (isSubmitting || isUploadingAvatar || isUploadingSubImages) ? "not-allowed" : "pointer",
+                      opacity: (isSubmitting || isUploadingAvatar || isUploadingSubImages) ? 0.6 : 1,
+                    }}
+                  >
+                    {isUploadingSubImages ? (
+                      <span className={styles.uploadText} style={{ fontSize: "0.75rem" }}>Đang tải...</span>
+                    ) : (
+                      <>
+                        <span className={styles.uploadIcon} style={{ fontSize: "1rem" }}>📷</span>
+                        <span className={styles.uploadText} style={{ fontSize: "0.72rem" }}>
+                          Tải thêm ảnh phụ ({10 - subImageUrls.length} ảnh còn lại)
+                        </span>
+                      </>
+                    )}
+                    <input
+                      id="product-sub-images-upload"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      hidden
+                      onChange={handleSubImagesChange}
+                      disabled={isSubmitting || isUploadingAvatar || isUploadingSubImages}
+                    />
+                  </label>
+                )}
+              </Box>
+              {errors.sub_images && (
+                <p style={{ color: "#ff6b6b", fontSize: 11, marginTop: 2 }}>
+                  {errors.sub_images}
+                </p>
               )}
-              <input
-                id="product-sub-images-upload"
-                type="file"
-                accept="image/*"
-                multiple
-                hidden
-                onChange={handleSubImagesChange}
-                disabled={isSubmitting || isUploadingSubImages}
-              />
-            </label>
-            {errors.sub_images && (
-              <p style={{ color: "#6B1218", fontSize: 12, marginTop: 4 }}>
-                {errors.sub_images}
-              </p>
-            )}
+            </Box>
           </Box>
           {errors.form && (
             <FormHelperText error>{errors.form}</FormHelperText>
@@ -564,7 +638,7 @@ export default function ModalProduct({
           <Button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingAvatar || isUploadingSubImages}
             className={styles.ghostButton}
           >
             Hủy
@@ -573,10 +647,10 @@ export default function ModalProduct({
             type="button"
             variant="contained"
             onClick={handleSave}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingAvatar || isUploadingSubImages}
             className={styles.primaryButton}
           >
-            {isSubmitting ? "Đang lưu..." : "Lưu sản phẩm"}
+            {isSubmitting ? "Đang lưu..." : (isUploadingAvatar || isUploadingSubImages) ? "Đang tải ảnh..." : "Lưu sản phẩm"}
           </Button>
         </Box>
       </Box>
