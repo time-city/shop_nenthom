@@ -16,6 +16,10 @@ import type {
 import { callAction } from "@/src/lib/utils/callAction";
 import AdminHeader from "@/src/components/admin/layout/AdminHeader";
 import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
+import DashboardLineChart, {
+  type DashboardChartDatum,
+} from "./DashboardLineChart";
+
 
 const statusLabels: Record<string, string> = {
   cancelled: "Đã huỷ",
@@ -106,9 +110,10 @@ export default function DashboardClient() {
   );
 
   useEffect(() => {
-    if (fetchResult && "success" in fetchResult && fetchResult.success && fetchResult.data) {
+    if (fetchResult && "success" in fetchResult && fetchResult.success) {
       console.log("[Data Source] 🟢 UI UPDATED - dashboardClient: Displaying overview data (from SWR Cache or Network)");
       const overview = fetchResult.data;
+
       setStatsData({
         revenue: overview.stats.revenueCents,
         ordersCount: overview.stats.orderCount,
@@ -209,6 +214,8 @@ export default function DashboardClient() {
             <section className="dashboard-stats-grid" aria-label="Dashboard stats">
               {stats.map((stat) => (
                 <article className="dashboard-stat-card flex items-center justify-between gap-4" key={stat.label}>
+
+
                   <div className="flex items-center gap-4">
                     <div className={`dashboard-stat-icon ${stat.icon}`}>
                       <svg
@@ -239,7 +246,34 @@ export default function DashboardClient() {
               ))}
             </section>
 
+            {/* Line chart */}
+            {statsData && (
+              <section className="mb-6 mt-6">
+                {(() => {
+                  const chartDataRaw = (fetchResult as any)?.data?.chartData;
+                  console.log("[DashboardClient] chartDataRaw:", chartDataRaw);
+
+                  const normalized: DashboardChartDatum[] = Array.isArray(chartDataRaw)
+                    ? (chartDataRaw as DashboardChartDatum[])
+                    : [];
+
+                  console.log(
+                    "[DashboardClient] chartData normalized:",
+                    {
+                      length: normalized.length,
+                      first: normalized[0],
+                    }
+                  );
+
+                  return <DashboardLineChart data={normalized} />;
+                })()}
+              </section>
+            )}
+
+
+
             <section className="dashboard-grid-2">
+
               <div className="dashboard-card">
                 <div className="dashboard-card-header">
                   <h2 className="dashboard-card-title">Top sản phẩm bán chạy</h2>

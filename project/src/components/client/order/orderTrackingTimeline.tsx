@@ -111,7 +111,7 @@ export function OrderTrackingTimeline({ orderId, initialStatus }: OrderTrackingT
                   <Icon className="w-5 h-5" />
                 </div>
                 <div className="mt-4 text-center">
-                  <span className={`text-sm font-medium ${
+                  <span className={`text-sm text-white font-medium ${
                     status === "completed" || status === "current" ? "text-[#4F3E34]" : "text-[#4F3E34]/40"
                   }`}>
                     {step.label}

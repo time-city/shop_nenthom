@@ -1,6 +1,6 @@
 import { OrderStatus, Prisma } from '@prisma/client'
 import { unstable_cache } from 'next/cache'
-import prisma from '../prisma'
+import prisma from '../prisma' // Sửa lại đường dẫn import prisma nếu cần
 import { orderStatusMap } from '../types/order'
 import { GetDashboardOverviewParams } from '../validations/dashboard.schema'
 
@@ -22,24 +22,32 @@ type DashboardQueryRow = {
     revenueCents: number
     soldQuantity: number
   }>
+  chart_raw_data: Array<{
+    createdAt: string
+    totalCents: number
+    identifier: string
+    quantity: number
+  }>
 }
 
 function getPeriodDateRange(period: GetDashboardOverviewParams['period']) {
   const now = new Date()
   const start = new Date(now)
 
+  // Đã fix từ setUTCHours sang setHours để lấy chuẩn giờ Việt Nam (Local Time)
+  // Nếu dùng UTC, 0h UTC sẽ tương đương 7h sáng VN, làm sai lệch kết quả ngày.
   if (period === 'today') {
-    start.setUTCHours(0, 0, 0, 0)
+    start.setHours(0, 0, 0, 0)
   }
 
   if (period === 'week') {
-    start.setUTCDate(now.getUTCDate() - 6)
-    start.setUTCHours(0, 0, 0, 0)
+    start.setDate(now.getDate() - 6)
+    start.setHours(0, 0, 0, 0)
   }
 
   if (period === 'month') {
-    start.setUTCDate(1)
-    start.setUTCHours(0, 0, 0, 0)
+    start.setDate(now.getDate() - 29) // Lấy 30 ngày gần nhất (bao gồm hôm nay)
+    start.setHours(0, 0, 0, 0)
   }
 
   return { end: now, start }
@@ -49,6 +57,7 @@ async function getDashboardOverview(
   period: GetDashboardOverviewParams['period'],
 ) {
   const { end, start } = getPeriodDateRange(period)
+  
   const rows = await prisma.$queryRaw<DashboardQueryRow[]>(Prisma.sql`
     WITH filtered_orders AS (
       SELECT
@@ -57,11 +66,12 @@ async function getDashboardOverview(
         "order_number",
         "shipping_fullname",
         "status",
-        "total_cents"
+        "total_cents",
+        COALESCE("user_id"::text, "shipping_phone") AS "identifier"
       FROM "public"."orders"
       WHERE "created_at" >= ${start}
         AND "created_at" <= ${end}
-        AND "status" <> 'CANCELLED'
+        AND "status" NOT IN ('CANCELLED', 'CANCEL_REQUESTED')
     ),
     order_stats AS (
       SELECT
@@ -70,11 +80,9 @@ async function getDashboardOverview(
       FROM filtered_orders
     ),
     customer_stats AS (
-      SELECT COUNT(*) AS "customer_count"
-      FROM "public"."users"
-      WHERE "role" = 'CUSTOMER'
-        AND "created_at" >= ${start}
-        AND "created_at" <= ${end}
+      -- Đã Fix: Đếm số lượng khách hàng UNIQUE thực tế phát sinh đơn hàng
+      SELECT COUNT(DISTINCT "identifier") AS "customer_count"
+      FROM filtered_orders
     ),
     product_stats AS (
       SELECT
@@ -129,6 +137,21 @@ async function getDashboardOverview(
         ORDER BY "sold_quantity" DESC, "revenue_cents" DESC
         LIMIT 5
       ) ranked
+    ),
+    chart_raw_data AS (
+      -- Kéo toàn bộ data thô của các đơn hàng để làm biểu đồ
+      SELECT COALESCE(
+        JSONB_AGG(
+          JSONB_BUILD_OBJECT(
+            'createdAt', orders."created_at",
+            'totalCents', orders."total_cents",
+            'identifier', orders."identifier",
+            'quantity', COALESCE((SELECT SUM(quantity) FROM "public"."order_items" WHERE order_id = orders."id"), 0)
+          )
+        ),
+        '[]'::JSONB
+      ) AS "items"
+      FROM filtered_orders orders
     )
     SELECT
       order_stats."order_count",
@@ -136,12 +159,14 @@ async function getDashboardOverview(
       customer_stats."customer_count",
       product_stats."sold_product_count",
       latest_orders."items" AS "latest_orders",
-      top_products."items" AS "top_products"
+      top_products."items" AS "top_products",
+      chart_raw_data."items" AS "chart_raw_data"
     FROM order_stats
     CROSS JOIN customer_stats
     CROSS JOIN product_stats
     CROSS JOIN latest_orders
     CROSS JOIN top_products
+    CROSS JOIN chart_raw_data
   `)
 
   const overview = rows[0]
@@ -149,6 +174,58 @@ async function getDashboardOverview(
   if (!overview) {
     throw new Error('Không thể tải dữ liệu tổng quan. Vui lòng thử lại.')
   }
+
+  // ==========================================
+  // THUẬT TOÁN BUCKETING (Tạo mốc thời gian & điền số 0)
+  // ==========================================
+  const chartMap = new Map();
+  const now = new Date();
+  let daysToGenerate = period === 'today' ? 0 : (period === 'week' ? 7 : 30);
+
+  // 1. Dựng sẵn các mốc thời gian rỗng (chứa toàn số 0)
+  if (period === "today") {
+    const currentHour = now.getHours();
+    for (let i = 0; i <= currentHour; i++) {
+      const hourLabel = `${i.toString().padStart(2, "0")}:00`;
+      chartMap.set(hourLabel, { revenue: 0, orders: 0, customers: new Set(), products: 0 });
+    }
+  } else {
+    for (let i = daysToGenerate - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dateLabel = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+      chartMap.set(dateLabel, { revenue: 0, orders: 0, customers: new Set(), products: 0 });
+    }
+  }
+
+  // 2. Phân loại data thực tế vào các mốc thời gian
+  overview.chart_raw_data.forEach((order) => {
+    const orderDate = new Date(order.createdAt);
+    let bucketKey = "";
+    
+    if (period === "today") {
+      bucketKey = `${orderDate.getHours().toString().padStart(2, "0")}:00`;
+    } else {
+      bucketKey = `${orderDate.getDate().toString().padStart(2, "0")}/${(orderDate.getMonth() + 1).toString().padStart(2, "0")}`;
+    }
+
+    if (chartMap.has(bucketKey)) {
+      const bucket = chartMap.get(bucketKey);
+      bucket.revenue += order.totalCents;
+      bucket.orders += 1;
+      bucket.products += order.quantity;
+      if (order.identifier) bucket.customers.add(order.identifier);
+    }
+  });
+
+  // 3. Format lại cho mảng Recharts
+  const finalChartData = Array.from(chartMap.entries()).map(([date, data]) => ({
+    date,
+    revenue: data.revenue,
+    orders: data.orders,
+    customers: data.customers.size,
+    products: data.products,
+  }));
 
   return {
     latestOrders: overview.latest_orders.map((order) => ({
@@ -168,6 +245,8 @@ async function getDashboardOverview(
       revenueCents: Number(product.revenueCents),
       soldQuantity: Number(product.soldQuantity),
     })),
+    // Gắn mảng chart hoàn chỉnh vào đây
+    chartData: finalChartData,
   }
 }
 

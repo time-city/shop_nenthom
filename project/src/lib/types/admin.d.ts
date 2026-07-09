@@ -327,13 +327,30 @@ export type AdminPaginationMeta = {
   totalPages: number;
 };
 
+/** Dữ liệu point cho biểu đồ dashboard admin. */
+export type DashboardChartDatum = {
+  date: string;
+  revenue: number;
+  orders: number;
+  customers: number;
+  products: number;
+};
+
 /** Dữ liệu thống kê tổng quan trên dashboard admin. */
 export type DashboardStatsData = {
   revenue: number;
   ordersCount: number;
   customersCount: number;
   productsSoldCount: number;
+  chartData?: Array<{
+    date: string;
+    revenue: number;
+    orders: number;
+    customers: number;
+    products: number;
+  }>;
 };
+
 
 /** Sản phẩm bán chạy trên dashboard admin. */
 export type DashboardTopProduct = {

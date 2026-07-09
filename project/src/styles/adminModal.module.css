@@ -423,6 +423,8 @@
 
 .supportPaper {
   max-width: 600px;
+  background: #ffffff !important;
+  color: #2c1810 !important;
 }
 
 .supportBody {
@@ -430,6 +432,21 @@
   gap: 18px;
   padding: 24px;
 }
+
+/* Fix contrast for support modal (white background + visible text) */
+.supportPaper,
+.supportPaper * {
+  color: #2c1810 !important;
+}
+
+.supportPaper :global(.text-white) {
+  color: #2c1810 !important;
+}
+
+.supportPaper :global(.text-gray-400) {
+  color: rgba(44, 24, 16, 0.55) !important;
+}
+
 
 .supportContactHeader {
   display: flex;
@@ -493,10 +510,11 @@
 
 .supportMessage {
   border-radius: 12px;
-  background: rgba(107, 78, 53, 0.04);
-  color: #2c1810;
+  background: #fff !important;
+  color: #2c1810 !important;
   font-size: 0.9rem;
   line-height: 1.8;
   padding: 20px;
   white-space: pre-wrap;
 }
+

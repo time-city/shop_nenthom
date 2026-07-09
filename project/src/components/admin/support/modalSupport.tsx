@@ -1,7 +1,6 @@
 "use client";
 import { Box, Button, Divider, Modal, Typography } from "@/src/components/ui/mui-mock";
 
-
 import type { AdminModalSupportProps } from "../../../lib/types/admin";
 import styles from "../../../styles/adminModal.module.css";
 
@@ -46,8 +45,9 @@ export default function ModalSupport({
           <Typography
             id="support-modal-title"
             component="h3"
-            className={styles.title}
+            className={`${styles.title} text-gray-900 font-bold`}
           >
+
             {contact?.subject || "Chi tiết hỗ trợ"}
           </Typography>
 
@@ -56,7 +56,7 @@ export default function ModalSupport({
             onClick={onClose}
             disabled={isMarkingReplied}
             aria-label="Đóng modal"
-            className={styles.closeButton}
+            className={`${styles.closeButton} text-gray-300 hover:text-white`}
           >
             ×
           </Button>
@@ -70,11 +70,13 @@ export default function ModalSupport({
               {getInitial(contact?.name)}
             </div>
             <div className={styles.supportContactInfo}>
-              <div className={styles.supportContactName}>
+              <div className={`${styles.supportContactName} text-white font-semibold`}>
                 {contact?.name || "Khách hàng"}
               </div>
               {contact?.email ? (
-                <div className={styles.supportContactEmail}>{contact.email}</div>
+                <div className={`${styles.supportContactEmail} text-gray-400 text-sm mt-1`}>
+                  {contact.email}
+                </div>
               ) : null}
             </div>
             <span
@@ -87,14 +89,15 @@ export default function ModalSupport({
           </div>
 
           {contact?.date ? (
-            <div className={styles.supportDate}>
+            <div className={`${styles.supportDate} text-gray-400 text-sm my-3`}>
               Gửi lúc: {formatDateTime(contact.date)}
             </div>
           ) : null}
 
-          <div className={styles.supportMessage}>
+          <div className={`${styles.supportMessage} p-4 rounded-md leading-relaxed`}>
             {contact?.message || "Không có nội dung tin nhắn"}
           </div>
+
         </Box>
 
         <Divider className={styles.divider} />
@@ -104,7 +107,7 @@ export default function ModalSupport({
             type="button"
             onClick={onClose}
             disabled={isMarkingReplied}
-            className={styles.ghostButton}
+            className={`${styles.ghostButton} text-white`}
           >
             Đóng
           </Button>
