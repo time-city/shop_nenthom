@@ -1,15 +1,15 @@
 import type { OrderStatus, PaymentStatus } from "@prisma/client";
 import type { AdminPaymentStatus } from "./admin";
 
-export type AdminOrderResponseStatus = "pending" | "confirmed" | "cancelled" | "cancel_requested";
+export type AdminOrderResponseStatus = "pending" | "confirmed" | "cancelled" | "cancel_requested" | "shipped" | "delivered";
 export type ClientOrderResponseStatus = "pending" | "processing" | "shipped" | "delivered" | "canceled" | "cancel_requested";
 
 export const orderStatusMap: Record<OrderStatus, AdminOrderResponseStatus> = {
   CANCELLED: "cancelled",
-  DELIVERED: "confirmed",
+  DELIVERED: "delivered",
   PENDING: "pending",
   PROCESSING: "confirmed",
-  SHIPPED: "confirmed",
+  SHIPPED: "shipped",
   CANCEL_REQUESTED: "cancel_requested",
 };
 

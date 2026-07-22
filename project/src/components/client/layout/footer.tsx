@@ -12,13 +12,7 @@ export default function Footer() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  if (
-    pathname?.startsWith("/collection/") || 
-    pathname?.startsWith("/cart") ||
-    pathname?.startsWith("/profile") ||
-    pathname?.startsWith("/orderHistory") ||
-    pathname?.startsWith("/orders")
-  ) {
+  if (pathname !== "/" && pathname !== "/home") {
     return null;
   }
 

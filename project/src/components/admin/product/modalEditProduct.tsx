@@ -333,8 +333,8 @@ export default function ModalEditProduct({
       }
 
       if ("success" in result && result.success) {
-        toast.success("Đã cập nhật sản phẩm");
-        await onSave?.();
+        toast.success("Cập nhật sản phẩm thành công");
+        await onSave?.(result.data);
         onClose();
       }
     } finally {

@@ -64,8 +64,8 @@ function FilterTabs({
       ref={containerRef}
     >
       <div
-        className="absolute top-1 bottom-1 bg-[#6B1218] rounded-[999px] transition-all duration-300 ease-out pointer-events-none"
-        style={{ ...indicatorStyle, zIndex: 0 }}
+        className="absolute top-[3px] bottom-[3px] bg-white rounded-[6px] transition-all duration-200 ease-out pointer-events-none"
+        style={{ ...indicatorStyle, zIndex: 0, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}
       />
       {[
         { id: "today", label: "Hôm nay" },
@@ -74,7 +74,7 @@ function FilterTabs({
       ].map((tab) => (
         <button
           key={tab.id}
-          className={`dashboard-filter-chip relative z-10 ${fullWidth ? "flex-1 text-center" : ""} transition-colors duration-300 ${activeChip === tab.id ? "active text-[#F5F0E8] font-semibold" : "text-white/60"}`}
+          className={`dashboard-filter-chip relative z-10 ${fullWidth ? "flex-1 text-center" : ""} transition-colors duration-200 ${activeChip === tab.id ? "active" : ""}`}
           type="button"
           onClick={() => setActiveChip(tab.id as DashboardActiveChip)}
           style={{ background: "transparent" }}
@@ -293,17 +293,17 @@ export default function DashboardClient() {
                         {topProducts.length > 0 ? (
                           topProducts.map((product, idx) => (
                             <tr key={product.productId}>
-                              <td className="w-12 text-center text-xs font-semibold text-[#D6A15F]">#{idx + 1}</td>
+                              <td className="w-12 text-center text-xs font-bold text-[#6B1218]">#{idx + 1}</td>
                               <td className="font-medium">{product.name}</td>
-                              <td className="text-center">{product.soldQuantity}</td>
-                              <td className="text-right font-semibold text-[#7A1218]">
+                              <td className="text-center text-gray-500">{product.soldQuantity}</td>
+                              <td className="text-right font-semibold text-[#6B1218]">
                                 {product.revenueCents.toLocaleString("vi-VN")}đ
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={4} className="text-center text-white/60">
+                            <td colSpan={4} className="text-center text-gray-400 py-8">
                               Chưa có dữ liệu bán chạy
                             </td>
                           </tr>
@@ -340,7 +340,7 @@ export default function DashboardClient() {
                           {latestOrders.length > 0 ? (
                             latestOrders.map((order) => (
                               <tr key={order.orderNumber}>
-                                <td className="font-semibold text-[#7A1218]">
+                                <td className="font-semibold text-[#6B1218]">
                                   <Link href={`/admin/ordersManagement/${order.orderNumber}`} className="hover:underline">
                                     {order.orderNumber}
                                   </Link>
@@ -358,7 +358,7 @@ export default function DashboardClient() {
                             ))
                           ) : (
                             <tr>
-                              <td colSpan={4} className="text-center text-white/60">
+                              <td colSpan={4} className="text-center text-gray-400 py-8">
                                 Chưa có dữ liệu đơn hàng
                               </td>
                             </tr>

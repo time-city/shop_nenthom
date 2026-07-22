@@ -26,7 +26,7 @@ export const UserService = {
                 select: { id: true }
             });
 
-            const userUpdate = prisma.user.update({
+            const userUpdate = await prisma.user.update({
                 where: { id },
                 data: {
                     fullname: data.fullname,
@@ -41,39 +41,24 @@ export const UserService = {
                 }
             });
 
-            const addressData = {
-                city: data.city,
-                district: "",
-                ward: "",
-                fullname: data.fullname,
-                phone: data.phone,
-                address: data.address,
-                postal_code: data.postal_code || null,
-            };
-
-            const addressUpdate = defaultAddress
-                ? prisma.shippingAddress.update({
+            let finalAddress = null;
+            if (defaultAddress) {
+                // Only update the fullname and phone on the default address to keep it in sync,
+                // do NOT touch address, city, district, ward.
+                finalAddress = await prisma.shippingAddress.update({
                     where: { id: defaultAddress.id },
-                    data: addressData,
-                })
-                : prisma.shippingAddress.create({
                     data: {
-                        ...addressData,
-                        is_default: true,
-                        user_id: id,
-                    },
+                        fullname: data.fullname,
+                        phone: data.phone,
+                    }
                 });
-
-            const [user, address] = await prisma.$transaction([
-                userUpdate,
-                addressUpdate,
-            ]);
+            }
 
             return {
-                ...user,
-                address: address.address,
-                city: address.city,
-                postal_code: address.postal_code,
+                ...userUpdate,
+                address: finalAddress?.address || "",
+                city: finalAddress?.city || "",
+                postal_code: finalAddress?.postal_code || "",
             };
         } finally {}
     },

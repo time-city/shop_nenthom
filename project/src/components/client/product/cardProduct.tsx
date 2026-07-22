@@ -8,6 +8,7 @@ import { useTransition } from "react";
 import { addToCartAction } from "@/src/lib/action/cart.action";
 import { useCartStore } from "@/src/store/useCartStore";
 import { useToast } from "@/src/components/ui/toastProvider";
+import { mutate } from "swr";
 
 const formatPrice = (price: number | string) => {
   if (typeof price === "number") {
@@ -61,18 +62,20 @@ export default function CardProduct({
         // Rollback
         decrementCartCount(1);
         toast.error(result.error);
+      } else {
+        void mutate(["client-cart"]);
       }
     });
   };
 
   return (
     <article
-      className="product-card group relative flex flex-col h-full overflow-hidden rounded-md bg-[#F5F0E8] text-[#2C1810] shadow-[0_14px_30px_rgba(44,8,12,0.22)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(44,8,12,0.28)]"
+      className="product-card group relative flex flex-col h-full overflow-hidden rounded-2xl bg-white text-[#2C1810] shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(107,18,24,0.08)] ring-1 ring-[#2C1810]/5"
     >
       <Link href={href} className="absolute inset-0 z-10" aria-label={`Xem chi tiết ${name}`} />
       
       <div
-        className="product-image relative block w-full aspect-[4/5] overflow-hidden bg-[#FAF6F0] p-0 transition duration-300"
+        className="product-image relative block w-full aspect-[4/5] overflow-hidden bg-[#F5F0E8]/30 p-0 transition duration-500 group-hover:bg-[#F5F0E8]/50"
       >
         {imageUrl ? (
           <Image
@@ -94,30 +97,44 @@ export default function CardProduct({
             </div>
           </div>
         )}
+
+        {/* Floating Add to Cart Button */}
+        <button
+          onClick={handleAddToCart}
+          disabled={isPending}
+          aria-label="Thêm vào giỏ"
+          className="absolute bottom-3 right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm text-[#6B1218] shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:bg-[#6B1218] hover:text-white hover:scale-110 disabled:opacity-50 disabled:hover:bg-white/90 disabled:hover:text-[#6B1218] disabled:hover:scale-100"
+        >
+          {isPending ? (
+            <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+          )}
+        </button>
       </div>
 
-      <div className="product-info flex flex-col flex-grow border-t border-[#2C1810]/5 p-3 sm:p-5 relative z-20 pointer-events-none">
+      <div className="product-info flex flex-col flex-grow p-4 sm:p-5 relative z-20 pointer-events-none bg-gradient-to-t from-white via-white to-white/90">
         <div className="flex-grow">
-          <h3 className="line-clamp-1 font-serif text-[1rem] sm:text-[1.32rem] font-medium leading-tight text-[#2C1810] transition group-hover:text-[#6B1218]">
+          <h3 className="line-clamp-1 font-serif text-[1.1rem] sm:text-[1.25rem] font-medium leading-tight text-[#2C1810] transition-colors group-hover:text-[#6B1218]">
             {name}
           </h3>
 
-          <p className="scent-note mt-1 sm:mt-2 line-clamp-1 text-[0.75rem] sm:text-[0.8rem] leading-4 text-[#2C1810]/80">
+          <p className="scent-note mt-1 sm:mt-1.5 line-clamp-1 text-[0.8rem] sm:text-[0.85rem] leading-relaxed text-[#8B7355]">
             {scentNote || "Nến thơm thủ công tinh giản."}
           </p>
         </div>
 
-        <div className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-[#2C1810]/5 flex flex-col justify-end gap-2 sm:gap-3">
-          <span className="product-price font-sans text-[1rem] sm:text-[1.12rem] font-bold text-[#6B1218] whitespace-nowrap">
+        <div className="mt-3 sm:mt-4 flex items-center justify-between">
+          <span className="product-price font-sans text-[1.05rem] sm:text-[1.15rem] font-bold text-[#6B1218] tracking-tight">
             {formatPrice(price)}
           </span>
-          <button
-            onClick={handleAddToCart}
-            disabled={isPending}
-            className="btn-add-cart pointer-events-auto flex h-8 sm:h-9 items-center justify-center rounded-md bg-[#6B1218] px-3 sm:px-5 text-center text-[0.65rem] sm:text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-[#F5F0E8] shadow-[0_4px_10px_rgba(107,18,24,0.15)] transition group-hover:bg-[#520d12] group-hover:shadow-[0_6px_14px_rgba(107,18,24,0.25)] whitespace-nowrap disabled:opacity-70"
-          >
-            {isPending ? "Đang thêm..." : "Thêm vào giỏ"}
-          </button>
         </div>
       </div>
     </article>

@@ -178,4 +178,94 @@ export const CartService = {
         return prisma.cartItem.deleteMany({ where: { cart_id: cartId } })
     },
 
+    // Merge toàn bộ cart_items của guest sang cart của user sau khi đăng nhập.
+    // - Nếu cùng product + combo options → cộng dồn quantity vào item đã có của user.
+    // - Nếu chưa có → chuyển cart_id sang cart của user.
+    // - Xóa guest cart sau khi merge xong.
+    async mergeGuestCartIntoUserCart(guestSessionId: string, userId: string): Promise<void> {
+        const [guestCart, userCart] = await Promise.all([
+            prisma.cart.findUnique({
+                where: { session_id: guestSessionId },
+                select: {
+                    id: true,
+                    items: {
+                        select: {
+                            id: true,
+                            quantity: true,
+                            product_id: true,
+                            scent_id: true,
+                            color_id: true,
+                            size_id: true,
+                            pack_id: true,
+                            toppings_json: true,
+                        },
+                    },
+                },
+            }),
+            prisma.cart.findUnique({
+                where: { user_id: userId },
+                select: {
+                    id: true,
+                    items: {
+                        select: {
+                            id: true,
+                            quantity: true,
+                            product_id: true,
+                            scent_id: true,
+                            color_id: true,
+                            size_id: true,
+                            pack_id: true,
+                            toppings_json: true,
+                        },
+                    },
+                },
+            }),
+        ]);
+
+        // Không có guest cart → không cần làm gì
+        if (!guestCart || guestCart.items.length === 0) return;
+
+        // Tạo user cart nếu chưa có
+        const targetCart = userCart ?? await prisma.cart.create({
+            data: { user_id: userId },
+            select: { id: true, items: { select: { id: true, quantity: true, product_id: true, scent_id: true, color_id: true, size_id: true, pack_id: true, toppings_json: true } } },
+        });
+
+        await prisma.$transaction(async (tx) => {
+            for (const guestItem of guestCart.items) {
+                const guestToppingIds = getToppingIds(guestItem.toppings_json);
+
+                // Tìm item trùng combo trong user cart
+                const duplicate = targetCart.items.find((userItem) => {
+                    if (userItem.product_id !== guestItem.product_id) return false;
+                    if (userItem.scent_id !== guestItem.scent_id) return false;
+                    if (userItem.color_id !== guestItem.color_id) return false;
+                    if (userItem.size_id !== guestItem.size_id) return false;
+                    if (userItem.pack_id !== guestItem.pack_id) return false;
+                    const userToppingIds = getToppingIds(userItem.toppings_json);
+                    return JSON.stringify(guestToppingIds) === JSON.stringify(userToppingIds);
+                });
+
+                if (duplicate) {
+                    // Cộng dồn quantity vào item đã có
+                    await tx.cartItem.update({
+                        where: { id: duplicate.id },
+                        data: { quantity: { increment: guestItem.quantity } },
+                    });
+                    // Xóa item guest (đã merge)
+                    await tx.cartItem.delete({ where: { id: guestItem.id } });
+                } else {
+                    // Chuyển item sang user cart
+                    await tx.cartItem.update({
+                        where: { id: guestItem.id },
+                        data: { cart_id: targetCart.id },
+                    });
+                }
+            }
+
+            // Xóa guest cart (rỗng sau khi đã chuyển hết items)
+            await tx.cart.delete({ where: { id: guestCart.id } });
+        });
+    },
+
 }

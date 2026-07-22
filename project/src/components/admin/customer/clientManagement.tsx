@@ -21,9 +21,8 @@ import {
 } from "../../../lib/action/user.action";
 import { callAction } from "@/src/lib/utils/callAction";
 
-const itemsPerPage = 10;
 const initialMeta: AdminPaginationMeta = {
-  limit: itemsPerPage,
+  limit: 10,
   page: 1,
   total: 0,
   totalPages: 1,
@@ -34,11 +33,21 @@ export default function ClientManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [meta, setMeta] = useState<AdminPaginationMeta>(initialMeta);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setItemsPerPage(window.innerWidth < 768 ? 5 : 10);
+    };
+    handleResize(); // Set initial value
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const { data: fetchResult, isLoading: isSwrLoading, error: swrError, mutate: mutateUsers } = useSWR(
-    ['admin-users', currentPage],
+    ['admin-users', currentPage, itemsPerPage],
     async () => {
       console.log("[Data Source] 🟡 NETWORK QUERY - clientManagement: Fetching customers...");
       const result = await callAction(() => getAllUsersAction({

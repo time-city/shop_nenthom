@@ -14,6 +14,8 @@ import type { AdminNavItem, AdminSidebarSectionProps } from "../../../lib/types/
 import NotificationAdmin from "@/src/components/admin/common/notificationAdmin";
 import { callAction } from "@/src/lib/utils/callAction";
 import { useAdminOrderSocket } from "@/src/hooks/useAdminOrderSocket";
+import { useToast } from "@/src/components/ui/toastProvider";
+import { mutate } from "swr";
 
 const overviewLinks: AdminNavItem[] = [
   {
@@ -119,8 +121,9 @@ const otherLinks: AdminNavItem[] = [
 ];
 
 export default function Navbar() {
-  const pathname = usePathname();
   const router = useRouter();
+  const pathname = usePathname();
+  const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -156,13 +159,30 @@ export default function Navbar() {
         useSupportStore.getState().setUnreadCount(data.pendingContactCount);
       }
     }, []),
-    onNewOrder: useCallback(() => {
-      // With SWR we don't manually mutate state, we could mutate the swr key if we wanted, or just ignore since Pusher triggers refresh
-      // But for real-time without re-fetching, we'd need to mutate SWR cache. For now we will rely on Pusher
-    }, []),
-    onNewContact: useCallback(() => {
+    onNewOrder: useCallback((data: any) => {
+      toast.info(`🎉 Đơn hàng mới: ${data?.orderNumber || ''}`);
+      mutate((key: any) => Array.isArray(key) && key[0] === 'admin-orders'); 
+    }, [toast]),
+    onNewPayment: useCallback((data: any) => {
+      toast.success(`💰 Khách thanh toán: ${data?.orderNumber || ''} - ${(data?.totalCents / 100)?.toLocaleString('vi-VN')}đ`);
+      mutate((key: any) => Array.isArray(key) && key[0] === 'admin-orders');
+    }, [toast]),
+    onOrderUpdated: useCallback((data: any) => {
+      toast.info(`🔄 Đơn hàng ${data?.orderNumber || ''} vừa được cập nhật`);
+      mutate((key: any) => Array.isArray(key) && key[0] === 'admin-orders');
+    }, [toast]),
+    onCancelRequest: useCallback((data: any) => {
+      toast.warning(`⚠️ Khách yêu cầu huỷ đơn: ${data?.orderNumber || ''}`);
+      mutate((key: any) => Array.isArray(key) && key[0] === 'admin-orders');
+    }, [toast]),
+    onNewContact: useCallback((data: any) => {
+      toast.info(`📬 Tin nhắn mới từ: ${data?.name || 'Khách hàng'}`);
       useSupportStore.getState().incrementUnread();
-    }, []),
+    }, [toast]),
+    onNewReview: useCallback((data: any) => {
+      toast.info(`⭐ Có đánh giá mới cho sản phẩm ${data?.productName || ''} từ ${data?.customerName || 'Khách hàng'}`);
+      mutate((key: any) => Array.isArray(key) && key[0]?.name === 'getAllReviewsAdminAction');
+    }, [toast])
   });
 
   // Badge chỉ hiển thị sau khi mount và store đã hydrate

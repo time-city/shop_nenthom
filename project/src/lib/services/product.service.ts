@@ -313,6 +313,13 @@ export const ProductService = {
                     images: true,
                     is_active: true,
                     created_at: true,
+                    category: {
+                        select: {
+                            id: true,
+                            name: true,
+                            description: true
+                        }
+                    },
                     scents: {
                         select: {
                             scent_id: true
@@ -382,6 +389,13 @@ export const ProductService = {
                     images: true,
                     is_active: true,
                     created_at: true,
+                    category: {
+                        select: {
+                            id: true,
+                            name: true,
+                            description: true
+                        }
+                    },
                     scents: {
                         select: {
                             scent_id: true

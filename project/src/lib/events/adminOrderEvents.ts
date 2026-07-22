@@ -110,6 +110,38 @@ export async function emitNewOrderToAdmin(
 }
 
 export async function emitNewPaymentToAdmin(input: NewPaymentAdminPayload) {
+  try {
+    const { default: prisma } = await import("../prisma");
+    const admins = await prisma.user.findMany({
+      where: {
+        role: "ADMIN",
+        status: "ACTIVE",
+      },
+      select: { id: true },
+    });
+
+    if (admins.length > 0) {
+      await prisma.notification.createMany({
+        data: admins.map((admin) => ({
+          created_at: new Date(input.paidAt),
+          data: {
+            orderNumber: input.orderNumber,
+            totalCents: input.totalCents,
+            transactionId: input.transactionId,
+          },
+          message: `Đơn hàng ${input.orderNumber} vừa được thanh toán thành công`,
+          order_id: input.orderId,
+          title: "Khách đã thanh toán",
+          type: "ORDER_STATUS_UPDATED",
+          user_id: admin.id,
+        })),
+        skipDuplicates: true,
+      });
+    }
+  } catch (error) {
+    console.error("Lỗi khi tạo thông báo thanh toán cho Admin:", error);
+  }
+
   const event: NewPaymentAdminEvent = {
     data: input,
     event: "NEW_PAYMENT",

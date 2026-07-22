@@ -155,10 +155,10 @@ export default function HomeClient({ initialCategories }: { initialCategories?: 
 
         <div className="relative z-10">
           <section
-            className="hero fade-section visible observed grid h-screen min-h-[640px] grid-cols-1 items-center justify-center gap-4 overflow-hidden px-4 pb-6 pt-24 md:grid-cols-2 md:gap-8 md:px-8 lg:gap-16 lg:px-16"
+            className="hero fade-section visible observed grid h-screen min-h-[640px] grid-cols-1 items-center justify-center gap-4 overflow-hidden px-4 pb-6 pt-24 lg:grid-cols-2 lg:gap-16 lg:px-16"
           >
-          <div className="hero-text flex w-full max-w-[480px] flex-col items-center text-center opacity-100 md:block md:max-w-none md:text-left">
-            <h1 data-aos="fade-right" className="mb-4 break-keep text-center font-serif text-[36px] leading-[1.2] font-light text-[#F5F0E8] drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] md:text-left md:text-[clamp(3rem,5vw,4.5rem)] md:leading-[1.08] md:drop-shadow-none">
+          <div className="hero-text flex w-full max-w-[480px] mx-auto flex-col items-center text-center opacity-100 lg:mx-0 lg:block lg:max-w-none lg:text-left">
+            <h1 data-aos="fade-right" className="mb-4 break-keep text-center font-serif text-[32px] sm:text-[38px] leading-[1.1] font-light text-[#F5F0E8] drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] lg:text-left lg:text-[clamp(3rem,5vw,4.5rem)] lg:leading-[1.08] lg:drop-shadow-none">
               Nến thơm
               <br />
               <em className="font-serif italic text-[#F5F0E8]">thuần khiết,</em>
@@ -167,33 +167,33 @@ export default function HomeClient({ initialCategories }: { initialCategories?: 
               <br />
               cho bạn
             </h1>
-            <p data-aos="fade-right" className="mb-5 max-w-[85%] text-center text-[18px] leading-[1.6] text-[#F5F0E8] drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] md:max-w-[380px] md:text-left md:text-[0.95rem] md:leading-[1.8] md:text-[#F5F0E8]/80 md:drop-shadow-none lg:mb-8">
+            <p data-aos="fade-right" className="mb-5 mx-auto max-w-[90%] sm:max-w-[80%] text-center text-[15px] sm:text-[17px] leading-[1.5] text-[#F5F0E8] drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] lg:mx-0 lg:max-w-[380px] lg:text-left lg:text-[0.95rem] lg:leading-[1.8] lg:text-[#F5F0E8]/80 lg:drop-shadow-none xl:mb-8">
               Tự tạo nên thơm của riêng mình — chọn hương, màu sáp, kích thước
               và bao bì theo phong cách tối giản độc đáo.
             </p>
-            <div className="btn-group flex flex-row items-center justify-center gap-3 w-auto md:flex-row md:flex-wrap md:justify-start lg:gap-4">
+            <div className="btn-group flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto px-6 sm:px-0 lg:justify-start">
               <Link
                 href="/#custom"
                 onClick={(e) => scrollToSection(e, "custom")}
-                className="btn-primary relative w-auto rounded-full border-[1.5px] border-transparent bg-[#F5F0E8] px-5 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] shadow-[0_10px_28px_rgba(0,0,0,0.15)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#FFFFFF] hover:text-[#2C1810] hover:shadow-[0_0_20px_rgba(245,240,232,0.6)] active:scale-95 md:px-6 md:py-3 lg:w-auto lg:px-9 lg:py-3.5"
+                className="btn-primary relative w-full sm:w-auto rounded-full border-[1.5px] border-transparent bg-[#F5F0E8] px-5 py-3 text-center text-[0.75rem] sm:text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] shadow-[0_10px_28px_rgba(0,0,0,0.15)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#FFFFFF] hover:text-[#2C1810] hover:shadow-[0_0_20px_rgba(245,240,232,0.6)] active:scale-95 md:px-6 md:py-3 lg:w-auto lg:px-9 lg:py-3.5"
               >
                 Tùy chỉnh ngay
               </Link>
               <Link
                 href="/#collection"
                 onClick={(e) => scrollToSection(e, "collection")}
-                className="btn-secondary w-auto rounded-full border-[1.5px] border-[#f5f0e8]/45 bg-transparent px-5 py-3 text-center text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition-all duration-300 hover:-translate-y-1 hover:border-[#F5F0E8] hover:bg-[#f5f0e8]/15 hover:text-[#F5F0E8] hover:shadow-[0_0_15px_rgba(245,240,232,0.3)] active:scale-95 md:px-6 lg:w-auto lg:px-[34px]"
+                className="btn-secondary w-full sm:w-auto rounded-full border-[1.5px] border-[#f5f0e8]/45 bg-transparent px-5 py-3 text-center text-[0.75rem] sm:text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] transition-all duration-300 hover:-translate-y-1 hover:border-[#F5F0E8] hover:bg-[#f5f0e8]/15 hover:text-[#F5F0E8] hover:shadow-[0_0_15px_rgba(245,240,232,0.3)] active:scale-95 md:px-6 lg:w-auto lg:px-[34px]"
               >
                 Xem bộ sưu tập
               </Link>
             </div>
 
             {/* Scent tags for mobile ONLY */}
-            <div className="scent-tags mt-8 flex flex-wrap justify-center gap-2 md:hidden">
+            <div className="scent-tags mt-7 flex flex-wrap justify-center gap-1.5 sm:gap-2 px-2 sm:px-0 lg:hidden">
               {scentTags.map((tag) => (
                 <div
                   key={tag}
-                  className="tag whitespace-nowrap rounded-[2px] border border-[#D4AF37]/40 bg-[rgba(20,5,5,0.4)] px-3 py-1.5 text-[0.7rem] font-light uppercase tracking-widest text-[#F5F0E8] backdrop-blur-md"
+                  className="tag whitespace-nowrap rounded-[2px] border border-[#D4AF37]/40 bg-[rgba(20,5,5,0.4)] px-2.5 py-1.5 text-[0.65rem] sm:text-[0.7rem] font-light uppercase tracking-widest text-[#F5F0E8] backdrop-blur-md"
                 >
                   {tag}
                 </div>
@@ -201,15 +201,15 @@ export default function HomeClient({ initialCategories }: { initialCategories?: 
             </div>
           </div>
 
-          <div className="candle-scene relative hidden h-full w-full items-center justify-center md:flex">
+          <div className="candle-scene relative hidden h-full w-full items-center justify-center lg:flex">
             
             {/* The Empty Pedestal Focus Area */}
-            <div data-aos="zoom-in" data-aos-duration="1500" className="pedestal-focus relative flex h-[350px] w-[350px] items-center justify-center lg:h-[450px] lg:w-[450px]">
+            <div data-aos="zoom-in" data-aos-duration="1500" className="pedestal-focus relative flex h-[350px] w-[350px] items-center justify-center xl:h-[450px] xl:w-[450px]">
               {/* Spotlight / glow */}
               <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(248,211,122,0.15)_0%,rgba(212,175,55,0.05)_40%,transparent_70%)] blur-2xl" />
               
               {/* Pedestal Base */}
-              <div className="absolute bottom-12 left-1/2 h-10 w-[200px] -translate-x-1/2 rounded-[50%] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.12)_0%,rgba(248,211,122,0.05)_40%,transparent_70%)] shadow-[0_20px_50px_rgba(0,0,0,0.8)] lg:w-[280px]" />
+              <div className="absolute bottom-12 left-1/2 h-10 w-[200px] -translate-x-1/2 rounded-[50%] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.12)_0%,rgba(248,211,122,0.05)_40%,transparent_70%)] shadow-[0_20px_50px_rgba(0,0,0,0.8)] xl:w-[280px]" />
               
               {/* Subtle light rays */}
               <div className="absolute inset-0 bg-[conic-gradient(from_90deg_at_50%_0%,transparent_45%,rgba(248,211,122,0.05)_50%,transparent_55%)] blur-md" />
@@ -224,7 +224,7 @@ export default function HomeClient({ initialCategories }: { initialCategories?: 
                   animation: float 6s ease-in-out infinite;
                 }
               `}} />
-              <div className="animate-float-custom absolute bottom-16 z-10 w-[200px] transition-all duration-700 ease-out hover:scale-[1.03] hover:drop-shadow-[0_0_40px_rgba(248,211,122,0.4)] lg:bottom-20 lg:w-[280px]">
+              <div className="animate-float-custom absolute bottom-16 z-10 w-[200px] transition-all duration-700 ease-out hover:scale-[1.03] hover:drop-shadow-[0_0_40px_rgba(248,211,122,0.4)] xl:bottom-20 xl:w-[280px]">
                 <Image
                   src={heroImage}
                   alt="Nến thơm"
@@ -235,7 +235,7 @@ export default function HomeClient({ initialCategories }: { initialCategories?: 
             </div>
 
             {/* Scent Tags */}
-            <div className="scent-tags relative flex w-full max-w-[300px] flex-wrap justify-center gap-1.5 md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2 md:w-auto md:max-w-none md:flex-col md:flex-nowrap lg:right-[-20px] lg:gap-8">
+            <div className="scent-tags relative flex w-full max-w-[300px] flex-wrap justify-center gap-1.5 lg:absolute lg:right-[-20px] lg:top-1/2 lg:-translate-y-1/2 lg:w-auto lg:max-w-none lg:flex-col lg:flex-nowrap lg:gap-8">
               {scentTags.map((tag, index) => (
                 <div
                   key={tag}
@@ -244,10 +244,10 @@ export default function HomeClient({ initialCategories }: { initialCategories?: 
                   className="group relative flex items-center justify-end"
                 >
                   {/* Connecting Line */}
-                  <div className="absolute right-[calc(100%+10px)] top-1/2 h-[1px] w-16 -translate-y-1/2 bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-[#D4AF37]/80 transition-all duration-500 group-hover:w-24 group-hover:via-[#F8D37A]/70 group-hover:to-[#F8D37A] group-hover:shadow-[0_0_8px_rgba(248,211,122,0.8)] lg:w-28 lg:group-hover:w-40" />
+                  <div className="absolute right-[calc(100%+10px)] top-1/2 h-[1px] w-16 -translate-y-1/2 bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-[#D4AF37]/80 transition-all duration-500 group-hover:w-24 group-hover:via-[#F8D37A]/70 group-hover:to-[#F8D37A] group-hover:shadow-[0_0_8px_rgba(248,211,122,0.8)] xl:w-28 xl:group-hover:w-40" />
                   
                   {/* Tag */}
-                  <div className="tag relative whitespace-nowrap rounded-[2px] border border-[#D4AF37]/40 bg-[rgba(20,5,5,0.4)] px-4 py-2.5 text-[0.7rem] font-light uppercase tracking-[0.2em] text-[#F5F0E8] backdrop-blur-md transition-all duration-500 group-hover:-translate-x-2 group-hover:border-[#F8D37A] group-hover:bg-[#F8D37A]/20 group-hover:text-[#FFF] group-hover:shadow-[0_0_25px_rgba(248,211,122,0.4)] lg:px-6 lg:py-3 lg:text-xs">
+                  <div className="tag relative whitespace-nowrap rounded-[2px] border border-[#D4AF37]/40 bg-[rgba(20,5,5,0.4)] px-4 py-2.5 text-[0.7rem] font-light uppercase tracking-[0.2em] text-[#F5F0E8] backdrop-blur-md transition-all duration-500 group-hover:-translate-x-2 group-hover:border-[#F8D37A] group-hover:bg-[#F8D37A]/20 group-hover:text-[#FFF] group-hover:shadow-[0_0_25px_rgba(248,211,122,0.4)] xl:px-6 xl:py-3 xl:text-xs">
                     {tag}
                   </div>
                 </div>

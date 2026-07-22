@@ -240,12 +240,14 @@ success: true;
 
 /** Interface chứa các trường thông tin cần thiết cho form checkout. */
 export interface FullFormValues {
-fullname: string;
-email: string;
-phone: string;
-address: string;
-city: string;
-zip: string;
+  fullname: string;
+  email: string;
+  phone: string;
+  address: string;
+  ward: string;
+  district: string;
+  city: string;
+  zip: string;
   note: string;
 }
 

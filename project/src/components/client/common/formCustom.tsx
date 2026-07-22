@@ -5,6 +5,7 @@ import type { ClientProductOptionItemInterface } from "../../../interface/client
 import { useToast } from "@/src/components/ui/toastProvider";
 import { addToCartAction } from "../../../lib/action/cart.action";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
+import { mutate } from "swr";
 import { useCartStore } from "@/src/store/useCartStore";
 import type { FormCustomProps } from "../../../lib/types/client";
 import { callAction } from "@/src/lib/utils/callAction";
@@ -154,6 +155,8 @@ export default function FormCustom({
             toast.success("Đã thêm nến tùy chỉnh vào giỏ hàng");
             // Cập nhật badge số lượng trên header
             incrementCartCount(1);
+            
+            void mutate(["client-cart"]);
         } finally {
             setIsAddingToCart(false);
         }

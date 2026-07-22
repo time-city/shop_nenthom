@@ -8,7 +8,9 @@ export const createOrderSchema = z.object({
   guest_email: z.string().trim().email('Email không hợp lệ').optional(),
   guest_phone: z.string().trim().optional(),
   payment_method: z.enum(['COD', 'BANK_TRANSFER']),
-  shipping_address: z.string().trim().min(1, 'Vui lòng nhập địa chỉ'),
+  shipping_address: z.string().trim().min(1, 'Vui lòng nhập số nhà, tên đường'),
+  shipping_ward: z.string().trim().min(1, 'Vui lòng nhập Phường/Xã'),
+  shipping_district: z.string().trim().min(1, 'Vui lòng nhập Quận/Huyện'),
   shipping_city: z.string().trim().min(1, 'Vui lòng chọn thành phố'),
   shipping_fullname: z.string().trim().min(1, 'Vui lòng nhập họ tên'),
   shipping_note: z.string().trim().optional(),
@@ -28,6 +30,7 @@ export const getListOrdersSchema = z.object({
   search_keyword: z.string().trim().optional(),
   start_date: z.coerce.date().optional(),
   status: z.enum(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'CANCEL_REQUESTED']).optional(),
+  sort_direction: z.enum(['desc', 'asc']).optional().default('desc'),
 }).refine(
   ({ end_date, start_date }) =>
     !end_date || !start_date || start_date <= end_date,
@@ -43,7 +46,9 @@ export const orderNumberSchema = z.object({
 
 export const updateOrderStatusSchema = orderNumberSchema.extend({
   note: z.string().trim().optional(),
-  status: z.literal('PROCESSING'),
+  status: z.enum(['PROCESSING', 'SHIPPED', 'DELIVERED']),
+  tracking_code: z.string().trim().optional(),
+  shipping_carrier: z.string().trim().optional(),
 })
 
 export const cancelOrderSchema = z.object({
@@ -51,8 +56,15 @@ export const cancelOrderSchema = z.object({
   reason: z.string().trim().min(1, 'Vui lòng nhập lý do hủy đơn'),
 })
 
+export const updateOrderTrackingSchema = z.object({
+  order_id: z.string().trim().min(1, 'Không tìm thấy đơn hàng phù hợp'),
+  shipping_carrier: z.string().trim().min(1, 'Vui lòng chọn đơn vị vận chuyển'),
+  tracking_code: z.string().trim().min(1, 'Vui lòng nhập mã vận đơn'),
+})
+
 export type CancelOrderInput = z.infer<typeof cancelOrderSchema>
 export type CreateOrderInput = z.infer<typeof createOrderSchema>
 export type GetListOrdersParams = z.infer<typeof getListOrdersSchema>
 export type OrderNumberInput = z.infer<typeof orderNumberSchema>
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>
+export type UpdateOrderTrackingInput = z.infer<typeof updateOrderTrackingSchema>

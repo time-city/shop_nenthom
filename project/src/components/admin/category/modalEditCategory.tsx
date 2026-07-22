@@ -86,8 +86,8 @@ export default function ModalEditCategory({
       }
 
       if ("success" in result && result.success) {
-        toast.success("Đã cập nhật danh mục thành công");
-        await onSave?.();
+        toast.success("Cập nhật danh mục thành công");
+        await onSave?.(result.data);
         onClose();
       }
     } finally {

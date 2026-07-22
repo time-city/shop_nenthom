@@ -71,6 +71,7 @@ enum NotificationType {
   NEW_ORDER
   NEW_CONTACT
   ORDER_CANCELLED
+  ORDER_STATUS_UPDATED
   PRODUCT_UNAVAILABLE
 
   @@schema("public")
@@ -351,6 +352,10 @@ model Order {
   shipping_postal_code String?
   shipping_note        String? @db.Text
 
+  // Tracking thông vị vận chuyển
+  shipping_carrier     String?
+  tracking_code        String? @unique
+
   // Trạng thái đơn & Thanh toán
   status         OrderStatus   @default(PENDING)
   payment_method PaymentMethod
@@ -479,6 +484,18 @@ model DiscountUsage {
   order         Order        @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   @@map("discount_usages")
+  @@schema("public")
+}
+
+model WebhookLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  event_id   String   @unique // The unique ID provided by SPX webhook payload
+  order_id   String?  @db.Uuid
+  status     String
+  created_at DateTime @default(now())
+
+  @@index([event_id])
+  @@map("webhook_logs")
   @@schema("public")
 }
 

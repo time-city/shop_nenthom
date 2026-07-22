@@ -8,6 +8,9 @@ export type OrderStatusUpdatedData = {
   orderNumber: string;
   status: string;
   updatedAt: string;
+  trackingCode?: string;
+  shippingCarrier?: string;
+  isGuest?: boolean;
 };
 
 export type UseOrderTrackingSocketOptions = {

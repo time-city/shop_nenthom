@@ -9,6 +9,8 @@ import LoadingState from "@/src/components/ui/loadingState";
 import { logoutUser } from "@/src/lib/action/auth.action";
 import { getCurrentUser, updateProfileAction } from "@/src/lib/action/user.action";
 import { getUserAddressesAction, createAddressAction, updateAddressAction, deleteAddressAction, setDefaultAddressAction } from "@/src/lib/action/address.action";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 import { getFriendlyResponseError } from "@/src/lib/utils/errorMessage";
 import { useUserStore } from "@/src/store/useUserStore";
 import { useCartStore } from "@/src/store/useCartStore";
@@ -22,6 +24,7 @@ import { callAction } from "@/src/lib/utils/callAction";
 import AddressModal, { AddressFormData } from "./addressModal";
 import { MapPin, Star, Trash2, Edit2, Plus } from "lucide-react";
 import dynamic from "next/dynamic";
+import ModalChangePassword from "./changePass";
 
 const ModalDeleteConfirmClient = dynamic(() => import("@/src/components/client/common/modalDeleteConfirmClient"), { ssr: false });
 
@@ -92,11 +95,14 @@ export default function ProfilePageContent({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState("");
+  const [originalProfile, setOriginalProfile] = useState<Required<ClientProfileUserData> | null>(null);
 
   // Address Book state
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressFormData | null>(null);
   const [deleteAddressId, setDeleteAddressId] = useState<string | null>(null);
+
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const { data: userResponse, mutate: mutateUser } = useSWR<any>(
     "getCurrentUser",
@@ -133,12 +139,76 @@ export default function ProfilePageContent({
         role: data.role ?? initialUser?.role ?? "",
       };
       setProfile(userProfile);
+      if (!originalProfile) {
+        setOriginalProfile(userProfile);
+      }
       useUserStore.getState().setUser(userProfile);
       setIsLoading(false);
     } else {
       setIsLoading(false);
     }
   }, [userResponse, initialUser]);
+
+  useEffect(() => {
+    if (!isLoading && typeof window !== "undefined") {
+      const hasSeenGuide = localStorage.getItem("hasSeenProfileGuide");
+      if (!hasSeenGuide && profile.email) {
+        // Cấu hình driver.js
+        const profileDriver = driver({
+          showProgress: true,
+          nextBtnText: 'Tiếp tục',
+          prevBtnText: 'Quay lại',
+          doneBtnText: 'Hoàn tất',
+          popoverClass: 'driverjs-theme',
+          steps: [
+            { 
+              element: '#fullname', 
+              popover: { 
+                title: 'Tên của bạn', 
+                description: 'Hãy cho chúng tôi biết họ và tên đầy đủ để tiện xưng hô nhé.', 
+                side: "top", 
+                align: 'start' 
+              } 
+            },
+            { 
+              element: '#phone', 
+              popover: { 
+                title: 'Số điện thoại', 
+                description: 'Cung cấp số điện thoại chính xác để shipper dễ dàng liên lạc khi giao hàng.', 
+                side: "top", 
+                align: 'start' 
+              } 
+            },
+            { 
+              element: '#profile-submit-btn', 
+              popover: { 
+                title: 'Lưu thay đổi', 
+                description: 'Đừng quên nhấn Lưu sau khi cập nhật thông tin cá nhân của bạn.', 
+                side: "bottom", 
+                align: 'start' 
+              } 
+            },
+            { 
+              element: '#add-address-btn', 
+              popover: { 
+                title: 'Sổ địa chỉ', 
+                description: 'Bạn có thể thêm và quản lý các địa chỉ nhận hàng tại đây.', 
+                side: "bottom", 
+                align: 'start' 
+              } 
+            },
+          ],
+          onDestroyStarted: () => {
+            profileDriver.destroy();
+            localStorage.setItem("hasSeenProfileGuide", "true");
+          }
+        });
+        
+        // Khởi động tour
+        profileDriver.drive();
+      }
+    }
+  }, [isLoading, profile.email]);
 
   const validateField = (field: keyof Required<ClientProfileUserData>, value: string): string => {
     const trimmed = value.trim();
@@ -232,7 +302,7 @@ export default function ProfilePageContent({
           fullname: profile.fullname,
           phone: profile.phone,
         });
-
+        setOriginalProfile(profile);
         toast.success("Cập nhật thông tin thành công");
       }
     }).catch((err) => {
@@ -308,7 +378,6 @@ export default function ProfilePageContent({
       const res = await deleteAddressAction(deleteAddressId);
       if (res.error) throw new Error(res.error);
       toast.success("Xóa địa chỉ thành công");
-      mutateAddresses();
     } catch (err: any) {
       toast.error(err.message || "Lỗi xóa địa chỉ");
       mutateAddresses(previousAddresses, false);
@@ -323,7 +392,6 @@ export default function ProfilePageContent({
       const res = await setDefaultAddressAction(id);
       if (res.error) throw new Error(res.error);
       toast.success("Đã đặt làm địa chỉ mặc định");
-      mutateAddresses();
     } catch (err: any) {
       toast.error(err.message || "Lỗi cập nhật địa chỉ mặc định");
       mutateAddresses(previousAddresses, false);
@@ -357,7 +425,14 @@ export default function ProfilePageContent({
                 </div>
               ) : (
                 <form autoComplete="off" onSubmit={handleSubmit}>
-                  <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+                  {(() => {
+                    const isFormChanged = originalProfile 
+                      ? profile.fullname !== originalProfile.fullname || profile.phone !== originalProfile.phone
+                      : false;
+                    
+                    return (
+                      <>
+                        <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
                     <Field
                       id="fullname"
                       label="Họ và Tên"
@@ -394,17 +469,22 @@ export default function ProfilePageContent({
                     <button
                       id="profile-submit-btn"
                       type="submit"
-                      disabled={isSaving}
-                      className="rounded-full border-0 bg-gradient-to-r from-[#D6A15F] to-[#E5C07B] px-8 py-3.5 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] shadow-[0_6px_24px_rgba(214,161,95,0.28)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 sm:px-10 sm:text-[0.8rem]"
+                      disabled={isSaving || !isFormChanged}
+                      className={`rounded-full border-0 px-8 py-3.5 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#2C1810] transition sm:px-10 sm:text-[0.8rem] ${
+                        !isFormChanged || isSaving
+                          ? "bg-[#D6A15F]/40 cursor-not-allowed opacity-50"
+                          : "bg-gradient-to-r from-[#D6A15F] to-[#E5C07B] shadow-[0_6px_24px_rgba(214,161,95,0.28)] hover:-translate-y-0.5"
+                      }`}
                     >
                       {isSaving ? "Đang lưu..." : "Lưu Thay Đổi"}
                     </button>
-                    <Link
-                      href="/profile/changePassword"
+                    <button
+                      type="button"
+                      onClick={() => setIsChangePasswordOpen(true)}
                       className="rounded-full border border-[#D6A15F]/50 bg-transparent px-6 py-3.5 text-[0.76rem] font-medium uppercase tracking-[0.14em] text-[#D6A15F] transition hover:bg-[#D6A15F] hover:text-[#2C1810] sm:text-[0.8rem] text-center"
                     >
                       Đổi Mật Khẩu
-                    </Link>
+                    </button>
                     <button
                       type="button"
                       onClick={handleLogout}
@@ -414,9 +494,12 @@ export default function ProfilePageContent({
                       {isLoggingOut ? "Đang Đăng Xuất..." : "Đăng Xuất"}
                     </button>
                   </div>
-                </form>
-              )}
-            </div>
+                </>
+              );
+            })()}
+          </form>
+        )}
+      </div>
 
             {/* Sổ Địa Chỉ */}
             {!isLoading && !error && (
@@ -426,6 +509,7 @@ export default function ProfilePageContent({
                     Sổ Địa Chỉ
                   </h2>
                   <button
+                    id="add-address-btn"
                     onClick={() => {
                       setEditingAddress(null);
                       setIsAddressModalOpen(true);
@@ -509,6 +593,11 @@ export default function ProfilePageContent({
         initialData={editingAddress}
         defaultFullname={profile.fullname}
         defaultPhone={profile.phone}
+      />
+
+      <ModalChangePassword 
+        open={isChangePasswordOpen} 
+        onClose={() => setIsChangePasswordOpen(false)} 
       />
 
       <ModalDeleteConfirmClient

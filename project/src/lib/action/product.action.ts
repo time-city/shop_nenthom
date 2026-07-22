@@ -1,5 +1,7 @@
 'use server'
 
+import { revalidatePath } from "next/cache";
+
 
 import { requireAdmin } from "../requireAdmin";
 import { ProductService } from "../services/product.service";
@@ -75,6 +77,9 @@ export async function createProductAction(params: unknown) {
   if (!parsed.success) return { error: parsed.error.issues[0].message }
   try {
     const product = await ProductService.createProduct(parsed.data)
+    
+    revalidatePath('/', 'layout');
+    
     return { success: true, data: product, message: "Đã thêm sản phẩm." }
   } catch (err) {
     return { error: getPublicErrorMessage(err, "Chưa thể thêm sản phẩm. Vui lòng thử lại.") }
@@ -92,6 +97,9 @@ export async function updateProductAction(id: string, params: unknown) {
   if (!parsed.success) return { error: parsed.error.issues[0].message }
   try {
     const product = await ProductService.updateProduct(id, parsed.data)
+    
+    revalidatePath('/', 'layout');
+    
     return { success: true, data: product, message: "Đã cập nhật sản phẩm." }
   } catch (err) {
     return { error: getPublicErrorMessage(err, "Chưa thể cập nhật sản phẩm. Vui lòng thử lại.") }
@@ -108,6 +116,9 @@ export async function deleteProductAction(params: unknown) {
   if (!parsed.success) return { error: parsed.error.issues[0].message }
   try {
     const product = await ProductService.deleteProduct(parsed.data.id)
+    
+    revalidatePath('/', 'layout');
+    
     return {
       success: true,
       data: product,

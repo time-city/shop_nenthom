@@ -104,8 +104,8 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                 </div>
 
                 {/* Modal Body */}
-                <div className="p-6">
-                    <div className="mb-4 text-sm text-white/60">
+                <div className="p-6 bg-[#FFFDF9]">
+                    <div className="mb-4 text-sm text-[#2C1810]">
                         <p><strong>Email:</strong> {user.email}</p>
                         <p><strong>Số điện thoại:</strong> {user.phone}</p>
                     </div>
@@ -125,7 +125,7 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                                 <tbody>
                                     {isLoading ? (
                                         <tr>
-                                            <td colSpan={5} className="px-4 py-8 text-center text-white/60 text-sm">
+                                            <td colSpan={5} className="px-4 py-8 text-center text-[#6B4E35] text-sm">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <Spinner size="sm" />
                                                     <span>Đang tải danh sách đơn hàng...</span>
@@ -142,9 +142,9 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                                         orders.map((order) => (
                                             <tr
                                                 key={order.id}
-                                                className="border-b border-white/10 text-sm text-[#F5F0E8] hover:bg-white/5 transition-colors"
+                                                className="border-b border-[#6B4E35]/10 text-sm text-[#2C1810] hover:bg-[#6B4E35]/5 transition-colors"
                                             >
-                                                <td className="px-4 py-3.5 font-bold font-mono text-[#F5F0E8]">
+                                                <td className="px-4 py-3.5 font-bold font-mono text-[#6B1218]">
                                                     {order.id}
                                                 </td>
                                                 <td className="px-4 py-3.5 whitespace-nowrap">
@@ -160,7 +160,7 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                                                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${order.status === "Đã xác nhận"
                                                             ? "bg-[#E8F5E9] text-[#2E7D32]"
                                                             : order.status === "Đã huỷ"
-                                                                ? "bg-white/10 text-white/60"
+                                                                ? "bg-gray-100 text-gray-500"
                                                                 : "bg-[#FFF9C4] text-[#F57F17]"
                                                         }`}>
                                                         {order.status}
@@ -170,7 +170,7 @@ export default function ClientOrderModal({ user, onClose }: ClientOrderModalProp
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={5} className="px-4 py-8 text-center text-white/60 text-sm">
+                                            <td colSpan={5} className="px-4 py-8 text-center text-[#6B4E35] text-sm">
                                                 Khách hàng này chưa có đơn hàng nào.
                                             </td>
                                         </tr>

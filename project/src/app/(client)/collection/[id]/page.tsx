@@ -30,6 +30,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     id: rawProduct.id,
     images: rawProduct.images,
     name: rawProduct.name,
+    ingredients: (rawProduct as any).ingredients,
+    usage_instructions: (rawProduct as any).usage_instructions,
     options: {
       packagings: options.packagings ?? [],
       scents: options.scents ?? [],

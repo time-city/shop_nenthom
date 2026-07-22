@@ -311,8 +311,8 @@ export default function ModalProduct({
       }
 
       if ("success" in result && result.success) {
-        toast.success("Đã thêm sản phẩm");
-        await onSave?.();
+        toast.success("Thêm sản phẩm thành công");
+        await onSave?.(result.data);
         // CHANGED: Reset avatar and sub images states on success
         setAvatarUrl("");
         setSubImageUrls([]);

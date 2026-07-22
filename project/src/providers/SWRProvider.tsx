@@ -3,10 +3,6 @@
 import { SWRConfig } from "swr";
 import { swrFetcher } from "@/src/lib/swr-fetcher";
 
-// Global cache outside of the component to survive navigation in App Router
-const globalCache = new Map();
-const globalProvider = () => globalCache;
-
 export const SWRProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <SWRConfig
@@ -15,8 +11,8 @@ export const SWRProvider = ({ children }: { children: React.ReactNode }) => {
         revalidateOnFocus: false,
         revalidateOnReconnect: true,
         shouldRetryOnError: true,
-        keepPreviousData: true,
-        provider: globalProvider,
+        // Bỏ keepPreviousData và provider globalCache để tránh tình trạng 
+        // "render dữ liệu cũ rồi mới giật ra dữ liệu mới" khi chuyển trang
       }}
     >
       {children}

@@ -434,8 +434,7 @@
 }
 
 /* Fix contrast for support modal (white background + visible text) */
-.supportPaper,
-.supportPaper * {
+.supportPaper {
   color: #2c1810 !important;
 }
 
@@ -446,7 +445,6 @@
 .supportPaper :global(.text-gray-400) {
   color: rgba(44, 24, 16, 0.55) !important;
 }
-
 
 .supportContactHeader {
   display: flex;

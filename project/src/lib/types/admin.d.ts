@@ -81,19 +81,20 @@ export type AdminIngredientTableProps = {
   items: AdminIngredientItem[];
   onDelete: (item: AdminIngredientItem) => void;
   onEdit: (item: AdminIngredientItem) => void;
+  startIndex?: number;
 };
 
 /** Props cho modal thêm/sửa sản phẩm trong admin. */
 export type AdminModalProductProps = {
   onClose: () => void;
-  onSave?: () => Promise<void> | void;
+  onSave?: (data?: any) => Promise<void> | void;
   open: boolean;
 };
 
 /** Props cho modal thêm danh mục trong admin. */
 export type AdminModalCategoryProps = {
   onClose: () => void;
-  onSave?: () => Promise<void> | void;
+  onSave?: (data?: any) => Promise<void> | void;
   open: boolean;
 };
 
@@ -101,7 +102,7 @@ export type AdminModalCategoryProps = {
 export type AdminModalEditCategoryProps = {
   category: import("../../interface/adminInterface").AdminProductCategoryInterface | null;
   onClose: () => void;
-  onSave?: () => Promise<void> | void;
+  onSave?: (data?: any) => Promise<void> | void;
   open: boolean;
 };
 
@@ -114,7 +115,7 @@ export type AdminCategoryFormValues = {
 /** Props cho modal chỉnh sửa sản phẩm trong admin. */
 export type AdminModalEditProductProps = {
   onClose: () => void;
-  onSave?: () => Promise<void> | void;
+  onSave?: (data?: any) => Promise<void> | void;
   open: boolean;
   product: import("../../interface/adminInterface").AdminProductListItemInterface | null;
 };
@@ -169,7 +170,7 @@ export type AdminDeleteConfirmModalProps = {
 /** Props cho modal thêm/sửa mã giảm giá trong admin. */
 export type AdminModalDiscountProps = {
   onClose: () => void;
-  onSave?: () => Promise<void> | void;
+  onSave?: (data?: any) => Promise<void> | void;
   open: boolean;
 };
 
@@ -210,7 +211,7 @@ export type AdminDiscountsSuccessResponse = {
 export type AdminModalEditDiscountProps = {
   discount: AdminDiscountItem | null;
   onClose: () => void;
-  onSave?: () => Promise<void> | void;
+  onSave?: (data?: any) => Promise<void> | void;
   open: boolean;
 };
 
@@ -241,7 +242,7 @@ export type AdminTableCellProps = {
 };
 
 /** Trạng thái xử lý đơn hàng trong admin. */
-export type AdminOrderStatus = "pending" | "confirmed" | "cancelled" | "cancel_requested";
+export type AdminOrderStatus = "pending" | "confirmed" | "cancelled" | "cancel_requested" | "shipped" | "delivered";
 
 /** Trạng thái thanh toán của đơn hàng trong admin. */
 export type AdminPaymentStatus = "paid" | "unpaid" | "refunded";
@@ -254,6 +255,8 @@ export type AdminOrder = {
   payment: AdminPaymentStatus;
   status: AdminOrderStatus;
   total: number;
+  shippingCarrier?: string | null;
+  trackingCode?: string | null;
 };
 
 /** Dữ liệu một sản phẩm hiển thị trong trang quản lý sản phẩm. */
@@ -433,5 +436,9 @@ export type UseAdminOrderSocketOptions = {
   onNewOrder?: (data: Extract<AdminWebSocketMessage, { event: "NEW_ORDER" }>["data"] & { event?: never }) => void;
   onNewContact?: (data: { contactId: string; name: string; subject: string; createdAt: string }) => void;
   onCancelRequest?: (data: Extract<AdminWebSocketMessage, { event: "CANCEL_REQUEST" }>["data"]) => void;
+  onNewPayment?: (data: any) => void;
+  onOrderUpdated?: (data: any) => void;
+  onNewReview?: (data: any) => void;
+  onReviewChanged?: (data: any) => void;
 };
 

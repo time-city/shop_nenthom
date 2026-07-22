@@ -8,6 +8,7 @@ import NotificationAdmin from "@/src/components/admin/common/notificationAdmin";
 import { useSupportStore } from "@/src/store/useSupportStore";
 import { getOrdersAction } from "@/src/lib/action/order.action";
 import { callAction } from "@/src/lib/utils/callAction";
+import useSWR from "swr";
 
 interface AdminHeaderProps {
   title: string;
@@ -19,7 +20,6 @@ interface AdminHeaderProps {
 export default function AdminHeader({ title, subtitle, backUrl, children }: AdminHeaderProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
-  const [pendingOrdersCount, setPendingOrdersCount] = useState<number>(0);
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
   const unreadCount = useSupportStore((state) => state.unreadCount);
   const hasHydrated = useSupportStore((state) => state._hasHydrated);
@@ -34,33 +34,24 @@ export default function AdminHeader({ title, subtitle, backUrl, children }: Admi
     return () => window.clearTimeout(timeoutId);
   }, []);
 
-  // Fetch initial pending orders count
-  useEffect(() => {
-    let cancelled = false;
-    const fetchPendingOrders = async () => {
-      try {
-        const result = await callAction(
-          () => getOrdersAction({ status: "PENDING", limit: 1 }),
-          "Không thể tải danh sách đơn hàng."
-        );
-        if (cancelled) return;
-        if (result && "success" in result && result.success && result.meta) {
-          setPendingOrdersCount(result.meta.total);
-        }
-      } catch {
-        // Ignore
-      }
-    };
-    void fetchPendingOrders();
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname]);
+  const { data: pendingOrdersResult, mutate: mutatePendingOrders } = useSWR(
+    ['admin-pending-orders'],
+    async () => {
+      return await callAction(
+        () => getOrdersAction({ status: "PENDING", limit: 1 }),
+        "Không thể tải danh sách đơn hàng."
+      );
+    }
+  );
+
+  const pendingOrdersCount = pendingOrdersResult && 'success' in pendingOrdersResult && pendingOrdersResult.success && pendingOrdersResult.meta
+    ? pendingOrdersResult.meta.total 
+    : 0;
 
   // Listen to global socket events dispatched by the Sidebar's socket connection
   useEffect(() => {
     const handleNewOrder = () => {
-      setPendingOrdersCount((prev) => prev + 1);
+      mutatePendingOrders();
     };
 
     window.addEventListener("admin-socket-new-order", handleNewOrder);
@@ -70,11 +61,11 @@ export default function AdminHeader({ title, subtitle, backUrl, children }: Admi
   }, []);
 
   const toggleSidebar = () => {
+    // On all screen sizes, toggle the sidebar via event
+    window.dispatchEvent(new Event("toggle-admin-sidebar"));
     if (window.innerWidth >= 1024) {
       document.body.classList.toggle('admin-sidebar-collapsed');
       setIsDesktopCollapsed(document.body.classList.contains('admin-sidebar-collapsed'));
-    } else {
-      window.dispatchEvent(new Event("toggle-admin-sidebar"));
     }
   };
 
@@ -85,11 +76,11 @@ export default function AdminHeader({ title, subtitle, backUrl, children }: Admi
         {backUrl ? (
           <Link
             href={backUrl}
-            className="flex items-center justify-center w-[38px] h-[38px] rounded-lg border border-[#D6A15F]/30 text-[#D6A15F] hover:bg-[#D6A15F]/10 transition-colors"
+            className="flex items-center justify-center w-[36px] h-[36px] rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors"
           >
             <svg
-              width="20"
-              height="20"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -103,23 +94,23 @@ export default function AdminHeader({ title, subtitle, backUrl, children }: Admi
           </Link>
         ) : (
           <button
-            className="flex items-center justify-center w-[38px] h-[38px] rounded-lg border border-[#D6A15F]/30 text-[#D6A15F] hover:bg-[#D6A15F]/10 transition-colors"
+            className="flex items-center justify-center w-[36px] h-[36px] rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors"
             type="button"
             aria-label="Toggle Menu"
             onClick={toggleSidebar}
           >
-            <Menu size={22} aria-hidden="true" />
+            <Menu size={20} aria-hidden="true" />
           </button>
         )}
       </div>
 
       {/* 2. Middle: Page title (centered on mobile, left-aligned on desktop) */}
       <div className="admin-header-title-slot">
-        <h1 className="dashboard-page-title font-serif text-[1.15rem] md:text-2xl font-bold inline-block">
+        <h1 className="dashboard-page-title">
           {title}
         </h1>
         {subtitle && (
-          <p className="dashboard-page-subtitle hidden lg:block text-xs mt-0.5">
+          <p className="dashboard-page-subtitle hidden lg:block">
             {subtitle}
           </p>
         )}

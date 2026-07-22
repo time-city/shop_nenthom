@@ -178,6 +178,34 @@ export default function NotificationUser() {
       }
       void loadNotifications({ silent: true });
     }, [loadNotifications, toast]),
+    onOrderStatusUpdated: useCallback((data: any) => {
+      if (data.notification) {
+        const newNoti: UserNotification = {
+          id: data.notification.id,
+          user_id: data.userId,
+          order_id: data.orderId,
+          type: data.notification.type,
+          title: data.notification.title,
+          message: data.notification.message,
+          is_read: data.notification.isRead,
+          read_at: null,
+          created_at: data.notification.createdAt,
+        };
+        setNotifications((prev) => [newNoti, ...prev]);
+        setArrivalReferenceTime(Date.now());
+
+        toast.info({
+          title: data.notification.title,
+          message: data.notification.message,
+        });
+      }
+      if (data.unreadNotificationCount !== undefined) {
+        setUnreadCount(data.unreadNotificationCount);
+      } else if (data.notification) {
+        setUnreadCount((prev) => prev + 1);
+      }
+      void loadNotifications({ silent: true });
+    }, [loadNotifications, toast]),
   });
 
   useEffect(() => {

@@ -7,6 +7,7 @@ import {
   getOrderDetailForAdminAction,
 } from "@/src/lib/action/order.action";
 import LoadingState from "@/src/components/ui/loadingState";
+import { useToast } from "@/src/components/ui/toastProvider";
 
 import type {
   DetailOrderProps,
@@ -14,6 +15,8 @@ import type {
 } from "../../../lib/types/client";
 import { callAction } from "@/src/lib/utils/callAction";
 import { OrderTrackingTimeline } from "./orderTrackingTimeline";
+import { useOrderTrackingSocket } from "@/src/hooks/useOrderTrackingSocket";
+import type { ClientOrderStatus } from "@/src/lib/types/client";
 
 const statusLabel: Record<OrderDetail["status"], string> = {
   canceled: "Đã huỷ",
@@ -40,12 +43,27 @@ const formatPrice = (value: number) =>
     style: "currency",
   }).format(value);
 
+const getTrackingLink = (carrier?: string | null, code?: string | null) => {
+  if (!code || !carrier) return null;
+  switch (carrier) {
+    case "SPX":
+      return `https://spx.vn/track?${code}`;
+    case "GHTK":
+      return `https://i.ghtk.vn/${code}`;
+    case "VIETTEL_POST":
+      return `https://viettelpost.com.vn/tra-cuu-hanh-trinh-don/`;
+    default:
+      return `https://www.google.com/search?q=${code}`;
+  }
+};
+
 export default function DetailOrder({
   orderNumber,
   onClose,
   isAdmin = false,
   onCancelSuccess,
 }: DetailOrderProps) {
+  const { toast } = useToast();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +71,26 @@ export default function DetailOrder({
   const [cancelReason, setCancelReason] = useState("");
   const [cancelError, setCancelError] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
+
+  useOrderTrackingSocket({
+    orderId: order?.dbId,
+    onOrderStatusUpdated: (data) => {
+      const translatedStatus = statusLabel[data.status as ClientOrderStatus] || data.status;
+      if (data.isGuest) {
+        toast.info(`Đơn hàng của bạn đã được cập nhật trạng thái: ${translatedStatus}`);
+      }
+      setOrder((prev) => prev ? { 
+        ...prev, 
+        status: data.status as ClientOrderStatus,
+        ...(data.trackingCode ? { trackingCode: data.trackingCode } : {}),
+        ...(data.shippingCarrier ? { shippingCarrier: data.shippingCarrier } : {})
+      } : prev);
+    },
+    onPaymentSuccess: (data) => {
+      toast.success("Thanh toán thành công! Cảm ơn bạn.");
+      setOrder((prev) => prev ? { ...prev, paymentStatus: "PAID" } : prev);
+    }
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -189,8 +227,10 @@ export default function DetailOrder({
               {/* Timeline Tracking */}
               {!isAdmin && (
                 <OrderTrackingTimeline 
-                  orderId={order.id} 
+                  orderId={order.dbId} 
                   initialStatus={order.status} 
+                  trackingCode={order.trackingCode}
+                  shippingCarrier={order.shippingCarrier}
                 />
               )}
 
@@ -210,12 +250,50 @@ export default function DetailOrder({
                   <div className="text-[0.7rem] uppercase tracking-wider text-[#F5F0E8]/60 mb-2 font-bold">Thanh toán</div>
                   <div className="text-sm font-semibold">
                     {order.paymentMethod === "cod" ? "COD (Khi nhận hàng)" : "Chuyển khoản"} -{" "}
-                    <span className={order.paymentStatus === "paid" ? "text-green-400" : "text-orange-400"}>
-                      {order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
+                    <span className={order.paymentStatus === "PAID" ? "text-green-400" : "text-orange-400"}>
+                      {order.paymentStatus === "PAID" ? "Đã thanh toán" : "Chưa thanh toán"}
                     </span>
                   </div>
                 </div>
               </div>
+
+              {/* QR Code Thanh Toán */}
+              {order.paymentMethod === "bank" && order.paymentStatus === "UNPAID" && (
+                <div className="rounded-2xl border border-[#10B981]/30 bg-black/35 p-5 space-y-4 shadow-[0_4px_12px_rgba(0,0,0,0.2)] relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-[#10B981]"></div>
+                  <h4 className="font-serif font-bold text-[#10B981] border-b border-[#F5F0E8]/10 pb-2 text-sm uppercase tracking-wider flex items-center gap-2">
+                    <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                    Quét Mã Thanh Toán
+                  </h4>
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <div className="bg-white p-2 rounded-xl shrink-0">
+                      <img 
+                        src={`https://vietqr.app/img?bank=MBBank&acc=0001118294755&template=qronly&amount=${order.total}&des=CHAM${order.dbId.replace(/-/g, '').substring(0,12).toUpperCase()}&showinfo=true&holder=NGUYEN%20THANH%20NHAN`} 
+                        alt="QR Code Thanh Toán" 
+                        className="w-32 h-32 md:w-40 md:h-40 object-contain"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-3 text-sm">
+                      <p className="text-[#F5F0E8]/80 leading-relaxed">
+                        Vui lòng sử dụng App Ngân hàng của bạn để quét mã QR bên cạnh. 
+                        Hệ thống sẽ tự động xác nhận thanh toán ngay lập tức.
+                      </p>
+                      <div className="bg-black/50 p-3 rounded-xl border border-[#F5F0E8]/10 space-y-1 mt-2">
+                        <div className="flex justify-between">
+                          <span className="text-[#F5F0E8]/60">Số tiền:</span>
+                          <strong className="text-[#10B981] font-bold">{formatPrice(order.total)}</strong>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-[#F5F0E8]/60">Nội dung:</span>
+                          <strong className="text-[#F5F0E8] font-bold text-right">CHAM{order.dbId.replace(/-/g, '').substring(0, 12).toUpperCase()}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Recipient / Shipping Info */}
               <div className="rounded-2xl border border-[#F5F0E8]/10 bg-black/35 p-5 space-y-3 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
@@ -237,6 +315,26 @@ export default function DetailOrder({
                     <div className="mt-2 rounded-xl bg-[#6B1218]/20 p-3 text-xs text-[#F5F0E8]/80 italic border border-[#F5F0E8]/10">
                       <span className="font-semibold block not-italic text-[#F5F0E8]/70 mb-1">Ghi chú giao hàng:</span>
                       &quot;{order.shippingNote}&quot;
+                    </div>
+                  )}
+                  {order.trackingCode && order.shippingCarrier && (
+                    <div className="mt-4 border-t border-[#F5F0E8]/10 pt-4">
+                      <div className="text-[#F5F0E8]/80 text-sm mb-2">
+                        Đơn vị vận chuyển: <strong className="text-[#E5C07B]">{order.shippingCarrier}</strong>
+                        <br />
+                        Mã vận đơn: <strong className="text-[#E5C07B]">{order.trackingCode}</strong>
+                      </div>
+                      <a
+                        href={getTrackingLink(order.shippingCarrier, order.trackingCode) || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-[#E5C07B] text-[#2C1810] px-4 py-2 rounded-lg font-semibold hover:bg-[#d4b06a] transition-colors"
+                      >
+                        <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        Theo dõi hành trình
+                      </a>
                     </div>
                   )}
                 </div>

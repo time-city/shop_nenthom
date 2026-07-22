@@ -86,7 +86,7 @@ export default function ModalCategory({
 
       if ("success" in result && result.success) {
         toast.success("Đã thêm danh mục thành công");
-        await onSave?.();
+        await onSave?.(result.data);
         setFormValues(initialFormValues);
         onClose();
       }

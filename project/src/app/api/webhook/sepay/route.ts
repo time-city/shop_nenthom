@@ -104,6 +104,11 @@ function extractOrderNumber(payload: SepayWebhookPayload, rawBody: string) {
     rawBody,
   ].filter(Boolean).join(" ");
 
+  const chamMatch = rawText.match(/\b(?:CHAM)[A-Z0-9]{8}\b/i);
+  if (chamMatch) {
+    return chamMatch[0].toUpperCase();
+  }
+
   const match = rawText.match(/\b(?:DH|CC)[-\sA-Z0-9]{4,}\b/i);
   return match?.[0]?.replace(/\s+/g, "").toUpperCase() ?? null;
 }

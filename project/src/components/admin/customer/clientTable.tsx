@@ -63,75 +63,135 @@ export default function ClientTable({
 
   return (
     <>
-      <div className="dashboard-card overflow-hidden no-padding">
-        <TableResponsiveWrapper minWidth={850}>
-          <table className="dashboard-admin-table">
-            <thead>
-            <tr>
-              <th>Họ và tên</th>
-              <th>Liên hệ</th>
-              <th>Ngày tham gia</th>
-              <th>Trạng thái & Vai trò</th>
-              <th className="text-right">Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {optimisticUsers.length > 0 ? (
-              optimisticUsers.map((user) => (
-                <tr
-                  key={user.id}
-                  className="transition-colors"
-                >
-                  <td className="font-bold text-[#2C1810]">{user.name}</td>
-                  <td>
-                    <div className="text-xs font-semibold text-[#2C1810]">{user.email}</div>
-                    <div className="text-xs text-[#6B4E35]">{user.phone}</div>
-                  </td>
-                  <td>{user.createdAt}</td>
-                  <td>
-                    <ClientStatusBadge isActive={user.isActive} role={user.role} />
-                  </td>
-                  <td className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => onViewOrders(user)}
-                        className="p-2 text-xs font-semibold rounded bg-[#F5F0E8] text-[#6B4E35] border border-[#6B4E35]/25 hover:bg-[#EDE5D8] transition-all duration-200"
-                        type="button"
-                        title="Xem đơn hàng"
-                      >
-                        <ClipboardList className="size-4" />
-                      </button>
-                      <button
-                        onClick={() => handleToggleStatus(user.id)}
-                        className={`p-2 text-xs font-semibold rounded border transition-all duration-200 flex items-center justify-center ${
-                          user.isActive
-                            ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-                            : "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                        }`}
-                        type="button"
-                        title={user.isActive ? "Khóa tài khoản" : "Kích hoạt tài khoản"}
-                      >
-                        {user.isActive ? (
-                          <Lock className="size-4" />
-                        ) : (
-                          <Unlock className="size-4" />
-                        )}
-                      </button>
-                    </div>
+      <div className="dashboard-card overflow-hidden no-padding md:bg-transparent md:border-none bg-white">
+        {/* Mobile Cards */}
+        <div className="md:hidden flex flex-col gap-4 p-4">
+          {optimisticUsers.length > 0 ? (
+            optimisticUsers.map((user) => (
+              <div 
+                key={user.id} 
+                className="bg-white border border-[#E5D5B5] rounded-xl p-4 flex flex-col gap-3 shadow-sm relative"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-[#2C1810] text-base">{user.name}</h3>
+                    <div className="text-xs text-[#6B4E35] mt-1">{user.phone}</div>
+                    <div className="text-xs font-medium text-[#2C1810]">{user.email}</div>
+                  </div>
+                  <ClientStatusBadge isActive={user.isActive} role={user.role} />
+                </div>
+                
+                <div className="text-xs text-[#6B4E35]/80">
+                  <span className="font-medium mr-1">Tham gia:</span>
+                  {user.createdAt}
+                </div>
+
+                <div className="flex justify-end gap-2 mt-2 pt-3 border-t border-[#F5F0E8]">
+                  <button
+                    onClick={() => onViewOrders(user)}
+                    className="p-2 text-xs font-semibold rounded bg-[#F5F0E8] text-[#6B4E35] border border-[#6B4E35]/25 hover:bg-[#EDE5D8] transition-all duration-200"
+                    type="button"
+                    title="Xem đơn hàng"
+                  >
+                    <ClipboardList className="size-4" />
+                  </button>
+                  <button
+                    onClick={() => handleToggleStatus(user.id)}
+                    className={`p-2 text-xs font-semibold rounded border transition-all duration-200 flex items-center justify-center ${
+                      user.isActive
+                        ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                        : "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                    }`}
+                    type="button"
+                    title={user.isActive ? "Khóa tài khoản" : "Kích hoạt tài khoản"}
+                  >
+                    {user.isActive ? (
+                      <Lock className="size-4" />
+                    ) : (
+                      <Unlock className="size-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-[#6B4E35]/60 text-sm">
+              Không tìm thấy khách hàng nào phù hợp.
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden md:block">
+          <TableResponsiveWrapper minWidth={850}>
+            <table className="dashboard-admin-table">
+              <thead>
+              <tr>
+                <th>Họ và tên</th>
+                <th>Liên hệ</th>
+                <th>Ngày tham gia</th>
+                <th>Trạng thái & Vai trò</th>
+                <th className="text-right">Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {optimisticUsers.length > 0 ? (
+                optimisticUsers.map((user) => (
+                  <tr
+                    key={user.id}
+                    className="transition-colors"
+                  >
+                    <td className="font-bold text-[#2C1810]">{user.name}</td>
+                    <td>
+                      <div className="text-xs font-semibold text-[#2C1810]">{user.email}</div>
+                      <div className="text-xs text-[#6B4E35]">{user.phone}</div>
+                    </td>
+                    <td>{user.createdAt}</td>
+                    <td>
+                      <ClientStatusBadge isActive={user.isActive} role={user.role} />
+                    </td>
+                    <td className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => onViewOrders(user)}
+                          className="p-2 text-xs font-semibold rounded bg-[#F5F0E8] text-[#6B4E35] border border-[#6B4E35]/25 hover:bg-[#EDE5D8] transition-all duration-200"
+                          type="button"
+                          title="Xem đơn hàng"
+                        >
+                          <ClipboardList className="size-4" />
+                        </button>
+                        <button
+                          onClick={() => handleToggleStatus(user.id)}
+                          className={`p-2 text-xs font-semibold rounded border transition-all duration-200 flex items-center justify-center ${
+                            user.isActive
+                              ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                              : "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                          }`}
+                          type="button"
+                          title={user.isActive ? "Khóa tài khoản" : "Kích hoạt tài khoản"}
+                        >
+                          {user.isActive ? (
+                            <Lock className="size-4" />
+                          ) : (
+                            <Unlock className="size-4" />
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-[#6B4E35]/60 text-sm">
+                    Không tìm thấy khách hàng nào phù hợp.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-[#6B4E35]/60 text-sm">
-                  Không tìm thấy khách hàng nào phù hợp.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </TableResponsiveWrapper>
-    </div>
+              )}
+            </tbody>
+          </table>
+        </TableResponsiveWrapper>
+        </div>
+      </div>
 
       <ModalDeleteConfirm
         open={lockUserId !== null}

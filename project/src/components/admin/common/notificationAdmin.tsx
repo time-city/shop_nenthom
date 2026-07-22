@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
   getAdminNotificationsAction,
@@ -61,6 +62,7 @@ export default function NotificationAdmin({
   variant = "sidebar",
 }: NotificationAdminProps) {
   const { toast } = useToast();
+  const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -287,7 +289,8 @@ export default function NotificationAdmin({
 
   return (
     <div className="notification-admin-root" ref={rootRef}>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .notification-admin-overlay.is-closing {
           animation: notification-admin-overlay-out 0.2s ease both !important;
         }
@@ -465,7 +468,14 @@ export default function NotificationAdmin({
               {!isLoading && !error && !isEmpty ? (
                 <div className="notification-admin-list">
                   {pendingOrdersCount > 0 ? (
-                    <article className="notification-admin-item is-summary">
+                    <article
+                      className="notification-admin-item is-summary"
+                      onClick={() => {
+                        closePanel();
+                        router.push("/admin/ordersManagement");
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
                       <span className="notification-admin-item-icon is-order">
                         <ShoppingBag size={19} aria-hidden="true" />
                       </span>
@@ -482,7 +492,14 @@ export default function NotificationAdmin({
                   ) : null}
 
                   {pendingSupportCount > 0 ? (
-                    <article className="notification-admin-item is-summary">
+                    <article
+                      className="notification-admin-item is-summary"
+                      onClick={() => {
+                        closePanel();
+                        router.push("/admin/support"); 
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
                       <span className="notification-admin-item-icon is-support">
                         <Headphones size={19} aria-hidden="true" />
                       </span>
@@ -504,11 +521,19 @@ export default function NotificationAdmin({
                       arrivalReferenceTime - new Date(notification.created_at).getTime() < 15000;
                     return (
                       <article
-                        className={`notification-admin-item${notification.is_read ? "" : " is-unread"
-                          } ${isNew ? "notification-admin-item-new-arrival" : ""}`}
                         key={notification.id}
-                        style={{ cursor: "pointer" }}
-                        onClick={() => !notification.is_read && void handleMarkAsRead(notification.id)}
+                        className={`notification-admin-item ${
+                          !notification.is_read ? "is-unread" : ""
+                        }`}
+                        onClick={() => {
+                          if (!notification.is_read) {
+                            handleMarkAsRead(notification.id);
+                          }
+                          if (notification.type === "ORDER") {
+                            router.push("/admin/ordersManagement");
+                          }
+                          // Add more routing logic based on type if needed
+                        }}
                       >
                         <span className="notification-admin-item-icon is-order">
                           <ShoppingBag size={19} aria-hidden="true" />

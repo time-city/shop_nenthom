@@ -404,12 +404,12 @@ export default function CollectionProducts({
          }
        `}} />
         <div
-          className="collection-grid mx-auto mt-10 flex max-w-[1180px] snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 sm:grid sm:grid-cols-2 sm:gap-7 sm:overflow-x-visible sm:px-0 xl:grid-cols-4 transition-opacity duration-300 scrollbar-hide"
+          className="collection-grid mx-auto mt-10 flex max-w-[1180px] snap-x snap-mandatory gap-4 overflow-x-auto px-2 pb-4 sm:grid sm:grid-cols-2 sm:gap-7 sm:overflow-x-visible sm:px-0 xl:grid-cols-4 transition-opacity duration-300 scrollbar-hide"
           id="collection-grid"
         >
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={`skeleton-${i}`} className="w-[60vw] shrink-0 snap-center sm:w-auto flex flex-col gap-4 rounded-[2rem] bg-black/10 backdrop-blur-xl border border-[#F5F0E8]/5 p-4 shadow-lg animate-pulse">
+              <div key={`skeleton-${i}`} className="w-[75vw] shrink-0 snap-center sm:w-auto flex flex-col gap-4 rounded-[2rem] bg-black/10 backdrop-blur-xl border border-[#F5F0E8]/5 p-4 shadow-lg animate-pulse">
                 <div className="aspect-[4/5] w-full rounded-2xl bg-[#F5F0E8]/10"></div>
                 <div className="px-2 pb-2">
                   <div className="h-5 w-3/4 bg-[#F5F0E8]/10 rounded mb-2"></div>
@@ -422,7 +422,7 @@ export default function CollectionProducts({
             pageProducts.map((product, index) => (
               <div
                 key={`${product.id}-${currentPage}`}
-                className="w-[60vw] shrink-0 snap-center sm:w-auto animate-slide-up-fade"
+                className="w-[75vw] shrink-0 snap-center sm:w-auto animate-slide-up-fade"
                 style={{ animationDelay: `${index * 150}ms` }}
                 suppressHydrationWarning
               >

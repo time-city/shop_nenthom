@@ -15,6 +15,7 @@ import LoadingState from "@/src/components/ui/loadingState";
 import ModalDeleteConfirm from "@/src/components/admin/common/modalDeleteConfirm";
 import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
 import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import ClientPagination from "@/src/components/admin/customer/clientPagination";
 
 const ModalProduct = dynamic(() => import("@/src/components/admin/product/modalProduct"), { ssr: false });
 const ModalEditProduct = dynamic(() => import("@/src/components/admin/product/modalEditProduct"), { ssr: false });
@@ -80,8 +81,30 @@ export default function ProductManagementClient() {
  const [isLoadingProductImpact, setIsLoadingProductImpact] = useState(false);
  const [productImpact, setProductImpact] = useState<ProductImpact | null>(null);
  const [error, setError] = useState("");
+
+  // Categories SWR
+  const { data: categoriesResult } = useSWR(
+    ['admin-categories'],
+    async () => {
+      return await callAction(() => getCategoriesAction(), "Không thể tải danh mục. Vui lòng thử lại sau.");
+    }
+  );
+
+  const categories = categoriesResult && 'success' in categoriesResult && categoriesResult.success
+    ? categoriesResult.categories
+    : [];
+
+ const initialMeta = {
+   limit: 10,
+   page: 1,
+   total: 0,
+   totalPages: 1,
+ };
+
  const [products, setProducts] = useState<AdminProductListItemInterface[]>([]);
- const [categories, setCategories] = useState<AdminProductCategoryInterface[]>([]);
+ const [currentPage, setCurrentPage] = useState(1);
+ const [itemsPerPage, setItemsPerPage] = useState(10);
+ const [meta, setMeta] = useState(initialMeta);
 
   // Selection & New actions states
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -92,11 +115,20 @@ export default function ProductManagementClient() {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [showBulkDeactivateConfirm, setShowBulkDeactivateConfirm] = useState(false);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setItemsPerPage(window.innerWidth < 768 ? 5 : 10);
+    };
+    handleResize(); // Set initial value
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
  const { data: fetchResult, isLoading: isSwrLoading, error: swrError, mutate: mutateProducts } = useSWR(
-    ['admin-products'],
+    ['admin-products', currentPage, itemsPerPage],
     async () => {
       console.log("[Data Source] 🟡 NETWORK QUERY - productManagementClient: Fetching products...");
-      const result = await callAction(() => getProductsAction({ limit: 100, page: 1 }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
+      const result = await callAction(() => getProductsAction({ limit: itemsPerPage, page: currentPage }), "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
       if ("error" in result && result.error) {
         throw new Error(getFriendlyResponseError(result.error));
       }
@@ -115,53 +147,57 @@ export default function ProductManagementClient() {
       const productResult = fetchResult as AdminProductsSuccessResponseInterface;
       setError("");
       setProducts(productResult.data.filter((product) => product.is_custom !== true));
+      if (productResult.meta) {
+        setMeta(productResult.meta);
+      }
     }
   }, [fetchResult, swrError, toast]);
 
   const isLoadingProducts = isSwrLoading && products.length === 0;
 
- useEffect(() => {
-   const loadCategories = async () => {
-     const result = await callAction(() => getCategoriesAction(), "Không thể tải danh mục. Vui lòng thử lại sau.");
-     if ("success" in result && result.success) {
-       setCategories(result.categories);
-     }
-   };
-   void loadCategories();
- }, [toast]);
+  const stopRowClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+  };
 
- const stopRowClick = (event: MouseEvent<HTMLButtonElement>) => {
-   event.stopPropagation();
- };
+  const handleDeleteProduct = async () => {
+    if (!deleteProduct) return;
+    const targetId = deleteProduct.id;
+    const targetName = deleteProduct.name;
+    
+    setDeleteProduct(null);
+    setProductImpact(null);
+    setSelectedIds((prev) => prev.filter((id) => id !== targetId));
 
- const handleDeleteProduct = async () => {
-   if (!deleteProduct) return;
-
-   setIsDeletingProduct(true);
-
-   // action-(ngừng bán sản phẩm)
-   const result = await callAction(() => deleteProductAction({ id: deleteProduct.id }), "Không thể ngừng bán sản phẩm. Vui lòng thử lại sau.");
-
-   if ("error" in result && result.error) {
-     toast.error(getFriendlyResponseError(result.error));
-     setIsDeletingProduct(false);
-     return;
-   }
-   if ("success" in result && result.success) {
-     const data = result.data as { removedCartItemCount?: number } | undefined;
-     const removedCount = data?.removedCartItemCount ?? 0;
-     const msg = removedCount > 0
-       ? `Đã ngừng bán sản phẩm "${deleteProduct.name}", đã cập nhật ${removedCount} giỏ hàng.`
-       : `Đã ngừng bán sản phẩm "${deleteProduct.name}".`;
-     toast.success(msg);
-     setDeleteProduct(null);
-     setProductImpact(null);
-     await mutateProducts();
-   }
-
-   setIsDeletingProduct(false);
- };
-
+    const mutationPromise = mutateProducts(
+      async (current: any) => {
+        const result = await callAction(() => deleteProductAction({ id: targetId }), "Không thể ngừng bán sản phẩm. Vui lòng thử lại sau.");
+        if ("error" in result && result.error) throw new Error(getFriendlyResponseError(result.error as string));
+        if (!current || !current.data) return current;
+        return {
+          ...current,
+          data: current.data.map((p: any) => p.id === targetId ? { ...p, is_active: false } : p)
+        };
+      },
+      {
+        optimisticData: (current: any) => {
+          if (!current || !current.data) return current;
+          return {
+            ...current,
+            data: current.data.map((p: any) => p.id === targetId ? { ...p, is_active: false } : p)
+          };
+        },
+        rollbackOnError: true,
+        revalidate: false
+      }
+    );
+    toast.info(`Đang ngừng bán "${targetName}"...`);
+    try {
+      await mutationPromise;
+      toast.success(`Đã ngừng bán "${targetName}".`);
+    } catch (err: any) {
+      toast.error(`Lỗi: ${err.message}`);
+    }
+  };
   const handleOpenDeleteProductModal = async (product: AdminProductListItemInterface) => {
     setDeleteProduct(product);
     setProductImpact(null);
@@ -200,93 +236,155 @@ export default function ProductManagementClient() {
 
   // Activation handler
   const handleActivateProduct = async (product: AdminProductListItemInterface) => {
-    try {
-      const result = await callAction(
-        () => updateProductAction(product.id, { is_active: true }),
-        "Không thể kích hoạt lại sản phẩm. Vui lòng thử lại sau."
-      );
-      if ("success" in result && result.success) {
-        toast.success(`Đã kích hoạt lại sản phẩm "${product.name}" thành công.`);
-        await mutateProducts();
-      } else if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
+    const targetId = product.id;
+    const targetName = product.name;
+
+    const mutationPromise = mutateProducts(
+      async (current: any) => {
+        const result = await callAction(() => updateProductAction(targetId, { is_active: true }), "Không thể kích hoạt lại sản phẩm. Vui lòng thử lại sau.");
+        if ("error" in result && result.error) throw new Error(getFriendlyResponseError(result.error as string));
+        if (!current || !current.data) return current;
+        return {
+          ...current,
+          data: current.data.map((p: any) => p.id === targetId ? { ...p, is_active: true } : p)
+        };
+      },
+      {
+        optimisticData: (current: any) => {
+          if (!current || !current.data) return current;
+          return {
+            ...current,
+            data: current.data.map((p: any) => p.id === targetId ? { ...p, is_active: true } : p)
+          };
+        },
+        rollbackOnError: true,
+        revalidate: false
       }
-    } catch (err) {
-      toast.error("Đã xảy ra lỗi khi kích hoạt lại sản phẩm.");
+    );
+    toast.info(`Đang kích hoạt "${targetName}"...`);
+    try {
+      await mutationPromise;
+      toast.success(`Đã kích hoạt lại "${targetName}" thành công.`);
+    } catch (err: any) {
+      toast.error(`Lỗi: ${err.message}`);
     }
   };
 
   // Hard delete handler
   const handleHardDeleteProduct = async () => {
     if (!hardDeleteProduct) return;
-    setIsHardDeleting(true);
+    const targetId = hardDeleteProduct.id;
+    const targetName = hardDeleteProduct.name;
+    
+    setHardDeleteProduct(null);
+    setSelectedIds((prev) => prev.filter((id) => id !== targetId));
 
-    try {
-      const result = await callAction(
-        () => hardDeleteProductAction({ id: hardDeleteProduct.id }),
-        "Không thể xóa vĩnh viễn sản phẩm. Vui lòng thử lại sau."
-      );
-
-      if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
-      } else if ("success" in result && result.success) {
-        toast.success(`Đã xóa vĩnh viễn sản phẩm "${hardDeleteProduct.name}" khỏi cơ sở dữ liệu.`);
-        setHardDeleteProduct(null);
-        setSelectedIds((prev) => prev.filter((id) => id !== hardDeleteProduct.id));
-        await mutateProducts();
+    const mutationPromise = mutateProducts(
+      async (current: any) => {
+        const result = await callAction(() => hardDeleteProductAction({ id: targetId }), "Không thể xóa vĩnh viễn sản phẩm. Vui lòng thử lại sau.");
+        if ("error" in result && result.error) throw new Error(getFriendlyResponseError(result.error as string));
+        if (!current || !current.data) return current;
+        return {
+          ...current,
+          data: current.data.filter((p: any) => p.id !== targetId)
+        };
+      },
+      {
+        optimisticData: (current: any) => {
+          if (!current || !current.data) return current;
+          return {
+            ...current,
+            data: current.data.filter((p: any) => p.id !== targetId)
+          };
+        },
+        rollbackOnError: true,
+        revalidate: false
       }
-    } catch (err) {
-      toast.error("Đã xảy ra lỗi khi xóa vĩnh viễn sản phẩm.");
-    } finally {
-      setIsHardDeleting(false);
+    );
+    toast.info(`Đang xóa vĩnh viễn "${targetName}"...`);
+    try {
+      await mutationPromise;
+      toast.success(`Đã xóa vĩnh viễn "${targetName}".`);
+    } catch (err: any) {
+      toast.error(`Lỗi: ${err.message}`);
     }
   };
 
   // Bulk deactivation handler
   const handleBulkDeactivate = async () => {
     if (selectedIds.length === 0) return;
-    setIsBulkActionPending(true);
-    try {
-      const result = await callAction(
-        () => bulkDeactivateProductsAction({ ids: selectedIds }),
-        "Không thể ngừng bán hàng loạt sản phẩm. Vui lòng thử lại sau."
-      );
-      if ("success" in result && result.success) {
-        toast.success(result.message || "Đã ngừng bán hàng loạt sản phẩm thành công.");
-        setSelectedIds([]);
-        setShowBulkDeactivateConfirm(false);
-        await mutateProducts();
-      } else if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
+    const targetIds = [...selectedIds];
+    
+    setShowBulkDeactivateConfirm(false);
+    setSelectedIds([]);
+
+    const mutationPromise = mutateProducts(
+      async (current: any) => {
+        const result = await callAction(() => bulkDeactivateProductsAction({ ids: targetIds }), "Không thể ngừng bán hàng loạt. Vui lòng thử lại sau.");
+        if ("error" in result && result.error) throw new Error(getFriendlyResponseError(result.error as string));
+        if (!current || !current.data) return current;
+        return {
+          ...current,
+          data: current.data.map((p: any) => targetIds.includes(p.id) ? { ...p, is_active: false } : p)
+        };
+      },
+      {
+        optimisticData: (current: any) => {
+          if (!current || !current.data) return current;
+          return {
+            ...current,
+            data: current.data.map((p: any) => targetIds.includes(p.id) ? { ...p, is_active: false } : p)
+          };
+        },
+        rollbackOnError: true,
+        revalidate: false
       }
-    } catch (err) {
-      toast.error("Đã xảy ra lỗi khi ngừng bán hàng loạt.");
-    } finally {
-      setIsBulkActionPending(false);
+    );
+    toast.info(`Đang ngừng bán ${targetIds.length} sản phẩm...`);
+    try {
+      await mutationPromise;
+      toast.success(`Đã ngừng bán ${targetIds.length} sản phẩm.`);
+    } catch (err: any) {
+      toast.error(`Lỗi: ${err.message}`);
     }
   };
 
   // Bulk hard delete handler
   const handleBulkHardDelete = async () => {
     if (selectedIds.length === 0) return;
-    setIsBulkActionPending(true);
-    try {
-      const result = await callAction(
-        () => bulkHardDeleteProductsAction({ ids: selectedIds }),
-        "Không thể xóa vĩnh viễn hàng loạt sản phẩm. Vui lòng thử lại sau."
-      );
-      if ("success" in result && result.success) {
-        toast.success(result.message || "Đã xóa vĩnh viễn hàng loạt sản phẩm thành công.");
-        setSelectedIds([]);
-        setShowBulkDeleteConfirm(false);
-        await mutateProducts();
-      } else if ("error" in result && result.error) {
-        toast.error(getFriendlyResponseError(result.error));
+    const targetIds = [...selectedIds];
+    
+    setShowBulkDeleteConfirm(false);
+    setSelectedIds([]);
+
+    const mutationPromise = mutateProducts(
+      async (current: any) => {
+        const result = await callAction(() => bulkHardDeleteProductsAction({ ids: targetIds }), "Không thể xóa hàng loạt. Vui lòng thử lại sau.");
+        if ("error" in result && result.error) throw new Error(getFriendlyResponseError(result.error as string));
+        if (!current || !current.data) return current;
+        return {
+          ...current,
+          data: current.data.filter((p: any) => !targetIds.includes(p.id))
+        };
+      },
+      {
+        optimisticData: (current: any) => {
+          if (!current || !current.data) return current;
+          return {
+            ...current,
+            data: current.data.filter((p: any) => !targetIds.includes(p.id))
+          };
+        },
+        rollbackOnError: true,
+        revalidate: false
       }
-    } catch (err) {
-      toast.error("Đã xảy ra lỗi khi xóa vĩnh viễn hàng loạt.");
-    } finally {
-      setIsBulkActionPending(false);
+    );
+    toast.info(`Đang xóa vĩnh viễn ${targetIds.length} sản phẩm...`);
+    try {
+      await mutationPromise;
+      toast.success(`Đã xóa vĩnh viễn ${targetIds.length} sản phẩm.`);
+    } catch (err: any) {
+      toast.error(`Lỗi: ${err.message}`);
     }
   };
 
@@ -319,9 +417,9 @@ export default function ProductManagementClient() {
 
       <div className="dashboard-page-content">
         {selectedIds.length > 0 && (
-          <div className="flex items-center justify-between px-6 py-4 mb-4 rounded-2xl border border-white/10" style={{ background: "rgba(255, 255, 255, 0.08)", backdropFilter: "blur(20px)" }}>
-            <div className="text-sm text-white/80">
-              Đang chọn <strong className="text-[#E5C07B]">{selectedIds.length}</strong> sản phẩm
+          <div className="flex items-center justify-between px-6 py-4 mb-4 rounded-2xl border border-gray-200 bg-gray-50">
+            <div className="text-sm text-gray-700">
+              Đang chọn <strong className="text-gray-900">{selectedIds.length}</strong> sản phẩm
             </div>
             <div className="flex gap-3">
               <button
@@ -343,9 +441,103 @@ export default function ProductManagementClient() {
             </div>
           </div>
         )}
-        <section className="dashboard-card product-table-card">
+        <section className="dashboard-card product-table-card overflow-hidden no-padding md:bg-transparent md:border-none bg-white">
           <div className="dashboard-card-body no-padding">
-            <div className="dashboard-table-wrapper">
+            {/* Mobile Cards */}
+            <div className="md:hidden flex flex-col gap-4 p-4">
+              {products.length > 0 ? (
+                products.map((product) => (
+                  <div 
+                    key={product.id} 
+                    className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3 shadow-sm relative"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 flex items-center justify-center pt-1">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(product.id)}
+                          onChange={() => handleSelectRow(product.id)}
+                          className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex gap-3 items-start">
+                          <div className="relative w-16 h-16 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                            {Array.isArray(product.images) && typeof product.images[0] === 'string' && product.images[0] ? (
+                              <Image
+                                src={product.images[0]}
+                                alt={product.name}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <span />
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-sm line-clamp-2 leading-tight mb-1">{product.name}</h3>
+                            <div className="text-xs font-semibold text-gray-700">
+                              {product.base_price_cents.toLocaleString('vi-VN')} đ
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Danh mục: {categories.find((c) => c.id === product.category_id)?.name || "N/A"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center mt-1">
+                      <div className="text-xs">
+                        <span className={`px-2 py-1 rounded-full font-semibold ${product.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {product.is_active ? "Đang bán" : "Ngừng bán"}
+                        </span>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <AdminEditButton
+                          ariaLabel={`Sửa ${product.name}`}
+                          onClick={(event) => {
+                            stopRowClick(event);
+                            setEditProduct(product);
+                          }}
+                        />
+                        {product.is_active ? (
+                          <AdminDeactivateButton
+                            ariaLabel={`Ngừng bán ${product.name}`}
+                            onClick={(event) => {
+                              stopRowClick(event);
+                              void handleOpenDeleteProductModal(product);
+                            }}
+                          />
+                        ) : (
+                          <AdminActivateButton
+                            ariaLabel={`Kích hoạt lại ${product.name}`}
+                            onClick={(event) => {
+                              stopRowClick(event);
+                              void handleActivateProduct(product);
+                            }}
+                          />
+                        )}
+                        <AdminDeleteButton
+                          ariaLabel={`Xóa vĩnh viễn ${product.name}`}
+                          onClick={(event) => {
+                            stopRowClick(event);
+                            setProductToDeleteChoice(product);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500 text-sm">
+                  {isLoadingProducts ? "Đang tải..." : "Chưa có sản phẩm nào"}
+                </div>
+              )}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden md:block dashboard-table-wrapper">
               <TableResponsiveWrapper minWidth={950}>
                 <table className="dashboard-admin-table product-admin-table">
                   <thead>
@@ -355,7 +547,7 @@ export default function ProductManagementClient() {
                           type="checkbox"
                           checked={products.length > 0 && selectedIds.length === products.length}
                           onChange={handleSelectAll}
-                          className="w-4 h-4 rounded-full border-white/20 bg-white/5 text-[#E5C07B] focus:ring-[#E5C07B]"
+                          className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                           style={{ cursor: "pointer" }}
                         />
                       </th>
@@ -385,7 +577,7 @@ export default function ProductManagementClient() {
                              type="checkbox"
                              checked={selectedIds.includes(product.id)}
                              onChange={() => handleSelectRow(product.id)}
-                             className="w-4 h-4 rounded-full border-white/20 bg-white/5 text-[#E5C07B] focus:ring-[#E5C07B]"
+                             className="w-4 h-4 rounded border-gray-300 bg-white text-gray-900 focus:ring-gray-900"
                              style={{ cursor: "pointer" }}
                            />
                          </td>
@@ -463,35 +655,66 @@ export default function ProductManagementClient() {
            {isLoadingProducts ? (
              <LoadingState type="table"
                label="Đang tải danh sách sản phẩm..."
-               className="m-5"
+               className="m-5 hidden md:block"
              />
            ) : null}
            {!isLoadingProducts && error ? (
-             <div className="px-5 py-8 text-center text-sm text-[#8A1119]">
+             <div className="px-5 py-8 text-center text-sm text-[#8A1119] hidden md:block">
                {error}
              </div>
            ) : null}
            {!isLoadingProducts && !error && products.length === 0 ? (
-             <div className="px-5 py-8 text-center text-sm text-white/60">
+             <div className="px-5 py-8 text-center text-sm text-[#6B4E35]/60 hidden md:block">
                Chưa có sản phẩm nào
              </div>
            ) : null}
          </div>
        </section>
+
+       <ClientPagination
+         currentPage={meta.page}
+         totalPages={meta.totalPages}
+         onChange={(page) => setCurrentPage(page)}
+       />
      </div>
 
       <ModalProduct
         open={isModalOpen}
         categories={categories}
         onClose={() => setIsModalOpen(false)}
-        onSave={() => { mutateProducts(); }}
+        onSave={(newProduct) => {
+          if (newProduct) {
+            mutateProducts(
+              (current: any) => {
+                if (!current || !current.data) return current;
+                return {
+                  ...current,
+                  data: [newProduct, ...current.data]
+                };
+              },
+              false
+            );
+          }
+        }}
       />
       <ModalEditProduct
-        open={Boolean(editProduct)}
         product={editProduct}
-        categories={categories}
+        open={Boolean(editProduct)}
         onClose={() => setEditProduct(null)}
-        onSave={() => { mutateProducts(); }}
+        onSave={(updatedProduct) => {
+          if (updatedProduct) {
+            mutateProducts(
+              (current: any) => {
+                if (!current || !current.data) return current;
+                return {
+                  ...current,
+                  data: current.data.map((p: any) => p.id === updatedProduct.id ? updatedProduct : p)
+                };
+              },
+              false
+            );
+          }
+        }}
       />
      <ModalDeleteConfirm
        open={Boolean(deleteProduct)}

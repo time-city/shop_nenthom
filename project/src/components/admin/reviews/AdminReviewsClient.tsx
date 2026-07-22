@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Star, MessageSquareReply, Eye, EyeOff, CheckCircle, Loader2 } from "lucide-react";
 import { updateReviewStatusAction, replyToReviewAction, getAllReviewsAdminAction } from "@/src/lib/action/review.action";
 import useSWR from "swr";
+import { useAdminOrderSocket } from "@/src/hooks/useAdminOrderSocket";
 
 type ActionResult<T = any> =
   | { success: true; data: T; error?: never }
@@ -41,15 +42,36 @@ export default function AdminReviewsClient({
   const [replyModalOpen, setReplyModalOpen] = useState(false);
   const [activeReview, setActiveReview] = useState<any>(null);
   const [replyContent, setReplyContent] = useState("");
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setItemsPerPage(window.innerWidth < 768 ? 5 : 10);
+    };
+    handleResize(); // Set initial value
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const { data: fetchResult, mutate: mutateReviews } = useSWR(
-    [getAllReviewsAdminAction, { page: currentPage, limit: 6, status: currentStatus, rating: currentRating }],
+    [getAllReviewsAdminAction, { page: currentPage, limit: itemsPerPage, status: currentStatus, rating: currentRating }],
     async ([action, args]) => {
       console.log("[Data Source] 🟡 NETWORK QUERY - AdminReviewsClient: Fetching reviews...");
       return fetcher([action, args]);
     },
     { fallbackData: initialData, revalidateOnFocus: false }
   );
+
+  useAdminOrderSocket({
+    onNewReview: (data) => {
+      toast.info({ title: "Đánh giá mới", message: "Có đánh giá mới từ khách hàng." });
+      mutateReviews();
+    },
+    onReviewChanged: (data) => {
+      toast.info({ title: "Thông báo", message: data.message || `Một đánh giá vừa được thay đổi.` });
+      mutateReviews();
+    }
+  });
 
   useEffect(() => {
     if (fetchResult) {
@@ -95,7 +117,6 @@ export default function AdminReviewsClient({
       const result = await updateReviewStatusAction({ reviewId, is_published: !currentStatus });
       if (result.success) {
         toast.success({ title: "Thành công", message: "Đã cập nhật trạng thái hiển thị." });
-        mutateReviews();
       } else {
         toast.error({ title: "Lỗi", message: result.error || "Không thể cập nhật." });
         mutateReviews(previousData, false);
@@ -134,7 +155,6 @@ export default function AdminReviewsClient({
         toast.success({ title: "Thành công", message: "Đã gửi phản hồi." });
         setReplyModalOpen(false);
         setActiveReview(null);
-        mutateReviews();
       } else {
         toast.error({ title: "Lỗi", message: result.error || "Không thể phản hồi." });
         mutateReviews(previousData, false);
@@ -150,18 +170,31 @@ export default function AdminReviewsClient({
       />
       <div className="dashboard-page-content space-y-6">
         <section className="dashboard-card relative z-20">
-          <div className="dashboard-card-body flex justify-end">
-            <div className="flex gap-4">
-              <CustomSelect 
-                value={currentStatus} 
-                onChange={(val) => handleFilterChange('status', val)}
-                options={[
-                  { label: "Tất cả trạng thái", value: "all" },
-                  { label: "Chờ duyệt", value: "pending" },
-                  { label: "Đã hiển thị", value: "published" }
-                ]}
-              />
+          <div className="dashboard-card-body flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "Tất cả trạng thái", value: "all" },
+                { label: "Chờ duyệt", value: "pending" },
+                { label: "Đã hiển thị", value: "published" }
+              ].map(opt => {
+                const isActive = (currentStatus || "all") === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleFilterChange('status', opt.value)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
+                      isActive 
+                        ? "bg-[#6B1218] text-white border-[#6B1218] shadow-sm" 
+                        : "bg-transparent text-[#6B4E35] border-[#6B4E35]/20 hover:bg-[#6B4E35]/5"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
 
+            <div className="shrink-0">
               <CustomSelect 
                 value={currentRating ? currentRating.toString() : 'all'} 
                 onChange={(val) => handleFilterChange('rating', val)}
@@ -178,8 +211,96 @@ export default function AdminReviewsClient({
           </div>
         </section>
 
-      <div className="dashboard-card overflow-hidden no-padding">
-        <div className="dashboard-table-wrapper">
+      <div className="dashboard-card overflow-hidden no-padding md:bg-transparent md:border-none bg-white">
+        {/* Mobile Cards */}
+        <div className="md:hidden flex flex-col gap-4 p-4">
+          {reviewsData.items.length === 0 ? (
+            <div className="text-center py-8 text-[#6B4E35]/60 text-sm">
+              Không có đánh giá nào phù hợp.
+            </div>
+          ) : (
+            reviewsData.items.map((review: any) => (
+              <div 
+                key={review.id} 
+                className="bg-white border border-[#E5D5B5] rounded-xl p-4 flex flex-col gap-3 shadow-sm"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-[#2C1810] text-sm">{review.user?.fullname || review.user?.email}</h3>
+                    <div className="text-xs text-[#6B4E35] mt-1">{new Date(review.created_at).toLocaleDateString('vi-VN')}</div>
+                  </div>
+                  {review.is_published ? (
+                    <span className="dashboard-status completed">
+                      <CheckCircle className="size-3" /> Hiển thị
+                    </span>
+                  ) : (
+                    <span className="dashboard-status pending">
+                      <Loader2 className="size-3" /> Chờ duyệt
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 bg-[#F5F0E8]/50 p-2 rounded-lg">
+                  <div className="size-10 rounded-md overflow-hidden bg-[#6B4E35]/20 relative shrink-0">
+                    {review.product.images?.[0] ? (
+                      <Image src={review.product.images[0]} alt="prod" fill className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-[#6B4E35]/10"></div>
+                    )}
+                  </div>
+                  <span className="font-medium text-[#2C1810] text-sm line-clamp-2">{review.product.name}</span>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-1 mb-1 text-[#D6A15F]">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className={`size-3 ${i < review.rating ? "fill-current" : "text-[#6B4E35]/30"}`} />
+                    ))}
+                  </div>
+                  <p className="text-sm text-[#2C1810] mt-1 line-clamp-3">{review.content}</p>
+                  
+                  {review.images && review.images.length > 0 && (
+                    <div className="flex gap-2 mt-2">
+                      {review.images.map((img: string, i: number) => (
+                        <a key={i} href={img} target="_blank" rel="noreferrer" className="relative size-12 rounded-lg border border-[#E5D5B5] overflow-hidden">
+                          <Image src={img} alt="fb" fill className="object-cover" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+
+                  {review.admin_reply && (
+                    <div className="mt-2 bg-[#D6A15F]/10 text-[#8B6030] text-xs p-2 rounded border border-[#D6A15F]/30 line-clamp-3">
+                      <span className="font-semibold">Đã TL:</span> {review.admin_reply}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2 mt-2 pt-3 border-t border-[#F5F0E8]">
+                  <button
+                    onClick={() => handleToggleStatus(review.id, review.is_published)}
+                    disabled={isPending}
+                    className={`p-2 rounded-lg transition border flex items-center justify-center ${review.is_published ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100" : "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"}`}
+                    title={review.is_published ? "Ẩn đánh giá này" : "Duyệt & Hiển thị"}
+                  >
+                    {review.is_published ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                  <button
+                    onClick={() => handleOpenReply(review)}
+                    disabled={isPending}
+                    className="p-2 bg-[#F5F0E8] text-[#6B4E35] border border-[#6B4E35]/25 rounded-lg hover:bg-[#EDE5D8] transition flex items-center justify-center"
+                    title="Trả lời khách hàng"
+                  >
+                    <MessageSquareReply className="size-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden md:block dashboard-table-wrapper">
           <TableResponsiveWrapper minWidth={900}>
           <table className="dashboard-admin-table">
             <thead>
@@ -195,7 +316,7 @@ export default function AdminReviewsClient({
             <tbody>
               {reviewsData.items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center">Không có đánh giá nào phù hợp.</td>
+                  <td colSpan={6} className="text-center py-8 text-[#6B4E35]/60">Không có đánh giá nào phù hợp.</td>
                 </tr>
               ) : (
                 reviewsData.items.map((review: any) => (
@@ -266,7 +387,7 @@ export default function AdminReviewsClient({
                         <button
                           onClick={() => handleOpenReply(review)}
                           disabled={isPending}
-                          className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
+                          className="p-2 bg-[#F5F0E8] text-[#6B4E35] border border-[#6B4E35]/25 rounded-lg hover:bg-[#EDE5D8] transition"
                           title="Trả lời khách hàng"
                         >
                           <MessageSquareReply className="size-4" />

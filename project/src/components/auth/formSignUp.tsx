@@ -139,17 +139,18 @@ export default function FormSignUp() {
       }
 
       if (isUserInputError(message)) {
-        const field = normalizedMessage.includes("số điện thoại")
-          ? "phone"
-          : normalizedMessage.includes("họ")
-            ? "fullname"
-            : normalizedMessage.includes("mật khẩu")
-              ? "password"
-              : "email";
-        actions.setFieldError(field, message);
-        actions.setFieldTouched(field, true, false);
-        actions.setSubmitting(false);
-        return;
+        let field: keyof SignUpValues | null = null;
+        if (normalizedMessage.includes("số điện thoại")) field = "phone";
+        else if (normalizedMessage.includes("họ")) field = "fullname";
+        else if (normalizedMessage.includes("mật khẩu")) field = "password";
+        else if (normalizedMessage.includes("email")) field = "email";
+
+        if (field) {
+            actions.setFieldError(field, message);
+            actions.setFieldTouched(field, true, false);
+            actions.setSubmitting(false);
+            return;
+        }
       }
 
       toast.error(message);
@@ -289,9 +290,6 @@ export default function FormSignUp() {
                         : "border-[#2c1810]/20"
                         }`}
                     />
-                    <div className="absolute bottom-[2px] right-2 text-[10px] text-[#7A1218]/60">
-                      Tối thiểu 6 ký tự
-                    </div>
                     {touched.password && errors.password ? (
                       <p className="absolute bottom-0 left-0 text-[11px] text-[#6B1218] sm:text-xs">
                         {errors.password}

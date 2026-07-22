@@ -70,6 +70,18 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
     }
   }, [response]);
 
+  useEffect(() => {
+    const handleOrderStatusUpdated = () => {
+      void mutate();
+    };
+    window.addEventListener("user-socket-order-status-updated", handleOrderStatusUpdated);
+    window.addEventListener("user-socket-order-cancelled", handleOrderStatusUpdated);
+    return () => {
+      window.removeEventListener("user-socket-order-status-updated", handleOrderStatusUpdated);
+      window.removeEventListener("user-socket-order-cancelled", handleOrderStatusUpdated);
+    };
+  }, [mutate]);
+
   const orders = response && "success" in response && response.success && "data" in response ? (response.data as ClientOrderRecord[]) : [];
   const meta = response && "success" in response && response.success && "meta" in response ? response.meta : initialMeta;
   const displayError = swrError ? (swrError instanceof Error ? swrError.message : String(swrError)) : (response && "error" in response ? response.error : null);
@@ -81,14 +93,14 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
   }, [meta.total, setOrderCount]);
 
   return (
-    <main 
+    <main
       className="min-h-screen text-[#F5F0E8] relative bg-cover bg-center bg-no-repeat bg-fixed"
       style={{ backgroundImage: "url('/assets/option_background.jpg')" }}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
-      
+
       <div className="relative z-10 pt-24">
-        <section className="mx-auto w-full max-w-[908px] px-4 py-8 sm:px-6 md:py-10">
+        <section className="mx-auto w-full max-w-[1024px] px-2 py-8 sm:px-4 md:py-10">
           <h2 className="relative mb-8 pb-3 font-serif text-[1.45rem] font-bold text-[#F5F0E8] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-[#D6A15F] sm:text-[1.55rem]">
             Lịch Sử Đơn Hàng
           </h2>
@@ -106,23 +118,42 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
               {orders.map((order) => (
                 <article
                   key={order.id}
-                  className="overflow-hidden rounded-3xl bg-[#F5F0E8]/5 backdrop-blur-md border border-[#F5F0E8]/10 p-5 shadow-[0_16px_36px_rgba(0,0,0,0.5)] sm:p-6"
+                  onClick={() => setSelectedOrderNumber(order.id)}
+                  className="group cursor-pointer relative overflow-hidden rounded-3xl bg-[#F5F0E8]/5 backdrop-blur-md border border-[#F5F0E8]/10 p-5 shadow-[0_16px_36px_rgba(0,0,0,0.5)] sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#D6A15F]/40 hover:shadow-[0_20px_40px_rgba(214,161,95,0.15)]"
                 >
-                  <div className="flex flex-col gap-3 border-b border-[#F5F0E8]/10 pb-4 sm:flex-row sm:items-start sm:justify-between">
+                  {/* Luminous Glow Effect */}
+                  <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-[#D6A15F] opacity-0 blur-[80px] transition-opacity duration-500 group-hover:opacity-20 pointer-events-none"></div>
+
+                  <div className="relative z-10 flex flex-col gap-3 border-b border-[#F5F0E8]/10 pb-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <div className="font-bold text-[#F5F0E8] tracking-wide text-sm">{order.id}</div>
                       <div className="mt-1 text-[0.82rem] font-light text-[#F5F0E8]/55">
                         {order.date}
                       </div>
                     </div>
-                    <span
-                      className={`w-fit rounded-full px-3.5 py-1.5 text-[0.76rem] font-semibold tracking-wide ${statusClass[order.status]}`}
-                    >
-                      {statusLabel[order.status]}
-                    </span>
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 mt-2 sm:mt-0">
+                      {order.paymentStatus && (
+                        <span
+                          className={`w-fit rounded-full px-3.5 py-1.5 text-[0.76rem] font-semibold tracking-wide border ${order.paymentStatus === 'PAID' ? 'bg-green-500/20 text-green-300 border-green-400/30' : 'bg-orange-500/20 text-orange-300 border-orange-400/30'}`}
+                        >
+                          {order.paymentStatus === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                        </span>
+                      )}
+                      <span
+                        className={`w-fit rounded-full px-3.5 py-1.5 text-[0.76rem] font-semibold tracking-wide flex items-center gap-2 ${statusClass[order.status]}`}
+                      >
+                        {(order.status === 'pending' || order.status === 'processing') && (
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
+                          </span>
+                        )}
+                        {statusLabel[order.status]}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col gap-3 pt-4">
+                  <div className="relative z-10 flex flex-col gap-3 pt-4">
                     {order.items.map((item, idx) => (
                       <div
                         key={`${order.id}-${item.name}-${idx}`}
@@ -145,16 +176,14 @@ export default function OrdersClient({ initialUser }: OrdersContentProps) {
                     ))}
                   </div>
 
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-[#F5F0E8]/10 pt-5">
-                    <button
-                      onClick={() => setSelectedOrderNumber(order.id)}
-                      type="button"
-                      className="w-full rounded-full border border-[#D6A15F]/50 bg-transparent px-5 py-2.5 text-[0.74rem] font-medium uppercase tracking-[0.12em] text-[#D6A15F] transition hover:bg-[#D6A15F] hover:text-[#2C1810] sm:w-auto"
-                    >
-                      Xem chi tiết
-                    </button>
-                    <div className="flex items-end justify-between gap-3 sm:justify-end">
-                      <span className="font-light text-[#F5F0E8]/70 mb-1">Tổng</span>
+                  <div className="relative z-10 mt-5 flex items-center justify-between border-t border-[#F5F0E8]/10 pt-5">
+                    <div className="flex items-center gap-2 text-[#F5F0E8]/40 transition-colors group-hover:text-[#D6A15F]">
+                      <span className="text-[0.8rem] font-light italic">Nhấn vào card để xem chi tiết</span>
+                      <svg className="size-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </div>
+                    <div className="flex items-end justify-end">
                       <span className="font-sans text-[1.4rem] font-bold text-[#D6A15F] leading-none tracking-wide">
                         {formatPrice(order.total)}
                       </span>

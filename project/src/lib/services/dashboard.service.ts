@@ -31,32 +31,38 @@ type DashboardQueryRow = {
 }
 
 function getPeriodDateRange(period: GetDashboardOverviewParams['period']) {
-  const now = new Date()
-  const start = new Date(now)
+  const now = new Date();
+  
+  // Lấy chuỗi ngày tháng ở múi giờ Việt Nam
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(now);
+  const year = parts.find(p => p.type === 'year')?.value;
+  const month = parts.find(p => p.type === 'month')?.value;
+  const day = parts.find(p => p.type === 'day')?.value;
 
-  // Đã fix từ setUTCHours sang setHours để lấy chuẩn giờ Việt Nam (Local Time)
-  // Nếu dùng UTC, 0h UTC sẽ tương đương 7h sáng VN, làm sai lệch kết quả ngày.
-  if (period === 'today') {
-    start.setHours(0, 0, 0, 0)
-  }
+  // Dựng chuỗi ISO chuẩn giờ VN (UTC+7) cho 0h sáng hôm nay
+  const todayVnIso = `${year}-${month}-${day}T00:00:00.000+07:00`;
+  const startUTC = new Date(todayVnIso);
 
   if (period === 'week') {
-    start.setDate(now.getDate() - 6)
-    start.setHours(0, 0, 0, 0)
+    startUTC.setDate(startUTC.getDate() - 6);
+  } else if (period === 'month') {
+    startUTC.setDate(startUTC.getDate() - 29);
   }
 
-  if (period === 'month') {
-    start.setDate(now.getDate() - 29) // Lấy 30 ngày gần nhất (bao gồm hôm nay)
-    start.setHours(0, 0, 0, 0)
-  }
-
-  return { end: now, start }
+  return { end: now, start: startUTC }
 }
 
 async function getDashboardOverview(
   period: GetDashboardOverviewParams['period'],
 ) {
   const { end, start } = getPeriodDateRange(period)
+  console.log(`[getDashboardOverview] period: ${period}, start: ${start.toISOString()}, end: ${end.toISOString()}`)
   
   const rows = await prisma.$queryRaw<DashboardQueryRow[]>(Prisma.sql`
     WITH filtered_orders AS (
@@ -180,12 +186,11 @@ async function getDashboardOverview(
   // ==========================================
   const chartMap = new Map();
   const now = new Date();
-  let daysToGenerate = period === 'today' ? 0 : (period === 'week' ? 7 : 30);
+  const daysToGenerate = period === 'today' ? 0 : (period === 'week' ? 7 : 30);
 
   // 1. Dựng sẵn các mốc thời gian rỗng (chứa toàn số 0)
   if (period === "today") {
-    const currentHour = now.getHours();
-    for (let i = 0; i <= currentHour; i++) {
+    for (let i = 0; i <= 23; i++) {
       const hourLabel = `${i.toString().padStart(2, "0")}:00`;
       chartMap.set(hourLabel, { revenue: 0, orders: 0, customers: new Set(), products: 0 });
     }
@@ -200,7 +205,9 @@ async function getDashboardOverview(
 
   // 2. Phân loại data thực tế vào các mốc thời gian
   overview.chart_raw_data.forEach((order) => {
-    const orderDate = new Date(order.createdAt);
+    // Append 'Z' to ensure JS parses it as UTC, avoiding timezone shift
+    const dateStr = order.createdAt.endsWith('Z') ? order.createdAt : `${order.createdAt}Z`;
+    const orderDate = new Date(dateStr);
     let bucketKey = "";
     
     if (period === "today") {
@@ -228,11 +235,14 @@ async function getDashboardOverview(
   }));
 
   return {
-    latestOrders: overview.latest_orders.map((order) => ({
-      ...order,
-      createdAt: new Date(order.createdAt).toISOString(),
-      status: orderStatusMap[order.status],
-    })),
+    latestOrders: overview.latest_orders.map((order) => {
+      const dateStr = order.createdAt.endsWith('Z') ? order.createdAt : `${order.createdAt}Z`;
+      return {
+        ...order,
+        createdAt: new Date(dateStr).toISOString(),
+        status: orderStatusMap[order.status],
+      };
+    }),
     period,
     stats: {
       customerCount: Number(overview.customer_count),
@@ -262,7 +272,7 @@ const getCachedDashboardOverview = unstable_cache(
 export const DashboardService = {
   async getOverview(params: GetDashboardOverviewParams) {
     try {
-      return await getCachedDashboardOverview(params.period)
+      return await getDashboardOverview(params.period)
     } finally {}
   },
 }

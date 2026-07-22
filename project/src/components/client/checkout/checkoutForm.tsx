@@ -12,6 +12,8 @@ import type {
   CheckoutFormProps,
 } from "../../../lib/types/client";
 import { callAction } from "@/src/lib/utils/callAction";
+import { fetchLocations, type Location } from "@/src/lib/utils/location";
+import LocationSelect from "@/src/components/ui/LocationSelect";
 
 
 
@@ -20,6 +22,8 @@ const initialCheckoutFormValues: FullFormValues = {
   email: "",
   phone: "",
   address: "",
+  ward: "",
+  district: "",
   city: "",
   zip: "",
   note: "",
@@ -34,6 +38,18 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
   
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | "custom">("custom");
+
+  const [provinces, setProvinces] = useState<Location[]>([]);
+  const [districts, setDistricts] = useState<Location[]>([]);
+  const [wards, setWards] = useState<Location[]>([]);
+  const [selectedIds, setSelectedIds] = useState({
+    province: "",
+    district: "",
+  });
+
+  useEffect(() => {
+    fetchLocations(1).then(setProvinces);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -99,8 +115,8 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
   const validateField = (field: keyof FullFormValues, value: string): string => {
     const trimmed = value.trim();
 
-    // 1. Required check for fullname, email, phone, address, city
-    if (["fullname", "email", "phone", "address", "city"].includes(field)) {
+    // 1. Required check
+    if (["fullname", "email", "phone", "address", "ward", "district", "city"].includes(field)) {
       if (!trimmed) {
         return "Vui lòng không để trống";
       }
@@ -114,7 +130,7 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
       }
     }
 
-    // 3. Phone check: starts with 0 or +84, and has 10 digits
+    // 3. Phone check
     if (field === "phone") {
       const phoneRegex = /^(0|\+84)\d{9}$/;
       if (!phoneRegex.test(trimmed)) {
@@ -145,18 +161,54 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
     }
   };
 
-  const handleCityChange = (city: string) => {
-    setFormValues((currentValues) => ({
-      ...currentValues,
-      city,
-      zip: city ? PROVINCE_POSTAL_CODE_MAP[city] || currentValues.zip : "",
+  const handleProvinceChange = async (id: string, name: string) => {
+    setFormValues((prev) => ({
+      ...prev,
+      city: name,
+      district: "",
+      ward: "",
+      zip: name ? PROVINCE_POSTAL_CODE_MAP[name] || prev.zip : "",
     }));
+    setSelectedIds((prev) => ({ ...prev, province: id, district: "" }));
+    setDistricts([]);
+    setWards([]);
+    const data = await fetchLocations(2, id);
+    setDistricts(data);
+    
+    if (errors.city) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.city;
+        return next;
+      });
+    }
+  };
 
-    setErrors((currentErrors) => {
-      const nextErrors = { ...currentErrors };
-      delete nextErrors.city;
-      return nextErrors;
-    });
+  const handleDistrictChange = async (id: string, name: string) => {
+    setFormValues((prev) => ({ ...prev, district: name, ward: "" }));
+    setSelectedIds((prev) => ({ ...prev, district: id }));
+    setWards([]);
+    const data = await fetchLocations(3, id);
+    setWards(data);
+
+    if (errors.district) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.district;
+        return next;
+      });
+    }
+  };
+
+  const handleWardChange = (id: string, name: string) => {
+    setFormValues((prev) => ({ ...prev, ward: name }));
+    if (errors.ward) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.ward;
+        return next;
+      });
+    }
   };
 
   const getInputClass = (fieldName: keyof FullFormValues) => {
@@ -171,26 +223,30 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
     setSelectedAddressId(id);
     if (id !== "custom") {
       const selected = savedAddresses.find(a => a.id === id);
-      if (selected) {
-        setFormValues((prev) => ({
-          ...prev,
-          fullname: selected.fullname,
-          phone: selected.phone,
-          address: `${selected.address}, ${selected.ward}, ${selected.district}`,
-          city: selected.city,
-          zip: selected.postal_code || PROVINCE_POSTAL_CODE_MAP[selected.city] || prev.zip,
-        }));
-        
-        // Xóa lỗi nếu có khi chọn địa chỉ có sẵn
-        setErrors((prevErrors) => {
-          const nextErrors = { ...prevErrors };
-          delete nextErrors.fullname;
-          delete nextErrors.phone;
-          delete nextErrors.address;
-          delete nextErrors.city;
-          delete nextErrors.zip;
-          return nextErrors;
-        });
+        if (selected) {
+          setFormValues((prev) => ({
+            ...prev,
+            fullname: selected.fullname,
+            phone: selected.phone,
+            address: selected.address,
+            ward: selected.ward || "",
+            district: selected.district || "",
+            city: selected.city,
+            zip: selected.postal_code || PROVINCE_POSTAL_CODE_MAP[selected.city] || prev.zip,
+          }));
+          
+          // Xóa lỗi nếu có khi chọn địa chỉ có sẵn
+          setErrors((prevErrors) => {
+            const nextErrors = { ...prevErrors };
+            delete nextErrors.fullname;
+            delete nextErrors.phone;
+            delete nextErrors.address;
+            delete nextErrors.ward;
+            delete nextErrors.district;
+            delete nextErrors.city;
+            delete nextErrors.zip;
+            return nextErrors;
+          });
       }
     } else {
       // Xóa form để người dùng tự nhập
@@ -199,6 +255,8 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
         fullname: storedUser?.fullname || prev.fullname,
         phone: storedUser?.phone || prev.phone,
         address: "",
+        ward: "",
+        district: "",
         city: "",
         zip: "",
       }));
@@ -209,7 +267,7 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
     event.preventDefault();
 
     const newErrors: Partial<Record<keyof FullFormValues, string>> = {};
-    const fieldsToValidate: Array<keyof FullFormValues> = ["fullname", "email", "phone", "address", "city"];
+    const fieldsToValidate: Array<keyof FullFormValues> = ["fullname", "email", "phone", "address", "ward", "district", "city"];
 
     fieldsToValidate.forEach((field) => {
       const errorMsg = validateField(field, formValues[field]);
@@ -230,6 +288,8 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
 
     await onComplete({
       address: formValues.address,
+      ward: formValues.ward,
+      district: formValues.district,
       city: formValues.city,
       email: formValues.email,
       fullname: formValues.fullname,
@@ -379,8 +439,59 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
           <div className="grid gap-5 md:grid-cols-2">
             {selectedAddressId === "custom" && (
               <>
+            {/* Tỉnh / Thành Phố */}
+            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70">
+              Tỉnh / Thành Phố
+              <LocationSelect
+                options={provinces}
+                value={formValues.city}
+                onChange={handleProvinceChange}
+                placeholder="Chọn Tỉnh/Thành phố"
+              />
+              {errors.city && (
+                <span className="text-xs text-[#ff6b6b] mt-1 normal-case tracking-normal font-medium">
+                  {errors.city}
+                </span>
+              )}
+            </label>
+            
+            {/* Quận / Huyện */}
+            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70">
+              Quận / Huyện
+              <LocationSelect
+                options={districts}
+                value={formValues.district}
+                onChange={handleDistrictChange}
+                placeholder="Chọn Quận/Huyện"
+                disabled={!formValues.city}
+              />
+              {errors.district && (
+                <span className="text-xs text-[#ff6b6b] mt-1 normal-case tracking-normal font-medium">
+                  {errors.district}
+                </span>
+              )}
+            </label>
+            
+            {/* Phường / Xã */}
             <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70 md:col-span-2">
-              Địa Chỉ
+              Phường / Xã
+              <LocationSelect
+                options={wards}
+                value={formValues.ward}
+                onChange={handleWardChange}
+                placeholder="Chọn Phường/Xã"
+                disabled={!formValues.district}
+              />
+              {errors.ward && (
+                <span className="text-xs text-[#ff6b6b] mt-1 normal-case tracking-normal font-medium">
+                  {errors.ward}
+                </span>
+              )}
+            </label>
+
+            {/* Địa Chỉ (Street) */}
+            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70">
+              Đường / Số nhà
               <input
                 type="text"
                 name="address"
@@ -395,30 +506,7 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
                 </span>
               )}
             </label>
-            <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70">
-              Tỉnh / Thành Phố
-              <select
-                name="city"
-                value={formValues.city}
-                onChange={(event) => handleCityChange(event.target.value)}
-                className={getInputClass("city")}
-              >
-                <option value="">Chọn tỉnh/thành...</option>
-                {Object.keys(PROVINCE_POSTAL_CODE_MAP).map((provinceName) => (
-                  <option key={provinceName} value={provinceName}>
-                    {provinceName}
-                  </option>
-                ))}
-                {formValues.city && !PROVINCE_POSTAL_CODE_MAP[formValues.city] && (
-                  <option value={formValues.city}>{formValues.city}</option>
-                )}
-              </select>
-              {errors.city && (
-                <span className="text-xs text-[#ff6b6b] mt-1 normal-case tracking-normal font-medium">
-                  {errors.city}
-                </span>
-              )}
-            </label>
+
             <label className="flex flex-col gap-2 text-[0.72rem] uppercase tracking-[0.12em] text-[#F5F0E8]/70">
               Mã Bưu Chính
               <input
@@ -485,14 +573,14 @@ export default function CheckoutForm({ isSubmitting = false, onComplete }: Check
 
           {payment === "bank" ? (
             <div className="mt-5 rounded-xl bg-black/50 border border-[#F5F0E8]/10 p-4 text-sm leading-7 text-[#F5F0E8]/85">
-              <p>
-                <strong className="text-[#F5F0E8]">Ngân hàng:</strong> Vietcombank
+              <p className="flex items-center gap-2">
+                <svg className="size-5 text-[#10B981]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+                <strong className="text-[#F5F0E8]">Thanh toán bằng mã QR tự động</strong>
               </p>
-              <p>
-                <strong className="text-[#F5F0E8]">Số tài khoản:</strong> 1234567890
-              </p>
-              <p>
-                <strong className="text-[#F5F0E8]">Chủ tài khoản:</strong> CHAMCHAM
+              <p className="mt-1 text-[#F5F0E8]/70">
+                Sau khi bấm <strong>&quot;Đặt hàng&quot;</strong>, hệ thống sẽ hiển thị mã VietQR. Bạn chỉ cần mở app ngân hàng quét mã, đơn hàng sẽ được tự động xác nhận ngay lập tức!
               </p>
             </div>
           ) : null}

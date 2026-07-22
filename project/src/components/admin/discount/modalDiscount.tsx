@@ -117,8 +117,8 @@ export default function ModalDiscount({
       }
 
       if ("success" in result && result.success) {
-        toast.success("Đã tạo mã giảm giá");
-        await onSave?.();
+        toast.success("Thêm mã giảm giá thành công");
+        await onSave?.(result.data);
         setFormValues(initialDiscountFormValues);
         onClose();
       }

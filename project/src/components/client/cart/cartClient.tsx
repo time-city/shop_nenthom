@@ -18,6 +18,7 @@ import CheckoutSummary from "@/src/components/client/checkout/checkoutSummary";
 import LoadingState from "@/src/components/ui/loadingState";
 import CartSuggestedProducts from "@/src/components/client/cart/cartSuggestedProducts";
 import { useCartStore } from "@/src/store/useCartStore";
+import { useOrderTrackingSocket } from "@/src/hooks/useOrderTrackingSocket";
 import type {
   ClientCartActionItemInterface,
   ClientCartActionSuccessResponseInterface,
@@ -84,6 +85,15 @@ export default function CartClient() {
   const pendingUpdatesRef = useRef<Record<string, NodeJS.Timeout>>({});
   const appliedDiscount = useCartStore((state) => state.appliedDiscount);
   const setAppliedDiscount = useCartStore((state) => state.setAppliedDiscount);
+  const [pendingPaymentOrder, setPendingPaymentOrder] = useState<any>(null);
+
+  useOrderTrackingSocket({
+    orderId: pendingPaymentOrder?.orderId,
+    onPaymentSuccess: (data) => {
+      setPendingPaymentOrder(null);
+      router.push("/orderConfirmation");
+    },
+  });
 
   const selectedCart = useMemo(
     () =>
@@ -193,6 +203,8 @@ export default function CartClient() {
         if ("error" in result && result.error) {
           await mutateCart();
           toast.error(getFriendlyResponseError(result.error));
+        } else {
+          void mutateCart(); // revalidate cache silently
         }
       } catch (err) {
         await mutateCart();
@@ -254,6 +266,8 @@ export default function CartClient() {
         setCartCount(previousCart.length);
         setSelectedItemIds(previousSelected);
         toast.error(getFriendlyResponseError(result.error));
+      } else {
+        void mutateCart();
       }
     } catch (err) {
       // Rollback
@@ -291,6 +305,7 @@ export default function CartClient() {
       setCart(nextCart);
       setCartCount(nextCart.length);
       setSelectedItemIds([]);
+      void mutateCart();
     } finally {
       setIsMutatingCart(false);
     }
@@ -314,6 +329,7 @@ export default function CartClient() {
       setCart([]);
       setCartCount(0);
       setSelectedItemIds([]);
+      void mutateCart();
     } finally {
       setIsMutatingCart(false);
     }
@@ -362,6 +378,8 @@ export default function CartClient() {
 
   const completeOrder = async (shippingData: {
     address: string;
+    ward: string;
+    district: string;
     city: string;
     email: string;
     fullname: string;
@@ -387,6 +405,8 @@ export default function CartClient() {
         guest_phone: shippingData.phone,
         payment_method: shippingData.paymentMethod === "bank" ? "BANK_TRANSFER" : "COD",
         shipping_address: shippingData.address,
+        shipping_ward: shippingData.ward,
+        shipping_district: shippingData.district,
         shipping_city: shippingData.city,
         shipping_fullname: shippingData.fullname,
         shipping_note: shippingData.note || undefined,
@@ -417,17 +437,21 @@ export default function CartClient() {
         setCartCount(nextCart.length);
         setSelectedItemIds([]);
         setAppliedDiscount(null);
-        setStep("cart");
-        toast.success("Đặt hàng thành công!");
 
-        router.push("/orderConfirmation");
+        if (shippingData.paymentMethod === "bank") {
+          setPendingPaymentOrder(response.data);
+        } else {
+          setStep("cart");
+          toast.success("Đặt hàng thành công!");
+          router.push("/orderConfirmation");
+        }
       }
     } finally {
       setIsCheckingOut(false);
     }
   };
 
-  if (step === "checkout" && selectedCart.length > 0) {
+  if ((step === "checkout" && selectedCart.length > 0) || pendingPaymentOrder) {
     return (
       <main
         className="min-h-screen relative text-[#F5F0E8] bg-cover bg-center bg-no-repeat bg-fixed"
@@ -476,6 +500,54 @@ export default function CartClient() {
               discountType={appliedDiscount?.type}
             />
           </section>
+
+          {/* Popup QR Thanh Toán */}
+          {pendingPaymentOrder && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+              <div className="bg-[#6B1218] border border-[#E5C07B]/30 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+                <button 
+                  onClick={() => {
+                    setPendingPaymentOrder(null);
+                    router.push("/orderConfirmation");
+                  }}
+                  className="absolute top-4 right-4 text-[#F5F0E8]/50 hover:text-[#F5F0E8]"
+                >
+                  <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <div className="text-center space-y-4">
+                  <h3 className="text-[#E5C07B] font-bold uppercase tracking-wider flex items-center justify-center gap-2">
+                    <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                    Mã Thanh Toán QR
+                  </h3>
+                  <div className="bg-white p-3 rounded-xl inline-block">
+                    <img 
+                      src={`https://vietqr.app/img?bank=MBBank&acc=0001118294755&template=qronly&amount=${pendingPaymentOrder.total}&des=CHAM${pendingPaymentOrder.orderId.replace(/-/g, '').substring(0,12).toUpperCase()}&showinfo=true&holder=NGUYEN%20THANH%20NHAN`} 
+                      alt="QR Code" 
+                      className="w-48 h-48 object-contain"
+                    />
+                  </div>
+                  <p className="text-sm font-light text-[#F5F0E8]/80 leading-relaxed">
+                    Vui lòng dùng app ngân hàng quét mã để thanh toán.<br/>
+                    Giao diện sẽ <strong className="text-[#E5C07B]">tự động chuyển</strong> khi nhận được tiền.
+                  </p>
+                  <div className="bg-black/50 p-3 rounded-xl border border-[#F5F0E8]/10 text-sm text-left space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-[#F5F0E8]/60">Số tiền:</span>
+                      <strong className="text-[#E5C07B]">{pendingPaymentOrder.total.toLocaleString("vi-VN")}đ</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#F5F0E8]/60">Nội dung:</span>
+                      <strong className="text-[#F5F0E8]">CHAM{pendingPaymentOrder.orderId.replace(/-/g, '').substring(0,12).toUpperCase()}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     );

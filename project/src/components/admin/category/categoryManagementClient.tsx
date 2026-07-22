@@ -9,6 +9,7 @@ import ModalEditCategory from "@/src/components/admin/category/modalEditCategory
 import LoadingState from "@/src/components/ui/loadingState";
 import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
 import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import ClientPagination from "@/src/components/admin/customer/clientPagination";
 import {
   AdminDeleteButton,
   AdminEditButton,
@@ -46,10 +47,22 @@ export default function CategoryManagementClient() {
   const [error, setError] = useState("");
   const [categories, setCategories] = useState<AdminProductCategoryInterface[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [bulkDeleteImpactCount, setBulkDeleteImpactCount] = useState<number | null>(null);
   const [isLoadingBulkImpact, setIsLoadingBulkImpact] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setItemsPerPage(window.innerWidth < 768 ? 5 : 10);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const { data: fetchResult, isLoading: isSwrLoading, error: swrError, mutate: mutateCategories } = useSWR(
     ['admin-categories'],
     async () => {
@@ -80,31 +93,67 @@ export default function CategoryManagementClient() {
 
   const isLoading = isSwrLoading && categories.length === 0;
 
+  const totalPages = Math.ceil(categories.length / itemsPerPage);
+  const paginatedCategories = categories.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const handleDelete = async () => {
     if (!deleteCategory) return;
-    setIsDeleting(true);
+    
+    const targetId = deleteCategory.id;
+    const targetName = deleteCategory.name;
+    
+    // Close modal immediately for Optimistic UI
+    setDeleteCategory(null);
+    setCategoryImpact(null);
 
-    const result = await callAction(() => deleteCategoryAction({ id: deleteCategory.id }), "Không thể xóa danh mục. Vui lòng thử lại sau.");
+    const mutationPromise = mutateCategories(
+      async (current: any) => {
+        const result = await callAction(() => deleteCategoryAction({ id: targetId }), "Không thể xóa danh mục. Vui lòng thử lại sau.");
+        if ("error" in result && result.error) {
+          throw new Error(getFriendlyResponseError(result.error));
+        }
+        
+        // Success handling
+        if ("success" in result && result.success) {
+          const data = result.data as { stoppedProductCount?: number } | undefined;
+          const stoppedCount = data?.stoppedProductCount ?? 0;
+          if (stoppedCount > 0) {
+            // Wait a bit to not overlap with the promise success toast
+            setTimeout(() => {
+              toast.success(`Đã ngừng bán ${stoppedCount} sản phẩm liên quan đến "${targetName}".`);
+            }, 500);
+          }
+        }
 
-    if ("error" in result && result.error) {
-      toast.error(getFriendlyResponseError(result.error));
-      setIsDeleting(false);
-      return;
+        if (!current) return current;
+        return {
+          ...current,
+          categories: current.categories.filter((c: any) => c.id !== targetId),
+        };
+      },
+      {
+        optimisticData: (current: any) => {
+          if (!current) return current;
+          return {
+            ...current,
+            categories: current.categories.filter((c: any) => c.id !== targetId),
+          };
+        },
+        rollbackOnError: true,
+        revalidate: false,
+      }
+    );
+
+    toast.info(`Đang xóa "${targetName}"...`);
+    try {
+      await mutationPromise;
+      toast.success(`Đã xóa "${targetName}" thành công.`);
+    } catch (err: any) {
+      toast.error(`Không thể xóa: ${err.message}`);
     }
-
-    if ("success" in result && result.success) {
-      const data = result.data as { stoppedProductCount?: number } | undefined;
-      const stoppedCount = data?.stoppedProductCount ?? 0;
-      const msg = stoppedCount > 0
-        ? `Đã xóa danh mục "${deleteCategory.name}" và ngừng bán ${stoppedCount} sản phẩm liên quan.`
-        : `Đã xóa danh mục "${deleteCategory.name}".`;
-      toast.success(msg);
-      setDeleteCategory(null);
-      setCategoryImpact(null);
-      await mutateCategories();
-    }
-
-    setIsDeleting(false);
   };
 
   const handleSelectAll = () => {
@@ -144,26 +193,55 @@ export default function CategoryManagementClient() {
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    setIsBulkDeleting(true);
+    
+    const targetIds = [...selectedIds];
+    
+    setIsBulkDeleteModalOpen(false);
+    setSelectedIds([]);
 
-    const result = await callAction(
-      () => bulkDeleteCategoryAction({ ids: selectedIds }),
-      "Không thể xóa các danh mục. Vui lòng thử lại sau."
+    const mutationPromise = mutateCategories(
+      async (current: any) => {
+        const result = await callAction(
+          () => bulkDeleteCategoryAction({ ids: targetIds }),
+          "Không thể xóa các danh mục. Vui lòng thử lại sau."
+        );
+
+        if ("error" in result && result.error) {
+          throw new Error(getFriendlyResponseError(result.error));
+        }
+
+        if ("success" in result && result.success) {
+          setTimeout(() => {
+            toast.success(result.message);
+          }, 500);
+        }
+
+        if (!current) return current;
+        return {
+          ...current,
+          categories: current.categories.filter((c: any) => !targetIds.includes(c.id)),
+        };
+      },
+      {
+        optimisticData: (current: any) => {
+          if (!current) return current;
+          return {
+            ...current,
+            categories: current.categories.filter((c: any) => !targetIds.includes(c.id)),
+          };
+        },
+        rollbackOnError: true,
+        revalidate: false,
+      }
     );
 
-    if ("error" in result && result.error) {
-      toast.error(getFriendlyResponseError(result.error));
-      setIsBulkDeleting(false);
-      return;
+    toast.info(`Đang xóa ${targetIds.length} danh mục...`);
+    try {
+      await mutationPromise;
+      toast.success(`Đã xóa ${targetIds.length} danh mục thành công.`);
+    } catch (err: any) {
+      toast.error(`Không thể xóa: ${err.message}`);
     }
-
-    if ("success" in result && result.success) {
-      toast.success(result.message);
-      setSelectedIds([]);
-      setIsBulkDeleteModalOpen(false);
-      await mutateCategories();
-    }
-    setIsBulkDeleting(false);
   };
 
   const handleOpenDeleteModal = async (category: AdminProductCategoryInterface) => {
@@ -215,9 +293,56 @@ export default function CategoryManagementClient() {
       </AdminHeader>
 
       <div className="dashboard-page-content">
-        <section className="dashboard-card product-table-card">
+        <section className="dashboard-card product-table-card overflow-hidden no-padding md:bg-transparent md:border-none bg-white">
           <div className="dashboard-card-body no-padding">
-            <div className="dashboard-table-wrapper">
+            {/* Mobile Cards */}
+            <div className="md:hidden flex flex-col gap-4 p-4">
+              {!isLoading && !error && paginatedCategories.length > 0 ? (
+                paginatedCategories.map((category, index) => {
+                  const isSelected = selectedIds.includes(category.id);
+                  return (
+                    <div 
+                      key={category.id} 
+                      className={`bg-white border border-[#E5D5B5] rounded-xl p-4 flex flex-col gap-3 shadow-sm ${isSelected ? 'ring-2 ring-[#8A1119]/20' : ''}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 flex items-center justify-center pt-1">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleSelectOne(category.id)}
+                            className="w-4 h-4 rounded border-[#E5D5B5] text-[#8A1119] focus:ring-[#8A1119]"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start mb-1">
+                            <h3 className="font-bold text-[#2C1810] text-sm leading-tight">{category.name}</h3>
+                            <span className="text-xs font-medium text-[#6B4E35]/60">#{index + 1 + (currentPage - 1) * itemsPerPage}</span>
+                          </div>
+                          <p className="text-xs text-[#6B4E35] line-clamp-2 mt-1">
+                            {category.description || "Chưa có mô tả"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 mt-2 pt-3 border-t border-[#F5F0E8]">
+                        <AdminEditButton
+                          ariaLabel={`Sửa ${category.name}`}
+                          onClick={() => setEditCategory(category)}
+                        />
+                        <AdminDeleteButton
+                          ariaLabel={`Xóa ${category.name}`}
+                          onClick={() => void handleOpenDeleteModal(category)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              ) : null}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden md:block dashboard-table-wrapper">
               <TableResponsiveWrapper minWidth={800}>
                 <table className="dashboard-admin-table product-admin-table">
                   <thead>
@@ -225,7 +350,7 @@ export default function CategoryManagementClient() {
                       <th style={{ width: "40px", paddingLeft: "1.5rem" }}>
                         <input
                           type="checkbox"
-                          className="w-4 h-4 rounded border-gray-300 text-[#6B1218] focus:ring-[#6B1218] accent-[#6B1218]"
+                          className="w-4 h-4 rounded border-gray-300 text-[#8A1119] focus:ring-[#8A1119] accent-[#8A1119]"
                           checked={categories.length > 0 && selectedIds.length === categories.length}
                           onChange={handleSelectAll}
                         />
@@ -239,7 +364,7 @@ export default function CategoryManagementClient() {
                     </tr>
                   </thead>
                   <tbody>
-                    {!isLoading && !error && categories.map((category, index) => {
+                    {!isLoading && !error && paginatedCategories.map((category, index) => {
                       const isSelected = selectedIds.includes(category.id);
                       return (
                         <tr
@@ -254,7 +379,7 @@ export default function CategoryManagementClient() {
                               onChange={() => handleSelectOne(category.id)}
                             />
                           </td>
-                          <td className={styles.idCell}>{index + 1}</td>
+                          <td className={styles.idCell}>{index + 1 + (currentPage - 1) * itemsPerPage}</td>
                           <td>
                             <div className={`dashboard-product-name ${styles.categoryName}`}>
                               {category.name}
@@ -286,34 +411,70 @@ export default function CategoryManagementClient() {
             {isLoading ? (
               <LoadingState type="table"
                 label="Đang tải danh sách danh mục..."
-                className="m-5"
+                className="m-5 hidden md:block"
               />
             ) : null}
             {!isLoading && error ? (
-              <div className="px-5 py-8 text-center text-sm text-[#8A1119]">
+              <div className="px-5 py-8 text-center text-sm text-[#8A1119] hidden md:block">
                 {error}
               </div>
             ) : null}
             {!isLoading && !error && categories.length === 0 ? (
-              <div className="px-5 py-8 text-center text-sm text-white/60">
+              <div className="px-5 py-8 text-center text-sm text-[#6B4E35]/60 hidden md:block">
                 Chưa có danh mục nào
               </div>
             ) : null}
           </div>
         </section>
+
+        {totalPages > 1 && (
+          <ClientPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onChange={(page) => setCurrentPage(page)}
+          />
+        )}
       </div>
 
       <ModalCategory
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSave={() => { mutateCategories(); }}
+        onSave={(newCat) => {
+          if (newCat) {
+            mutateCategories(
+              (current: any) => {
+                if (!current) return current;
+                return {
+                  ...current,
+                  categories: [newCat, ...current.categories],
+                };
+              },
+              false
+            );
+          }
+        }}
       />
 
       <ModalEditCategory
-        open={Boolean(editCategory)}
         category={editCategory}
+        open={Boolean(editCategory)}
         onClose={() => setEditCategory(null)}
-        onSave={() => { mutateCategories(); }}
+        onSave={(updatedCat) => {
+          if (updatedCat) {
+            mutateCategories(
+              (current: any) => {
+                if (!current) return current;
+                return {
+                  ...current,
+                  categories: current.categories.map((c: any) =>
+                    c.id === updatedCat.id ? updatedCat : c
+                  ),
+                };
+              },
+              false
+            );
+          }
+        }}
       />
 
       <ModalDeleteConfirm

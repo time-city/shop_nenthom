@@ -12,8 +12,8 @@ export const getUsersSchema = z.object({
 export const updateProfileSchema = z.object({
     fullname: z.string().trim().min(3, 'Họ và tên không được để trống'),
     phone: z.string().trim().regex(/^(0[3|5|7|8|9])+([0-9]{8})$/, 'Số điện thoại không hợp lệ'),
-    address: z.string().trim().min(3, 'Địa chỉ không được để trống'),
-    city: z.string().trim().min(3, 'Thành phố không được để trống'),
+    address: z.string().trim().optional(),
+    city: z.string().trim().optional(),
     postal_code: z.string().trim().optional(),
 })
 

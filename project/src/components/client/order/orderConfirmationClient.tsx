@@ -4,14 +4,15 @@ import Link from "next/link";
 import { startTransition, useEffect, useState } from "react";
 import { getCurrentUser } from "@/src/lib/action/user.action";
 import { useCartStore } from "@/src/store/useCartStore";
-import type { Order } from "../../../lib/types/client";
+import type { Order } from "@/src/lib/types/client";
 import LoadingState from "@/src/components/ui/loadingState";
 import { callAction } from "@/src/lib/utils/callAction";
 import { useOrderTrackingSocket } from "@/src/hooks/useOrderTrackingSocket";
-import { toast } from "react-toastify";
+import { useToast } from "@/src/components/ui/toastProvider";
 
 export default function OrderConfirmationClient() {
   const { lastOrder, clearLastOrder } = useCartStore();
+  const { toast } = useToast();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasToken, setHasToken] = useState(false);
@@ -51,7 +52,18 @@ export default function OrderConfirmationClient() {
       setOrder((prev) => prev ? { ...prev, paymentStatus: "PAID" } as Order : prev);
     },
     onOrderStatusUpdated: (data) => {
-      toast.info(`Trạng thái đơn hàng cập nhật: ${data.status}`);
+      const statusMap: Record<string, string> = {
+        canceled: "Đã huỷ",
+        pending: "Đang chờ xác nhận",
+        processing: "Đang xử lý",
+        shipped: "Đang giao",
+        delivered: "Đã giao thành công",
+        cancel_requested: "Chờ duyệt huỷ",
+      };
+      const translatedStatus = statusMap[data.status] || data.status;
+      if (data.isGuest) {
+        toast.info(`Trạng thái đơn hàng cập nhật: ${translatedStatus}`);
+      }
       setOrder((prev) => prev ? { ...prev, status: data.status as any } as Order : prev);
     }
   });
@@ -104,10 +116,18 @@ export default function OrderConfirmationClient() {
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-serif font-bold text-[#F5F0E8] tracking-wide">
-                Đơn Hàng Được Xác Nhận!
+                {order.status === "confirmed" || order.status === "processing" || order.status === "shipped" || order.status === "delivered" 
+                  ? "Đơn Hàng Đã Được Xác Nhận!" 
+                  : order.status === "canceled" 
+                  ? "Đơn Hàng Đã Huỷ"
+                  : "Đặt Hàng Thành Công!"}
               </h1>
               <p className="text-xs sm:text-sm text-[#F5F0E8]/70 mt-0.5 font-light">
-                Cảm ơn bạn đã tin tưởng và đồng hành cùng ChamCham.
+                {order.status === "confirmed" || order.status === "processing" || order.status === "shipped" || order.status === "delivered" 
+                  ? "Đơn hàng của bạn đã được admin xác nhận và đang trong quá trình xử lý."
+                  : order.status === "canceled"
+                  ? "Đơn hàng của bạn đã bị huỷ."
+                  : "Đơn hàng của bạn đang chờ admin xác nhận. Cảm ơn bạn đã tin tưởng ChamCham."}
               </p>
             </div>
           </div>
@@ -121,6 +141,49 @@ export default function OrderConfirmationClient() {
         <div className="flex flex-col md:flex-row gap-6 flex-1 overflow-visible md:overflow-hidden min-h-0">
           {/* CỘT TRÁI: Thông tin vận chuyển & Đơn hàng */}
           <div className="flex-1 flex flex-col gap-4 overflow-visible md:overflow-y-auto pr-0 md:pr-1">
+            
+            {/* THÔNG TIN CHUYỂN KHOẢN (Chỉ hiện khi chưa thanh toán và là Bank Transfer) */}
+            {order.paymentMethod === "bank" && order.paymentStatus !== "PAID" && (
+              <div className="bg-black/35 rounded-2xl border border-[#10B981]/30 p-4 space-y-4 shadow-[0_4px_12px_rgba(0,0,0,0.2)] shrink-0 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-[#10B981]"></div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-[#10B981] flex items-center gap-2">
+                  <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                  </svg>
+                  Quét Mã Thanh Toán
+                </h3>
+                
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  {/* Mã QR */}
+                  <div className="bg-white p-2 rounded-xl shrink-0">
+                    <img 
+                      src={`https://vietqr.app/img?bank=MBBank&acc=0001118294755&template=qronly&amount=${order.total}&des=CHAM${order.orderId.replace(/-/g, '').substring(0,12).toUpperCase()}&showinfo=true&holder=NGUYEN%20THANH%20NHAN`} 
+                      alt="QR Code Thanh Toán" 
+                      className="w-32 h-32 sm:w-40 sm:h-40 object-contain"
+                    />
+                  </div>
+                  
+                  {/* Hướng dẫn */}
+                  <div className="text-xs sm:text-sm text-[#F5F0E8]/80 font-light space-y-2 flex-1">
+                    <p>
+                      Mở ứng dụng ngân hàng của bạn và quét mã QR để thanh toán. 
+                      Hệ thống sẽ <strong className="text-[#E5C07B] font-semibold">tự động xác nhận</strong> sau khi nhận được tiền (thường mất 1-3 phút).
+                    </p>
+                    <div className="bg-black/50 p-3 rounded-xl border border-[#F5F0E8]/10 space-y-1 mt-2">
+                      <div className="flex justify-between">
+                        <span>Số tiền:</span>
+                        <strong className="text-[#10B981] font-bold">{order.total.toLocaleString("vi-VN")}đ</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Nội dung:</span>
+                        <strong className="text-[#F5F0E8] font-bold">CHAM{order.orderId.replace(/-/g, '').substring(0,12).toUpperCase()}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Chi tiết chung của đơn */}
             <div className="bg-black/35 rounded-2xl border border-[#F5F0E8]/10 p-4 space-y-3 shadow-[0_4px_12px_rgba(0,0,0,0.2)] shrink-0">
               <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#E5C07B] border-b border-[#F5F0E8]/10 pb-2 flex items-center gap-2">

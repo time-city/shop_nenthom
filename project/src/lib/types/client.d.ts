@@ -146,6 +146,7 @@ export type ClientOrderRecord = {
   id: string;
   items: ClientOrderItem[];
   status: ClientOrderStatus;
+  paymentStatus?: string;
   total: number;
 };
 
@@ -211,6 +212,8 @@ export type CheckoutFormProps = {
   isSubmitting?: boolean;
   onComplete: (data: {
     address: string;
+    ward: string;
+    district: string;
     city: string;
     email: string;
     fullname: string;
@@ -366,24 +369,29 @@ export type OrderHistoryLog = {
 
 /** Chi tiết đầy đủ một đơn hàng (client & admin). */
 export type OrderDetail = {
+  dbId: string;
   date: string;
   discount: number;
   discountCode?: string | null;
   email?: string | null;
   historyLogs: OrderHistoryLog[];
   id: string;
+  isGuest?: boolean;
   items: OrderDetailItem[];
   paymentMethod: "bank" | "cod";
-  paymentStatus: "paid" | "unpaid";
+  paymentStatus: "PAID" | "UNPAID" | "FAILED";
   phone: string;
   shipping: number;
   shippingAddress: string;
   shippingCity: string;
   shippingFullname: string;
   shippingNote?: string | null;
+  shippingPostalCode?: string | null;
   status: ClientOrderStatus;
   subtotal: number;
   total: number;
+  shippingCarrier?: string | null;
+  trackingCode?: string | null;
 };
 
 
@@ -431,6 +439,7 @@ export type Order = {
   total: number;
   zip?: string;
   paymentStatus?: string;
+  status?: string;
 };
 
 /** Dữ liệu sản phẩm ngừng bán được gửi từ WebSocket của user */
@@ -468,6 +477,7 @@ export type UseUserNotificationSocketOptions = {
   onConnected?: (data: { userId: string }) => void;
   onCartProductsRemoved?: (data: CartProductsRemovedData) => void;
   onOrderCancelled?: (data: OrderCancelledData) => void;
+  onOrderStatusUpdated?: (data: any) => void;
   onReviewReplied?: (data: any) => void;
 };
 

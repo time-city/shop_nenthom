@@ -120,8 +120,8 @@ export default function ModalEditDiscount({
       }
 
       if ("success" in result && result.success) {
-        toast.success("Đã cập nhật mã giảm giá");
-        await onSave?.();
+        toast.success("Cập nhật mã giảm giá thành công");
+        await onSave?.(result.data);
         onClose();
       }
     } finally {

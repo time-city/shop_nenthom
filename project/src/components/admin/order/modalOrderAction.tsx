@@ -8,10 +8,16 @@ import styles from "../../../styles/adminModal.module.css";
 
 type OrderActionType = "confirm" | "cancel";
 
+export type ConfirmOrderData = {
+  reason?: string;
+  trackingCode?: string;
+  shippingCarrier?: string;
+};
+
 interface Props {
   open: boolean;
   onClose: () => void;
-  onConfirm: (reason?: string) => Promise<void> | void;
+  onConfirm: (data: ConfirmOrderData) => Promise<void> | void;
   type: OrderActionType | null;
   orderId: string | null;
   currentStatus: string | null;
@@ -21,6 +27,8 @@ interface Props {
 const nextStatusLabels: Record<string, string> = {
   pending: "Đã xác nhận",
   cancel_requested: "Đã xác nhận (Bác bỏ yêu cầu huỷ)",
+  confirmed: "Đang giao hàng",
+  shipped: "Giao thành công",
 };
 
 export default function ModalOrderAction({
@@ -34,22 +42,38 @@ export default function ModalOrderAction({
 }: Props) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
+  const [trackingCode, setTrackingCode] = useState("");
 
   const handleSubmit = async () => {
-    if (type === "cancel") {
+    if (type === "cancel" && currentStatus !== "cancel_requested") {
       if (!reason.trim()) {
         setError("Vui lòng nhập lý do hủy đơn hàng");
         return;
       }
     }
+    if (type === "confirm" && currentStatus === "confirmed") {
+      if (!trackingCode.trim()) {
+        setError("Vui lòng nhập mã vận đơn SPX");
+        return;
+      }
+    }
     setError("");
-    await onConfirm(reason.trim());
+    await onConfirm({
+      reason: reason.trim(),
+      trackingCode: trackingCode.trim(),
+      shippingCarrier: "SPX"
+    });
   };
 
   if (!type) return null;
 
   const isCancel = type === "cancel";
-  const title = isCancel ? "Xác nhận huỷ đơn hàng" : "Xác nhận đơn hàng";
+  const isApproveCancelRequest = isCancel && currentStatus === "cancel_requested";
+  const title = isCancel 
+    ? (isApproveCancelRequest ? "Xác nhận duyệt yêu cầu huỷ đơn" : "Xác nhận huỷ đơn hàng") 
+    : currentStatus === "confirmed" ? "Xác nhận giao hàng"
+    : currentStatus === "shipped" ? "Xác nhận giao thành công"
+    : "Xác nhận đơn hàng";
   
   let nextStatusLabel = "";
   if (currentStatus) {
@@ -99,7 +123,9 @@ export default function ModalOrderAction({
             <Typography className={styles.description} style={{ marginTop: "12px", color: "#2C1810" }}>
               {isCancel ? (
                 <>
-                  Bạn có chắc chắn muốn hủy đơn hàng{" "}
+                  {isApproveCancelRequest 
+                    ? "Bạn có chắc chắn muốn duyệt yêu cầu huỷ đơn hàng " 
+                    : "Bạn có chắc chắn muốn hủy đơn hàng "}
                   <Box component="span" className={styles.highlight}>
                     {orderId}
                   </Box>
@@ -114,7 +140,7 @@ export default function ModalOrderAction({
               )}
             </Typography>
 
-            {isCancel && (
+            {isCancel && !isApproveCancelRequest && (
               <Box style={{ marginTop: "16px" }}>
                 <TextField
                   fullWidth
@@ -126,6 +152,26 @@ export default function ModalOrderAction({
                   value={reason}
                   onChange={(e) => {
                     setReason(e.target.value);
+                    if (e.target.value.trim()) setError("");
+                  }}
+                  error={Boolean(error)}
+                  helperText={error}
+                  disabled={isSubmitting}
+                  className={styles.field}
+                />
+              </Box>
+            )}
+
+            {!isCancel && currentStatus === "confirmed" && (
+              <Box style={{ marginTop: "16px" }}>
+                <TextField
+                  fullWidth
+                  label="Mã vận đơn (SPX) *"
+                  variant="outlined"
+                  placeholder="Nhập mã vận đơn SPX..."
+                  value={trackingCode}
+                  onChange={(e) => {
+                    setTrackingCode(e.target.value);
                     if (e.target.value.trim()) setError("");
                   }}
                   error={Boolean(error)}
@@ -158,7 +204,11 @@ export default function ModalOrderAction({
             className={isCancel ? styles.dangerButton : styles.primaryButton}
             style={!isCancel ? { background: "#2E5A44 !important", boxShadow: "0 8px 18px rgba(46, 90, 68, 0.18) !important" } : undefined}
           >
-            {isSubmitting ? "Đang xử lý..." : isCancel ? "Huỷ đơn hàng" : "Xác nhận"}
+            {isSubmitting 
+              ? "Đang xử lý..." 
+              : isCancel 
+                ? (isApproveCancelRequest ? "Duyệt yêu cầu" : "Huỷ đơn hàng")
+                : "Xác nhận"}
           </Button>
         </Box>
       </Box>

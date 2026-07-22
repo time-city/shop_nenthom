@@ -12,12 +12,19 @@ function normalizeEmail(email: string) {
 export const AuthService = {
     async register(data: RegisterFormState) {
         const normalizedEmail = normalizeEmail(data.email);
-        const existing = await prisma.user.findUnique({
+        const existingEmail = await prisma.user.findUnique({
             where: {
                 email: normalizedEmail,
             },
         })
-        if (existing) throw new Error('Email đã tồn tại');
+        if (existingEmail) throw new Error('Email đã tồn tại');
+
+        const existingPhone = await prisma.user.findUnique({
+            where: {
+                phone: data.phone,
+            },
+        })
+        if (existingPhone) throw new Error('Số điện thoại đã tồn tại');
 
         const hashPassword = await bcryptjs.hash(data.password, 10);
 

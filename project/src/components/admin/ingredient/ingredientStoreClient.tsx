@@ -18,6 +18,7 @@ const ModalEditIngre = dynamic(() => import("@/src/components/admin/ingredient/m
 import LoadingState from "@/src/components/ui/loadingState";
 import TableResponsiveWrapper from "@/src/components/admin/common/TableResponsiveWrapper";
 import AdminHeader from "@/src/components/admin/layout/AdminHeader";
+import ClientPagination from "@/src/components/admin/customer/clientPagination";
 import {
   AdminDeleteButton,
   AdminEditButton,
@@ -153,6 +154,23 @@ export default function IngredientStoreClient() {
   const [toppings, setToppings] = useState<AdminIngredientItem[]>([]);
   const [packagings, setPackagings] = useState<AdminIngredientItem[]>([]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setItemsPerPage(window.innerWidth < 768 ? 5 : 10);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Reset page when tab changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
   const handleIngredientFormError = (error: string) => {
     const message = getFriendlyResponseError(error);
     if (isUserInputError(message)) return message;
@@ -225,27 +243,75 @@ export default function IngredientStoreClient() {
   const deleteIngredient = async () => {
     if (!deleteTarget) return;
 
-    setIsDeletingIngredient(true);
+    const targetType = deleteTarget.type;
+    const targetId = deleteTarget.item.id;
+    const mappedType = deleteOptionTypeMap[targetType];
 
-    // action-(xóa option nguyên liệu)
-    const result = await callAction(() => deleteOptionAction({
-      id: deleteTarget.item.id,
-      type: deleteOptionTypeMap[deleteTarget.type],
-    }), "Không thể xóa tùy chọn. Vui lòng thử lại sau.");
+    // Optimistic UI updates to local state
+    removeDeletedItem(targetType, targetId);
+    setDeleteTarget(null);
 
-    if ("error" in result && result.error) {
-      toast.error(getFriendlyResponseError(result.error));
-      setIsDeletingIngredient(false);
-      return;
+    const mutationPromise = mutateOptions(
+      async (current: any) => {
+        const result = await callAction(() => deleteOptionAction({
+          id: targetId,
+          type: mappedType,
+        }), "Không thể xóa tùy chọn. Vui lòng thử lại sau.");
+
+        if ("error" in result && result.error) {
+          throw new Error(getFriendlyResponseError(result.error));
+        }
+
+        if (!current || !current.data) return current;
+
+        const typeKeyMap: Record<AdminIngredientType, string> = {
+          scent: 'scents',
+          color: 'colors',
+          size: 'sizes',
+          topping: 'toppings',
+          type: 'packagings'
+        };
+        const key = typeKeyMap[targetType];
+
+        return {
+          ...current,
+          data: {
+            ...current.data,
+            [key]: current.data[key].filter((item: any) => item.id !== targetId)
+          }
+        };
+      },
+      {
+        optimisticData: (current: any) => {
+          if (!current || !current.data) return current;
+          const typeKeyMap: Record<AdminIngredientType, string> = {
+            scent: 'scents',
+            color: 'colors',
+            size: 'sizes',
+            topping: 'toppings',
+            type: 'packagings'
+          };
+          const key = typeKeyMap[targetType];
+          return {
+            ...current,
+            data: {
+              ...current.data,
+              [key]: current.data[key].filter((item: any) => item.id !== targetId)
+            }
+          };
+        },
+        rollbackOnError: true,
+        revalidate: false
+      }
+    );
+
+    toast.info("Đang xóa nguyên liệu...");
+    try {
+      await mutationPromise;
+      toast.success("Đã xóa nguyên liệu.");
+    } catch (err: any) {
+      toast.error(`Lỗi: ${err.message}`);
     }
-
-    if ("success" in result && result.success) {
-      removeDeletedItem(deleteTarget.type, deleteTarget.item.id);
-      setDeleteTarget(null);
-      toast.success("Đã xóa nguyên liệu");
-    }
-
-    setIsDeletingIngredient(false);
   };
 
   const saveNewIngredient = async (values: AdminIngredientFormValues) => {
@@ -527,7 +593,7 @@ export default function IngredientStoreClient() {
       <div className="dashboard-page-content">
         <section className="dashboard-card p-5">
           <div
-            className="mb-6 flex gap-0 overflow-x-auto overflow-y-hidden border-b-2 border-[#6B4E35]/15"
+            className="mb-6 flex gap-0 overflow-x-auto overflow-y-hidden border-b border-gray-200"
             role="tablist"
             aria-label="Kho nguyên liệu"
           >
@@ -538,10 +604,10 @@ export default function IngredientStoreClient() {
               return (
                 <button
                   key={tab.id}
-                  className={`relative flex shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors after:absolute after:bottom-[-2px] after:left-0 after:h-0.5 after:w-full after:origin-center after:scale-x-0 after:bg-[#D6A15F] after:transition-transform ${
+                  className={`relative flex shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors after:absolute after:bottom-[-1px] after:left-0 after:h-[2px] after:w-full after:origin-center after:scale-x-0 after:bg-black after:transition-transform ${
                     active
-                      ? "text-[#D6A15F] after:scale-x-100"
-                      : "text-[#6B4E35]/70 hover:text-[#6B4E35]"
+                      ? "text-black after:scale-x-100"
+                      : "text-gray-500 hover:text-gray-900"
                   }`}
                   type="button"
                   role="tab"
@@ -556,11 +622,11 @@ export default function IngredientStoreClient() {
           </div>
 
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-sm text-[#6B4E35]/70">
+            <span className="text-sm text-gray-500">
               {counts[activeTab]} mục trong {activeConfig.label.toLowerCase()}
             </span>
             <button
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#6B1218] px-4 py-2 text-sm font-semibold text-[#F5F0E8] shadow-[0_8px_18px_rgba(107,18,24,0.18)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] hover:shadow-[0_12px_24px_rgba(107,18,24,0.25)]"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-black"
               type="button"
               onClick={() => setModalType(activeTab)}
             >
@@ -580,40 +646,53 @@ export default function IngredientStoreClient() {
             ) : null}
             {!isLoadingOptions && !error && activeTab === "scent" ? (
               <ScentTable
-                items={scents}
+                items={scents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
+                startIndex={(currentPage - 1) * itemsPerPage}
                 onDelete={(item) => setDeleteTarget({ item, type: "scent" })}
                 onEdit={(item) => openEditModal("scent", item)}
               />
             ) : null}
             {!isLoadingOptions && !error && activeTab === "color" ? (
               <ColorTable
-                items={colors}
+                items={colors.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
+                startIndex={(currentPage - 1) * itemsPerPage}
                 onDelete={(item) => setDeleteTarget({ item, type: "color" })}
                 onEdit={(item) => openEditModal("color", item)}
               />
             ) : null}
             {!isLoadingOptions && !error && activeTab === "size" ? (
               <SizeTable
-                items={sizes}
+                items={sizes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
+                startIndex={(currentPage - 1) * itemsPerPage}
                 onDelete={(item) => setDeleteTarget({ item, type: "size" })}
                 onEdit={(item) => openEditModal("size", item)}
               />
             ) : null}
             {!isLoadingOptions && !error && activeTab === "topping" ? (
               <ToppingTable
-                items={toppings}
+                items={toppings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
+                startIndex={(currentPage - 1) * itemsPerPage}
                 onDelete={(item) => setDeleteTarget({ item, type: "topping" })}
                 onEdit={(item) => openEditModal("topping", item)}
               />
             ) : null}
             {!isLoadingOptions && !error && activeTab === "type" ? (
               <TypeTable
-                items={packagings}
+                items={packagings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
+                startIndex={(currentPage - 1) * itemsPerPage}
                 onDelete={(item) => setDeleteTarget({ item, type: "type" })}
                 onEdit={(item) => openEditModal("type", item)}
               />
             ) : null}
           </div>
+
+          {!isLoadingOptions && !error && counts[activeTab] > itemsPerPage && (
+            <ClientPagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(counts[activeTab] / itemsPerPage)}
+              onChange={(page) => setCurrentPage(page)}
+            />
+          )}
         </section>
       </div>
 
@@ -665,7 +744,7 @@ function TableShell({
             {headers.map((header, index) => (
               <th
                 key={index}
-                className="bg-[rgba(214,161,95,0.15)] px-5 py-3 text-xs font-bold uppercase tracking-[0.1em] text-[#D6A15F]"
+                className="bg-gray-50 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500"
               >
                 {header}
               </th>
@@ -680,23 +759,41 @@ function TableShell({
 
 function TableCell({ children }: AdminTableCellProps) {
   return (
-    <td className="border-t border-[#6B4E35]/10 px-5 py-4 text-sm text-[#2C1810]">
+    <td className="border-t border-gray-100 px-5 py-4 text-sm text-gray-900">
       {children}
     </td>
   );
 }
 
-function ScentTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
+function ScentTable({ items, onDelete, onEdit, startIndex = 0 }: AdminIngredientTableProps) {
   return (
-    <TableShell headers={["#", "Tên mùi hương", "Giá cộng thêm", ""]}>
-      {items.map((item, index) => (
-        <tr key={item.id} className="transition">
-          <TableCell>{index + 1}</TableCell>
-          <TableCell>
+    <>
+      <div className="md:hidden flex flex-col gap-3 p-4">
+        {items.map((item, index) => (
+          <div key={item.id} className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="text-xs font-medium text-gray-500 mb-1">#{index + 1 + startIndex}</div>
+                <h3 className="font-bold text-gray-900 text-sm">{item.name}</h3>
+              </div>
+              <span className="font-semibold text-gray-900">{item.price}</span>
+            </div>
+            <div className="flex justify-end pt-3 border-t border-gray-100">
+              <ActionButtons onDelete={() => onDelete(item)} onEdit={() => onEdit(item)} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <TableShell headers={["#", "Tên mùi hương", "Giá cộng thêm", ""]}>
+          {items.map((item, index) => (
+            <tr key={item.id} className="transition">
+              <TableCell>{index + 1 + startIndex}</TableCell>
+              <TableCell>
             <span className="font-bold">{item.name}</span>
           </TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#D6A15F] text-xl">{item.price}</span>
+            <span className="font-semibold text-gray-900">{item.price}</span>
           </TableCell>
           <TableCell>
             <ActionButtons
@@ -706,17 +803,40 @@ function ScentTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
           </TableCell>
         </tr>
       ))}
-    </TableShell>
+        </TableShell>
+      </div>
+    </>
   );
 }
 
-function ColorTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
+function ColorTable({ items, onDelete, onEdit, startIndex = 0 }: AdminIngredientTableProps) {
   return (
-    <TableShell headers={["#", "Màu sắc", "Tên màu", "Mã hex", "Giá cộng thêm", ""]}>
-      {items.map((item, index) => (
-        <tr key={item.id} className="transition">
-          <TableCell>{index + 1}</TableCell>
-          <TableCell>
+    <>
+      <div className="md:hidden flex flex-col gap-3 p-4">
+        {items.map((item, index) => (
+          <div key={item.id} className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+            <div className="flex justify-between items-start">
+              <div className="flex gap-3 items-center">
+                <span className={ingredientStyles.colorSwatch} style={{ backgroundColor: item.hex }} />
+                <div>
+                  <div className="text-xs font-medium text-gray-500 mb-1">#{index + 1 + startIndex}</div>
+                  <h3 className="font-bold text-gray-900 text-sm">{item.name} <span className="text-xs font-normal text-gray-500">({item.hex})</span></h3>
+                </div>
+              </div>
+              <span className="font-semibold text-gray-900">{item.price}</span>
+            </div>
+            <div className="flex justify-end pt-3 border-t border-gray-100">
+              <ActionButtons onDelete={() => onDelete(item)} onEdit={() => onEdit(item)} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <TableShell headers={["#", "Màu sắc", "Tên màu", "Mã hex", "Giá cộng thêm", ""]}>
+          {items.map((item, index) => (
+            <tr key={item.id} className="transition">
+              <TableCell>{index + 1 + startIndex}</TableCell>
+              <TableCell>
             <span
               className={ingredientStyles.colorSwatch}
               style={{ backgroundColor: item.hex }}
@@ -727,7 +847,7 @@ function ColorTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
           </TableCell>
           <TableCell>{item.hex}</TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#D6A15F] text-xl">{item.price}</span>
+            <span className="font-semibold text-gray-900">{item.price}</span>
           </TableCell>
           <TableCell>
             <ActionButtons
@@ -737,21 +857,41 @@ function ColorTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
           </TableCell>
         </tr>
       ))}
-    </TableShell>
+        </TableShell>
+      </div>
+    </>
   );
 }
 
-function SizeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
+function SizeTable({ items, onDelete, onEdit, startIndex = 0 }: AdminIngredientTableProps) {
   return (
-    <TableShell headers={["#", "Kích thước", "Giá cộng thêm", ""]}>
-      {items.map((item, index) => (
-        <tr key={item.id} className="transition">
-          <TableCell>{index + 1}</TableCell>
-          <TableCell>
+    <>
+      <div className="md:hidden flex flex-col gap-3 p-4">
+        {items.map((item, index) => (
+          <div key={item.id} className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="text-xs font-medium text-gray-500 mb-1">#{index + 1 + startIndex}</div>
+                <h3 className="font-bold text-gray-900 text-sm">{item.name}</h3>
+              </div>
+              <span className="font-semibold text-gray-900">{item.price}</span>
+            </div>
+            <div className="flex justify-end pt-3 border-t border-gray-100">
+              <ActionButtons onDelete={() => onDelete(item)} onEdit={() => onEdit(item)} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <TableShell headers={["#", "Kích thước", "Giá cộng thêm", ""]}>
+          {items.map((item, index) => (
+            <tr key={item.id} className="transition">
+              <TableCell>{index + 1 + startIndex}</TableCell>
+              <TableCell>
             <span className="font-bold">{item.name}</span>
           </TableCell>
           <TableCell>
-            <span className="font-serif font-bold text-[#D6A15F] text-xl">{item.price}</span>
+            <span className="font-semibold text-gray-900">{item.price}</span>
           </TableCell>
           <TableCell>
             <ActionButtons
@@ -761,65 +901,110 @@ function SizeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
           </TableCell>
         </tr>
       ))}
-    </TableShell>
+        </TableShell>
+      </div>
+    </>
   );
 }
 
-function ToppingTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
+function ToppingTable({ items, onDelete, onEdit, startIndex = 0 }: AdminIngredientTableProps) {
   return (
-    <TableShell headers={["#", "Tên topping", "Giá cộng thêm", "Trạng thái", ""]}>
-      {items.map((item, index) => (
-        <tr key={item.id} className="transition">
-          <TableCell>{index + 1}</TableCell>
-          <TableCell>
-            <span className="font-bold">{item.name}</span>
-          </TableCell>
-          <TableCell>
-            <span className="font-serif font-bold text-[#D6A15F] text-xl">{item.price}</span>
-          </TableCell>
-          <TableCell>
-            <span
-              className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                item.in_stock === false
-                  ? "bg-red-100 text-red-600"
-                  : "bg-green-100 text-green-700"
-              }`}
-            >
-              {item.in_stock === false ? "Hết hàng" : "Còn hàng"}
-            </span>
-          </TableCell>
-          <TableCell>
-            <ActionButtons
-              onDelete={() => onDelete(item)}
-              onEdit={() => onEdit(item)}
-            />
-          </TableCell>
-        </tr>
-      ))}
-    </TableShell>
+    <>
+      <div className="md:hidden flex flex-col gap-3 p-4">
+        {items.map((item, index) => (
+          <div key={item.id} className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="text-xs font-medium text-gray-500 mb-1">#{index + 1 + startIndex}</div>
+                <h3 className="font-bold text-gray-900 text-sm mb-1">{item.name}</h3>
+                <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.in_stock === false ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"}`}>
+                  {item.in_stock === false ? "Hết hàng" : "Còn hàng"}
+                </span>
+              </div>
+              <span className="font-semibold text-gray-900">{item.price}</span>
+            </div>
+            <div className="flex justify-end pt-3 border-t border-gray-100">
+              <ActionButtons onDelete={() => onDelete(item)} onEdit={() => onEdit(item)} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <TableShell headers={["#", "Tên topping", "Giá cộng thêm", "Trạng thái", ""]}>
+          {items.map((item, index) => (
+            <tr key={item.id} className="transition">
+              <TableCell>{index + 1 + startIndex}</TableCell>
+              <TableCell>
+                <span className="font-bold">{item.name}</span>
+              </TableCell>
+              <TableCell>
+                <span className="font-semibold text-gray-900">{item.price}</span>
+              </TableCell>
+              <TableCell>
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                    item.in_stock === false
+                      ? "bg-red-100 text-red-600"
+                      : "bg-green-100 text-green-700"
+                  }`}
+                >
+                  {item.in_stock === false ? "Hết hàng" : "Còn hàng"}
+                </span>
+              </TableCell>
+              <TableCell>
+                <ActionButtons
+                  onDelete={() => onDelete(item)}
+                  onEdit={() => onEdit(item)}
+                />
+              </TableCell>
+            </tr>
+          ))}
+        </TableShell>
+      </div>
+    </>
   );
 }
 
-function TypeTable({ items, onDelete, onEdit }: AdminIngredientTableProps) {
+function TypeTable({ items, onDelete, onEdit, startIndex = 0 }: AdminIngredientTableProps) {
   return (
-    <TableShell headers={["#", "Bao bì", "Giá cộng thêm", ""]}>
-      {items.map((item, index) => (
-        <tr key={item.id} className="transition">
-          <TableCell>{index + 1}</TableCell>
-          <TableCell>
-            <span className="font-bold">{item.name}</span>
-          </TableCell>
-          <TableCell>
-            <span className="font-serif font-bold text-[#D6A15F] text-xl">{item.price}</span>
-          </TableCell>
-          <TableCell>
-            <ActionButtons
-              onDelete={() => onDelete(item)}
-              onEdit={() => onEdit(item)}
-            />
-          </TableCell>
-        </tr>
-      ))}
-    </TableShell>
+    <>
+      <div className="md:hidden flex flex-col gap-3 p-4">
+        {items.map((item, index) => (
+          <div key={item.id} className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="text-xs font-medium text-gray-500 mb-1">#{index + 1 + startIndex}</div>
+                <h3 className="font-bold text-gray-900 text-sm">{item.name}</h3>
+              </div>
+              <span className="font-semibold text-gray-900">{item.price}</span>
+            </div>
+            <div className="flex justify-end pt-3 border-t border-gray-100">
+              <ActionButtons onDelete={() => onDelete(item)} onEdit={() => onEdit(item)} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <TableShell headers={["#", "Bao bì", "Giá cộng thêm", ""]}>
+          {items.map((item, index) => (
+            <tr key={item.id} className="transition">
+              <TableCell>{index + 1 + startIndex}</TableCell>
+              <TableCell>
+                <span className="font-bold">{item.name}</span>
+              </TableCell>
+              <TableCell>
+                <span className="font-semibold text-gray-900">{item.price}</span>
+              </TableCell>
+              <TableCell>
+                <ActionButtons
+                  onDelete={() => onDelete(item)}
+                  onEdit={() => onEdit(item)}
+                />
+              </TableCell>
+            </tr>
+          ))}
+        </TableShell>
+      </div>
+    </>
   );
 }

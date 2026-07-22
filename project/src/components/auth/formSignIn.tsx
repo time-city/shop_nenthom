@@ -9,7 +9,7 @@ import {
 } from "formik";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type ChangeEvent, useEffect, useState } from "react";
+import { type ChangeEvent, useEffect, useState, useTransition } from "react";
 import { useToast } from "@/src/components/ui/toastProvider";
 import { z } from "zod";
 import { loginUser } from "../../lib/action/auth.action";
@@ -64,6 +64,7 @@ const validateSignIn = (values: SignInValues) => {
 export default function FormSignIn() {
   const { toast } = useToast();
   const router = useRouter();
+  const [isPendingNavigation, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState("");
   const [formInitialValues, setFormInitialValues] =
     useState<SignInValues>(initialValues);
@@ -127,7 +128,12 @@ export default function FormSignIn() {
 
     setErrorMessage("");
     toast.success(message);
-    void useCartStore.getState().fetchCartCount();
+    
+    // Fetch cart count in background without blocking navigation
+    setTimeout(() => {
+      useCartStore.getState().clearCart();
+      void useCartStore.getState().fetchCartCount();
+    }, 0);
 
     if (result.user?.is_newUser) {
       localStorage.removeItem("hasSeenProfileGuide");
@@ -139,16 +145,10 @@ export default function FormSignIn() {
         ? "/admin/dashboard"
         : redirect || (!result.user?.has_info ? "/profile" : "/");
 
-    window.setTimeout(() => {
-      // Admin cần hard navigation để server layout nhận cookie mới ngay
-      if (result.user?.role === "ADMIN") {
-        window.location.href = targetPath;
-      } else {
-        router.replace(targetPath);
-      }
-    }, 900);
-
-    actions.setSubmitting(false);
+    startTransition(() => {
+      router.refresh();
+      router.replace(targetPath);
+    });
   };
 
   return (
@@ -298,9 +298,9 @@ export default function FormSignIn() {
                 <button
                   type="submit"
                   className="mb-3 min-h-12 w-full rounded-full bg-[#7A1218] px-4 py-3.5 text-[0.74rem] font-medium uppercase tracking-[0.14em] text-[#F5F0E8] shadow-[0_14px_28px_rgba(107,18,24,0.22)] transition hover:-translate-y-0.5 hover:bg-[#4A0C10] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[0.8rem]"
-                  disabled={isSubmitting || !isValid}
+                  disabled={isSubmitting || isPendingNavigation || !isValid}
                 >
-                  {isSubmitting ? "Đang đăng nhập..." : "Đăng Nhập"}
+                  {isSubmitting || isPendingNavigation ? "Đang xử lý..." : "Đăng Nhập"}
                 </button>
               </Form>
             )}

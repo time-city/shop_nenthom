@@ -1,10 +1,13 @@
 'use server'
 
 import { cookies } from "next/headers";
-import { updateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
+import prisma from "../prisma";
 import { requireAdmin } from "../requireAdmin";
 import { getPublicErrorMessage } from "../utils/publicError";
 import { OrderService } from "../services/order.service";
+import { SPXOrderService } from "../spx/order.service";
+import { emitOrderStatusUpdatedToUser } from "../events/userOrderEvents";
 import { getSession } from "../session";
 import {
   CancelOrderInput,
@@ -16,6 +19,8 @@ import {
   getListOrdersSchema,
   orderNumberSchema,
   updateOrderStatusSchema,
+  UpdateOrderTrackingInput,
+  updateOrderTrackingSchema,
 } from "../validations/order.schema";
 
 const CART_SESSION_COOKIE_NAME = 'guest_session_id';
@@ -40,7 +45,8 @@ export async function createOrderAction(params: CreateOrderInput) {
     const { userId, sessionId } = await getCartIdentity();
     const order = await OrderService.createOrder(parsed.data, userId, sessionId);
 
-    updateTag("dashboard-overview");
+    // @ts-expect-error: Next.js revalidateTag types are sometimes incomplete or missing
+    revalidateTag("dashboard-overview");
 
     return { success: true, data: order }
   } catch (err) {
@@ -80,6 +86,7 @@ export async function getMyOrderDetailAction(orderNumber: string) {
 
     return { success: true, data: order }
   } catch (err) {
+    console.error("GET_MY_ORDER_DETAIL_ERROR", err);
     return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
   }
 }
@@ -152,6 +159,18 @@ export async function updateOrderStatusAction(params: UpdateOrderStatusInput) {
 
   try {
     const order = await OrderService.updateOrderStatus(parsed.data, admin.adminId)
+    // @ts-expect-error: Next.js revalidateTag types are sometimes incomplete or missing
+    revalidateTag("dashboard-overview");
+
+    // Task 3: Kích Hoạt Trigger Tự Động
+    if (order && order.status === "shipped" && !order.trackingCode) {
+      try {
+        await SPXOrderService.createSPXOrder(order.id);
+      } catch (spxError: any) {
+        return { error: `Đã cập nhật trạng thái nhưng tạo đơn SPX thất bại: ${spxError.message}` };
+      }
+    }
+
     return { success: true, data: order }
   } catch (err) {
     return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
@@ -192,5 +211,61 @@ export async function cancelMyOrderAction(params: CancelOrderInput) {
     return { success: true, data: cancelledOrder }
   } catch (err) {
     return { error: getPublicErrorMessage(err, "Chưa thể hủy đơn hàng. Vui lòng thử lại.") }
+  }
+}
+
+// Admin cập nhật thông tin vận chuyển
+export async function updateOrderTrackingAction(params: UpdateOrderTrackingInput) {
+  const admin = await requireAdmin()
+  if ("error" in admin) return admin
+
+  const parsed = updateOrderTrackingSchema.safeParse(params)
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  try {
+    const order = await OrderService.updateOrderTracking(parsed.data, admin.adminId)
+    return { success: true, data: order }
+  } catch (err) {
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.") }
+  }
+}
+
+// TEST ONLY: Chuyển đơn hàng sang DELIVERED
+export async function testDeliverOrderAction(orderId: string) {
+  const admin = await requireAdmin();
+  if ("error" in admin) return admin;
+
+  try {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) return { error: "Không tìm thấy đơn hàng" };
+
+    const updated = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: "DELIVERED",
+        history_logs: {
+          create: {
+            current_status: "DELIVERED",
+            previous_status: order.status,
+            note: "TEST: Tự động chuyển sang Giao hàng thành công",
+          }
+        }
+      }
+    });
+
+    const statusPayload = {
+      orderId: updated.id,
+      orderNumber: updated.order_number,
+      status: "delivered" as const,
+      updatedAt: new Date().toISOString(),
+      userId: updated.user_id || undefined,
+    };
+    await emitOrderStatusUpdatedToUser(statusPayload);
+
+    // @ts-expect-error: Next.js revalidateTag types are sometimes incomplete or missing
+    revalidateTag("dashboard-overview");
+    return { success: true };
+  } catch (err) {
+    return { error: getPublicErrorMessage(err, "Có lỗi xảy ra.") };
   }
 }

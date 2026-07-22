@@ -63,7 +63,7 @@ export const useCartStore = create<CartStore>()(
 
       setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
 
-      clearCart: () => set({ cartCount: 0, lastOrder: null, appliedDiscount: null }),
+      clearCart: () => set({ cartCount: 0, lastOrder: null, appliedDiscount: null, orderCount: 0 }),
 
       setOrderCount: (count) => set({ orderCount: Math.max(0, count) }),
 

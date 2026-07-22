@@ -85,7 +85,16 @@ export default function DiscountCodeClient() {
     if ("success" in result && result.success) {
       toast.success("Đã vô hiệu hóa mã giảm giá");
       setDisableDiscount(null);
-      await mutateDiscounts();
+      mutateDiscounts(
+        (current: any) => {
+          if (!current || !current.data) return current;
+          return {
+            ...current,
+            data: current.data.map((d: any) => d.id === disableDiscount.id ? { ...d, is_active: false } : d)
+          };
+        },
+        false
+      );
     }
 
     setIsDisabling(false);
@@ -257,14 +266,40 @@ export default function DiscountCodeClient() {
       <ModalDiscount
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSave={() => { mutateDiscounts(); }}
+        onSave={(newDiscount) => {
+          if (newDiscount) {
+            mutateDiscounts(
+              (current: any) => {
+                if (!current || !current.data) return current;
+                return {
+                  ...current,
+                  data: [newDiscount, ...current.data]
+                };
+              },
+              false
+            );
+          }
+        }}
       />
 
       <ModalEditDiscount
-        open={Boolean(editDiscount)}
         discount={editDiscount}
+        open={Boolean(editDiscount)}
         onClose={() => setEditDiscount(null)}
-        onSave={() => { mutateDiscounts(); }}
+        onSave={(updatedDiscount) => {
+          if (updatedDiscount) {
+            mutateDiscounts(
+              (current: any) => {
+                if (!current || !current.data) return current;
+                return {
+                  ...current,
+                  data: current.data.map((d: any) => d.id === updatedDiscount.id ? updatedDiscount : d)
+                };
+              },
+              false
+            );
+          }
+        }}
       />
 
       <ModalDeleteProduct

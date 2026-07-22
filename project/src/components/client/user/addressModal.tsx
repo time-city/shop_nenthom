@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { X, ChevronDown, Check } from "lucide-react";
+import { X } from "lucide-react";
+import { fetchLocations, type Location } from "@/src/lib/utils/location";
+import LocationSelect from "@/src/components/ui/LocationSelect";
 
 export interface AddressFormData {
   id?: string;
@@ -23,93 +25,7 @@ interface AddressModalProps {
   defaultPhone?: string;
 }
 
-interface Location {
-  id: string;
-  name: string;
-  full_name: string;
-}
 
-const fetchLocations = async (level: number, parentId: string = "0") => {
-  try {
-    const res = await fetch(`https://esgoo.net/api-tinhthanh/${level}/${parentId}.htm`);
-    const data = await res.json();
-    if (data.error === 0) {
-      return data.data as Location[];
-    }
-    return [];
-  } catch (error) {
-    console.error("Failed to fetch locations:", error);
-    return [];
-  }
-};
-
-const CustomSelect = ({ 
-  options, 
-  value, 
-  onChange, 
-  placeholder, 
-  disabled 
-}: { 
-  options: Location[], 
-  value: string, 
-  onChange: (id: string, name: string) => void, 
-  placeholder: string,
-  disabled?: boolean
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex w-full items-center justify-between rounded-[10px] border-[1.5px] border-[#F5F0E8]/20 bg-black/40 px-4 py-3 text-left text-[0.95rem] text-[#F5F0E8] outline-none transition hover:border-[#D6A15F]/50 focus:border-[#D6A15F] disabled:cursor-not-allowed disabled:bg-black/20 disabled:text-[#F5F0E8]/40`}
-      >
-        <span className={value ? "text-[#F5F0E8]" : "text-[#F5F0E8]/40"}>
-          {value || placeholder}
-        </span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180 text-[#D6A15F]" : "text-[#F5F0E8]/40"}`} />
-      </button>
-
-      {isOpen && !disabled && (
-        <div className="absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-xl border border-[#F5F0E8]/10 bg-[#1A0506]/95 p-1 shadow-xl backdrop-blur-lg custom-scrollbar">
-          {options.length === 0 ? (
-            <div className="p-3 text-center text-sm text-[#F5F0E8]/50">Đang tải...</div>
-          ) : (
-            options.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => {
-                  onChange(opt.id, opt.full_name);
-                  setIsOpen(false);
-                }}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-[0.9rem] transition-colors hover:bg-[#D6A15F]/10 ${
-                  value === opt.full_name ? "text-[#D6A15F] font-medium bg-[#D6A15F]/5" : "text-[#F5F0E8]/80"
-                }`}
-              >
-                {opt.full_name}
-                {value === opt.full_name && <Check className="h-4 w-4" />}
-              </button>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
 
 export default function AddressModal({ isOpen, onClose, onSave, initialData, defaultFullname = "", defaultPhone = "" }: AddressModalProps) {
   const [formData, setFormData] = useState<AddressFormData>({
@@ -165,8 +81,13 @@ export default function AddressModal({ isOpen, onClose, onSave, initialData, def
     setSelectedIds(prev => ({ ...prev, province: id, district: "" }));
     setDistricts([]);
     setWards([]);
-    const data = await fetchLocations(2, id);
-    setDistricts(data);
+    setIsSubmitting(true);
+    try {
+      const data = await fetchLocations(2, id);
+      setDistricts(data);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle district change
@@ -174,8 +95,13 @@ export default function AddressModal({ isOpen, onClose, onSave, initialData, def
     setFormData(prev => ({ ...prev, district: name, ward: "" }));
     setSelectedIds(prev => ({ ...prev, district: id }));
     setWards([]);
-    const data = await fetchLocations(3, id);
-    setWards(data);
+    setIsSubmitting(true);
+    try {
+      const data = await fetchLocations(3, id);
+      setWards(data);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleWardChange = (id: string, name: string) => {
@@ -203,6 +129,30 @@ export default function AddressModal({ isOpen, onClose, onSave, initialData, def
     });
     return match;
   };
+
+  // Pre-load districts and wards for edit mode
+  useEffect(() => {
+    let isMounted = true;
+    if (isOpen && initialData && provinces.length > 0 && !selectedIds.province) {
+      const matchProv = findBestMatch(initialData.city, provinces);
+      if (matchProv) {
+        setSelectedIds(prev => ({ ...prev, province: matchProv.id }));
+        fetchLocations(2, matchProv.id).then(d => {
+          if (!isMounted) return;
+          setDistricts(d);
+          const matchDist = findBestMatch(initialData.district, d);
+          if (matchDist) {
+            setSelectedIds(prev => ({ ...prev, district: matchDist.id }));
+            fetchLocations(3, matchDist.id).then(w => {
+              if (isMounted) setWards(w);
+            });
+          }
+        });
+      }
+    }
+    return () => { isMounted = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialData, provinces, selectedIds.province]);
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -414,35 +364,35 @@ const matchedDist = fetchedDistricts.find(checkMatch);
           <div className="grid gap-5">
             <div className="flex flex-col gap-2">
               <label className="text-[0.7rem] uppercase tracking-wider text-[#F5F0E8]/70">Tỉnh / Thành Phố</label>
-              <CustomSelect
+              <LocationSelect
                 options={provinces}
                 value={formData.city}
                 onChange={handleProvinceChange}
-                placeholder="Chọn Tỉnh/Thành phố"
+                placeholder={provinces.length === 0 ? "Đang tải..." : "Chọn Tỉnh/Thành phố"}
+                disabled={provinces.length === 0 || isSubmitting}
               />
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <label className="text-[0.7rem] uppercase tracking-wider text-[#F5F0E8]/70">Quận / Huyện</label>
-                <CustomSelect
-                  options={districts}
-                  value={formData.district}
-                  onChange={handleDistrictChange}
-                  placeholder="Chọn Quận/Huyện"
-                  disabled={!formData.city}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-[0.7rem] uppercase tracking-wider text-[#F5F0E8]/70">Phường / Xã</label>
-                <CustomSelect
-                  options={wards}
-                  value={formData.ward}
-                  onChange={handleWardChange}
-                  placeholder="Chọn Phường/Xã"
-                  disabled={!formData.district}
-                />
-              </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[0.7rem] uppercase tracking-wider text-[#F5F0E8]/70">Quận / Huyện</label>
+              <LocationSelect
+                options={districts}
+                value={formData.district}
+                onChange={handleDistrictChange}
+                placeholder={!formData.city ? "Vui lòng chọn Tỉnh/Thành phố trước" : districts.length === 0 ? "Đang tải..." : "Chọn Quận/Huyện"}
+                disabled={!formData.city || isSubmitting}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[0.7rem] uppercase tracking-wider text-[#F5F0E8]/70">Phường / Xã</label>
+              <LocationSelect
+                options={wards}
+                value={formData.ward}
+                onChange={handleWardChange}
+                placeholder={!formData.district ? "Vui lòng chọn Quận/Huyện trước" : wards.length === 0 ? "Đang tải..." : "Chọn Phường/Xã"}
+                disabled={!formData.district || isSubmitting}
+              />
             </div>
 
             <div className="flex flex-col gap-2">
